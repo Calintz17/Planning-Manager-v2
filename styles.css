@@ -16,11 +16,11 @@
   --border:#e5e7eb;
 
   /* BOUTONS / TABS — TU PEUX MODIFIER */
-  --btn:#1E5631;
+  --btn:#1E5631;         /* <-- COULEUR DES BOUTONS/TABS (modif libre) */
   --btn-text:#ffffff;
 
   /* ACCENT — TU PEUX MODIFIER */
-  --accent:#1C4966;
+  --accent:#1C4966;      /* <-- Autre couleur */
 
   /* Adherence bar — TU PEUX MODIFIER */
   --adherence-fill:#1C4966;
@@ -54,24 +54,6 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
 }
 .tab-btn.active{ outline:2px solid var(--accent) }
 
-/* Main */
-.app-main{ max-width:1200px; margin:16px auto; padding:0 12px }
-.tab-panel{ display:none }
-.tab-panel.visible{ display:block }
-.panel-card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 2px 12px rgba(0,0,0,0.06);
-}
-
-/* Footer */
-.app-footer{
-  max-width:1200px; margin:24px auto 40px; padding:0 12px;
-  color:#d6d2d2; text-align:right; /* © Roman Inc. */
-}
-
 /* Buttons (generic) */
 .primary{
   background:var(--btn); color:var(--btn-text); border:1px solid var(--btn);
@@ -90,6 +72,24 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
 }
 .mini.danger{
   background:#fff; color:var(--danger); border:1px solid var(--danger);
+}
+
+/* Main */
+.app-main{ max-width:1200px; margin:16px auto; padding:0 12px }
+.tab-panel{ display:none }
+.tab-panel.visible{ display:block }
+.panel-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+
+/* Footer */
+.app-footer{
+  max-width:1200px; margin:24px auto 40px; padding:0 12px;
+  color:#d6d2d2; text-align:right; /* © Roman Inc. */
 }
 
 /* Forms */
@@ -219,3 +219,63 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
 }
 .mini-cal-cell.pto{ background:#ffecec }
 .mini-cal-cell.pto-half{ background:linear-gradient(135deg, #ffecec 50%, #fff 50%) }
+
+/* =========================================================
+   ===== Tasks (nouvelle section) ==========================
+   ======================================================= */
+
+/* Conteneur & table */
+.tasks-table-wrap{ overflow:auto; margin-top:8px }
+.tasks-table{
+  width:100%;
+  border-collapse:separate; border-spacing:0;
+  border:1px solid var(--border); border-radius:12px; overflow:hidden;
+  table-layout:auto; background:#fff;
+}
+.tasks-table th, .tasks-table td{
+  border-bottom:1px solid var(--border); border-right:1px solid var(--border);
+  padding:10px; font-size:13px; text-align:left;
+}
+.tasks-table th{ position:sticky; top:0; background:#fff; z-index:1 }
+
+/* Colonnes */
+.tasks-table td:nth-child(1){ min-width:160px; font-weight:600 } /* Task name */
+.tasks-table td:nth-child(2){ width:160px }                      /* Priority */
+.tasks-table td:nth-child(3){ width:200px }                      /* AHT */
+.tasks-table td:nth-child(4){ width:120px; text-align:center }   /* Enabled */
+
+/* Champs éditables */
+.tasks-priority, .tasks-aht{
+  height:36px; border:1px solid var(--border); border-radius:10px; padding:0 10px; width:100%; background:#fff;
+  font-size:13px;
+}
+.tasks-aht::-webkit-outer-spin-button,
+.tasks-aht::-webkit-inner-spin-button{
+  -webkit-appearance: none; margin: 0;
+}
+
+/* Toggle Enabled (style “à la Apple”) */
+.switch{
+  --w:46px; --h:26px; --r:13px;
+  position:relative; display:inline-flex; align-items:center;
+  width:var(--w); height:var(--h);
+  background:#f1f5f9; border:1px solid var(--border); border-radius:var(--h);
+  cursor:pointer; transition:background .2s ease, border-color .2s ease;
+}
+.switch input{ display:none }
+.switch .dot{
+  position:absolute; top:50%; left:2px; transform:translateY(-50%);
+  width:var(--h); height:var(--h); border-radius:50%; background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,0.15); transition:left .2s ease;
+}
+.switch.on{ background:var(--btn); border-color:var(--btn) } /* <-- COULEUR ON = --btn (#1E5631) */
+.switch.on .dot{ left:calc(var(--w) - var(--h) - 2px) }
+
+/* Légende */
+.legend{ display:inline-flex; gap:10px; align-items:center; color:var(--muted); margin-top:6px }
+
+/* Responsive pour Tasks */
+@media (max-width: 600px){
+  .tasks-table td:nth-child(3){ width:160px }
+  .tasks-table td:nth-child(2){ width:140px }
+}
