@@ -96,13 +96,81 @@
       </div>
     </section>
 
-    <!-- WEEKLY (placeholder – à implémenter après validation) -->
-    <section id="weekly" class="tab-panel">
-      <div class="panel-card">
-        <h2>Weekly Planning</h2>
-        <p>Planning hebdo par tranches de 30 minutes. (À venir.)</p>
+<!-- === WEEKLY PLANNING (Tab Panel) START -->
+<section id="weekly" class="tab-panel">
+  <div class="panel-card">
+    <h2>Weekly Planning</h2>
+
+    <!-- Toolbar -->
+    <div class="wp-toolbar">
+      <label class="field compact">
+        <span>Region</span>
+        <select id="wp-region">
+          <option value="EMEA">Europe</option>
+          <option value="US">Americas</option>
+          <option value="CN">Greater China</option>
+          <option value="JP">Japan</option>
+          <option value="KR">South Korea</option>
+          <option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+
+      <label class="field compact">
+        <span>ISO Week</span>
+        <input id="wp-week" type="week" />
+      </label>
+
+      <label class="field compact">
+        <span>Day start</span>
+        <input id="wp-day-start" type="time" value="09:00" />
+      </label>
+
+      <label class="field compact">
+        <span>Day end</span>
+        <input id="wp-day-end" type="time" value="18:00" />
+      </label>
+
+      <div class="wp-actions">
+        <button id="wp-load" class="secondary">Load</button>
+        <button id="wp-export" class="primary">Export CSV</button>
       </div>
-    </section>
+    </div>
+
+    <!-- Summary ribbons -->
+    <div class="wp-summaries">
+      <div class="wp-chip">
+        <span class="k">Agents (present)</span>
+        <span id="wp-agents-count" class="v">–</span>
+      </div>
+      <div class="wp-chip">
+        <span class="k">Coverage avg</span>
+        <span id="wp-coverage-avg" class="v">– %</span>
+      </div>
+      <div class="wp-chip">
+        <span class="k">Understaffed slots</span>
+        <span id="wp-understaffed" class="v">–</span>
+      </div>
+    </div>
+
+    <!-- Timeline grid -->
+    <div class="wp-grid-wrap">
+      <table id="wp-grid" class="wp-grid">
+        <!-- Head + body seront remplis via app.js -->
+      </table>
+    </div>
+
+    <!-- Legend -->
+    <small class="legend">
+      Legend:
+      <span class="legend-box present"></span> Present
+      <span class="legend-box pto"></span> PTO
+      <span class="legend-box gap"></span> Demand gap
+      <span class="legend-box over"></span> Over-coverage
+    </small>
+  </div>
+</section>
+<!-- === WEEKLY PLANNING (Tab Panel) END -->
+
 
     <!-- AGENTS (COMPLET) -->
     <section id="agents" class="tab-panel visible">
