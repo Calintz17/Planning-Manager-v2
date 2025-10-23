@@ -1582,6 +1582,567 @@ async function initWeeklyUI(){
 // =======================
 // === WEEKLY (Module) END
 // =======================
+/* ============================================================
+   REGULATION MODULE — à coller TOUT EN BAS de app.js
+   Gère : CRUD des règles, toggle d’application, validation, export CSV
+   Dépendances : 
+     - supabase (client global déjà initialisé)
+     - éléments HTML/IDs créés dans l’onglet "Regulation"
+   ============================================================ */
+(() => {
+  const qs  = (sel, root=document) => root.querySelector(sel);
+  const qsa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  // --- Sélecteurs UI
+  const el = {
+    tabPanel: qs('#regulation'),
+    enforceToggle: qs('#enforceRegulationsToggle'),
+    addRuleBtn: qs('#addRuleBtn'),
+    validateAllBtn: qs('#validateAllBtn'),
+    exportViolationsBtn: qs('#exportViolationsBtn'),
+    ruleSearch: qs('#ruleSearch'),
+
+    // Summary
+    activeRulesCount: qs('#activeRulesCount'),
+    violationsCount: qs('#violationsCount'),
+    lastValidationAt: qs('#lastValidationAt'),
+
+    // Tables
+    rulesTbody: qs('#regulationTableBody'),
+    violationsPanel: qs('#violationsPanel'),
+    violationsTbody: qs('#violationsTableBody'),
+
+    // Modal Règle
+    ruleModal: qs('#ruleModal'),
+    ruleForm: qs('#ruleForm'),
+    ruleModalTitle: qs('#ruleModalTitle'),
+    closeRuleModal: qs('#closeRuleModal'),
+    cancelRuleBtn: qs('#cancelRuleBtn'),
+
+    // Champs formulaire
+    ruleId: qs('#ruleId'),
+    ruleName: qs('#ruleName'),
+    ruleType: qs('#ruleType'),
+    ruleParam1: qs('#ruleParam1'),
+    ruleParam2: qs('#ruleParam2'),
+    ruleParam1Label: qs('#ruleParam1Label'),
+    ruleParam2Label: qs('#ruleParam2Label'),
+    ruleScope: qs('#ruleScope'),
+    scopeTargetField: qs('#scopeTargetField'),
+    scopeTargetLabel: qs('#scopeTargetLabel'),
+    ruleScopeTarget: qs('#ruleScopeTarget'),
+    ruleSeverity: qs('#ruleSeverity'),
+    ruleActive: qs('#ruleActive'),
+
+    // Confirm delete
+    confirmDeleteModal: qs('#confirmDeleteModal'),
+    confirmDeleteBtn: qs('#confirmDeleteBtn'),
+    cancelDeleteBtn: qs('#cancelDeleteBtn'),
+  };
+
+  // --- State
+  let rules = [];
+  let filteredRules = [];
+  let violations = [];
+  let pendingDeleteId = null;
+
+  // --- Helpers
+  const toBool = (v) => (v === true || v === 'true' || v === 1 || v === '1');
+  const fmtDate = (d) => {
+    try {
+      const x = (d instanceof Date) ? d : new Date(d);
+      return x.toLocaleString();
+    } catch { return '–'; }
+  };
+  const downloadTextFile = (filename, text) => {
+    const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // --- Stockage du toggle "enforce"
+  const ENFORCE_LOCAL_KEY = 'pm_enforce_regulations';
+  const loadEnforceLocal = () => toBool(localStorage.getItem(ENFORCE_LOCAL_KEY));
+  const saveEnforceLocal = (v) => localStorage.setItem(ENFORCE_LOCAL_KEY, v ? 'true' : 'false');
+
+  // --- Adaptation labels selon type de règle
+  const updateParamLabels = () => {
+    const t = el.ruleType.value;
+    if (t === 'MAX_HOURS_PER_WEEK') {
+      el.ruleParam1Label.textContent = 'Heures max / semaine';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
+      el.ruleParam1.type = 'number';
+      el.ruleParam2.type = 'number';
+      el.ruleParam1.placeholder = 'Ex: 40';
+      el.ruleParam2.placeholder = '';
+    } else if (t === 'MIN_REST_BETWEEN_SHIFTS') {
+      el.ruleParam1Label.textContent = 'Repos minimum (heures)';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
+      el.ruleParam1.type = 'number';
+      el.ruleParam2.type = 'number';
+      el.ruleParam1.placeholder = 'Ex: 11';
+      el.ruleParam2.placeholder = '';
+    } else if (t === 'NO_OVERLAP_SHIFTS') {
+      el.ruleParam1Label.textContent = 'Paramètre 1 (non requis)';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (non requis)';
+      el.ruleParam1.placeholder = '';
+      el.ruleParam2.placeholder = '';
+    } else if (t === 'NO_PTO_OVERBOOKING') {
+      el.ruleParam1Label.textContent = 'Paramètre 1 (non requis)';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (non requis)';
+      el.ruleParam1.placeholder = '';
+      el.ruleParam2.placeholder = '';
+    } else if (t === 'HOLIDAY_BLACKOUT') {
+      el.ruleParam1Label.textContent = 'Jour férié (AAAA-MM-JJ) ou pattern';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
+      el.ruleParam1.type = 'text';
+      el.ruleParam2.type = 'text';
+      el.ruleParam1.placeholder = 'Ex: 2025-12-25 ou WE';
+      el.ruleParam2.placeholder = '';
+    }
+  };
+
+  const updateScopeVisibility = () => {
+    const s = el.ruleScope.value;
+    if (s === 'REGION') {
+      el.scopeTargetLabel.textContent = 'Code Région (ex: EMEA)';
+      el.scopeTargetField.hidden = false;
+    } else if (s === 'AGENT') {
+      el.scopeTargetLabel.textContent = 'Agent ID';
+      el.scopeTargetField.hidden = false;
+    } else {
+      el.scopeTargetField.hidden = true;
+      el.ruleScopeTarget.value = '';
+    }
+  };
+
+  // --- CRUD Supabase (tables conseillées)
+  // Table "regulations":
+  // id uuid (pk) | name text | type text | param1 numeric? | param2 numeric? | scope text | scope_target text | severity text | active boolean | created_at timestamptz default now()
+  const fetchRegulations = async () => {
+    if (!window.supabase) { console.warn('[Regulation] supabase non trouvé'); return []; }
+    const { data, error } = await supabase
+      .from('regulations')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (error) { console.warn('[Regulation] fetchRegulations error:', error.message); return []; }
+    return data || [];
+  };
+
+  const upsertRule = async (payload) => {
+    if (!window.supabase) return { error: new Error('Supabase client manquant') };
+    // upsert by id if present
+    const { data, error } = await supabase
+      .from('regulations')
+      .upsert(payload)
+      .select()
+      .single();
+    return { data, error };
+  };
+
+  const deleteRule = async (id) => {
+    if (!window.supabase) return { error: new Error('Supabase client manquant') };
+    const { error } = await supabase.from('regulations').delete().eq('id', id);
+    return { error };
+  };
+
+  // --- Validation (lecture des shifts ; ajuster nom de table/colonnes si besoin)
+  // Table "shifts" attendue : id, agent_id, start_time (timestamptz), end_time (timestamptz)
+  const fetchShifts = async () => {
+    if (!window.supabase) return [];
+    const { data, error } = await supabase
+      .from('shifts')
+      .select('id,agent_id,start_time,end_time');
+    if (error) { console.warn('[Regulation] fetchShifts error:', error.message); return []; }
+    return data || [];
+  };
+
+  // Optionnel : PTO / holidays si tu as ces tables
+  const fetchPTO = async () => {
+    if (!window.supabase) return [];
+    const { data, error } = await supabase
+      .from('pto')
+      .select('agent_id,start_date,end_date');
+    if (error) return [];
+    return data || [];
+  };
+
+  // --- Moteur de validation de base (MAX_HOURS_PER_WEEK, MIN_REST_BETWEEN_SHIFTS, NO_OVERLAP_SHIFTS, NO_PTO_OVERBOOKING)
+  const hoursBetween = (a, b) => Math.abs((new Date(b) - new Date(a)) / 36e5);
+  const getISOWeek = (date) => {
+    const d = new Date(date);
+    d.setHours(0,0,0,0);
+    // jeudi de la semaine
+    d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+  };
+
+  const applyScope = (rule, item) => {
+    // Scope GLOBAL / REGION / AGENT
+    if (rule.scope === 'AGENT' && rule.scope_target) {
+      return String(item.agent_id) === String(rule.scope_target);
+    }
+    if (rule.scope === 'REGION' && rule.scope_target) {
+      // Si tu as une table agents avec region_code, tu peux enrichir "item.agent_region"
+      // Ici on assume que "item.agent_region" pourrait exister ; sinon on traite comme global
+      if (item.agent_region) return String(item.agent_region) === String(rule.scope_target);
+    }
+    // GLOBAL par défaut
+    return true;
+  };
+
+  const runValidation = (rulesActive, shifts, ptoList=[]) => {
+    const out = [];
+    // Préparer shifts triés par agent puis par start_time
+    const byAgent = {};
+    shifts.forEach(s => {
+      if (!byAgent[s.agent_id]) byAgent[s.agent_id] = [];
+      byAgent[s.agent_id].push(s);
+    });
+    Object.values(byAgent).forEach(list => list.sort((a,b) => new Date(a.start_time) - new Date(b.start_time)));
+
+    // PTO map (par agent -> liste de ranges)
+    const ptoMap = {};
+    ptoList.forEach(p => {
+      if (!ptoMap[p.agent_id]) ptoMap[p.agent_id] = [];
+      ptoMap[p.agent_id].push([new Date(p.start_date), new Date(p.end_date)]);
+    });
+
+    const active = rulesActive.filter(r => r.active);
+
+    // MAX_HOURS_PER_WEEK
+    const maxWeekRules = active.filter(r => r.type === 'MAX_HOURS_PER_WEEK' && r.param1);
+    if (maxWeekRules.length) {
+      const weekHours = {}; // key: agent_id|year|week -> hours
+      shifts.forEach(s => {
+        const st = new Date(s.start_time), et = new Date(s.end_time);
+        const hrs = Math.max(0, (et - st) / 36e5);
+        const week = getISOWeek(st);
+        const key = `${s.agent_id}|${st.getUTCFullYear()}|${week}`;
+        weekHours[key] = (weekHours[key] || 0) + hrs;
+      });
+      for (const rule of maxWeekRules) {
+        for (const key in weekHours) {
+          const [agent_id, year, week] = key.split('|');
+          const total = weekHours[key];
+          if (!applyScope(rule, { agent_id })) continue;
+          if (total > Number(rule.param1)) {
+            out.push({
+              rule: rule.name || 'Max heures / semaine',
+              agent_id,
+              shift: `Semaine ${week} ${year}`,
+              detail: `Total ${total.toFixed(1)}h > ${Number(rule.param1)}h`,
+              severity: rule.severity || 'WARN'
+            });
+          }
+        }
+      }
+    }
+
+    // MIN_REST_BETWEEN_SHIFTS
+    const restRules = active.filter(r => r.type === 'MIN_REST_BETWEEN_SHIFTS' && r.param1);
+    if (restRules.length) {
+      for (const agentId in byAgent) {
+        const list = byAgent[agentId];
+        for (let i = 1; i < list.length; i++) {
+          const prev = list[i-1], cur = list[i];
+          const restH = hoursBetween(prev.end_time, cur.start_time);
+          for (const rule of restRules) {
+            if (!applyScope(rule, { agent_id: agentId })) continue;
+            if (restH < Number(rule.param1)) {
+              out.push({
+                rule: rule.name || 'Repos minimum',
+                agent_id: agentId,
+                shift: `${fmtDate(cur.start_time)}`,
+                detail: `Repos ${restH.toFixed(1)}h < ${Number(rule.param1)}h`,
+                severity: rule.severity || 'WARN'
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // NO_OVERLAP_SHIFTS
+    const overlapRules = active.filter(r => r.type === 'NO_OVERLAP_SHIFTS');
+    if (overlapRules.length) {
+      for (const agentId in byAgent) {
+        const list = byAgent[agentId];
+        for (let i = 1; i < list.length; i++) {
+          const prev = list[i-1], cur = list[i];
+          if (new Date(cur.start_time) < new Date(prev.end_time)) {
+            for (const rule of overlapRules) {
+              if (!applyScope(rule, { agent_id: agentId })) continue;
+              out.push({
+                rule: rule.name || 'Pas de chevauchement',
+                agent_id: agentId,
+                shift: `${fmtDate(cur.start_time)}`,
+                detail: `Chevauchement avec shift précédent`,
+                severity: rule.severity || 'BLOCK'
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // NO_PTO_OVERBOOKING
+    const ptoRules = active.filter(r => r.type === 'NO_PTO_OVERBOOKING');
+    if (ptoRules.length && Object.keys(ptoMap).length) {
+      for (const agentId in byAgent) {
+        const list = byAgent[agentId];
+        const ranges = ptoMap[agentId] || [];
+        if (!ranges.length) continue;
+        for (const s of list) {
+          const st = new Date(s.start_time), et = new Date(s.end_time);
+          for (const [pst, pet] of ranges) {
+            const overlap = st < pet && et > pst;
+            if (overlap) {
+              for (const rule of ptoRules) {
+                if (!applyScope(rule, { agent_id: agentId })) continue;
+                out.push({
+                  rule: rule.name || 'Interdiction PTO',
+                  agent_id: agentId,
+                  shift: `${fmtDate(st)}`,
+                  detail: `Shift pendant PTO (${pst.toISOString().slice(0,10)}→${pet.toISOString().slice(0,10)})`,
+                  severity: rule.severity || 'BLOCK'
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return out;
+  };
+
+  // --- Rendu UI
+  const renderRules = () => {
+    const rows = (filteredRules.length ? filteredRules : rules).map(r => {
+      const statusBadge = r.active ? '<span class="badge success">Actif</span>' : '<span class="badge muted">Inactif</span>';
+      const params = [r.param1, r.param2].filter(v => v !== null && v !== '' && v !== undefined).join(' · ') || '—';
+      const scope = r.scope === 'GLOBAL' ? 'Global' : `${r.scope} : ${r.scope_target || '—'}`;
+      return `
+        <tr data-id="${r.id || ''}">
+          <td>${r.name || '—'}</td>
+          <td>${r.type || '—'}</td>
+          <td>${params}</td>
+          <td>${scope}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="row-actions">
+              <button class="icon-btn js-edit" title="Éditer">✎</button>
+              <button class="icon-btn js-delete" title="Supprimer">🗑</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    el.rulesTbody.innerHTML = rows || `<tr><td colspan="6">Aucune règle pour le moment.</td></tr>`;
+    attachRowActions();
+    el.activeRulesCount.textContent = rules.filter(r => r.active).length;
+  };
+
+  const renderViolations = () => {
+    if (!violations.length) {
+      el.violationsPanel.hidden = true;
+      el.violationsTbody.innerHTML = '';
+      el.violationsCount.textContent = '0';
+      return;
+    }
+    el.violationsPanel.hidden = false;
+    el.violationsCount.textContent = String(violations.length);
+    const rows = violations.map(v => `
+      <tr>
+        <td>${v.rule}</td>
+        <td>${v.agent_id}</td>
+        <td>${v.shift}</td>
+        <td>${v.detail}</td>
+        <td>${v.severity}</td>
+      </tr>
+    `).join('');
+    el.violationsTbody.innerHTML = rows;
+  };
+
+  // --- Actions lignes (edit/delete)
+  const attachRowActions = () => {
+    qsa('.js-edit', el.tabPanel).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        const id = tr?.dataset?.id;
+        const r = rules.find(x => String(x.id) === String(id));
+        openRuleModal(r || null);
+      });
+    });
+    qsa('.js-delete', el.tabPanel).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        pendingDeleteId = tr?.dataset?.id || null;
+        if (el.confirmDeleteModal?.showModal) el.confirmDeleteModal.showModal();
+      });
+    });
+  };
+
+  // --- Modal CRUD
+  const resetForm = () => {
+    el.ruleForm.reset();
+    el.ruleId.value = '';
+    el.ruleScope.value = 'GLOBAL';
+    updateScopeVisibility();
+    el.ruleType.value = '';
+    updateParamLabels();
+    el.ruleActive.checked = true;
+    el.ruleSeverity.value = 'WARN';
+  };
+
+  const openRuleModal = (rule=null) => {
+    resetForm();
+    if (rule) {
+      el.ruleModalTitle.textContent = 'Éditer la règle';
+      el.ruleId.value = rule.id || '';
+      el.ruleName.value = rule.name || '';
+      el.ruleType.value = rule.type || '';
+      el.ruleParam1.value = (rule.param1 ?? '');
+      el.ruleParam2.value = (rule.param2 ?? '');
+      el.ruleScope.value = rule.scope || 'GLOBAL';
+      updateScopeVisibility();
+      el.ruleScopeTarget.value = rule.scope_target || '';
+      el.ruleSeverity.value = rule.severity || 'WARN';
+      el.ruleActive.checked = toBool(rule.active);
+      updateParamLabels();
+    } else {
+      el.ruleModalTitle.textContent = 'Nouvelle règle';
+    }
+    if (el.ruleModal?.showModal) el.ruleModal.showModal();
+  };
+
+  const closeRuleModal = () => {
+    if (el.ruleModal?.close) el.ruleModal.close();
+  };
+
+  // --- Recherche
+  const applySearch = () => {
+    const q = (el.ruleSearch.value || '').toLowerCase().trim();
+    if (!q) { filteredRules = []; renderRules(); return; }
+    filteredRules = rules.filter(r => {
+      const hay = `${r.name||''} ${r.type||''} ${r.scope||''} ${r.scope_target||''}`.toLowerCase();
+      return hay.includes(q);
+    });
+    renderRules();
+  };
+
+  // --- Export CSV
+  const exportViolationsCSV = () => {
+    if (!violations.length) return;
+    const headers = ['regle','agent','shift','detail','gravite'];
+    const lines = [headers.join(',')].concat(
+      violations.map(v => [
+        `"${String(v.rule).replace(/"/g,'""')}"`,
+        `"${String(v.agent_id).replace(/"/g,'""')}"`,
+        `"${String(v.shift).replace(/"/g,'""')}"`,
+        `"${String(v.detail).replace(/"/g,'""')}"`,
+        `"${String(v.severity).replace(/"/g,'""')}"`
+      ].join(','))
+    );
+    downloadTextFile(`violations_${Date.now()}.csv`, lines.join('\n'));
+  };
+
+  // --- Init et events
+  const initEvents = () => {
+    el.addRuleBtn?.addEventListener('click', () => openRuleModal(null));
+    el.closeRuleModal?.addEventListener('click', closeRuleModal);
+    el.cancelRuleBtn?.addEventListener('click', closeRuleModal);
+
+    el.ruleType?.addEventListener('change', updateParamLabels);
+    el.ruleScope?.addEventListener('change', updateScopeVisibility);
+
+    el.ruleForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        id: el.ruleId.value || undefined,
+        name: el.ruleName.value?.trim(),
+        type: el.ruleType.value,
+        param1: el.ruleParam1.value ? Number(el.ruleParam1.value) : null,
+        param2: el.ruleParam2.value ? Number(el.ruleParam2.value) : null,
+        scope: el.ruleScope.value || 'GLOBAL',
+        scope_target: el.ruleScopeTarget.value?.trim() || null,
+        severity: el.ruleSeverity.value || 'WARN',
+        active: !!el.ruleActive.checked,
+      };
+      const { error } = await upsertRule(payload);
+      if (error) {
+        console.warn('[Regulation] save error:', error.message);
+      }
+      closeRuleModal();
+      rules = await fetchRegulations();
+      renderRules();
+    });
+
+    el.confirmDeleteBtn?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (pendingDeleteId) {
+        const { error } = await deleteRule(pendingDeleteId);
+        if (error) console.warn('[Regulation] delete error:', error.message);
+      }
+      pendingDeleteId = null;
+      el.confirmDeleteModal?.close?.();
+      rules = await fetchRegulations();
+      renderRules();
+    });
+    el.cancelDeleteBtn?.addEventListener('click', () => {
+      pendingDeleteId = null;
+      el.confirmDeleteModal?.close?.();
+    });
+
+    el.ruleSearch?.addEventListener('input', applySearch);
+
+    // Toggle enforce (localStorage ; si tu préfères en DB, on l’ajoutera ensuite)
+    const initialEnforce = loadEnforceLocal();
+    el.enforceToggle.checked = !!initialEnforce;
+    el.enforceToggle?.addEventListener('change', () => {
+      saveEnforceLocal(!!el.enforceToggle.checked);
+    });
+
+    // Validation complète
+    el.validateAllBtn?.addEventListener('click', async () => {
+      const activeRules = rules.filter(r => r.active);
+      const [shifts, pto] = await Promise.all([fetchShifts(), fetchPTO()]);
+      violations = runValidation(activeRules, shifts, pto);
+      renderViolations();
+      el.lastValidationAt.textContent = fmtDate(new Date());
+    });
+
+    el.exportViolationsBtn?.addEventListener('click', exportViolationsCSV);
+  };
+
+  const init = async () => {
+    if (!el.tabPanel) return; // onglet absent
+    try {
+      rules = await fetchRegulations();
+    } catch (e) {
+      console.warn('[Regulation] fetchRegulations failed:', e?.message || e);
+      rules = [];
+    }
+    renderRules();
+    // Ne lance pas la validation auto pour éviter la charge ; l’utilisateur clique quand il veut
+  };
+
+  // Initialise quand le DOM est prêt (et que ton app est chargée)
+  document.addEventListener('DOMContentLoaded', () => {
+    initEvents();
+    init();
+  });
+})();
+
 
 /* ---------------- Boot ---------------- */
 window.addEventListener("load", requireAuth);
