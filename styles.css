@@ -483,3 +483,38 @@ button.secondary, a.secondary {
 }
 button.secondary:hover, a.secondary:hover { border-color:var(--btn); }
 
+/* ===== TABS HANDLER (placer TOUT EN HAUT de app.js) ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  const btns = Array.from(document.querySelectorAll('.tab-btn'));
+  const panels = Array.from(document.querySelectorAll('.tab-panel'));
+  let tasksInitDone = false;
+
+  const showTab = (id) => {
+    panels.forEach(p => {
+      if (p.id === id) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+    });
+    btns.forEach(b => {
+      const isActive = (b.dataset.tab === id);
+      b.classList.toggle('active', isActive);
+      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(isActive));
+    });
+
+    // Lazy init: Tasks
+    if (id === 'tasks' && !tasksInitDone && window.Tasks?.init) {
+      Tasks.init();
+      tasksInitDone = true;
+    }
+  };
+
+  btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // Sélection initiale basée sur le bouton .active
+  const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
+  if (initial) showTab(initial);
+});
+   /* Attendance cells */
+.cell-present   { background:#e8f5e9; border:1px solid #c8e6c9; height:24px; border-radius:6px; }
+.cell-pto       { background:#fde8e8; border:1px solid #fecaca; height:24px; border-radius:6px; }
+.cell-pto-half  { background:#fff0f0; border:1px dashed #fca5a5; height:24px; border-radius:6px; }
+.warn-flag { display:inline-block; padding:2px 6px; border-radius:999px; background:var(--warn-bg); color:var(--warn); font-size:12px; margin-left:4px; }
+
