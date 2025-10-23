@@ -468,3 +468,18 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 
 #regulation .warn{ color:var(--warn); }
 
+/* Mappe les classes simples vers le style bouton */
+button.primary, a.primary { 
+  padding:8px 12px; border:1px solid var(--border); border-radius:10px;
+  background:var(--btn); color:var(--btn-text); cursor:pointer; 
+  text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
+  height:40px;
+}
+button.secondary, a.secondary {
+  padding:8px 12px; border:1px solid var(--border); border-radius:10px;
+  background:#fff; color:var(--text); cursor:pointer;
+  text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
+  height:40px;
+}
+button.secondary:hover, a.secondary:hover { border-color:var(--btn); }
+
