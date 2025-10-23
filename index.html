@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ROMAN | Resource Optimization & Management Allocation Network</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Helvetica system fallback -->
+  <style>
+    /* Force Helvetica-like stack */
+    html, body { font-family: Helvetica, Arial, sans-serif; }
+  </style>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+  <!-- Header / Tabs -->
+  <header class="app-header">
+    <div class="brand">
+      <h1 class="site-title">ROMAN | Resource Optimization & Management Allocation Network</h1>
+    </div>
+    <nav class="tabs">
+      <!-- IMPORTANT COULEUR DES TABS : voir styles.css (variable --btn / #1E5631) -->
+      <button class="tab-btn active" data-tab="attendance">Attendance</button>
+      <button class="tab-btn" data-tab="weekly">Weekly Planning</button>
+      <button class="tab-btn" data-tab="agents">Agents</button>
+      <button class="tab-btn" data-tab="tasks">Tasks</button>
+      <button class="tab-btn" data-tab="forecast">Forecast</button>
+      <button class="tab-btn" data-tab="regulation">Regulation</button>
+    </nav>
+  </header>
+
+  <!-- Main panels -->
+  <main class="app-main">
+    <section id="attendance" class="tab-panel visible">
+      <div class="panel-card">
+        <h2>Attendance</h2>
+        <p>On mettra ici le bloc Settings + la grille mensuelle. (On code ça aux étapes suivantes.)</p>
+      </div>
+    </section>
+
+    <section id="weekly" class="tab-panel">
+      <div class="panel-card">
+        <h2>Weekly Planning</h2>
+        <p>Planning hebdo par tranches de 30 minutes. (À venir.)</p>
+      </div>
+    </section>
+
+    <section id="agents" class="tab-panel">
+      <div class="panel-card">
+        <h2>Agents</h2>
+        <p>Directory + PTO + Skill matrix. (À venir.)</p>
+      </div>
+    </section>
+
+    <section id="tasks" class="tab-panel">
+      <div class="panel-card">
+        <h2>Tasks</h2>
+        <p>Liste des tâches, priorités et AHT. (À venir.)</p>
+      </div>
+    </section>
+
+    <section id="forecast" class="tab-panel">
+      <div class="panel-card">
+        <h2>Forecast</h2>
+        <p>Base centrale des volumes + répartitions. (À venir.)</p>
+      </div>
+    </section>
+
+    <section id="regulation" class="tab-panel">
+      <div class="panel-card">
+        <h2>Regulation</h2>
+        <p>Règles & lois du travail par région. (À venir.)</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <small>© Roman Inc.</small>
+  </footer>
+
+  <!-- Auth Modal (bloquant tant qu’on n’est pas connecté) -->
+  <div id="auth-modal" class="modal-backdrop visible" aria-hidden="false">
+    <div class="modal">
+      <h3>Sign In</h3>
+      <label class="field">
+        <span>Username (Email)</span>
+        <input id="auth-email" type="email" placeholder="name@company.com" autocomplete="username"/>
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password"/>
+      </label>
+
+      <div class="region-row">
+        <label class="field">
+          <span>Region</span>
+          <select id="auth-region">
+            <option value="EMEA">Europe</option>
+            <option value="US">Americas</option>
+            <option value="CN">Greater China</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="SEAO">Southeast Asia</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="auth-actions">
+        <!-- IMPORTANT COULEUR DES BOUTONS : voir styles.css (variables --btn / --btn-text) -->
+        <button id="login-btn" class="primary">Log in</button>
+        <button id="signup-btn" class="secondary">Sign up</button>
+        <a id="forgot-link" href="#" class="muted">Forgot password</a>
+      </div>
+
+      <p id="auth-error" class="error" role="alert" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="./config.example.js"></script>
+  <script src="./app.js" type="module"></script>
+</body>
+</html>
