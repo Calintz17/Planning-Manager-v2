@@ -24,7 +24,7 @@
       <button class="tab-btn" data-tab="weekly">Weekly Planning</button>
       <button class="tab-btn active" data-tab="agents">Agents</button>
       <button class="tab-btn" data-tab="tasks">Tasks</button>
-      <button class="tab-btn" data-tab="forecast">Forecast</button>
+      <button class="tab-btn" data-tab="forecast-section">Forecast</button>
       <button class="tab-btn" data-tab="regulation">Regulation</button>
     </nav>
   </header>
@@ -203,13 +203,84 @@
 </section>
 
 
-    <!-- FORECAST (placeholder) -->
-    <section id="forecast" class="tab-panel">
-      <div class="panel-card">
-        <h2>Forecast</h2>
-        <p>Base centrale des volumes + répartitions. (À venir.)</p>
+<!-- === FORECAST (Tab Panel) START -->
+<section id="forecast-section" class="tab-panel">
+  <div class="panel-card">
+    <h2>Forecast — Data Editor</h2>
+
+    <div class="forecast-toolbar">
+      <label class="field compact">
+        <span>Region</span>
+        <select id="fc-region">
+          <option value="EMEA">Europe</option>
+          <option value="US">Americas</option>
+          <option value="CN">Greater China</option>
+          <option value="JP">Japan</option>
+          <option value="KR">South Korea</option>
+          <option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+
+      <label class="field compact">
+        <span>Month (context)</span>
+        <input type="month" id="fc-month" />
+      </label>
+
+      <button id="fc-load" class="secondary">Load</button>
+    </div>
+
+    <div class="forecast-section-card">
+      <h3>Totals</h3>
+      <div class="grid-1-3">
+        <label class="field compact">
+          <span>Total yearly volume</span>
+          <input type="number" id="fc-total" min="0" step="1" />
+        </label>
+        <div class="muted">Volume annuel total, toutes tâches confondues.</div>
+        <button id="fc-save-total" class="primary">Save totals</button>
       </div>
-    </section>
+    </div>
+
+    <div class="forecast-section-card">
+      <h3>Monthly shares (sum = 100%)</h3>
+      <div id="fc-monthly" class="forecast-table"></div>
+      <div class="forecast-actions">
+        <span id="fc-monthly-sum" class="muted"></span>
+        <button id="fc-save-monthly" class="primary">Save monthly</button>
+      </div>
+    </div>
+
+    <div class="forecast-section-card">
+      <h3>Weekly shares (1–53) (guide ≈ 100%)</h3>
+      <div id="fc-weekly" class="forecast-table"></div>
+      <div class="forecast-actions">
+        <span id="fc-weekly-sum" class="muted"></span>
+        <button id="fc-save-weekly" class="primary">Save weekly</button>
+      </div>
+    </div>
+
+    <div class="forecast-section-card">
+      <h3>Daily shares & channel mix</h3>
+      <div class="muted">7 lignes (Mon→Sun). “Day %” doit totaliser 100% sur la semaine. Chaque ligne Mail/Call/… doit totaliser 100%.</div>
+      <div id="fc-daily" class="forecast-table"></div>
+      <div class="forecast-actions">
+        <span id="fc-daily-check" class="muted"></span>
+        <button id="fc-save-daily" class="primary">Save daily</button>
+      </div>
+    </div>
+
+    <div class="forecast-section-card">
+      <h3>Hourly shares (0–23) (sum = 100%)</h3>
+      <div id="fc-hourly" class="forecast-table"></div>
+      <div class="forecast-actions">
+        <span id="fc-hourly-sum" class="muted"></span>
+        <button id="fc-save-hourly" class="primary">Save hourly</button>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- === FORECAST (Tab Panel) END -->
+
 
     <!-- REGULATION (placeholder) -->
     <section id="regulation" class="tab-panel">
