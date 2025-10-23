@@ -69,7 +69,7 @@ async function requireAuth() {
     initAttendanceUI();
     initAgentsUI();
     initForecastUI();
-
+    initWeeklyUI();
   }
 }
 
@@ -1272,6 +1272,315 @@ async function initForecastUI(){
 
 // =======================
 // === FORECAST (Module) END
+// =======================
+// =======================
+// === WEEKLY (Module) START
+// =======================
+
+/**
+ * Weekly Planning: timeline 30 min par agent + comparaison demande/capacité
+ * Hypothèses:
+ * - On réutilise tes helpers existants:
+ *   - fetchAgentsWithPTO(region)
+ *   - fetchRegulations(region)
+ *   - computeNetCapacityPerAgentMin(reg)
+ *   - fetchForecastPieces(region, y, m, d)  -> totalVolume, monthlyShare, weeklyShare, dailyShare, dailyTaskPct, tasks
+ *   - sumDemandMinutes(totalVolumeDay, dailyTaskPct, tasks)
+ * - forecast_hourly (hhmm, share_percent) distribue la journée (somme = 100).
+ */
+
+const Weekly = (() => {
+  const $ = (s)=>document.querySelector(s);
+  const els = {
+    region: ()=>$('#wp-region'),
+    week: ()=>$('#wp-week'),
+    dayStart: ()=>$('#wp-day-start'),
+    dayEnd: ()=>$('#wp-day-end'),
+    load: ()=>$('#wp-load'),
+    exportBtn: ()=>$('#wp-export'),
+    grid: ()=>$('#wp-grid'),
+
+    agentsCount: ()=>$('#wp-agents-count'),
+    coverageAvg: ()=>$('#wp-coverage-avg'),
+    understaffed: ()=>$('#wp-understaffed'),
+  };
+
+  // ---- Utils
+  const parseWeekInput = (val) => {
+    // "YYYY-Www" -> date du lundi
+    const [y, w] = val.split('-W').map(x=>parseInt(x,10));
+    return isoWeekToDate(y, w); // retourne le lundi de la semaine ISO
+  };
+
+  function isoWeekToDate(year, week) {
+    // Trouve le jeudi de la semaine 1
+    const simple = new Date(Date.UTC(year, 0, 4));
+    const dayOfWeek = simple.getUTCDay() || 7;
+    const thursday = new Date(simple);
+    thursday.setUTCDate(simple.getUTCDate() + (4 - dayOfWeek));
+    // Lundi de la semaine demandée
+    const monday = new Date(thursday);
+    monday.setUTCDate(thursday.getUTCDate() - 3 + (week - 1) * 7);
+    return monday; // UTC
+  }
+
+  function addDays(date, n){
+    const d = new Date(date); d.setUTCDate(d.getUTCDate()+n); return d;
+  }
+  function ymd(date){ return date.toISOString().slice(0,10); }
+
+  function minutesBetween(hhmmStart, hhmmEnd){
+    const [sh, sm] = hhmmStart.split(':').map(Number);
+    const [eh, em] = hhmmEnd.split(':').map(Number);
+    return (eh*60+em) - (sh*60+sm);
+  }
+
+  function hhmmAdd(hhmm, deltaMin){
+    let [h,m] = hhmm.split(':').map(Number);
+    let total = h*60+m + deltaMin;
+    if (total<0) total=0;
+    const nh = Math.floor(total/60), nm = total%60;
+    return `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;
+  }
+
+  // ---- Forecast hourly (hhmm -> %)
+  async function fetchHourlyShares(region){
+    const { data, error } = await supabase
+      .from('forecast_hourly')
+      .select('hhmm, share_percent')
+      .eq('region', region)
+      .order('hhmm');
+    if (error) throw error;
+    const map = new Map();
+    (data||[]).forEach(r => map.set(r.hhmm, parseFloat(r.share_percent)||0));
+    // Si vide, seed plat 10:00..18:00 (9h -> 18 tranches de 30 min)
+    if (!map.size){
+      for (let h=10; h<=18; h++){
+        map.set(`${String(h).padStart(2,'0')}:00`, +(100/18).toFixed(2));
+        map.set(`${String(h).padStart(2,'0')}:30`, +(100/18).toFixed(2));
+      }
+    }
+    return map; // somme ≈ 100
+  }
+
+  // ---- Build slots grid (Mon..Sun x 30 min)
+  function buildWeekSlots(mondayUTC, dayStart, dayEnd){
+    // Liste des jours (UTC) + slots internes
+    const days = Array.from({length:7}, (_,i)=> addDays(mondayUTC, i));
+    const slots = [];
+    let cursor = dayStart;
+    while (cursor < dayEnd){
+      slots.push(cursor);
+      cursor = hhmmAdd(cursor, 30);
+    }
+    return { days, slots }; // slots = ["09:00","09:30",...]
+  }
+
+  // ---- Demand per slot
+  async function computeDemandPerSlot(region, mondayUTC, dayStart, dayEnd, slots){
+    const demand = {}; // key = YYYY-MM-DD|HH:MM -> minutes
+    const hourly = await fetchHourlyShares(region); // % sur la journée (somme ≈100)
+
+    for (let i=0; i<7; i++){
+      const d = addDays(mondayUTC, i);
+      const dateISO = ymd(d);
+      const y = d.getUTCFullYear(), m = d.getUTCMonth()+1, day = d.getUTCDate();
+
+      // Forecast du jour (déjà utilisé par Attendance)
+      const f = await fetchForecastPieces(region, y, m, day);
+      const totalDay = f.totalVolume * f.monthlyShare * f.weeklyShare * f.dailyShare;
+      const demandMinutesDay = sumDemandMinutes(totalDay, f.dailyTaskPct, f.tasks);
+
+      // Normalise part horaire aux slots visibles (dayStart..dayEnd)
+      const dayKeys = Array.from(hourly.keys()).filter(h=> h>=dayStart && h<dayEnd);
+      const sumVisible = dayKeys.reduce((s,k)=> s+(hourly.get(k)||0), 0) || 1;
+
+      for (const hhmm of slots){
+        if (!dayKeys.includes(hhmm)) continue;
+        const pct = (hourly.get(hhmm)||0) / sumVisible; // part relative dans la fenêtre visible
+        const mins = demandMinutesDay * pct;
+        demand[`${dateISO}|${hhmm}`] = mins;
+      }
+    }
+    return demand; // minutes de travail requis par slot
+  }
+
+  // ---- Capacity per slot
+  async function computeCapacityPerSlot(region, mondayUTC, dayStart, dayEnd, slots){
+    const regs = await fetchRegulations(region);
+    const netCapPerAgentMin = computeNetCapacityPerAgentMin(regs);
+    const workWindowMin = Math.max(30, minutesBetween(dayStart, dayEnd));
+    const perAgentPerMinute = netCapPerAgentMin / workWindowMin; // capacité lissée
+
+    const agents = await fetchAgentsWithPTO(region);
+    const cap = {}; // key = YYYY-MM-DD|HH:MM -> minutes de capacité
+    const presentAgentsByDate = {}; // stats
+
+    for (let i=0; i<7; i++){
+      const d = addDays(mondayUTC, i);
+      const dateISO = ymd(d);
+      const present = agents.filter(a => a.status === "Present" && !agentIsOffThatDate(a, dateISO));
+      presentAgentsByDate[dateISO] = present.length;
+
+      for (const hhmm of slots){
+        const slotMin = 30;
+        const perAgentSlot = perAgentPerMinute * slotMin;
+        cap[`${dateISO}|${hhmm}`] = present.length * perAgentSlot;
+      }
+    }
+
+    return { cap, presentAgentsByDate, perAgentPerMinute };
+  }
+
+  // ---- Render grid
+  function renderGrid(days, slots, demand, cap, agents){
+    const $grid = els.grid();
+    if (!$grid) return;
+
+    // THEAD
+    let thead = `<thead><tr><th class="first-col">Row</th>`;
+    // colonnes par slot avec marqueur d’heure pleine
+    slots.forEach((s, idx)=>{
+      const hourMark = s.endsWith(':00') ? 'hour-marker' : '';
+      thead += `<th class="slot-col ${hourMark}">${s}</th>`;
+    });
+    thead += `</tr></thead>`;
+
+    // TBODY
+    let tbody = '';
+
+    // Ligne 1: Demand vs Capacity (couleurs)
+    for (let i=0; i<7; i++){
+      const dateISO = ymd(addDays(days[0], i));
+      let row = `<tr><td class="first-col">${dateISO} — Demand vs Cap.</td>`;
+      slots.forEach(s=>{
+        const key = `${dateISO}|${s}`;
+        const dmin = demand[key]||0;
+        const cmin = cap[key]||0;
+        const cls = dmin > cmin ? 'gap' : (cmin > dmin ? 'over' : 'present');
+        row += `<td><div class="cell ${cls}" title="Demand ${Math.round(dmin)}m / Cap ${Math.round(cmin)}m"></div></td>`;
+      });
+      row += `</tr>`;
+      tbody += row;
+    }
+
+    // Lignes agents: présence vs PTO
+    agents.forEach(a=>{
+      let row = `<tr><td class="first-col">${a.full_name}</td>`;
+      for (let i=0; i<7; i++){
+        const dateISO = ymd(addDays(days[0], i));
+        const off = agentIsOffThatDate(a, dateISO);
+        const cls = off ? 'pto' : 'present';
+        slots.forEach(s=>{
+          row += `<td><div class="cell ${cls}"></div></td>`;
+        });
+      }
+      row += `</tr>`;
+      tbody += row;
+    });
+
+    $grid.innerHTML = thead + `<tbody>${tbody}</tbody>`;
+  }
+
+  // ---- Summary chips
+  function renderSummaries(days, slots, demand, cap, presentAgentsByDate){
+    // Agents (present) = moyenne jour (ou Lundi)
+    const agentsAvg = Math.round(
+      Object.values(presentAgentsByDate).reduce((a,b)=>a+b,0) / Object.values(presentAgentsByDate).length || 0
+    );
+
+    // Coverage avg & understaffed slots
+    let totalD=0, totalC=0, gaps=0;
+    for (let i=0; i<7; i++){
+      const dateISO = ymd(addDays(days[0], i));
+      slots.forEach(s=>{
+        const key = `${dateISO}|${s}`;
+        const d = demand[key]||0, c = cap[key]||0;
+        totalD += d; totalC += c;
+        if (d > c) gaps++;
+      });
+    }
+    const coverage = totalD>0 ? Math.min(100, Math.round((totalC/totalD)*100)) : 100;
+
+    els.agentsCount().textContent = `${agentsAvg}`;
+    els.coverageAvg().textContent = `${coverage}%`;
+    els.understaffed().textContent = `${gaps}`;
+  }
+
+  // ---- Export CSV
+  function exportCSV(region, days, slots, demand, cap){
+    let csv = `Region,${region}\n`;
+    csv += `Slot,Date,Time,Demand_Min,Capacity_Min\n`;
+    let idx=1;
+    for (let i=0; i<7; i++){
+      const dateISO = ymd(addDays(days[0], i));
+      for (const s of slots){
+        const key = `${dateISO}|${s}`;
+        const d = Math.round(demand[key]||0);
+        const c = Math.round(cap[key]||0);
+        csv += `${idx},${dateISO},${s},${d},${c}\n`;
+        idx++;
+      }
+    }
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `weekly_planning_${region}_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ---- INIT / LOAD
+  async function load(){
+    const region = els.region().value;
+    const weekVal = els.week().value;
+    const dayStart = els.dayStart().value || '09:00';
+    const dayEnd = els.dayEnd().value || '18:00';
+
+    if (!weekVal){ alert('Select an ISO week'); return; }
+    if (minutesBetween(dayStart, dayEnd) < 30){ alert('Day end must be after start by at least 30 min'); return; }
+
+    const monday = parseWeekInput(weekVal); // UTC
+    const { days, slots } = buildWeekSlots(monday, dayStart, dayEnd);
+
+    // Demande et capacité
+    const demand = await computeDemandPerSlot(region, monday, dayStart, dayEnd, slots);
+    const { cap, presentAgentsByDate } = await computeCapacityPerSlot(region, monday, dayStart, dayEnd, slots);
+
+    // Agents (pour les lignes agent)
+    const agents = await fetchAgentsWithPTO(region);
+
+    // Render
+    renderGrid(days, slots, demand, cap, agents);
+    renderSummaries(days, slots, demand, cap, presentAgentsByDate);
+
+    // Hook export
+    els.exportBtn().onclick = ()=> exportCSV(region, days, slots, demand, cap);
+  }
+
+  async function init(){
+    // Defaults
+    els.region().value = await getDefaultRegionFromProfile();
+    // ISO week par défaut = semaine courante
+    const now = new Date();
+    const week = isoWeekNumber(now); // helper existant
+    const y = now.getFullYear();
+    els.week().value = `${y}-W${String(week).padStart(2,'0')}`;
+
+    els.load().addEventListener('click', load);
+  }
+
+  return { init };
+})();
+
+async function initWeeklyUI(){
+  const panel = document.querySelector('#weekly');
+  if (!panel) return;
+  await Weekly.init();
+}
+
+// =======================
+// === WEEKLY (Module) END
 // =======================
 
 /* ---------------- Boot ---------------- */
