@@ -1057,11 +1057,23 @@ const Forecast = (() => {
     });
   }
 
-  async function fetchHourly(region) {
-    const { data } = await supabase.from('forecast_hourly').select('hour, share_percent').eq('region', region).order('hour');
-    const map = new Map((data||[]).map(r=>[r.hour, r.share_percent]));
-    return Array.from({length:24}, (_,h)=> ({ hour:h, pct: map.get(h) ?? (h>=10&&h<=18? clamp2(100/9) : 0) }));
-  }
+async function fetchHourly(region) {
+  const { data, error } = await supabase
+    .from('forecast_hourly')
+    .select('hhmm, share_percent')
+    .eq('region', region)
+    .order('hhmm');
+  if (error) throw error;
+
+  // Agrège 2 créneaux de 30 min -> 1 heure
+  const byHour = new Array(24).fill(0);
+  (data || []).forEach(r => {
+    const h = parseInt(r.hhmm.slice(0,2), 10); // "HH"
+    byHour[h] += parseFloat(r.share_percent) || 0;
+  });
+  return byHour.map((pct, hour) => ({ hour, pct: Math.round(pct * 100) / 100 }));
+}
+
 
   // ---------- RENDER ----------
   function renderMonthly(rows){
@@ -1202,12 +1214,27 @@ const Forecast = (() => {
     alert('Daily saved.');
   }
 
-  async function saveHourly(region){
-    const inputs = els.hourlyWrap().querySelectorAll('input');
-    const rows = Array.from(inputs).map(i=>({ hour: parseInt(i.dataset.h,10), share_percent: clamp2(i.value) }));
-    await supabase.from('forecast_hourly').upsert(rows.map(r=>({ region, ...r })), { onConflict:'region,hour' });
-    alert('Hourly saved.');
-  }
+async function saveHourly(region){
+  // Lis les 24 inputs (0..23) et répartis sur 2 slots HH:00 / HH:30
+  const inputs = els.hourlyWrap().querySelectorAll('input');
+  const rows = [];
+  inputs.forEach(i => {
+    const hour = parseInt(i.dataset.h,10);
+    const pct = Math.round((parseFloat(i.value)||0) * 100) / 100;
+    const half = Math.round((pct / 2) * 100) / 100;
+    const hh = String(hour).padStart(2,'0');
+    rows.push({ region, hhmm: `${hh}:00`, share_percent: half });
+    rows.push({ region, hhmm: `${hh}:30`, share_percent: half });
+  });
+
+  // Upsert par (owner_id, region, hhmm) — owner_id est fixé par trigger DB
+  const { error } = await supabase.from('forecast_hourly').upsert(rows, {
+    onConflict: 'owner_id,region,hhmm'
+  });
+  if (error) throw error;
+  alert('Hourly saved.');
+}
+
 
   // ---------- LOAD ----------
   async function loadAll(){
