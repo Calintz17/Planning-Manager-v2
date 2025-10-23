@@ -36,17 +36,36 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
 
-/* ---------------- Tabs ---------------- */
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabPanels = document.querySelectorAll(".tab-panel");
-tabButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    tabButtons.forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    const target = btn.getAttribute("data-tab");
-    tabPanels.forEach((p) => p.classList.toggle("visible", p.id === target));
-  });
+/* ===== TABS HANDLER (placer TOUT EN HAUT de app.js) ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  const btns = Array.from(document.querySelectorAll('.tab-btn'));
+  const panels = Array.from(document.querySelectorAll('.tab-panel'));
+  let tasksInitDone = false;
+
+  const showTab = (id) => {
+    panels.forEach(p => {
+      if (p.id === id) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+    });
+    btns.forEach(b => {
+      const isActive = (b.dataset.tab === id);
+      b.classList.toggle('active', isActive);
+      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(isActive));
+    });
+
+    // Lazy init: Tasks
+    if (id === 'tasks' && !tasksInitDone && window.Tasks?.init) {
+      Tasks.init();
+      tasksInitDone = true;
+    }
+  };
+
+  btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // Sélection initiale basée sur le bouton .active
+  const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
+  if (initial) showTab(initial);
 });
+
 
 /* ---------------- Auth Modal ---------------- */
 const authModal = document.getElementById("auth-modal");
@@ -984,12 +1003,12 @@ const Tasks = (() => {
   return { init, add, update, remove, setFilter };
 })();
 
-// Boot (si vous avez déjà un router global, appelez Tasks.init() quand la vue Tasks est montée)
+// Boot Tasks : initialise si la section existe au chargement (sécurité)
 document.addEventListener('DOMContentLoaded', () => {
-  // Si la section Tasks existe dans le DOM au chargement, on initialise directement.
-  const hasTasks = document.querySelector('#tasks-section');
+  const hasTasks = document.querySelector('#tasks');
   if (hasTasks) Tasks.init();
 });
+
 
 // =======================
 // === TASKS (Step 3) END
