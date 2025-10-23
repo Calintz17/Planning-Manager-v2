@@ -140,3 +140,68 @@ html, body{
   .tab-btn{ font-size:13px; padding:8px 10px }
   .modal{ padding:16px }
 }
+/* ===== Attendance (Étape 3.1) ===== */
+
+/* SETTINGS */
+.settings-bar{
+  display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;
+}
+.field.compact span{ font-size:12px; color:var(--muted) }
+.field.compact input, .field.compact select{
+  height:36px;
+}
+
+/* ADHERENCE */
+.adherence-wrap{
+  background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:14px;
+}
+.adherence-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
+.adherence-title{ font-weight:600 }
+.adherence-value{ font-variant-numeric:tabular-nums }
+.adherence-bar{
+  width:100%; height:14px; border-radius:10px; background:var(--adherence-bg);
+  overflow:hidden; border:1px solid var(--border);
+}
+.adherence-fill{
+  height:100%; background:var(--adherence-fill);
+  transition:width .3s ease;
+}
+.adherence-notes{ color:var(--muted) }
+
+/* GRID */
+.calendar-wrap{ margin-top:10px }
+.warning-row{ min-height:20px; margin:6px 0; color:var(--danger); font-weight:600 }
+.calendar-scroll{ overflow-x:auto } /* en dernier recours si 31 colonnes; on minimise le besoin */
+.calendar-table{
+  width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed;
+  border:1px solid var(--border); border-radius:12px; overflow:hidden;
+}
+.calendar-table thead th{
+  position:sticky; top:0; background:#fff; z-index:1; border-bottom:1px solid var(--border);
+  padding:6px; font-size:12px;
+}
+.calendar-table th.first-col, .calendar-table td.first-col{
+  position:sticky; left:0; background:#fff; z-index:2; border-right:1px solid var(--border);
+  width:180px; max-width:180px; min-width:180px;
+}
+.calendar-table td, .calendar-table th{
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
+  text-align:center; padding:6px; font-size:12px;
+}
+.calendar-table .day-head{
+  writing-mode:vertical-rl; transform:rotate(180deg); /* texte à 270° équivalent */
+  height:72px; line-height:1; white-space:nowrap;
+}
+.cell-present{ background:#f5fff5 }
+.cell-pto{ background:#ffecec }
+.legend{ display:inline-flex; gap:10px; align-items:center; color:var(--muted); margin-top:6px }
+.legend-box{ display:inline-block; width:12px; height:12px; border:1px solid var(--border) }
+.legend-box.present{ background:#f5fff5 }
+.legend-box.pto{ background:#ffecec }
+
+/* /!\ en haut des colonnes sous-staffées */
+.warn-flag{
+  display:inline-block; color:#fff; background:var(--danger);
+  border-radius:6px; padding:2px 6px; font-size:11px; font-weight:700;
+}
