@@ -1,3 +1,31 @@
+/* ===== TABS HANDLER (placer TOUT EN HAUT de app.js) ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  const btns = Array.from(document.querySelectorAll('.tab-btn'));
+  const panels = Array.from(document.querySelectorAll('.tab-panel'));
+
+  const showTab = (id) => {
+    panels.forEach(p => {
+      if (p.id === id) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+    });
+    btns.forEach(b => {
+      const isActive = (b.dataset.tab === id);
+      b.classList.toggle('active', isActive);
+      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(isActive));
+    });
+  };
+
+  btns.forEach(b => {
+    b.addEventListener('click', () => showTab(b.dataset.tab));
+  });
+
+  // Sélection initiale basée sur le bouton .active au chargement
+  const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
+  if (initial) showTab(initial);
+});
+
+
+
+
 // app.js — Planning Manager V2
 // Auth Supabase + Attendance (v3.2) + Agents (directory, skills, status, PTO, export)
 
@@ -5,6 +33,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
 
 /* ---------------- Tabs ---------------- */
 const tabButtons = document.querySelectorAll(".tab-btn");
