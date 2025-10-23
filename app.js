@@ -614,6 +614,354 @@ async function renderPtoMiniCalendar() {
   html += `</div>`;
   PTO_DRAWER.calendar.innerHTML = html;
 }
+// =======================
+// === TASKS (Step 3) START
+// =======================
+
+/**
+ * Modèle de donnée
+ * Task = {
+ *   id: string,
+ *   title: string,
+ *   status: 'open'|'in_progress'|'done',
+ *   priority: 'low'|'medium'|'high',
+ *   assigneeId: string|null,
+ *   assigneeName: string|null,
+ *   due: 'YYYY-MM-DD'|null,
+ *   tags: string[], // en minuscules
+ *   notes: string|null,
+ *   createdAt: number,
+ *   updatedAt: number
+ * }
+ */
+
+const Tasks = (() => {
+  const STORAGE_KEY = 'app.tasks.v1';
+
+  // ---- State
+  let tasks = [];
+  let filters = {
+    q: '',
+    status: 'all',
+    assignee: 'all',
+    priority: 'all',
+    tags: []
+  };
+
+  // ---- Utils
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const now = () => Date.now();
+
+  const save = () => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch {}
+  };
+  const load = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) tasks = JSON.parse(raw);
+    } catch {}
+  };
+
+  const seedIfEmpty = () => {
+    if (tasks.length) return;
+    tasks = [
+      {
+        id: uid(), title: 'Mettre en place la vue Tasks', status: 'in_progress', priority: 'high',
+        assigneeId: 'u1', assigneeName: 'Roman', due: null, tags:['frontend','repo'], notes:'Wire l’UI et la persistence.',
+        createdAt: now(), updatedAt: now()
+      },
+      {
+        id: uid(), title: 'Écrire la doc README: Tasks', status: 'open', priority: 'medium',
+        assigneeId: 'u2', assigneeName: 'Aline', due: null, tags:['docs'], notes:null,
+        createdAt: now(), updatedAt: now()
+      },
+      {
+        id: uid(), title: 'QA rapide + filtres', status: 'done', priority: 'low',
+        assigneeId: null, assigneeName: null, due: null, tags:['qa'], notes:'Ok sur desktop et 375px.',
+        createdAt: now(), updatedAt: now()
+      }
+    ];
+  };
+
+  // ---- CRUD
+  const add = (payload) => {
+    const t = {
+      id: uid(),
+      title: (payload.title||'').trim(),
+      status: payload.status || 'open',
+      priority: payload.priority || 'medium',
+      assigneeId: payload.assigneeId || null,
+      assigneeName: payload.assigneeName || null,
+      due: payload.due || null,
+      tags: (payload.tags||[]).map(s=>s.toLowerCase()),
+      notes: payload.notes || null,
+      createdAt: now(), updatedAt: now()
+    };
+    tasks.unshift(t);
+    save();
+    return t;
+  };
+
+  const update = (id, patch) => {
+    const i = tasks.findIndex(t=>t.id===id);
+    if (i===-1) return null;
+    tasks[i] = { ...tasks[i], ...patch, updatedAt: now() };
+    save();
+    return tasks[i];
+  };
+
+  const remove = (id) => {
+    tasks = tasks.filter(t=>t.id!==id);
+    save();
+  };
+
+  // ---- Filters
+  const setFilter = (patch) => {
+    filters = { ...filters, ...patch };
+    render();
+  };
+
+  const applyFilters = (list) => {
+    let out = [...list];
+    const q = filters.q.trim().toLowerCase();
+    if (q) {
+      out = out.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        (t.notes||'').toLowerCase().includes(q) ||
+        t.tags.some(tag=>tag.includes(q))
+      );
+    }
+    if (filters.status !== 'all') {
+      const map = { open:'open', in_progress:'in_progress', done:'done' };
+      out = out.filter(t => t.status === map[filters.status]);
+    }
+    if (filters.assignee !== 'all') {
+      out = out.filter(t => (t.assigneeId||'') === filters.assignee);
+    }
+    if (filters.priority !== 'all') {
+      out = out.filter(t => t.priority === filters.priority);
+    }
+    if (filters.tags.length) {
+      out = out.filter(t => filters.tags.every(tag => t.tags.includes(tag)));
+    }
+    return out;
+  };
+
+  // ---- Render
+  const $ = (sel) => document.querySelector(sel);
+
+  const el = {
+    list: () => $('#tasks-list'),
+    search: () => $('#task-search'),
+    filterStatus: () => $('#task-filter-status'),
+    filterAssignee: () => $('#task-filter-assignee'),
+    filterPriority: () => $('#task-filter-priority'),
+    filterTags: () => $('#task-filter-tags'),
+    form: () => $('#task-form'),
+    counts: {
+      all: () => $('#tasks-count-all'),
+      open: () => $('#tasks-count-open'),
+      prog: () => $('#tasks-count-inprogress'),
+      done: () => $('#tasks-count-done'),
+    }
+  };
+
+  const fmtPrio = (p) => ({low:'Faible',medium:'Moyenne',high:'Élevée'})[p]||p;
+  const fmtStatus = (s) => ({open:'Ouverte',in_progress:'En cours',done:'Terminée'})[s]||s;
+
+  const chipClassForPrio = (p) => p === 'high' ? 'prio-high' : p === 'low' ? 'prio-low' : 'prio-med';
+  const chipClassForStatus = (s) => s === 'done' ? 'status-done' : s === 'in_progress' ? 'status-progress' : 'status-open';
+
+  const renderCounts = (list) => {
+    const $all = el.counts.all(); if ($all) $all.textContent = tasks.length;
+    const $o = el.counts.open(); if ($o) $o.textContent = tasks.filter(t=>t.status==='open').length;
+    const $p = el.counts.prog(); if ($p) $p.textContent = tasks.filter(t=>t.status==='in_progress').length;
+    const $d = el.counts.done(); if ($d) $d.textContent = tasks.filter(t=>t.status==='done').length;
+  };
+
+  const render = () => {
+    const $list = el.list();
+    if (!$list) return;
+
+    const filtered = applyFilters(tasks);
+    renderCounts(filtered);
+
+    $list.innerHTML = '';
+    if (!filtered.length) {
+      $list.innerHTML = `<div class="chip">Aucune tâche ne correspond aux filtres</div>`;
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    filtered.forEach(t => {
+      const row = document.createElement('div');
+      row.className = 'task-item';
+      row.innerHTML = `
+        <div class="task-main">
+          <input type="checkbox" ${t.status==='done'?'checked':''} data-action="toggle" data-id="${t.id}" style="margin-top:4px"/>
+          <div>
+            <div class="task-title">${escapeHtml(t.title)}</div>
+            <div class="task-meta">
+              <span class="chip ${chipClassForStatus(t.status)}">${fmtStatus(t.status)}</span>
+              <span class="chip ${chipClassForPrio(t.priority)}">Priorité ${fmtPrio(t.priority)}</span>
+              ${t.assigneeName?`<span class="chip">@${escapeHtml(t.assigneeName)}</span>`:''}
+              ${t.due?`<span class="chip">Échéance ${t.due}</span>`:''}
+              ${t.tags.map(tag=>`<span class="chip">#${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            ${t.notes?`<div class="task-notes">${escapeHtml(t.notes)}</div>`:''}
+          </div>
+        </div>
+        <div class="task-actions">
+          <button data-action="edit" data-id="${t.id}">Éditer</button>
+          <button class="danger" data-action="delete" data-id="${t.id}">Supprimer</button>
+        </div>
+      `;
+      frag.appendChild(row);
+    });
+    $list.appendChild(frag);
+  };
+
+  const escapeHtml = (s) => String(s)
+    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+    .replaceAll('"','&quot;').replaceAll("'","&#039;");
+
+  // ---- Form handling
+  const readForm = ($form) => {
+    const id = $form.querySelector('#task-id')?.value || null;
+    const title = $form.querySelector('#task-title')?.value || '';
+    const assignee = $form.querySelector('#task-assignee')?.value || '';
+    const [assigneeId, assigneeName] = assignee ? assignee.split('::') : [null, null];
+    const due = $form.querySelector('#task-due')?.value || null;
+    const priority = $form.querySelector('#task-priority')?.value || 'medium';
+    const status = $form.querySelector('#task-status')?.value || 'open';
+    const tagsRaw = $form.querySelector('#task-tags')?.value || '';
+    const notes = $form.querySelector('#task-notes')?.value || null;
+
+    const tags = tagsRaw
+      .split(',')
+      .map(s=>s.trim())
+      .filter(Boolean)
+      .map(s=>s.toLowerCase());
+
+    return { id, title, assigneeId, assigneeName, due, priority, status, tags, notes };
+  };
+
+  const fillForm = ($form, t=null) => {
+    const set = (sel, val) => { const n = $form.querySelector(sel); if (n) n.value = val ?? ''; };
+    set('#task-id', t?.id ?? '');
+    set('#task-title', t?.title ?? '');
+    if (t?.assigneeId || t?.assigneeName) set('#task-assignee', `${t.assigneeId||''}::${t.assigneeName||''}`);
+    set('#task-due', t?.due ?? '');
+    set('#task-priority', t?.priority ?? 'medium');
+    set('#task-status', t?.status ?? 'open');
+    set('#task-tags', (t?.tags||[]).join(', '));
+    set('#task-notes', t?.notes ?? '');
+  };
+
+  const clearForm = ($form) => fillForm($form, null);
+
+  const hookForm = () => {
+    const $form = el.form();
+    if (!$form) return;
+
+    // Submit (create/update)
+    $form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const data = readForm($form);
+      if (!data.title.trim()) return;
+
+      if (data.id) {
+        update(data.id, {
+          title:data.title, assigneeId:data.assigneeId, assigneeName:data.assigneeName,
+          due:data.due, priority:data.priority, status:data.status, tags:data.tags, notes:data.notes
+        });
+      } else {
+        add({
+          title:data.title, assigneeId:data.assigneeId, assigneeName:data.assigneeName,
+          due:data.due, priority:data.priority, status:data.status, tags:data.tags, notes:data.notes
+        });
+      }
+      clearForm($form);
+      render();
+    });
+
+    // Reset button (optional)
+    const resetBtn = $form.querySelector('[data-action="reset-form"]');
+    if (resetBtn) resetBtn.addEventListener('click', (e)=>{ e.preventDefault(); clearForm($form); });
+  };
+
+  // ---- List interactions
+  const hookList = () => {
+    const $list = el.list();
+    if (!$list) return;
+
+    $list.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button,[data-action="toggle"]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+
+      if (action==='delete') {
+        remove(id);
+        render();
+      } else if (action==='edit') {
+        const t = tasks.find(t=>t.id===id);
+        const $form = el.form(); if ($form && t) fillForm($form, t);
+      } else if (action==='toggle') {
+        const t = tasks.find(t=>t.id===id);
+        if (!t) return;
+        const next = t.status === 'done' ? 'open' : 'done';
+        update(id, { status: next });
+        render();
+      }
+    });
+  };
+
+  // ---- Toolbar (search + filters)
+  const hookToolbar = () => {
+    const $search = el.search();
+    if ($search) $search.addEventListener('input', (e)=> setFilter({ q: e.target.value }));
+
+    const $fs = el.filterStatus();
+    if ($fs) $fs.addEventListener('change', (e)=> setFilter({ status: e.target.value }));
+
+    const $fa = el.filterAssignee();
+    if ($fa) $fa.addEventListener('change', (e)=> setFilter({ assignee: e.target.value }));
+
+    const $fp = el.filterPriority();
+    if ($fp) $fp.addEventListener('change', (e)=> setFilter({ priority: e.target.value }));
+
+    const $ft = el.filterTags();
+    if ($ft) $ft.addEventListener('change', (e)=> {
+      const val = e.target.value.trim();
+      const tags = val ? val.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean) : [];
+      setFilter({ tags });
+    });
+  };
+
+  // ---- Public API
+  const init = () => {
+    load();
+    seedIfEmpty();
+    hookForm();
+    hookList();
+    hookToolbar();
+    render();
+  };
+
+  return { init, add, update, remove, setFilter };
+})();
+
+// Boot (si vous avez déjà un router global, appelez Tasks.init() quand la vue Tasks est montée)
+document.addEventListener('DOMContentLoaded', () => {
+  // Si la section Tasks existe dans le DOM au chargement, on initialise directement.
+  const hasTasks = document.querySelector('#tasks-section');
+  if (hasTasks) Tasks.init();
+});
+
+// =======================
+// === TASKS (Step 3) END
+// =======================
 
 /* ---------------- Boot ---------------- */
 window.addEventListener("load", requireAuth);
