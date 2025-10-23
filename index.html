@@ -20,9 +20,9 @@
 
     <nav class="tabs">
       <!-- IMPORTANT COULEUR DES TABS : voir styles.css (variable --btn / #1E5631) -->
-      <button class="tab-btn active" data-tab="attendance">Attendance</button>
+      <button class="tab-btn" data-tab="attendance">Attendance</button>
       <button class="tab-btn" data-tab="weekly">Weekly Planning</button>
-      <button class="tab-btn" data-tab="agents">Agents</button>
+      <button class="tab-btn active" data-tab="agents">Agents</button>
       <button class="tab-btn" data-tab="tasks">Tasks</button>
       <button class="tab-btn" data-tab="forecast">Forecast</button>
       <button class="tab-btn" data-tab="regulation">Regulation</button>
@@ -32,7 +32,7 @@
   <!-- Main panels -->
   <main class="app-main">
     <!-- ATTENDANCE (v3.2) -->
-    <section id="attendance" class="tab-panel visible">
+    <section id="attendance" class="tab-panel">
       <div class="panel-card">
         <h2>Attendance</h2>
 
@@ -104,11 +104,54 @@
       </div>
     </section>
 
-    <!-- AGENTS (placeholder) -->
-    <section id="agents" class="tab-panel">
+    <!-- AGENTS (COMPLET) -->
+    <section id="agents" class="tab-panel visible">
       <div class="panel-card">
         <h2>Agents</h2>
-        <p>Directory + PTO + Skill matrix. (À venir.)</p>
+
+        <!-- Directory top bar -->
+        <div class="agents-topbar">
+          <label class="field compact">
+            <span>Region</span>
+            <select id="ag-region">
+              <option value="EMEA">Europe</option>
+              <option value="US">Americas</option>
+              <option value="CN">Greater China</option>
+              <option value="JP">Japan</option>
+              <option value="KR">South Korea</option>
+              <option value="SEAO">Southeast Asia</option>
+            </select>
+          </label>
+
+          <div class="agents-actions">
+            <!-- IMPORTANT COULEURS DES BOUTONS : --btn (#1E5631) / --btn-text (#fff) -->
+            <button id="ag-add" class="primary">Add agent</button>
+            <button id="ag-export" class="secondary">Export CSV</button>
+          </div>
+        </div>
+
+        <!-- Directory table -->
+        <div class="agents-table-wrap">
+          <table id="ag-table" class="agents-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Region</th>
+                <th>Status</th>
+                <th>Call</th>
+                <th>Mail</th>
+                <th>Chat</th>
+                <th>Clienteling</th>
+                <th>Fraud</th>
+                <th>Back Office</th>
+                <th>PTO</th>
+                <th>Calendar</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody><!-- rempli en JS --></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -182,10 +225,64 @@
     </div>
   </div>
 
+  <!-- PTO Drawer (slide-in) -->
+  <aside id="pto-drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-inner">
+      <div class="drawer-head">
+        <h3 id="pto-title">PTO for …</h3>
+        <button id="pto-close" class="ghost">✕</button>
+      </div>
+
+      <div class="drawer-content">
+        <div class="drawer-form">
+          <label class="field compact">
+            <span>Start date</span>
+            <input id="pto-start" type="date"/>
+          </label>
+          <label class="field compact">
+            <span>Start half</span>
+            <select id="pto-half-start">
+              <option value="">Full day</option>
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </label>
+          <label class="field compact">
+            <span>End date</span>
+            <input id="pto-end" type="date"/>
+          </label>
+          <label class="field compact">
+            <span>End half</span>
+            <select id="pto-half-end">
+              <option value="">Full day</option>
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- IMPORTANT COULEUR DU BOUTON : --btn (#1E5631) -->
+        <button id="pto-save" class="primary">Save PTO</button>
+
+        <div class="drawer-section">
+          <h4>Existing PTO</h4>
+          <ul id="pto-list" class="list"></ul>
+        </div>
+
+        <div class="drawer-section">
+          <h4>Mini Calendar</h4>
+          <div id="pto-calendar" class="mini-cal"></div>
+          <small class="legend">
+            <span class="legend-box pto"></span> PTO
+            <span class="legend-box pto-half"></span> Half-day
+          </small>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <!-- JS -->
-  <!-- Utilise BIEN config.js (pas config.example.js) -->
   <script src="./config.js" type="module"></script>
   <script src="./app.js" type="module"></script>
 </body>
 </html>
-
