@@ -20,9 +20,9 @@
 
     <nav class="tabs">
       <!-- IMPORTANT COULEUR DES TABS : voir styles.css (variable --btn / #1E5631) -->
-      <button class="tab-btn" data-tab="attendance">Attendance</button>
+      <button class="tab-btn active" data-tab="attendance">Attendance</button>
       <button class="tab-btn" data-tab="weekly">Weekly Planning</button>
-      <button class="tab-btn active" data-tab="agents">Agents</button>
+      <button class="tab-btn" data-tab="agents">Agents</button>
       <button class="tab-btn" data-tab="tasks">Tasks</button>
       <button class="tab-btn" data-tab="forecast-section">Forecast</button>
       <button class="tab-btn" data-tab="regulation">Regulation</button>
@@ -350,13 +350,192 @@
 <!-- === FORECAST (Tab Panel) END -->
 
 
-    <!-- REGULATION (placeholder) -->
-    <section id="regulation" class="tab-panel">
-      <div class="panel-card">
-        <h2>Regulation</h2>
-        <p>Règles & lois du travail par région. (À venir.)</p>
+<!-- ============ TAB: REGULATION ============ -->
+<section id="regulation" class="tab-panel" role="region" aria-labelledby="tab-regulation" hidden>
+  <div class="container">
+    <header class="section-header">
+      <h2>Regulation & Constraints</h2>
+      <p class="muted">
+        Définis les règles globales de planning et l’application automatique des contraintes.
+      </p>
+    </header>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="left">
+        <label class="switch">
+          <input type="checkbox" id="enforceRegulationsToggle" />
+          <span class="slider"></span>
+        </label>
+        <label for="enforceRegulationsToggle" class="switch-label">Activer l’application automatique des règles</label>
       </div>
-    </section>
+      <div class="right">
+        <button id="addRuleBtn" class="btn primary">Ajouter une règle</button>
+        <button id="validateAllBtn" class="btn">Vérifier tout le planning</button>
+      </div>
+    </div>
+
+    <!-- Résumé rapide -->
+    <div class="cards-grid" id="regulationSummary">
+      <div class="card">
+        <div class="card-title">Règles actives</div>
+        <div class="card-value" id="activeRulesCount">0</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Infractions détectées</div>
+        <div class="card-value warn" id="violationsCount">0</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Dernière vérification</div>
+        <div class="card-value" id="lastValidationAt">–</div>
+      </div>
+    </div>
+
+    <!-- Table des règles -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Liste des règles</h3>
+        <div class="grow"></div>
+        <input id="ruleSearch" type="search" placeholder="Rechercher une règle…" class="input">
+      </div>
+      <div class="table-wrapper">
+        <table class="table" id="regulationTable" aria-describedby="regulation-table-caption">
+          <caption id="regulation-table-caption" class="sr-only">Règles de planning</caption>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Type</th>
+              <th>Paramètres</th>
+              <th>Scope</th>
+              <th>Statut</th>
+              <th style="width:120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="regulationTableBody">
+            <!-- Lignes injectées par app.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panneau d’alertes / violations -->
+    <div class="card" id="violationsPanel" hidden>
+      <div class="card-header">
+        <h3>Infractions détectées</h3>
+        <div class="grow"></div>
+        <button id="exportViolationsBtn" class="btn">Exporter CSV</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="table" id="violationsTable" aria-describedby="violations-table-caption">
+          <caption id="violations-table-caption" class="sr-only">Infractions de règles</caption>
+          <thead>
+            <tr>
+              <th>Règle</th>
+              <th>Agent</th>
+              <th>Date / Shift</th>
+              <th>Détail</th>
+              <th>Gravité</th>
+            </tr>
+          </thead>
+          <tbody id="violationsTableBody">
+            <!-- Lignes injectées par app.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Créer / Éditer une règle -->
+  <dialog id="ruleModal" class="modal">
+    <form method="dialog" class="modal-box" id="ruleForm">
+      <header class="modal-header">
+        <h3 id="ruleModalTitle">Nouvelle règle</h3>
+        <button type="button" class="icon-btn" id="closeRuleModal" aria-label="Fermer">✕</button>
+      </header>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="ruleName">Nom de la règle</label>
+          <input id="ruleName" name="name" type="text" class="input" required placeholder="Ex: Max heures / semaine">
+        </div>
+
+        <div class="form-field">
+          <label for="ruleType">Type</label>
+          <select id="ruleType" name="type" class="input" required>
+            <option value="" disabled selected>Choisir un type…</option>
+            <option value="MAX_HOURS_PER_WEEK">Max heures / semaine</option>
+            <option value="MIN_REST_BETWEEN_SHIFTS">Repos minimum entre shifts (heures)</option>
+            <option value="NO_OVERLAP_SHIFTS">Pas de chevauchement de shifts</option>
+            <option value="NO_PTO_OVERBOOKING">Interdiction de planifier pendant PTO</option>
+            <option value="HOLIDAY_BLACKOUT">Blackout jours fériés</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="ruleParam1" id="ruleParam1Label">Paramètre 1</label>
+          <input id="ruleParam1" name="param1" type="number" class="input" placeholder="Ex: 40">
+        </div>
+
+        <div class="form-field">
+          <label for="ruleParam2" id="ruleParam2Label">Paramètre 2 (optionnel)</label>
+          <input id="ruleParam2" name="param2" type="number" class="input" placeholder="Ex: 11">
+        </div>
+
+        <div class="form-field">
+          <label for="ruleScope">Scope</label>
+          <select id="ruleScope" name="scope" class="input">
+            <option value="GLOBAL" selected>Global</option>
+            <option value="REGION">Par région</option>
+            <option value="AGENT">Par agent</option>
+          </select>
+        </div>
+
+        <div class="form-field" id="scopeTargetField" hidden>
+          <label for="ruleScopeTarget" id="scopeTargetLabel">Cible</label>
+          <input id="ruleScopeTarget" name="scope_target" type="text" class="input" placeholder="Code région (ex: EMEA) ou Agent ID">
+        </div>
+
+        <div class="form-field">
+          <label for="ruleSeverity">Gravité</label>
+          <select id="ruleSeverity" name="severity" class="input" required>
+            <option value="WARN" selected>Avertissement</option>
+            <option value="BLOCK">Bloquant</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="checkbox">
+            <input type="checkbox" id="ruleActive" name="active" checked>
+            Activer cette règle
+          </label>
+        </div>
+      </div>
+
+      <footer class="modal-actions">
+        <button type="submit" class="btn primary" id="saveRuleBtn">Enregistrer</button>
+        <button type="button" class="btn" id="cancelRuleBtn">Annuler</button>
+      </footer>
+
+      <!-- Champs techniques -->
+      <input type="hidden" id="ruleId" name="id" value="">
+    </form>
+  </dialog>
+
+  <!-- Dialog confirmation suppression -->
+  <dialog id="confirmDeleteModal" class="modal">
+    <form method="dialog" class="modal-box">
+      <header class="modal-header">
+        <h3>Supprimer la règle</h3>
+      </header>
+      <p>Confirmer la suppression de cette règle ? Cette action est irréversible.</p>
+      <footer class="modal-actions">
+        <button type="submit" class="btn danger" id="confirmDeleteBtn">Supprimer</button>
+        <button type="button" class="btn" id="cancelDeleteBtn">Annuler</button>
+      </footer>
+    </form>
+  </dialog>
+</section>
+
   </main>
 
   <!-- Footer -->
