@@ -2,10 +2,10 @@
    PALETTE — TU PEUX CHANGER ICI (OPTIONS DE COULEURS)
    ---------------------------------------------------------
    Background (site)        : --bg = #F4E3C1
-   Couleur des boutons/tabs : --btn = #1E5631   (BOUTONS/TABS)
-   Couleur du texte         : --text = #2E2E2E
-   Autre couleur (accent)   : --accent = #1C4966
-   Barre Adherence (fill/bg): --adherence-fill = #1C4966 ; --adherence-bg = #FFF7E0
+   Couleur des boutons/tabs : --btn = #1E5631   (BOUTONS/TABS)  <-- TU PEUX MODIFIER ICI
+   Couleur du texte         : --text = #2E2E2E  <-- TU PEUX MODIFIER ICI
+   Autre couleur (accent)   : --accent = #1C4966 <-- TU PEUX MODIFIER ICI
+   Barre Adherence (fill/bg): --adherence-fill = #1C4966 ; --adherence-bg = #FFF7E0  <-- TU PEUX MODIFIER
    Footer text              : #d6d2d2 (plus bas)
    ======================================================= */
 :root{
@@ -47,7 +47,7 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
   padding:10px 14px;
   border-radius:10px;
   border:1px solid transparent;
-  background:var(--btn);
+  background:var(--btn); /* COULEUR DES TABS/BOUTONS */
   color:var(--btn-text);
   cursor:pointer;
   font-size:14px;
@@ -72,11 +72,34 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
   color:#d6d2d2; text-align:right; /* © Roman Inc. */
 }
 
-/* Modal Auth */
-.modal-backdrop{
-  position:fixed; inset:0; background:rgba(0,0,0,0.3);
-  display:none; align-items:center; justify-content:center; padding:16px;
+/* Buttons (generic) */
+.primary{
+  background:var(--btn); color:var(--btn-text); border:1px solid var(--btn);
+  border-radius:10px; padding:10px 14px; cursor:pointer;
 }
+.secondary{
+  background:#fff; color:var(--btn); border:1px solid var(--btn);
+  border-radius:10px; padding:10px 14px; cursor:pointer;
+}
+.ghost{
+  background:transparent; color:var(--text); border:1px solid var(--border);
+  border-radius:10px; padding:8px 12px; cursor:pointer;
+}
+.mini{
+  padding:6px 10px; border-radius:8px; font-size:12px; cursor:pointer;
+}
+.mini.danger{
+  background:#fff; color:var(--danger); border:1px solid var(--danger);
+}
+
+/* Forms */
+.field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px }
+.field input, .field select{ height:40px; padding:0 12px; border-radius:10px; border:1px solid var(--border); background:#fff; }
+.field.compact span{ font-size:12px; color:var(--muted) }
+.field.compact input, .field.compact select{ height:36px }
+
+/* Modal Auth */
+.modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.3); display:none; align-items:center; justify-content:center; padding:16px; }
 .modal-backdrop.visible{ display:flex }
 .modal{
   width:100%; max-width:420px; background:var(--card);
@@ -84,21 +107,6 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
   box-shadow:0 12px 40px rgba(0,0,0,0.2);
 }
 .modal h3{ margin:0 0 12px 0 }
-.field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px }
-.field input, .field select{
-  height:40px; padding:0 12px; border-radius:10px; border:1px solid var(--border); background:#fff;
-}
-.region-row{ margin-top:4px }
-.auth-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px }
-.auth-actions .primary{
-  background:var(--btn); color:var(--btn-text); border:1px solid var(--btn);
-  border-radius:10px; padding:10px 14px; cursor:pointer;
-}
-.auth-actions .secondary{
-  background:#fff; color:var(--btn); border:1px solid var(--btn);
-  border-radius:10px; padding:10px 14px; cursor:pointer;
-}
-.auth-actions .muted{ color:var(--muted); text-decoration:none; margin-left:auto; font-size:14px }
 .error{ color:var(--danger); min-height:20px; margin-top:8px }
 
 /* Responsive (mobile iPhone 13 ok) */
@@ -108,13 +116,10 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
   .modal{ padding:16px }
 }
 
-/* ===== Attendance (v3.1) ===== */
+/* ===== Attendance ===== */
 .settings-bar{
   display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px;
 }
-.field.compact span{ font-size:12px; color:var(--muted) }
-.field.compact input, .field.compact select{ height:36px }
-
 .adherence-wrap{
   background:#fff; border:1px solid var(--border); border-radius:12px;
   padding:12px; margin-bottom:14px;
@@ -155,7 +160,7 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
 .cell-present{ background:#f5fff5 }
 .cell-pto{ background:#ffecec }
 
-/* ===== Attendance (v3.2 extras) ===== */
+/* v3.2 extras */
 .grid-topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px }
 .legend{ display:inline-flex; gap:10px; align-items:center; color:var(--muted); margin-top:6px }
 .legend-box{ display:inline-block; width:12px; height:12px; border:1px solid var(--border) }
@@ -167,3 +172,51 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
   display:inline-block; color:#fff; background:var(--danger);
   border-radius:6px; padding:2px 6px; font-size:11px; font-weight:700;
 }
+
+/* ===== Agents Directory ===== */
+.agents-topbar{
+  display:flex; gap:12px; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; margin-bottom:14px;
+}
+.agents-actions{ display:flex; gap:8px; align-items:center; }
+
+.agents-table-wrap{ overflow:auto }
+.agents-table{
+  width:100%; border-collapse:separate; border-spacing:0; table-layout:auto;
+  border:1px solid var(--border); border-radius:12px; overflow:hidden;
+}
+.agents-table th, .agents-table td{
+  border-bottom:1px solid var(--border); border-right:1px solid var(--border);
+  text-align:center; padding:8px; font-size:13px; background:#fff;
+}
+.agents-table th:first-child, .agents-table td:first-child{ text-align:left }
+.agents-table td .ag-status{ height:32px; border:1px solid var(--border); border-radius:8px; padding:0 8px }
+.ag-name{ min-width:180px }
+.ag-skill{ width:16px; height:16px }
+
+/* Drawer (PTO) */
+.drawer{
+  position:fixed; top:0; right:-420px; width:420px; height:100vh; transition:right .25s ease;
+  background:#fff; border-left:1px solid var(--border); box-shadow:-8px 0 20px rgba(0,0,0,.08); z-index:50;
+}
+.drawer.open{ right:0 }
+.drawer-inner{ height:100%; display:flex; flex-direction:column }
+.drawer-head{
+  display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border);
+}
+.drawer-content{ padding:12px 16px; overflow:auto }
+.drawer-form{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px }
+.drawer-section{ margin-top:16px }
+.list{ padding-left:18px }
+.list .muted{ color:var(--muted) }
+
+/* Mini calendar */
+.mini-cal{ margin-top:8px }
+.mini-cal-grid{
+  display:grid; grid-template-columns:repeat(7, 1fr); gap:6px;
+}
+.mini-cal-cell{
+  background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px; text-align:center;
+}
+.mini-cal-cell.pto{ background:#ffecec }
+.mini-cal-cell.pto-half{ background:linear-gradient(135deg, #ffecec 50%, #fff 50%) }
+
