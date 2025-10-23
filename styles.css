@@ -219,4 +219,3 @@ html, body{ margin:0; background:var(--bg); color:var(--text) }
 }
 .mini-cal-cell.pto{ background:#ffecec }
 .mini-cal-cell.pto-half{ background:linear-gradient(135deg, #ffecec 50%, #fff 50%) }
-
