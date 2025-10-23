@@ -248,4 +248,124 @@
 /* =======================
    === FORECAST (Style) END
    ======================= */
+/* =======================
+   === WEEKLY (Style) START
+   ======================= */
+
+/* Toolbar (filtres + actions) */
+.wp-toolbar{
+  display:grid;
+  gap:12px;
+  grid-template-columns: repeat(4, minmax(180px, 1fr)) auto;
+  align-items:end;
+  margin-bottom:12px;
+}
+.wp-toolbar .field{
+  display:flex; flex-direction:column; gap:6px; font-size:14px;
+}
+.wp-toolbar input,
+.wp-toolbar select{
+  height:40px;
+  border:1px solid var(--task-border,#e5e7eb);
+  border-radius:10px;
+  padding:8px 10px;
+  background:#fff;
+}
+.wp-actions{ display:flex; gap:10px; justify-content:flex-end; }
+.wp-actions .primary,
+.wp-actions .secondary{
+  height:40px; padding:0 14px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--task-border,#e5e7eb);
+}
+.wp-actions .primary{ background:var(--btn,#1E5631); color:var(--btn-text,#fff); }
+.wp-actions .secondary{ background:#fff; color:#111; }
+
+/* Petits indicateurs de synthèse */
+.wp-summaries{
+  display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;
+}
+.wp-chip{
+  display:flex; align-items:center; gap:8px;
+  background:var(--task-chip,#f3f4f6);
+  border:1px solid var(--task-border,#e5e7eb);
+  border-radius:999px; padding:6px 10px; font-size:13px; color:var(--task-text,#111827);
+}
+.wp-chip .k{ color:var(--task-muted,#6b7280); }
+.wp-chip .v{ font-weight:600; }
+
+/* Grille de timeline */
+.wp-grid-wrap{
+  border:1px solid var(--task-border,#e5e7eb);
+  border-radius:14px;
+  background:#fff;
+  overflow:auto;
+  max-height:65vh;
+}
+.wp-grid{
+  width:max(100%, 980px);
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:13px;
+}
+.wp-grid th,
+.wp-grid td{
+  border-right:1px solid var(--task-border,#e5e7eb);
+  border-bottom:1px solid var(--task-border,#e5e7eb);
+  padding:6px 8px;
+  text-align:center;
+  white-space:nowrap;
+}
+.wp-grid thead th{
+  position:sticky; top:0; z-index:2;
+  background:#fafafa;
+}
+.wp-grid .first-col{
+  position:sticky; left:0; z-index:1;
+  background:#fff;
+  text-align:left;
+  min-width:180px;
+  font-weight:600;
+}
+.wp-grid .day-col{ min-width:64px; }         /* colonne “jour” si utilisée */
+.wp-grid .slot-col{ min-width:44px; }        /* colonnes 30 min */
+.wp-grid .hour-marker{ font-weight:600; }    /* entête d’heure */
+
+.wp-grid tr:nth-child(even) td.first-col{ background:#fcfcfc; }
+
+/* Pastilles d’état dans les cellules */
+.cell{
+  display:flex; align-items:center; justify-content:center;
+  height:24px; border-radius:6px;
+  background:#fff;
+}
+.cell.present{ background:#e8f5e9; border:1px solid #c8e6c9; }      /* vert pâle */
+.cell.pto{ background:#fde8e8; border:1px solid #fecaca; }          /* rouge pâle */
+.cell.gap{ background:#fff7e0; border:1px solid #fde68a; }          /* jaune pâle (manque) */
+.cell.over{ background:#eef2ff; border:1px solid #c7d2fe; }         /* bleu pâle (surcouv.) */
+
+/* Légende (réutilise les styles globaux si présents) */
+.legend{ display:inline-flex; gap:12px; align-items:center; color:var(--task-muted,#6b7280); }
+.legend-box{
+  display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:middle; margin-right:4px;
+  border:1px solid var(--task-border,#e5e7eb);
+}
+.legend-box.present{ background:#e8f5e9; border-color:#c8e6c9; }
+.legend-box.pto{ background:#fde8e8; border-color:#fecaca; }
+.legend-box.gap{ background:#fff7e0; border-color:#fde68a; }
+.legend-box.over{ background:#eef2ff; border-color:#c7d2fe; }
+
+/* Sélection/hover utile pour l’édition à la souris (optionnel) */
+.wp-grid td:hover .cell{ box-shadow:0 0 0 2px rgba(0,0,0,0.06) inset; }
+
+/* Responsive */
+@media (max-width: 900px){
+  .wp-toolbar{ grid-template-columns: 1fr 1fr; }
+  .wp-grid-wrap{ max-height:60vh; }
+  .wp-grid .first-col{ min-width:150px; }
+  .wp-grid .slot-col{ min-width:40px; }
+}
+
+/* =======================
+   === WEEKLY (Style) END
+   ======================= */
 
