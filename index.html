@@ -155,13 +155,53 @@
       </div>
     </section>
 
-    <!-- TASKS (placeholder) -->
-    <section id="tasks" class="tab-panel">
-      <div class="panel-card">
-        <h2>Tasks</h2>
-        <p>Liste des tâches, priorités et AHT. (À venir.)</p>
-      </div>
-    </section>
+<!-- TASKS (v1) -->
+<section id="tasks" class="tab-panel">
+  <div class="panel-card">
+    <h2>Tasks</h2>
+
+    <!-- SETTINGS -->
+    <div class="settings-bar">
+      <label class="field compact">
+        <span>Region</span>
+        <select id="tasks-region">
+          <option value="EMEA">Europe</option>
+          <option value="US">Americas</option>
+          <option value="CN">Greater China</option>
+          <option value="JP">Japan</option>
+          <option value="KR">South Korea</option>
+          <option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+
+      <!-- IMPORTANT COULEURS DES BOUTONS : var(--btn / #1E5631) -->
+      <button id="tasks-reset" class="secondary">Reset to default</button>
+      <button id="tasks-export" class="primary">Export CSV</button>
+    </div>
+
+    <!-- TABLEAU DES TASKS -->
+    <div class="tasks-table-wrap">
+      <table id="tasks-table" class="tasks-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Priority</th>
+            <th>Avg Handle Time (min)</th>
+            <th>Enabled</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- rempli dynamiquement par app.js -->
+        </tbody>
+      </table>
+    </div>
+
+    <small class="legend">
+      Each task is region-specific. Changes are saved automatically.
+    </small>
+  </div>
+</section>
+
 
     <!-- FORECAST (placeholder) -->
     <section id="forecast" class="tab-panel">
