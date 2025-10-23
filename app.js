@@ -617,4 +617,3 @@ async function renderPtoMiniCalendar() {
 
 /* ---------------- Boot ---------------- */
 window.addEventListener("load", requireAuth);
-
