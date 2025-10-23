@@ -137,3 +137,115 @@
 @media (max-width:900px){ #task-form .row{ grid-template-columns:1fr; } }
 
 #task-form in
+
+/* =======================
+   === FORECAST (Style) START
+   ======================= */
+
+/* Barre d’outils en haut du panneau Forecast */
+.forecast-toolbar{
+  display:grid;
+  gap:12px;
+  grid-template-columns: repeat(3, minmax(220px, 1fr)) auto;
+  align-items:end;
+  margin-bottom:12px;
+}
+.forecast-toolbar label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:14px;
+}
+.forecast-toolbar select,
+.forecast-toolbar input{
+  height:40px;
+  border:1px solid var(--task-border,#e5e7eb);
+  border-radius:10px;
+  padding:8px 10px;
+  background:#fff;
+}
+
+/* Cartes internes (à l’intérieur de .panel-card du layout global) */
+.forecast-section-card{
+  background:#fff;
+  border:1px solid var(--task-border,#e5e7eb);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:12px;
+}
+.forecast-section-card h3{
+  margin:0 0 8px;
+}
+
+/* Petites aides de style réutilisables */
+.muted{
+  color:var(--task-muted,#6b7280);
+  font-size:13px;
+}
+.grid-1-3{
+  display:grid;
+  gap:10px;
+  grid-template-columns: 1fr auto auto;
+  align-items:end;
+}
+.grid-1-3 input{
+  width:100%;
+}
+
+/* Tableaux éditables (monthly/weekly/daily/hourly) */
+.forecast-table{
+  overflow-x:auto;
+}
+.forecast-table table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+.forecast-table th,
+.forecast-table td{
+  border:1px solid var(--task-border,#e5e7eb);
+  padding:8px;
+  text-align:center;
+  white-space:nowrap;
+}
+.forecast-table input{
+  width:90px;
+  height:36px;
+  border:1px solid var(--task-border,#e5e7eb);
+  border-radius:8px;
+  padding:4px 6px;
+  text-align:right;
+}
+.forecast-table .bad{
+  outline:2px solid #ef4444; /* met en évidence une somme incorrecte */
+}
+
+/* Ligne d’actions (texte à gauche, bouton à droite) */
+.forecast-actions{
+  margin-top:8px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+}
+.forecast-actions button{
+  height:36px;
+  padding:0 12px;
+  border:1px solid var(--task-border,#e5e7eb);
+  border-radius:10px;
+  background:#111;
+  color:#fff;
+  cursor:pointer;
+}
+
+/* Responsive: réduit les colonnes de la toolbar sur petits écrans */
+@media (max-width: 900px){
+  .forecast-toolbar{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =======================
+   === FORECAST (Style) END
+   ======================= */
+
