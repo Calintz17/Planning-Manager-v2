@@ -68,6 +68,8 @@ async function requireAuth() {
     // init tabs default region
     initAttendanceUI();
     initAgentsUI();
+    initForecastUI();
+
   }
 }
 
@@ -961,6 +963,288 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // =======================
 // === TASKS (Step 3) END
+// =======================
+
+// =======================
+// === FORECAST (Module) START
+// =======================
+
+/**
+ * Tables utilisées :
+ * - forecast_totals: { region, total_volume }
+ * - forecast_monthly: { region, month_index (1..12), share_percent }
+ * - forecast_weekly: { region, week_index (1..53), share_percent }
+ * - forecast_daily: { region, weekday (1..7 Mon..Sun), share_percent,
+ *                     email_pct, call_pct, chat_pct, clienteling_pct, fraud_pct, admin_pct }
+ * - forecast_hourly: { region, hour (0..23), share_percent }
+ */
+
+const Forecast = (() => {
+  const $ = (s) => document.querySelector(s);
+  const els = {
+    region: () => $('#fc-region'),
+    month:  () => $('#fc-month'),
+    load:   () => $('#fc-load'),
+    total:  () => $('#fc-total'),
+    saveTotal: () => $('#fc-save-total'),
+    monthlyWrap: () => $('#fc-monthly'),
+    monthlySum:  () => $('#fc-monthly-sum'),
+    saveMonthly: () => $('#fc-save-monthly'),
+    weeklyWrap: () => $('#fc-weekly'),
+    weeklySum:  () => $('#fc-weekly-sum'),
+    saveWeekly: () => $('#fc-save-weekly'),
+    dailyWrap: () => $('#fc-daily'),
+    dailyCheck:() => $('#fc-daily-check'),
+    saveDaily: () => $('#fc-save-daily'),
+    hourlyWrap: () => $('#fc-hourly'),
+    hourlySum:  () => $('#fc-hourly-sum'),
+    saveHourly: () => $('#fc-save-hourly'),
+  };
+
+  const sum = (arr) => arr.reduce((a,b)=>a+(parseFloat(b)||0), 0);
+  const clamp2 = (n) => Math.round((parseFloat(n)||0) * 100) / 100;
+
+  async function getDefaultRegion() {
+    const local = localStorage.getItem("pmv2_default_region");
+    if (local) return local;
+    const { data } = await supabase.from("profiles").select("default_region").maybeSingle();
+    return data?.default_region || "EMEA";
+  }
+
+  // ---------- FETCH ----------
+  async function fetchTotals(region) {
+    const { data } = await supabase.from('forecast_totals').select('total_volume').eq('region', region).maybeSingle();
+    return data?.total_volume ?? 0;
+  }
+
+  async function fetchMonthly(region) {
+    const { data } = await supabase.from('forecast_monthly').select('month_index, share_percent').eq('region', region).order('month_index');
+    const map = new Map((data||[]).map(r => [r.month_index, r.share_percent]));
+    return Array.from({length:12}, (_,i)=> ({ month:i+1, pct: map.get(i+1) ?? clamp2(100/12) }));
+  }
+
+  async function fetchWeekly(region) {
+    const { data } = await supabase.from('forecast_weekly').select('week_index, share_percent').eq('region', region).order('week_index');
+    const map = new Map((data||[]).map(r => [r.week_index, r.share_percent]));
+    return Array.from({length:53}, (_,i)=> ({ week:i+1, pct: map.get(i+1) ?? clamp2(100/52) }));
+  }
+
+  async function fetchDaily(region) {
+    const { data } = await supabase
+      .from('forecast_daily')
+      .select('weekday, share_percent, email_pct, call_pct, chat_pct, clienteling_pct, fraud_pct, admin_pct')
+      .eq('region', region)
+      .order('weekday');
+
+    const defaults = [
+      { weekday:1, name:'Mon' }, { weekday:2, name:'Tue' }, { weekday:3, name:'Wed' },
+      { weekday:4, name:'Thu' }, { weekday:5, name:'Fri' }, { weekday:6, name:'Sat' }, { weekday:7, name:'Sun' },
+    ];
+    const byWd = {}; (data||[]).forEach(r => byWd[r.weekday] = r);
+
+    return defaults.map(d => {
+      const r = byWd[d.weekday] || {};
+      return {
+        weekday:d.weekday, name:d.name,
+        share: r.share_percent ?? clamp2(100/7),
+        email: r.email_pct ?? 38,
+        call: r.call_pct ?? 36,
+        chat: r.chat_pct ?? 0,
+        clienteling: r.clienteling_pct ?? 3,
+        fraud: r.fraud_pct ?? 0,
+        admin: r.admin_pct ?? 26
+      };
+    });
+  }
+
+  async function fetchHourly(region) {
+    const { data } = await supabase.from('forecast_hourly').select('hour, share_percent').eq('region', region).order('hour');
+    const map = new Map((data||[]).map(r=>[r.hour, r.share_percent]));
+    return Array.from({length:24}, (_,h)=> ({ hour:h, pct: map.get(h) ?? (h>=10&&h<=18? clamp2(100/9) : 0) }));
+  }
+
+  // ---------- RENDER ----------
+  function renderMonthly(rows){
+    const wrap = els.monthlyWrap();
+    const head = `<thead><tr><th>Month</th>${rows.map(r=>`<th>${r.month}</th>`).join('')}</tr></thead>`;
+    const row = `<tr><td>%</td>${rows.map(r=>`<td><input type="number" step="0.01" min="0" data-m="${r.month}" value="${r.pct}"/></td>`).join('')}</tr>`;
+    wrap.innerHTML = `<table>${head}<tbody>${row}</tbody></table>`;
+    updateMonthlySum();
+    wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateMonthlySum));
+  }
+
+  function updateMonthlySum(){
+    const wrap = els.monthlyWrap();
+    const vals = Array.from(wrap.querySelectorAll('input')).map(i=>parseFloat(i.value)||0);
+    const s = clamp2(sum(vals));
+    els.monthlySum().textContent = `Sum = ${s}% ${s===100?'(OK)':'(should be 100%)'}`;
+    wrap.querySelectorAll('input').forEach(i => i.classList.toggle('bad', s!==100));
+  }
+
+  function renderWeekly(rows){
+    const wrap = els.weeklyWrap();
+    const chunk = (arr,n)=> arr.reduce((a,_,i)=> (i%n? a[a.length-1].push(arr[i]) : a.push([arr[i]]), a), []);
+    const groups = chunk(rows, 13);
+    let html = '<table>';
+    groups.forEach((g,idx)=>{
+      html += `<thead><tr><th>Week ${idx*13+1}..${idx*13+g.length}</th>${g.map(r=>`<th>${r.week}</th>`).join('')}</tr></thead>`;
+      html += `<tbody><tr><td>%</td>${g.map(r=>`<td><input type="number" step="0.01" min="0" data-w="${r.week}" value="${r.pct}"/></td>`).join('')}</tr></tbody>`;
+    });
+    html += '</table>';
+    wrap.innerHTML = html;
+    updateWeeklySum();
+    wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateWeeklySum));
+  }
+
+  function updateWeeklySum(){
+    const wrap = els.weeklyWrap();
+    const vals = Array.from(wrap.querySelectorAll('input')).map(i=>parseFloat(i.value)||0);
+    const s = clamp2(sum(vals));
+    els.weeklySum().textContent = `Sum ≈ ${s}% (guide ~100%)`;
+  }
+
+  function renderDaily(rows){
+    const wrap = els.dailyWrap();
+    const head = `<thead>
+      <tr>
+        <th>Day</th><th>Day %</th>
+        <th>Mail %</th><th>Call %</th><th>Chat %</th>
+        <th>Clienteling %</th><th>Fraud %</th><th>Back Office %</th>
+      </tr>
+    </thead>`;
+    const body = rows.map(r=>`
+      <tr data-wd="${r.weekday}">
+        <td>${r.name}</td>
+        <td><input type="number" step="0.01" class="fc-d-share" value="${r.share}"/></td>
+        <td><input type="number" step="0.01" class="fc-d-mail" value="${r.email}"/></td>
+        <td><input type="number" step="0.01" class="fc-d-call" value="${r.call}"/></td>
+        <td><input type="number" step="0.01" class="fc-d-chat" value="${r.chat}"/></td>
+        <td><input type="number" step="0.01" class="fc-d-clienteling" value="${r.clienteling}"/></td>
+        <td><input type="number" step="0.01" class="fc-d-fraud" value="${r.fraud}"/></td>
+        <td><input type="number" step="0.01" class="fc-d-admin" value="${r.admin}"/></td>
+      </tr>`).join('');
+    wrap.innerHTML = `<table>${head}<tbody>${body}</tbody></table>`;
+    updateDailyChecks();
+    wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateDailyChecks));
+  }
+
+  function updateDailyChecks(){
+    const wrap = els.dailyWrap();
+    const dayShare = Array.from(wrap.querySelectorAll('.fc-d-share')).map(i=>parseFloat(i.value)||0);
+    const daySum = clamp2(sum(dayShare));
+    let allOk = true;
+    wrap.querySelectorAll('tbody tr').forEach(tr=>{
+      const vals = ['.fc-d-mail','.fc-d-call','.fc-d-chat','.fc-d-clienteling','.fc-d-fraud','.fc-d-admin']
+        .map(sel=>parseFloat(tr.querySelector(sel).value)||0);
+      const s = clamp2(sum(vals));
+      const bad = s!==100;
+      ['.fc-d-mail','.fc-d-call','.fc-d-chat','.fc-d-clienteling','.fc-d-fraud','.fc-d-admin']
+        .forEach(sel=>tr.querySelector(sel).classList.toggle('bad', bad));
+      if (bad) allOk = false;
+    });
+    els.dailyCheck().textContent = `Day% sum = ${daySum}% ${daySum===100?'(OK)':'(should be 100%)'} | Channels per day ${allOk?'(OK)':'(check rows)'}`;
+  }
+
+  function renderHourly(rows){
+    const wrap = els.hourlyWrap();
+    const head = `<thead><tr><th>Hour</th>${rows.map(r=>`<th>${r.hour}</th>`).join('')}</tr></thead>`;
+    const row = `<tr><td>%</td>${rows.map(r=>`<td><input type="number" step="0.01" min="0" data-h="${r.hour}" value="${r.pct}"/></td>`).join('')}</tr>`;
+    wrap.innerHTML = `<table>${head}<tbody>${row}</tbody></table>`;
+    updateHourlySum();
+    wrap.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateHourlySum));
+  }
+
+  function updateHourlySum(){
+    const wrap = els.hourlyWrap();
+    const vals = Array.from(wrap.querySelectorAll('input')).map(i=>parseFloat(i.value)||0);
+    const s = clamp2(sum(vals));
+    els.hourlySum().textContent = `Sum = ${s}% ${s===100?'(OK)':'(should be 100%)'}`;
+    wrap.querySelectorAll('input').forEach(i => i.classList.toggle('bad', s!==100));
+  }
+
+  // ---------- SAVE ----------
+  async function saveTotals(region){
+    const total = parseInt(els.total().value||'0',10);
+    await supabase.from('forecast_totals').upsert({ region, total_volume: total }, { onConflict:'region' });
+    alert('Totals saved.');
+  }
+
+  async function saveMonthly(region){
+    const inputs = els.monthlyWrap().querySelectorAll('input');
+    const rows = Array.from(inputs).map(i=>({ month_index: parseInt(i.dataset.m,10), share_percent: clamp2(i.value) }));
+    await supabase.from('forecast_monthly').upsert(rows.map(r=>({ region, ...r })), { onConflict:'region,month_index' });
+    alert('Monthly saved.');
+  }
+
+  async function saveWeekly(region){
+    const inputs = els.weeklyWrap().querySelectorAll('input');
+    const rows = Array.from(inputs).map(i=>({ week_index: parseInt(i.dataset.w,10), share_percent: clamp2(i.value) }));
+    await supabase.from('forecast_weekly').upsert(rows.map(r=>({ region, ...r })), { onConflict:'region,week_index' });
+    alert('Weekly saved.');
+  }
+
+  async function saveDaily(region){
+    const trs = els.dailyWrap().querySelectorAll('tbody tr');
+    const rows = Array.from(trs).map(tr=>{
+      const get = sel=>clamp2(tr.querySelector(sel).value);
+      return {
+        weekday: parseInt(tr.dataset.wd,10),
+        share_percent: get('.fc-d-share'),
+        email_pct: get('.fc-d-mail'),
+        call_pct: get('.fc-d-call'),
+        chat_pct: get('.fc-d-chat'),
+        clienteling_pct: get('.fc-d-clienteling'),
+        fraud_pct: get('.fc-d-fraud'),
+        admin_pct: get('.fc-d-admin'),
+      };
+    });
+    await supabase.from('forecast_daily').upsert(rows.map(r=>({ region, ...r })), { onConflict:'region,weekday' });
+    alert('Daily saved.');
+  }
+
+  async function saveHourly(region){
+    const inputs = els.hourlyWrap().querySelectorAll('input');
+    const rows = Array.from(inputs).map(i=>({ hour: parseInt(i.dataset.h,10), share_percent: clamp2(i.value) }));
+    await supabase.from('forecast_hourly').upsert(rows.map(r=>({ region, ...r })), { onConflict:'region,hour' });
+    alert('Hourly saved.');
+  }
+
+  // ---------- LOAD ----------
+  async function loadAll(){
+    const region = els.region().value;
+    els.total().value = await fetchTotals(region);
+    renderMonthly(await fetchMonthly(region));
+    renderWeekly(await fetchWeekly(region));
+    renderDaily(await fetchDaily(region));
+    renderHourly(await fetchHourly(region));
+  }
+
+  // ---------- INIT ----------
+  async function init(){
+    els.month().value = new Date().toISOString().slice(0,7);
+    els.region().value = await getDefaultRegion();
+
+    els.load().addEventListener('click', loadAll);
+    els.saveTotal().addEventListener('click', ()=>saveTotals(els.region().value));
+    els.saveMonthly().addEventListener('click', ()=>saveMonthly(els.region().value));
+    els.saveWeekly().addEventListener('click', ()=>saveWeekly(els.region().value));
+    els.saveDaily().addEventListener('click', ()=>saveDaily(els.region().value));
+    els.saveHourly().addEventListener('click', ()=>saveHourly(els.region().value));
+
+    await loadAll();
+  }
+
+  return { init };
+})();
+
+async function initForecastUI(){
+  const hasPanel = document.querySelector('#forecast-section');
+  if (!hasPanel) return;
+  await Forecast.init();
+}
+
+// =======================
+// === FORECAST (Module) END
 // =======================
 
 /* ---------------- Boot ---------------- */
