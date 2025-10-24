@@ -227,64 +227,53 @@
 
 <!-- TASKS (v1) -->
 <section id="tasks" class="tab-panel" hidden>
-   <div class="tasks" id="tasksPanel">
+<div class="tasks" id="tasksPanel">
     <!-- Toolbar -->
     <div class="toolbar">
       <input id="task-search" type="search" placeholder="Search tasks..." />
-      <select id="task-filter-priority">
-        <option value="">All priorities</option>
-        <option value="low">Low</option>
-        <option value="med">Medium</option>
-        <option value="high">High</option>
-      </select>
-      <select id="task-filter-status">
-        <option value="">All status</option>
-        <option value="open">Open</option>
-        <option value="progress">In progress</option>
-        <option value="done">Done</option>
-      </select>
-      <select id="task-filter-owner">
-        <option value="">All owners</option>
+
+      <!-- NOUVEAU : filtre Région (détermine les lignes affichées et persistées) -->
+      <select id="task-region" title="Region">
+        <option value="EMEA">Europe</option>
+        <option value="US">Americas</option>
+        <option value="CN">Greater China</option>
+        <option value="JP">Japan</option>
+        <option value="KR">South Korea</option>
+        <option value="SEAO">Southeast Asia</option>
       </select>
 
-      <!-- Bouton demandé -->
+      <!-- Remplace 'All owners' par 'All priorities' (garde utile) -->
+      <select id="task-filter-priority" title="Priority filter">
+        <option value="">All priorities</option>
+        <option value="high">High (P1)</option>
+        <option value="med">Medium (P2)</option>
+        <option value="low">Low (P3)</option>
+      </select>
+
+      <!-- Bouton pour ajouter une tâche personnalisée -->
       <button id="createTaskBtn" class="btn primary" type="button">Create task</button>
     </div>
 
-    <!-- Compteurs -->
-    <div class="counters" id="task-counters">
-      <!-- rempli en JS -->
+    <!-- Tableau des tâches (par région) -->
+    <div class="table-wrapper">
+      <table class="table" id="tasksTable" aria-describedby="tasks-table-caption">
+        <caption id="tasks-table-caption" class="sr-only">Regional task configuration</caption>
+        <thead>
+          <tr>
+            <th style="min-width:180px">Task</th>
+            <th style="width:140px">Priority</th>
+            <th style="width:190px">Avg Handle Time (min)</th>
+            <th style="width:120px">Enabled</th>
+            <th>Notes</th>
+            <th style="width:84px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tasksTbody"><!-- lignes injectées par app.js --></tbody>
+      </table>
     </div>
 
-    <!-- Liste -->
-    <div class="task-list" id="task-list">
-      <!-- items injectés en JS -->
-    </div>
-
-    <!-- Formulaire (caché par défaut, affiché quand Create task) -->
-    <form id="task-form" hidden>
-      <div class="row">
-        <input type="text" id="tf-title" placeholder="Task title" required />
-        <select id="tf-owner"></select>
-      </div>
-      <div class="row">
-        <select id="tf-priority" required>
-          <option value="low">Low (P3)</option>
-          <option value="med">Medium (P2)</option>
-          <option value="high">High (P1)</option>
-        </select>
-        <select id="tf-status" required>
-          <option value="open">Open</option>
-          <option value="progress">In progress</option>
-          <option value="done">Done</option>
-        </select>
-      </div>
-      <textarea id="tf-notes" rows="3" placeholder="Notes (optional)"></textarea>
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
-        <button type="button" id="tf-cancel" class="btn">Cancel</button>
-        <button type="submit" class="btn primary">Save task</button>
-      </div>
-    </form>
+    <!-- Compteurs (optionnel) -->
+    <div class="counters" id="task-counters"></div>
   </div>
 </section>
 
