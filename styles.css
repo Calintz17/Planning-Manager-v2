@@ -1,13 +1,12 @@
 /* ======================================================================
    ROMAN — Global UI styles (cleaned & harmonized)
-   Replace your styles.css with this complete file
    ====================================================================== */
 
 /* ---------- CSS Variables (palette unifiée) ---------- */
 :root{
   /* Base theme */
   --bg:#ffffff;
-  --card:#FFF7E0;
+  --card:#FFF7E0;          /* demandé et utilisé partout pour les cards */
   --text:#111827;
   --muted:#6b7280;
   --border:#e5e7eb;
@@ -24,7 +23,7 @@
   --err:#dc2626;
   --err-bg:#fef2f2;
 
-  /* Tasks local tokens (réutilisés ailleurs si utile) */
+  /* Tasks local tokens */
   --task-bg:#ffffff;
   --task-border:#e5e7eb;
   --task-muted:#6b7280;
@@ -64,22 +63,51 @@ section{ margin:24px 0; }
 /* Screen container */
 .container{ max-width:1200px; margin:0 auto; padding:16px; }
 
-/* ---------- Tabs ---------- */
-.tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 20px; }
+/* ---------- Site title (centré) ---------- */
+.site-title{
+  text-align:center;
+  margin: 8px 0 4px;
+  line-height:1.2;
+}
+.site-title .brand{
+  font-weight: 800;           /* ROMAN en gras */
+  font-size: clamp(20px, 3.2vw, 28px);
+  display:block;
+}
+.site-title .tagline{
+  font-style: italic;         /* sous-titre en italique */
+  color: var(--muted);
+  font-size: clamp(12px, 2vw, 14px);
+  display:block;
+  margin-top: 2px;
+}
+
+/* ---------- Tabs (centrés) ---------- */
+.tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:12px 0 20px;
+  justify-content:center;     /* centre la barre d’onglets */
+}
 .tab-btn{
   padding:8px 12px;
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:10px;         /* léger arrondi, pas “pill” */
   background:#fff;
   color:var(--text);
   cursor:pointer;
+  font-weight:600;
 }
 .tab-btn:hover{ border-color:var(--btn); }
 .tab-btn.active{
-  background:var(--btn);
-  color:var(--btn-text);
-  border-color:var(--btn);
+  background:var(--card);     /* cohérent avec la charte */
+  color:#111;
+  border-color:#f1d49a;
 }
+
+/* Le contenu des onglets doit rester aligné à gauche pour la lisibilité */
+.tab-panel{ text-align:left; }
 
 /* ---------- Inputs / Buttons (base) ---------- */
 input, select, button, textarea{ font:inherit; color:inherit; }
@@ -100,13 +128,14 @@ input[type="date"], input[type="time"], select{ min-height:36px; }
   background:#fff;
   color:var(--text);
   cursor:pointer;
+  font-weight:600;
 }
 .btn:hover{ border-color:var(--btn); }
 .btn.primary{ background:var(--btn); color:var(--btn-text); border-color:var(--btn); }
 .btn.danger{ background:var(--err); color:#fff; border-color:var(--err); }
 .muted{ color:var(--muted); font-size:13px; }
 
-/* ---------- Tables (base) ---------- */
+/* ---------- Tables (base, sobres) ---------- */
 .table-wrapper{ overflow:auto; border:1px solid var(--border); border-radius:10px; background:#fff; }
 table{ width:100%; border-collapse:collapse; }
 th, td{ padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; }
@@ -119,10 +148,9 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 }
 
 /* ======================================================================
-   TASKS (Step 2) — cleaned
+   TASKS — Styles
    ====================================================================== */
 .tasks{ display:grid; gap:16px; }
-
 .tasks .toolbar{
   display:grid;
   grid-template-columns: 1fr repeat(4, minmax(140px, 0.3fr));
@@ -131,13 +159,11 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 @media (max-width:900px){
   .tasks .toolbar{ grid-template-columns:1fr 1fr; }
 }
-
 #task-search, .tasks select{
   width:100%; height:40px;
   border:1px solid var(--task-border); border-radius:10px;
   padding:8px 12px; background:#fff; color:var(--task-text);
 }
-
 .tasks .counters{ display:flex; flex-wrap:wrap; gap:8px; }
 .tasks .counter{
   font-size:12px; color:var(--task-muted);
@@ -145,20 +171,15 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
   border:1px solid var(--task-border);
   padding:6px 10px; border-radius:999px;
 }
-
 .task-list{ display:grid; gap:10px; }
-
 .task-item{
   display:grid; grid-template-columns:1fr auto; gap:8px;
   background:var(--task-bg); border:1px solid var(--task-border);
   border-radius:14px; padding:12px;
 }
-
 .task-main{ display:flex; gap:10px; align-items:flex-start; }
 .task-title{ font-weight:600; color:var(--task-text); }
-
 .task-meta{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
-
 .chip{
   font-size:12px; line-height:1;
   padding:6px 8px; border-radius:999px;
@@ -171,24 +192,19 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 .chip.status-open{ background:var(--status-open); color:var(--status-open-text); border-color:transparent; }
 .chip.status-progress{ background:var(--status-progress); color:var(--status-progress-text); border-color:transparent; }
 .chip.status-done{ background:var(--status-done); color:var(--status-done-text); border-color:transparent; }
-
 .task-actions{ display:flex; gap:8px; align-items:center; }
 .task-actions button{
   height:34px; padding:0 10px; border-radius:10px;
   border:1px solid var(--task-border); background:#fff; cursor:pointer;
 }
 .task-actions .danger{ border-color:#fecaca; background:#fff; color:#b91c1c; }
-
 .task-notes{ font-size:13px; color:var(--task-muted); margin-top:6px; }
-
 #task-form{
   display:grid; gap:10px; background:#fff;
   border:1px solid var(--task-border); padding:12px; border-radius:14px;
 }
 #task-form .row{ display:grid; gap:10px; grid-template-columns:1fr 1fr; }
 @media (max-width:900px){ #task-form .row{ grid-template-columns:1fr; } }
-
-/* Fixed: broadened form controls */
 #task-form input,
 #task-form select,
 #task-form textarea{
@@ -202,7 +218,7 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 }
 
 /* ======================================================================
-   FORECAST — Styles
+   FORECAST — Styles (table plus compacte, sans cadre rouge, pas de pills)
    ====================================================================== */
 
 /* Toolbar */
@@ -233,19 +249,43 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 }
 .grid-1-3 input{ width:100%; }
 
-/* Editable tables */
+/* Editable tables — NOUVEAU style discret */
 .forecast-table{ overflow-x:auto; }
-.forecast-table table{ width:100%; border-collapse:collapse; font-size:14px; }
-.forecast-table th, .forecast-table td{
-  border:1px solid var(--task-border); padding:8px; text-align:center; white-space:nowrap;
-}
-.forecast-table input{
-  width:90px; height:36px; border:1px solid var(--task-border);
-  border-radius:8px; padding:4px 6px; text-align:right;
-}
-.forecast-table .bad{ outline:2px solid #ef4444; }
 
-/* Row actions */
+/* Table compacte et discrète */
+.forecast-table table{
+  width:100%;
+  border-collapse:collapse;
+  font-size: 0.85em;            /* typo ~15% plus petite */
+  border: none;                  /* pas de bordure globale */
+}
+.forecast-table th, .forecast-table td{
+  padding: 6px 8px;              /* ~50% plus étroit vs 10x12 */
+  text-align:center;
+  white-space:nowrap;
+  border: none;                   /* pas de cadres gras */
+  background: transparent;        /* pas de pills */
+}
+.forecast-table td:hover{ background:#f8f9fa; }
+
+/* Champs d’édition compacts, propres */
+.forecast-table input{
+  width: 80px;
+  height: 32px;
+  border:1px solid var(--task-border);
+  border-radius:6px;              /* angle léger, pas pill */
+  padding:4px 6px;
+  text-align:right;
+  outline:none;
+}
+.forecast-table input:focus{
+  box-shadow:0 0 0 2px rgba(28,73,102,.12);
+}
+
+/* Plus d’outline rouge agressif */
+.forecast-table .bad{ outline:none; }
+
+/* Actions */
 .forecast-actions{
   margin-top:8px; display:flex; gap:10px; align-items:center; justify-content:flex-end;
 }
@@ -385,7 +425,7 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 #regulation .card-header h3{ margin:0; font-size:1rem; }
 #regulation .grow{ flex:1; }
 
-/* Local inputs/buttons (isole du thème global si différent) */
+/* Local inputs/buttons */
 #regulation .input{
   width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px;
   background:#fff; color:var(--text); font:inherit;
@@ -483,40 +523,26 @@ button.secondary, a.secondary {
 }
 button.secondary:hover, a.secondary:hover { border-color:var(--btn); }
 
-/* ===== TABS HANDLER (placer TOUT EN HAUT de app.js) ===== */
-document.addEventListener('DOMContentLoaded', () => {
-  const btns = Array.from(document.querySelectorAll('.tab-btn'));
-  const panels = Array.from(document.querySelectorAll('.tab-panel'));
-  let tasksInitDone = false;
-
-  const showTab = (id) => {
-    panels.forEach(p => {
-      if (p.id === id) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
-    });
-    btns.forEach(b => {
-      const isActive = (b.dataset.tab === id);
-      b.classList.toggle('active', isActive);
-      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(isActive));
-    });
-
-    // Lazy init: Tasks
-    if (id === 'tasks' && !tasksInitDone && window.Tasks?.init) {
-      Tasks.init();
-      tasksInitDone = true;
-    }
-  };
-
-  btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
-
-  // Sélection initiale basée sur le bouton .active
-  const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
-  if (initial) showTab(initial);
-});
-   /* Attendance cells */
+/* ======================================================================
+   Attendance — helpers
+   ====================================================================== */
 .cell-present   { background:#e8f5e9; border:1px solid #c8e6c9; height:24px; border-radius:6px; }
 .cell-pto       { background:#fde8e8; border:1px solid #fecaca; height:24px; border-radius:6px; }
 .cell-pto-half  { background:#fff0f0; border:1px dashed #fca5a5; height:24px; border-radius:6px; }
 .warn-flag { display:inline-block; padding:2px 6px; border-radius:999px; background:var(--warn-bg); color:var(--warn); font-size:12px; margin-left:4px; }
+
+/* ======================================================================
+   Footer — fixé en bas à droite
+   ====================================================================== */
+.footer{
+  position:fixed;
+  right:12px;
+  bottom:8px;
+  font-size:12px;
+  color:#9aa1a9;
+  pointer-events:none;
+  background:transparent;
+}
 
 /* =========================
    Modals & Drawer (overlay)
@@ -566,3 +592,4 @@ document.addEventListener('DOMContentLoaded', () => {
 .drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:12px; }
 .drawer-content{ padding:12px; overflow:auto; }
 .drawer .ghost{ background:transparent; border:1px solid var(--border); border-radius:8px; cursor:pointer; height:32px; padding:0 10px; }
+
