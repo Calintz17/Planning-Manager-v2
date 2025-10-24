@@ -656,8 +656,22 @@
   </aside>
 
   <!-- JS -->
-  <script src="./config.js" type="module"></script>
-  <script src="./app.js" type="module"></script>
+<script src="./config.js" type="module"></script>
+
+<!-- >>> SEED TASKS — À GARDER AVANT app.js <<< -->
+<script>
+  // Tâches préchargées (ne seront lues qu'une seule fois, puis stockées dans localStorage)
+  window.__SEED_TASKS__ = [
+    { id:"t1", title:"Fix Attendance calc", owner:"EMEA", priority:"high", status:"open",     notes:"Le tableau est vide — vérifier génération des cases et calcul d’adherence." },
+    { id:"t2", title:"Weekly grid render",  owner:"US",   priority:"med",  status:"progress", notes:"Le planning ne charge pas les agents — mapper correctement les IDs." },
+    { id:"t3", title:"Forecast UI compact", owner:"EMEA", priority:"low",  status:"done",     notes:"Cellules compactes + pas de bordures rouges = OK." },
+    { id:"t4", title:"Create Task button",  owner:"EMEA", priority:"med",  status:"open",     notes:"Bouton présent, vérifier le formulaire et la persistance locale." },
+    { id:"t5", title:"Regulation seeding",  owner:"EMEA", priority:"low",  status:"open",     notes:"Préparer 2–3 règles de base pour le rendu (affichage seulement)." }
+  ];
+</script>
+
+<script src="./app.js" type="module"></script>
+
 </body>
 </html>
 
