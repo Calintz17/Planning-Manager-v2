@@ -1,7 +1,9 @@
-/* ===== TABS HANDLER (placer TOUT EN HAUT de app.js) ===== */
+/* ===== TABS HANDLER ===== */
 document.addEventListener('DOMContentLoaded', () => {
   const btns = Array.from(document.querySelectorAll('.tab-btn'));
   const panels = Array.from(document.querySelectorAll('.tab-panel'));
+  let tasksInitDone = false;
+  let forecastInitDone = false;
 
   const showTab = (id) => {
     panels.forEach(p => {
@@ -12,17 +14,214 @@ document.addEventListener('DOMContentLoaded', () => {
       b.classList.toggle('active', isActive);
       if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(isActive));
     });
+
+    // Lazy inits
+    if (id === 'tasks' && !tasksInitDone && window.Tasks?.init) {
+      Tasks.init();
+      tasksInitDone = true;
+    }
+    if (id === 'forecast' && !forecastInitDone && window.ForecastStore?.init) {
+      ForecastStore.init();
+      forecastInitDone = true;
+    }
   };
 
-  btns.forEach(b => {
-    b.addEventListener('click', () => showTab(b.dataset.tab));
-  });
-
-  // Sélection initiale basée sur le bouton .active au chargement
+  btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
   const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
   if (initial) showTab(initial);
 });
 
+/* =========================
+   TASKS MODULE
+   - localStorage key: 'roman_tasks'
+   - Seed: depuis window.__SEED_TASKS__ si présent
+   ========================= */
+window.Tasks = (() => {
+  const LS_KEY = 'roman_tasks';
+
+  const els = {
+    panel: () => document.getElementById('tasksPanel'),
+    list:  () => document.getElementById('task-list'),
+    counters: () => document.getElementById('task-counters'),
+    search: () => document.getElementById('task-search'),
+    fPrio: () => document.getElementById('task-filter-priority'),
+    fStatus: () => document.getElementById('task-filter-status'),
+    fOwner: () => document.getElementById('task-filter-owner'),
+    btnCreate: () => document.getElementById('createTaskBtn'),
+    form: () => document.getElementById('task-form'),
+    tf: {
+      title: () => document.getElementById('tf-title'),
+      owner: () => document.getElementById('tf-owner'),
+      prio:  () => document.getElementById('tf-priority'),
+      status:() => document.getElementById('tf-status'),
+      notes: () => document.getElementById('tf-notes'),
+      cancel:() => document.getElementById('tf-cancel'),
+    }
+  };
+
+  let tasks = [];
+  let owners = []; // rempli depuis Agents si dispo, sinon depuis les tasks existantes
+
+  // -------- Storage helpers
+  const load = () => {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      try { tasks = JSON.parse(raw); }
+      catch { tasks = []; }
+    } else {
+      // Seed: si une variable globale est fournie côté HTML
+      tasks = Array.isArray(window.__SEED_TASKS__) ? window.__SEED_TASKS__ : [];
+      persist();
+    }
+  };
+  const persist = () => localStorage.setItem(LS_KEY, JSON.stringify(tasks));
+
+  // -------- Rendering
+  const renderOwners = () => {
+    // Construit la liste des owners depuis tasks existantes si vide
+    if (!owners.length) {
+      const set = new Set();
+      tasks.forEach(t => t.owner && set.add(t.owner));
+      owners = Array.from(set);
+    }
+    const fOwner = els.fOwner();
+    const tfOwner = els.tf.owner();
+    const opts = ['<option value="">All owners</option>']
+      .concat(owners.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`));
+    fOwner.innerHTML = opts.join('');
+    tfOwner.innerHTML = owners.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+  };
+
+  const renderCounters = (list) => {
+    const total = list.length;
+    const open = list.filter(t => t.status==='open').length;
+    const prog = list.filter(t => t.status==='progress').length;
+    const done = list.filter(t => t.status==='done').length;
+    els.counters().innerHTML = [
+      `<span class="counter">Total: <b>${total}</b></span>`,
+      `<span class="counter">Open: <b>${open}</b></span>`,
+      `<span class="counter">In progress: <b>${prog}</b></span>`,
+      `<span class="counter">Done: <b>${done}</b></span>`
+    ].join('');
+  };
+
+  const applyFilters = () => {
+    const q = (els.search().value || '').toLowerCase().trim();
+    const fp = els.fPrio().value;
+    const fs = els.fStatus().value;
+    const fo = els.fOwner().value;
+
+    return tasks.filter(t => {
+      if (q && !(t.title?.toLowerCase().includes(q) || t.notes?.toLowerCase().includes(q))) return false;
+      if (fp && t.priority !== fp) return false;
+      if (fs && t.status !== fs) return false;
+      if (fo && t.owner !== fo) return false;
+      return true;
+    });
+  };
+
+  const renderList = () => {
+    const list = applyFilters();
+    renderCounters(list);
+    els.list().innerHTML = list.map(t => renderItem(t)).join('') || `<div class="muted">No tasks.</div>`;
+    // Wire row actions
+    els.list().querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('[data-id]')?.dataset.id;
+        if (!id) return;
+        const idx = tasks.findIndex(x => x.id === id);
+        if (idx === -1) return;
+        const act = btn.dataset.action;
+        if (act === 'delete') {
+          tasks.splice(idx,1); persist(); renderList();
+        } else if (act === 'status') {
+          // Cycle: open -> progress -> done -> open
+          const order = ['open','progress','done'];
+          const next = order[(order.indexOf(tasks[idx].status)+1) % order.length];
+          tasks[idx].status = next; persist(); renderList();
+        }
+      });
+    });
+  };
+
+  const renderItem = (t) => {
+    const prioMap = {low:'prio-low', med:'prio-med', high:'prio-high'};
+    const stMap = {open:'status-open', progress:'status-progress', done:'status-done'};
+    return `
+      <div class="task-item" data-id="${t.id}">
+        <div class="task-main">
+          <div>
+            <div class="task-title">${escapeHtml(t.title || '')}</div>
+            <div class="task-meta">
+              <span class="chip ${prioMap[t.priority]||''}">Priority: ${t.priority||'-'}</span>
+              <span class="chip ${stMap[t.status]||''}">Status: ${t.status||'-'}</span>
+              ${t.owner ? `<span class="chip">Owner: ${escapeHtml(t.owner)}</span>` : ``}
+            </div>
+            ${t.notes ? `<div class="task-notes">${escapeHtml(t.notes)}</div>` : ``}
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="btn" data-action="status">Next status</button>
+          <button class="btn danger" data-action="delete">Delete</button>
+        </div>
+      </div>
+    `;
+  };
+
+  // -------- Create form
+  const showForm = (show) => els.form().hidden = !show;
+
+  const onCreateClick = () => {
+    showForm(true);
+    // Pré-sélectionne owner si un filtre est en place
+    const fo = els.fOwner().value;
+    if (fo) els.tf.owner().value = fo;
+  };
+
+  const onFormSubmit = (e) => {
+    e.preventDefault();
+    const title = els.tf.title().value.trim();
+    if (!title) return;
+    const task = {
+      id: cryptoRandomId(),
+      title,
+      owner: els.tf.owner().value || '',
+      priority: els.tf.prio().value || 'low',
+      status: els.tf.status().value || 'open',
+      notes: els.tf.notes().value?.trim() || ''
+    };
+    tasks.unshift(task);
+    if (task.owner && !owners.includes(task.owner)) { owners.push(task.owner); renderOwners(); }
+    persist(); showForm(false); e.target.reset(); renderList();
+  };
+
+  // -------- Utils
+  const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const cryptoRandomId = () => {
+    if (window.crypto?.randomUUID) return crypto.randomUUID();
+    return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  };
+
+  // -------- Public
+  const init = () => {
+    if (!els.panel()) return; // pas sur la page
+    load();
+    renderOwners();
+    renderList();
+
+    // Listeners
+    els.search().addEventListener('input', renderList);
+    els.fPrio().addEventListener('change', renderList);
+    els.fStatus().addEventListener('change', renderList);
+    els.fOwner().addEventListener('change', renderList);
+
+    els.btnCreate().addEventListener('click', onCreateClick);
+    els.form().addEventListener('submit', onFormSubmit);
+    els.tf.cancel().addEventListener('click', () => { els.form().reset(); showForm(false); });
+  };
+
+  return { init };
+})();
 
 
 
