@@ -227,48 +227,64 @@
 
 <!-- TASKS (v1) -->
 <section id="tasks" class="tab-panel" hidden>
-  <div class="panel-card">
-    <h2>Tasks</h2>
+   <div class="tasks" id="tasksPanel">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input id="task-search" type="search" placeholder="Search tasks..." />
+      <select id="task-filter-priority">
+        <option value="">All priorities</option>
+        <option value="low">Low</option>
+        <option value="med">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <select id="task-filter-status">
+        <option value="">All status</option>
+        <option value="open">Open</option>
+        <option value="progress">In progress</option>
+        <option value="done">Done</option>
+      </select>
+      <select id="task-filter-owner">
+        <option value="">All owners</option>
+      </select>
 
-    <!-- SETTINGS -->
-    <div class="settings-bar">
-      <label class="field compact">
-        <span>Region</span>
-        <select id="tasks-region">
-          <option value="EMEA">Europe</option>
-          <option value="US">Americas</option>
-          <option value="CN">Greater China</option>
-          <option value="JP">Japan</option>
-          <option value="KR">South Korea</option>
-          <option value="SEAO">Southeast Asia</option>
+      <!-- Bouton demandé -->
+      <button id="createTaskBtn" class="btn primary" type="button">Create task</button>
+    </div>
+
+    <!-- Compteurs -->
+    <div class="counters" id="task-counters">
+      <!-- rempli en JS -->
+    </div>
+
+    <!-- Liste -->
+    <div class="task-list" id="task-list">
+      <!-- items injectés en JS -->
+    </div>
+
+    <!-- Formulaire (caché par défaut, affiché quand Create task) -->
+    <form id="task-form" hidden>
+      <div class="row">
+        <input type="text" id="tf-title" placeholder="Task title" required />
+        <select id="tf-owner"></select>
+      </div>
+      <div class="row">
+        <select id="tf-priority" required>
+          <option value="low">Low (P3)</option>
+          <option value="med">Medium (P2)</option>
+          <option value="high">High (P1)</option>
         </select>
-      </label>
-
-      <!-- IMPORTANT COULEURS DES BOUTONS : var(--btn / #1E5631) -->
-      <button id="tasks-reset" class="secondary">Reset to default</button>
-      <button id="tasks-export" class="primary">Export CSV</button>
-    </div>
-
-    <!-- TABLEAU DES TASKS -->
-    <div class="tasks-table-wrap">
-      <table id="tasks-table" class="tasks-table">
-        <thead>
-          <tr>
-            <th>Task</th>
-            <th>Priority</th>
-            <th>Avg Handle Time (min)</th>
-            <th>Enabled</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- rempli dynamiquement par app.js -->
-        </tbody>
-      </table>
-    </div>
-
-    <small class="legend">
-      Each task is region-specific. Changes are saved automatically.
-    </small>
+        <select id="tf-status" required>
+          <option value="open">Open</option>
+          <option value="progress">In progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <textarea id="tf-notes" rows="3" placeholder="Notes (optional)"></textarea>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button type="button" id="tf-cancel" class="btn">Cancel</button>
+        <button type="submit" class="btn primary">Save task</button>
+      </div>
+    </form>
   </div>
 </section>
 
