@@ -238,7 +238,8 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
 
 /* Cards internes */
 .forecast-section-card{
-  background:#fff; border:1px solid var(--task-border);
+  background:var(--card); /* #FFF7E0 demandé */
+  border:1px solid #f1d49a;
   border-radius:14px; padding:12px; margin-bottom:12px;
 }
 .forecast-section-card h3{ margin:0 0 8px; }
@@ -277,6 +278,18 @@ thead th{ background:#fafafa; font-weight:600; font-size:.9rem; }
   padding:4px 6px;
   text-align:right;
   outline:none;
+}
+/* Compact encore plus (≈ moitié de largeur visuelle) */
+#forecast-section .forecast-table th, 
+#forecast-section .forecast-table td { padding:4px 6px; }
+#forecast-section .forecast-table input { width:72px; height:28px; border-radius:4px; }
+
+/* Pas de “pills” */
+#forecast-section .pill, 
+#forecast-section .cell-pill{
+  border-radius:0 !important;
+  border:none !important;
+  background:transparent !important;
 }
 .forecast-table input:focus{
   box-shadow:0 0 0 2px rgba(28,73,102,.12);
