@@ -6,8 +6,8 @@
 /* ---------- CSS Variables (palette unifiée) ---------- */
 :root{
   /* Base theme */
-  --bg:#F4E3C1;
-  --card:#ffffff;
+  --bg:#ffffff;
+  --card:#FFF7E0;
   --text:#111827;
   --muted:#6b7280;
   --border:#e5e7eb;
