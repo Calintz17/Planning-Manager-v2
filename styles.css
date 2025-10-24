@@ -6,14 +6,14 @@
 /* ---------- CSS Variables (palette unifiée) ---------- */
 :root{
   /* Base theme */
-  --bg:#f7f7fb;
+  --bg:#F4E3C1;
   --card:#ffffff;
   --text:#111827;
   --muted:#6b7280;
   --border:#e5e7eb;
 
   /* Accent / brand */
-  --btn:#1E5631;
+  --btn:#1C4966;
   --btn-text:#ffffff;
 
   /* Status */
