@@ -32,207 +32,186 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================
-   TASKS MODULE
-   - localStorage key: 'roman_tasks'
-   - Seed: depuis window.__SEED_TASKS__ si présent
+   TASKS MODULE v2 — Regional, persistent
+   - localStorage key by region: 'roman_tasks_v2:<REGION>'
+   - Pre-seeded tasks: Call, Mail, Chat, Clienteling, Fraud, Back Office, Lunch, Break, Training, Morning Brief
+   - Columns: Priority | Avg Handle Time (min) | Enabled | Notes
+   - Filters: search + priority, Region select decides the dataset
    ========================= */
 window.Tasks = (() => {
-  const LS_KEY = 'roman_tasks';
+  const LS_PREFIX = 'roman_tasks_v2:';
+  const REGION_DEFAULT = 'EMEA';
+  const $ = (s, r=document) => r.querySelector(s);
 
+  // defaults for a fresh region
+  const DEFAULT_ROWS = [
+    { key:'call',         label:'Call',          priority:'med', aht:5,  enabled:true,  notes:'' },
+    { key:'mail',         label:'Mail',          priority:'med', aht:7,  enabled:true,  notes:'' },
+    { key:'chat',         label:'Chat',          priority:'med', aht:4,  enabled:true,  notes:'' },
+    { key:'clienteling',  label:'Clienteling',   priority:'high',aht:10, enabled:true,  notes:'' },
+    { key:'fraud',        label:'Fraud',         priority:'high',aht:12, enabled:true,  notes:'' },
+    { key:'backoffice',   label:'Back Office',   priority:'med', aht:8,  enabled:true,  notes:'' },
+    { key:'lunch',        label:'Lunch',         priority:'low', aht:60, enabled:true,  notes:'Paid/unpaid per policy' },
+    { key:'break',        label:'Break',         priority:'low', aht:15, enabled:true,  notes:'x2 per day' },
+    { key:'training',     label:'Training',      priority:'low', aht:45, enabled:true,  notes:'' },
+    { key:'morningbrief', label:'Morning Brief', priority:'low', aht:15, enabled:true,  notes:'' },
+  ];
+
+  // state
+  let region = REGION_DEFAULT;
+  let rows = []; // current region rows
+
+  // elements
   const els = {
     panel: () => document.getElementById('tasksPanel'),
-    list:  () => document.getElementById('task-list'),
-    counters: () => document.getElementById('task-counters'),
     search: () => document.getElementById('task-search'),
     fPrio: () => document.getElementById('task-filter-priority'),
-    fStatus: () => document.getElementById('task-filter-status'),
-    fOwner: () => document.getElementById('task-filter-owner'),
-    btnCreate: () => document.getElementById('createTaskBtn'),
-    form: () => document.getElementById('task-form'),
-    tf: {
-      title: () => document.getElementById('tf-title'),
-      owner: () => document.getElementById('tf-owner'),
-      prio:  () => document.getElementById('tf-priority'),
-      status:() => document.getElementById('tf-status'),
-      notes: () => document.getElementById('tf-notes'),
-      cancel:() => document.getElementById('tf-cancel'),
-    }
+    region: () => document.getElementById('task-region'),
+    tbody: () => document.getElementById('tasksTbody'),
+    counters: () => document.getElementById('task-counters'),
+    createBtn: () => document.getElementById('createTaskBtn'),
   };
 
-  let tasks = [];
-  let owners = []; // rempli depuis Agents si dispo, sinon depuis les tasks existantes
-
-  // -------- Storage helpers
-  const load = () => {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      try { tasks = JSON.parse(raw); }
-      catch { tasks = []; }
-    } else {
-      // Seed: si une variable globale est fournie côté HTML
-      tasks = Array.isArray(window.__SEED_TASKS__) ? window.__SEED_TASKS__ : [];
-      persist();
-    }
+  // storage helpers
+  const key = (reg) => `${LS_PREFIX}${reg || REGION_DEFAULT}`;
+  const load = (reg) => {
+    const raw = localStorage.getItem(key(reg));
+    if (!raw) return clone(DEFAULT_ROWS);
+    try { 
+      const arr = JSON.parse(raw); 
+      if (Array.isArray(arr)) return arr;
+      return clone(DEFAULT_ROWS);
+    } catch { return clone(DEFAULT_ROWS); }
   };
-  const persist = () => localStorage.setItem(LS_KEY, JSON.stringify(tasks));
+  const save = (reg, data) => localStorage.setItem(key(reg), JSON.stringify(data));
+  const clone = (x) => JSON.parse(JSON.stringify(x));
 
-  // -------- Rendering
-  const renderOwners = () => {
-    // Construit la liste des owners depuis tasks existantes si vide
-    if (!owners.length) {
-      const set = new Set();
-      tasks.forEach(t => t.owner && set.add(t.owner));
-      owners = Array.from(set);
-    }
-    const fOwner = els.fOwner();
-    const tfOwner = els.tf.owner();
-    const opts = ['<option value="">All owners</option>']
-      .concat(owners.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`));
-    fOwner.innerHTML = opts.join('');
-    tfOwner.innerHTML = owners.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+  // init region
+  const setRegion = (reg) => {
+    region = reg || REGION_DEFAULT;
+    rows = load(region);
+    render();
   };
 
-  const renderCounters = (list) => {
-    const total = list.length;
-    const open = list.filter(t => t.status==='open').length;
-    const prog = list.filter(t => t.status==='progress').length;
-    const done = list.filter(t => t.status==='done').length;
-    els.counters().innerHTML = [
-      `<span class="counter">Total: <b>${total}</b></span>`,
-      `<span class="counter">Open: <b>${open}</b></span>`,
-      `<span class="counter">In progress: <b>${prog}</b></span>`,
-      `<span class="counter">Done: <b>${done}</b></span>`
-    ].join('');
+  // CRUD
+  const addRow = () => {
+    const name = prompt('New task name (ex: QA Review) ?');
+    if (!name) return;
+    const safeKey = name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24) || ('task'+Date.now());
+    rows.push({ key:safeKey, label:name, priority:'low', aht:5, enabled:true, notes:'' });
+    save(region, rows); render();
+  };
+  const deleteRow = (k) => {
+    rows = rows.filter(r => r.key !== k);
+    save(region, rows); render();
   };
 
+  // filters
   const applyFilters = () => {
-    const q = (els.search().value || '').toLowerCase().trim();
+    const q = (els.search().value || '').trim().toLowerCase();
     const fp = els.fPrio().value;
-    const fs = els.fStatus().value;
-    const fo = els.fOwner().value;
-
-    return tasks.filter(t => {
-      if (q && !(t.title?.toLowerCase().includes(q) || t.notes?.toLowerCase().includes(q))) return false;
-      if (fp && t.priority !== fp) return false;
-      if (fs && t.status !== fs) return false;
-      if (fo && t.owner !== fo) return false;
+    return rows.filter(r => {
+      if (q && !(r.label.toLowerCase().includes(q) || r.notes?.toLowerCase().includes(q))) return false;
+      if (fp && r.priority !== fp) return false;
       return true;
     });
   };
 
-  const renderList = () => {
+  // render
+  const render = () => {
     const list = applyFilters();
-    renderCounters(list);
-    els.list().innerHTML = list.map(t => renderItem(t)).join('') || `<div class="muted">No tasks.</div>`;
-    // Wire row actions
-    els.list().querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.closest('[data-id]')?.dataset.id;
-        if (!id) return;
-        const idx = tasks.findIndex(x => x.id === id);
-        if (idx === -1) return;
-        const act = btn.dataset.action;
-        if (act === 'delete') {
-          tasks.splice(idx,1); persist(); renderList();
-        } else if (act === 'status') {
-          // Cycle: open -> progress -> done -> open
-          const order = ['open','progress','done'];
-          const next = order[(order.indexOf(tasks[idx].status)+1) % order.length];
-          tasks[idx].status = next; persist(); renderList();
-        }
-      });
+    els.tbody().innerHTML = list.map(renderRow).join('') || `<tr><td colspan="6" class="muted">No tasks.</td></tr>`;
+    // wire inputs
+    els.tbody().querySelectorAll('select[data-key], input[data-key], textarea[data-key]').forEach(inp => {
+      inp.addEventListener('change', onCellChange);
+      inp.addEventListener('input', onCellInput);
     });
+    els.tbody().querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', () => deleteRow(btn.dataset.key));
+    });
+
+    // counters (simple)
+    const enabled = rows.filter(r => r.enabled).length;
+    els.counters().innerHTML = [
+      `<span class="counter">Region: <b>${region}</b></span>`,
+      `<span class="counter">Tasks: <b>${rows.length}</b></span>`,
+      `<span class="counter">Enabled: <b>${enabled}</b></span>`
+    ].join('');
   };
 
-  const renderItem = (t) => {
-    const prioMap = {low:'prio-low', med:'prio-med', high:'prio-high'};
-    const stMap = {open:'status-open', progress:'status-progress', done:'status-done'};
+  const renderRow = (r) => {
     return `
-      <div class="task-item" data-id="${t.id}">
-        <div class="task-main">
-          <div>
-            <div class="task-title">${escapeHtml(t.title || '')}</div>
-            <div class="task-meta">
-              <span class="chip ${prioMap[t.priority]||''}">Priority: ${t.priority||'-'}</span>
-              <span class="chip ${stMap[t.status]||''}">Status: ${t.status||'-'}</span>
-              ${t.owner ? `<span class="chip">Owner: ${escapeHtml(t.owner)}</span>` : ``}
-            </div>
-            ${t.notes ? `<div class="task-notes">${escapeHtml(t.notes)}</div>` : ``}
-          </div>
-        </div>
-        <div class="task-actions">
-          <button class="btn" data-action="status">Next status</button>
-          <button class="btn danger" data-action="delete">Delete</button>
-        </div>
-      </div>
+      <tr data-row="${r.key}">
+        <td><input type="text" value="${escapeHtml(r.label)}" data-key="${r.key}" data-field="label" /></td>
+        <td>
+          <select data-key="${r.key}" data-field="priority">
+            <option value="high" ${r.priority==='high'?'selected':''}>High (P1)</option>
+            <option value="med"  ${r.priority==='med'?'selected':''}>Medium (P2)</option>
+            <option value="low"  ${r.priority==='low'?'selected':''}>Low (P3)</option>
+          </select>
+        </td>
+        <td><input type="number" min="0" step="1" value="${Number(r.aht)||0}" data-key="${r.key}" data-field="aht" /></td>
+        <td>
+          <label class="switch">
+            <input type="checkbox" ${r.enabled?'checked':''} data-key="${r.key}" data-field="enabled" />
+            <span class="slider"></span>
+          </label>
+        </td>
+        <td><input type="text" value="${escapeHtml(r.notes||'')}" data-key="${r.key}" data-field="notes" /></td>
+        <td class="row-actions">
+          <button type="button" class="icon-btn" data-action="delete" data-key="${r.key}" title="Delete">🗑</button>
+        </td>
+      </tr>
     `;
   };
 
-  // -------- Create form
-  const showForm = (show) => els.form().hidden = !show;
+  // cell update handlers
+  const onCellInput = debounce((e) => onCellChange(e), 200);
+  const onCellChange = (e) => {
+    const el = e.target;
+    const k = el.dataset.key, f = el.dataset.field;
+    const idx = rows.findIndex(x => x.key === k);
+    if (idx === -1) return;
 
-  const onCreateClick = () => {
-    showForm(true);
-    // Pré-sélectionne owner si un filtre est en place
-    const fo = els.fOwner().value;
-    if (fo) els.tf.owner().value = fo;
+    let v = el.value;
+    if (f === 'enabled') v = el.checked;
+    if (f === 'aht') v = Number(v)||0;
+
+    rows[idx][f] = v;
+    save(region, rows);
   };
 
-  const onFormSubmit = (e) => {
-    e.preventDefault();
-    const title = els.tf.title().value.trim();
-    if (!title) return;
-    const task = {
-      id: cryptoRandomId(),
-      title,
-      owner: els.tf.owner().value || '',
-      priority: els.tf.prio().value || 'low',
-      status: els.tf.status().value || 'open',
-      notes: els.tf.notes().value?.trim() || ''
-    };
-    tasks.unshift(task);
-    if (task.owner && !owners.includes(task.owner)) { owners.push(task.owner); renderOwners(); }
-    persist(); showForm(false); e.target.reset(); renderList();
-  };
-
-  // -------- Utils
+  // utils
   const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const cryptoRandomId = () => {
-    if (window.crypto?.randomUUID) return crypto.randomUUID();
-    return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-  };
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
-  // -------- Public
+  // public API for other modules (Attendance/Weekly)
+  const getConfig = (reg) => load(reg); // renvoie l’array [{label, priority, aht, enabled, notes}, ...]
+
+  // init
   const init = () => {
-    if (!els.panel()) return; // pas sur la page
-    load();
-    renderOwners();
-    renderList();
+    if (!els.panel()) return;
+    // region select initialisation
+    const rSel = els.region();
+    rSel.addEventListener('change', () => setRegion(rSel.value));
+    // default region: conserve le choix utilisateur si déjà stocké
+    const previous = localStorage.getItem('roman_tasks_v2:last_region') || REGION_DEFAULT;
+    rSel.value = previous;
+    setRegion(previous);
 
-    // Listeners
-    els.search().addEventListener('input', renderList);
-    els.fPrio().addEventListener('change', renderList);
-    els.fStatus().addEventListener('change', renderList);
-    els.fOwner().addEventListener('change', renderList);
+    // filters
+    els.search().addEventListener('input', render);
+    els.fPrio().addEventListener('change', render);
 
-    els.btnCreate().addEventListener('click', onCreateClick);
-    els.form().addEventListener('submit', onFormSubmit);
-    els.tf.cancel().addEventListener('click', () => { els.form().reset(); showForm(false); });
+    // create row
+    els.createBtn().addEventListener('click', addRow);
+
+    // persiste le dernier choix de région
+    rSel.addEventListener('change', () => localStorage.setItem('roman_tasks_v2:last_region', rSel.value));
   };
 
-  return { init };
+  return { init, getConfig };
 })();
-
-
-
-// app.js — Planning Manager V2
-// Auth Supabase + Attendance (v3.2) + Agents (directory, skills, status, PTO, export)
-
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 
 
 /* ===== TABS HANDLER (placer TOUT EN HAUT de app.js) ===== */
