@@ -593,3 +593,42 @@ button.secondary:hover, a.secondary:hover { border-color:var(--btn); }
 .drawer-content{ padding:12px; overflow:auto; }
 .drawer .ghost{ background:transparent; border:1px solid var(--border); border-radius:8px; cursor:pointer; height:32px; padding:0 10px; }
 
+/* ===== TASKS — Table custom ===== */
+#tasks .table-wrapper{ background:#fff; }
+#tasks table.table th, #tasks table.table td{ vertical-align:middle; }
+#tasks table.table input[type="number"]{
+  width:100%; height:36px; text-align:right;
+  border:1px solid var(--task-border); border-radius:8px; padding:4px 8px;
+}
+#tasks table.table input[type="text"]{
+  width:100%; height:36px;
+  border:1px solid var(--task-border); border-radius:8px; padding:4px 8px;
+}
+#tasks table.table select{
+  width:100%; height:36px;
+  border:1px solid var(--task-border); border-radius:8px; padding:4px 8px; background:#fff;
+}
+
+/* iOS-like switch (scopé à #tasks) */
+#tasks .switch{ position:relative; display:inline-block; width:46px; height:26px; }
+#tasks .switch input{ opacity:0; width:0; height:0; }
+#tasks .switch .slider{
+  position:absolute; inset:0; border-radius:26px;
+  background:#d1d5db; transition:.2s; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+}
+#tasks .switch .slider:before{
+  content:""; position:absolute; top:3px; left:3px; width:20px; height:20px;
+  background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 2px rgba(0,0,0,.2);
+}
+#tasks .switch input:checked + .slider{ background:var(--btn); }
+#tasks .switch input:checked + .slider:before{ transform:translateX(20px); }
+
+/* Action buttons in table */
+#tasks .row-actions{ display:flex; gap:8px; justify-content:flex-end; }
+#tasks .icon-btn{
+  width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:#fff;
+  display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+}
+#tasks .icon-btn:hover{ border-color:var(--btn); }
+
+
