@@ -1,115 +1,105 @@
-/* ===== TABS HANDLER ===== */
+/* ===== TABS HANDLER — robuste ===== */
 document.addEventListener('DOMContentLoaded', () => {
-  const btns = Array.from(document.querySelectorAll('.tab-btn'));
+  const btns   = Array.from(document.querySelectorAll('.tab-btn'));
   const panels = Array.from(document.querySelectorAll('.tab-panel'));
-  let tasksInitDone = false;
-  let forecastInitDone = false;
+
+  // Mappe forecast-section / forecast (on accepte les deux)
+  const isForecastId = (id) => id === 'forecast' || id === 'forecast-section';
 
   const showTab = (id) => {
+    // Affiche/masque les panels
     panels.forEach(p => {
       if (p.id === id) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
     });
+    // Active le bouton
     btns.forEach(b => {
-      const isActive = (b.dataset.tab === id);
-      b.classList.toggle('active', isActive);
-      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(isActive));
+      const on = (b.dataset.tab === id);
+      b.classList.toggle('active', on);
+      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(on));
     });
 
-    // Lazy inits
-    if (id === 'tasks' && !tasksInitDone && window.Tasks?.init) {
-      Tasks.init();
-      tasksInitDone = true;
-    }
-    if (id === 'forecast' && !forecastInitDone && window.ForecastStore?.init) {
-      ForecastStore.init();
-      forecastInitDone = true;
+    // Init “lazy” ré-entrant et safe
+    try {
+      if (id === 'tasks' && window.Tasks?.init) window.Tasks.init();
+      if (isForecastId(id) && window.ForecastStore?.init) window.ForecastStore.init();
+      // si tu as d’autres modules: if (id==='agents' && window.Agents?.init) Agents.init();
+    } catch (e) {
+      console.error('Tab init error:', e);
     }
   };
 
+  // Clicks
   btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // Onglet initial => le bouton qui a .active, sinon le premier panel
   const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
   if (initial) showTab(initial);
+
+  // **Hot-start** : on initialise quand même Tasks et Forecast en arrière-plan
+  // (utile si l’init a besoin de s’exécuter pour préparer des APIs)
+  try { window.Tasks?.init && window.Tasks.init(); } catch(e){ console.warn('Tasks init (background) failed', e); }
+  try { window.ForecastStore?.init && window.ForecastStore.init(); } catch(e){ console.warn('Forecast init (background) failed', e); }
 });
 
 /* =========================
-   TASKS MODULE v2 — Regional, persistent
-   - localStorage key by region: 'roman_tasks_v2:<REGION>'
-   - Pre-seeded tasks: Call, Mail, Chat, Clienteling, Fraud, Back Office, Lunch, Break, Training, Morning Brief
-   - Columns: Priority | Avg Handle Time (min) | Enabled | Notes
-   - Filters: search + priority, Region select decides the dataset
+   TASKS MODULE v2 — Regional, persistent (durci)
    ========================= */
 window.Tasks = (() => {
   const LS_PREFIX = 'roman_tasks_v2:';
   const REGION_DEFAULT = 'EMEA';
   const $ = (s, r=document) => r.querySelector(s);
 
-  // defaults for a fresh region
   const DEFAULT_ROWS = [
-    { key:'call',         label:'Call',          priority:'med', aht:5,  enabled:true,  notes:'' },
+    { key:'call',         label:'Call',          priority:'high', aht:6,  enabled:true,  notes:'' },
     { key:'mail',         label:'Mail',          priority:'med', aht:7,  enabled:true,  notes:'' },
-    { key:'chat',         label:'Chat',          priority:'med', aht:4,  enabled:true,  notes:'' },
-    { key:'clienteling',  label:'Clienteling',   priority:'high',aht:10, enabled:true,  notes:'' },
+    { key:'chat',         label:'Chat',          priority:'high', aht:4,  enabled:true,  notes:'' },
+    { key:'clienteling',  label:'Clienteling',   priority:'low',aht:10, enabled:true,  notes:'' },
     { key:'fraud',        label:'Fraud',         priority:'high',aht:12, enabled:true,  notes:'' },
     { key:'backoffice',   label:'Back Office',   priority:'med', aht:8,  enabled:true,  notes:'' },
-    { key:'lunch',        label:'Lunch',         priority:'low', aht:60, enabled:true,  notes:'Paid/unpaid per policy' },
-    { key:'break',        label:'Break',         priority:'low', aht:15, enabled:true,  notes:'x2 per day' },
+    { key:'lunch',        label:'Lunch',         priority:'high', aht:60, enabled:true,  notes:'Paid/unpaid per policy' },
+    { key:'break',        label:'Break',         priority:'high', aht:15, enabled:true,  notes:'x2 per day' },
     { key:'training',     label:'Training',      priority:'low', aht:45, enabled:true,  notes:'' },
-    { key:'morningbrief', label:'Morning Brief', priority:'low', aht:15, enabled:true,  notes:'' },
+    { key:'morningbrief', label:'Morning Brief', priority:'med', aht:15, enabled:true,  notes:'' },
   ];
 
   // state
   let region = REGION_DEFAULT;
-  let rows = []; // current region rows
+  let rows = [];
 
-  // elements
+  // elements (résolus à l’exécution pour éviter les nulls au parse)
   const els = {
-    panel: () => document.getElementById('tasksPanel'),
-    search: () => document.getElementById('task-search'),
-    fPrio: () => document.getElementById('task-filter-priority'),
-    region: () => document.getElementById('task-region'),
-    tbody: () => document.getElementById('tasksTbody'),
-    counters: () => document.getElementById('task-counters'),
-    createBtn: () => document.getElementById('createTaskBtn'),
+    panel:   () => document.getElementById('tasksPanel'),
+    search:  () => document.getElementById('task-search'),
+    fPrio:   () => document.getElementById('task-filter-priority'),
+    region:  () => document.getElementById('task-region'),
+    tbody:   () => document.getElementById('tasksTbody'),
+    counters:() => document.getElementById('task-counters'),
+    createBtn:() => document.getElementById('createTaskBtn'),
   };
 
-  // storage helpers
+  // storage
   const key = (reg) => `${LS_PREFIX}${reg || REGION_DEFAULT}`;
+  const clone = (x) => JSON.parse(JSON.stringify(x));
   const load = (reg) => {
     const raw = localStorage.getItem(key(reg));
     if (!raw) return clone(DEFAULT_ROWS);
-    try { 
-      const arr = JSON.parse(raw); 
-      if (Array.isArray(arr)) return arr;
-      return clone(DEFAULT_ROWS);
+    try {
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : clone(DEFAULT_ROWS);
     } catch { return clone(DEFAULT_ROWS); }
   };
   const save = (reg, data) => localStorage.setItem(key(reg), JSON.stringify(data));
-  const clone = (x) => JSON.parse(JSON.stringify(x));
 
-  // init region
-  const setRegion = (reg) => {
-    region = reg || REGION_DEFAULT;
-    rows = load(region);
-    render();
-  };
+  // helpers
+  const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
-  // CRUD
-  const addRow = () => {
-    const name = prompt('New task name (ex: QA Review) ?');
-    if (!name) return;
-    const safeKey = name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24) || ('task'+Date.now());
-    rows.push({ key:safeKey, label:name, priority:'low', aht:5, enabled:true, notes:'' });
-    save(region, rows); render();
-  };
-  const deleteRow = (k) => {
-    rows = rows.filter(r => r.key !== k);
-    save(region, rows); render();
-  };
+  // region + render
+  const setRegion = (reg) => { region = reg || REGION_DEFAULT; rows = load(region); render(); };
 
-  // filters
   const applyFilters = () => {
-    const q = (els.search().value || '').trim().toLowerCase();
-    const fp = els.fPrio().value;
+    const q  = (els.search()?.value || '').trim().toLowerCase();
+    const fp = (els.fPrio()?.value || '');
     return rows.filter(r => {
       if (q && !(r.label.toLowerCase().includes(q) || r.notes?.toLowerCase().includes(q))) return false;
       if (fp && r.priority !== fp) return false;
@@ -117,97 +107,96 @@ window.Tasks = (() => {
     });
   };
 
-  // render
   const render = () => {
+    const tb = els.tbody(); if (!tb) return;
     const list = applyFilters();
-    els.tbody().innerHTML = list.map(renderRow).join('') || `<tr><td colspan="6" class="muted">No tasks.</td></tr>`;
-    // wire inputs
-    els.tbody().querySelectorAll('select[data-key], input[data-key], textarea[data-key]').forEach(inp => {
+    tb.innerHTML = list.map(renderRow).join('') || `<tr><td colspan="6" class="muted">No tasks.</td></tr>`;
+
+    tb.querySelectorAll('select[data-key], input[data-key]').forEach(inp => {
       inp.addEventListener('change', onCellChange);
-      inp.addEventListener('input', onCellInput);
-    });
-    els.tbody().querySelectorAll('[data-action="delete"]').forEach(btn => {
-      btn.addEventListener('click', () => deleteRow(btn.dataset.key));
+      inp.addEventListener('input',  onCellInput);
     });
 
-    // counters (simple)
-    const enabled = rows.filter(r => r.enabled).length;
-    els.counters().innerHTML = [
-      `<span class="counter">Region: <b>${region}</b></span>`,
-      `<span class="counter">Tasks: <b>${rows.length}</b></span>`,
-      `<span class="counter">Enabled: <b>${enabled}</b></span>`
-    ].join('');
+    const cnt = els.counters(); if (cnt) {
+      const enabled = rows.filter(r => r.enabled).length;
+      cnt.innerHTML = [
+        `<span class="counter">Region: <b>${region}</b></span>`,
+        `<span class="counter">Tasks: <b>${rows.length}</b></span>`,
+        `<span class="counter">Enabled: <b>${enabled}</b></span>`
+      ].join('');
+    }
   };
 
-  const renderRow = (r) => {
-    return `
-      <tr data-row="${r.key}">
-        <td><input type="text" value="${escapeHtml(r.label)}" data-key="${r.key}" data-field="label" /></td>
-        <td>
-          <select data-key="${r.key}" data-field="priority">
-            <option value="high" ${r.priority==='high'?'selected':''}>High (P1)</option>
-            <option value="med"  ${r.priority==='med'?'selected':''}>Medium (P2)</option>
-            <option value="low"  ${r.priority==='low'?'selected':''}>Low (P3)</option>
-          </select>
-        </td>
-        <td><input type="number" min="0" step="1" value="${Number(r.aht)||0}" data-key="${r.key}" data-field="aht" /></td>
-        <td>
-          <label class="switch">
-            <input type="checkbox" ${r.enabled?'checked':''} data-key="${r.key}" data-field="enabled" />
-            <span class="slider"></span>
-          </label>
-        </td>
-        <td><input type="text" value="${escapeHtml(r.notes||'')}" data-key="${r.key}" data-field="notes" /></td>
-        <td class="row-actions">
-          <button type="button" class="icon-btn" data-action="delete" data-key="${r.key}" title="Delete">🗑</button>
-        </td>
-      </tr>
-    `;
-  };
+  const renderRow = (r) => `
+    <tr data-row="${r.key}">
+      <td><input type="text" value="${escapeHtml(r.label)}" data-key="${r.key}" data-field="label" /></td>
+      <td>
+        <select data-key="${r.key}" data-field="priority">
+          <option value="high" ${r.priority==='high'?'selected':''}>High (P1)</option>
+          <option value="med"  ${r.priority==='med'?'selected':''}>Medium (P2)</option>
+          <option value="low"  ${r.priority==='low'?'selected':''}>Low (P3)</option>
+        </select>
+      </td>
+      <td><input type="number" min="0" step="1" value="${Number(r.aht)||0}" data-key="${r.key}" data-field="aht" /></td>
+      <td>
+        <label class="switch">
+          <input type="checkbox" ${r.enabled?'checked':''} data-key="${r.key}" data-field="enabled" />
+          <span class="slider"></span>
+        </label>
+      </td>
+      <td><input type="text" value="${escapeHtml(r.notes||'')}" data-key="${r.key}" data-field="notes" /></td>
+      <td class="row-actions">
+        <button type="button" class="icon-btn" data-action="delete" data-key="${r.key}" title="Delete">🗑</button>
+      </td>
+    </tr>
+  `;
 
-  // cell update handlers
+  // cell updates
   const onCellInput = debounce((e) => onCellChange(e), 200);
   const onCellChange = (e) => {
     const el = e.target;
     const k = el.dataset.key, f = el.dataset.field;
     const idx = rows.findIndex(x => x.key === k);
     if (idx === -1) return;
-
     let v = el.value;
     if (f === 'enabled') v = el.checked;
     if (f === 'aht') v = Number(v)||0;
-
     rows[idx][f] = v;
     save(region, rows);
   };
 
-  // utils
-  const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+  // public API
+  const getConfig = (reg) => load(reg);
 
-  // public API for other modules (Attendance/Weekly)
-  const getConfig = (reg) => load(reg); // renvoie l’array [{label, priority, aht, enabled, notes}, ...]
-
-  // init
+  // init (idempotent et safe)
+  let _inited = false;
   const init = () => {
-    if (!els.panel()) return;
-    // region select initialisation
+    if (_inited) return;
+    const panel = els.panel();
+    if (!panel) return; // pas sur la page
+    _inited = true;
+
+    // Region select : si absent, on simule EMEA
     const rSel = els.region();
-    rSel.addEventListener('change', () => setRegion(rSel.value));
-    // default region: conserve le choix utilisateur si déjà stocké
     const previous = localStorage.getItem('roman_tasks_v2:last_region') || REGION_DEFAULT;
-    rSel.value = previous;
-    setRegion(previous);
+    if (rSel) {
+      rSel.value = previous;
+      rSel.addEventListener('change', () => {
+        localStorage.setItem('roman_tasks_v2:last_region', rSel.value);
+        setRegion(rSel.value);
+      });
+    }
+    setRegion(rSel?.value || previous);
 
-    // filters
-    els.search().addEventListener('input', render);
-    els.fPrio().addEventListener('change', render);
-
-    // create row
-    els.createBtn().addEventListener('click', addRow);
-
-    // persiste le dernier choix de région
-    rSel.addEventListener('change', () => localStorage.setItem('roman_tasks_v2:last_region', rSel.value));
+    els.search()?.addEventListener('input', render);
+    els.fPrio()?.addEventListener('change', render);
+    els.createBtn()?.addEventListener('click', () => {
+      const name = prompt('New task name (ex: QA Review) ?');
+      if (!name) return;
+      const safeKey = name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24) || ('task'+Date.now());
+      rows.push({ key:safeKey, label:name, priority:'low', aht:5, enabled:true, notes:'' });
+      save(region, rows); render();
+    });
   };
 
   return { init, getConfig };
