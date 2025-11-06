@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<title>Forecast — First Green Test</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:40px;line-height:1.5}
+  .ok{color:#065f46}.fail{color:#991b1b}.code{font-family:ui-monospace,Consolas,monospace;background:#f6f8fa;padding:8px;border-radius:8px}
+</style>
+<h1>Forecast — First Green Test</h1>
+<p>Objectif : valider une formule minimale et déterministe avant toute intégration.</p>
+<pre id="log" class="code"></pre>
+<script>
+// ---------- 1) Formule minimale, pure et testable ----------
+// Hypothèse simple (call center / support):
+// workload_hours = volume * (AHT_seconds / 3600)
+// capacity_hours = agents * hours_per_agent * occupancy * (1 - shrinkage)
+// coverage = capacity_hours / workload_hours
+// required_agents = ceil(workload_hours / (hours_per_agent * occupancy * (1 - shrinkage)))
+
+function forecastKPIs({
+  volume,           // nb contacts
+  ahtSec,           // Average Handle Time en secondes
+  agents,           // nb agents dispo
+  hoursPerAgent,    // heures productives planifiées par agent (ex: 7h)
+  occupancy = 0.85, // % de temps en charge (0..1)
+  shrinkage = 0.25  // pertes (pauses, absence, meetings) (0..1)
+}) {
+  if (volume < 0 || ahtSec <= 0 || agents < 0 || hoursPerAgent <= 0) {
+    throw new Error("Paramètres invalides");
+  }
+  const workloadHours = volume * (ahtSec / 3600);
+  const capacityHours = agents * hoursPerAgent * occupancy * (1 - shrinkage);
+  const coverage = workloadHours === 0 ? Infinity : capacityHours / workloadHours;
+  const requiredAgents = Math.ceil(
+    (workloadHours) / (hoursPerAgent * occupancy * (1 - shrinkage))
+  );
+  return { workloadHours, capacityHours, coverage, requiredAgents };
+}
+
+// ---------- 2) Mini test runner natif ----------
+function test(name, fn){ tests.push({name, fn}) }
+function expectClose(actual, expected, tol=1e-6){
+  if (Math.abs(actual-expected) > tol) throw new Error(`Expected ~${expected}, got ${actual}`)
+}
+function expectEqual(actual, expected){
+  if (actual !== expected) throw new Error(`Expected ${expected}, got ${actual}`)
+}
+const tests = [];
+
+// ---------- 3) Jeux de tests déterministes ----------
+test("Cas de base — charge = capacité → coverage ~ 1", () => {
+  const p = { volume: 1000, ahtSec: 300, agents: 20, hoursPerAgent: 7, occupancy: 0.85, shrinkage: 0.25 };
+  const r = forecastKPIs(p);
+  // workload = 1000 * (300/3600) = 83.3333 h
+  // capacité = 20 * 7 * 0.85 * 0.75 = 89.25 h → coverage ≈ 1.071
+  expectClose(r.workloadHours, 83.3333333333, 1e-4);
+  expectClose(r.capacityHours, 89.25, 1e-6);
+  expectClose(r.coverage, 1.071, 1e-3);
+  expectEqual(r.requiredAgents, Math.ceil(83.33333333 / (7*0.85*0.75))); // ≈ 19
+});
+
+test("Zéro volume — coverage = Infinity, requiredAgents = 0", () => {
+  const r = forecastKPIs({ volume: 0, ahtSec: 300, agents: 10, hoursPerAgent: 7, occupancy: 0.85, shrinkage: 0.25 });
+  expectEqual(r.workloadHours, 0);
+  expectEqual(r.coverage, Infinity);
+  expectEqual(r.requiredAgents, 0);
+});
+
+test("Plus de charge que de capacité → coverage < 1", () => {
+  const r = forecastKPIs({ volume: 2000, ahtSec: 360, agents: 15, hoursPerAgent: 7, occupancy: 0.85, shrinkage: 0.30 });
+  // workload = 2000*(360/3600) = 200 h
+  // capacity = 15*7*0.85*0.70 = 62.475 h → coverage ~ 0.312
+  expectClose(r.workloadHours, 200, 1e-9);
+  expectClose(r.capacityHours, 62.475, 1e-6);
+  expectClose(r.coverage, 0.312375, 1e-6);
+  expectEqual(r.requiredAgents, Math.ceil(200/(7*0.85*0.70))); // 49
+});
+
+test("Paramètres invalides → throw", () => {
+  let threw = false;
+  try { forecastKPIs({ volume:-1, ahtSec:300, agents:10, hoursPerAgent:7 }); } catch(e){ threw = true; }
+  if(!threw) throw new Error("Aurait dû lancer une exception");
+});
+
+test("Sensibilité occupancy : +10 pts augmente la capacité", () => {
+  const base = forecastKPIs({ volume: 1200, ahtSec: 240, agents: 18, hoursPerAgent: 7, occupancy: 0.75, shrinkage: 0.25 });
+  const up   = forecastKPIs({ volume: 1200, ahtSec: 240, agents: 18, hoursPerAgent: 7, occupancy: 0.85, shrinkage: 0.25 });
+  if (!(up.capacityHours > base.capacityHours)) throw new Error("La capacité devrait augmenter");
+});
+
+test("Sensibilité shrinkage : +10 pts réduit la capacité", () => {
+  const base = forecastKPIs({ volume: 1200, ahtSec: 240, agents: 18, hoursPerAgent: 7, occupancy: 0.85, shrinkage: 0.20 });
+  const up   = forecastKPIs({ volume: 1200, ahtSec: 240, agents: 18, hoursPerAgent: 7, occupancy: 0.85, shrinkage: 0.30 });
+  if (!(up.capacityHours < base.capacityHours)) throw new Error("La capacité devrait diminuer");
+});
+
+// ---------- 4) Exécution et rendu ----------
+(async function run(){
+  const log = document.getElementById('log');
+  let pass = 0, out = [];
+  for (const t of tests) {
+    try { await t.fn(); pass++; out.push(`✅ ${t.name}`); }
+    catch(e){ out.push(`❌ ${t.name}\n   → ${e.message}`); }
+  }
+  const hdr = pass === tests.length
+    ? `%c✅ ${pass}/${tests.length} tests passed`
+    : `%c❌ ${pass}/${tests.length} tests passed`;
+  console.log(hdr, pass===tests.length?'color:#065f46':'color:#991b1b');
+  log.textContent = [ `${pass}/${tests.length} tests`, ...out ].join('\n');
+  log.className = pass===tests.length?'code ok':'code fail';
+})();
+</script>
