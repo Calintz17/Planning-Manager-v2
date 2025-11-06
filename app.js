@@ -1,9 +1,23 @@
-/* ===== TABS HANDLER — robuste ===== */
+/* ============================================================
+   APP.JS — ROMAN Planning Manager (final)
+   - Un seul Tabs Handler (robuste)
+   - Init Supabase + Auth + Seed
+   - Modules: Tasks, Attendance, Agents/PTO, Forecast, Weekly, Regulation
+   ============================================================ */
+
+/* ---------- Supabase client ---------- */
+const supabase = window.supabase.createClient(
+  window.CONFIG.SUPABASE_URL,
+  window.CONFIG.SUPABASE_ANON_KEY
+);
+
+/* ======================================================================
+   TABS HANDLER — unique & robuste (placer tout en haut du fichier)
+   ====================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   const btns   = Array.from(document.querySelectorAll('.tab-btn'));
   const panels = Array.from(document.querySelectorAll('.tab-panel'));
 
-  // Mappe forecast-section / forecast (on accepte les deux)
   const isForecastId = (id) => id === 'forecast' || id === 'forecast-section';
 
   const showTab = (id) => {
@@ -18,11 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(on));
     });
 
-    // Init “lazy” ré-entrant et safe
+    // Lazy init, safe et idempotent
     try {
       if (id === 'tasks' && window.Tasks?.init) window.Tasks.init();
+      if (id === 'agents' && typeof initAgentsUI === 'function') initAgentsUI();
+      if (id === 'attendance' && typeof initAttendanceUI === 'function') initAttendanceUI();
+      if (id === 'weekly' && typeof initWeeklyUI === 'function') initWeeklyUI();
       if (isForecastId(id) && window.ForecastStore?.init) window.ForecastStore.init();
-      // si tu as d’autres modules: if (id==='agents' && window.Agents?.init) Agents.init();
     } catch (e) {
       console.error('Tab init error:', e);
     }
@@ -31,218 +47,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clicks
   btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
-  // Onglet initial => le bouton qui a .active, sinon le premier panel
+  // Onglet initial => le bouton .active, sinon le premier panel
   const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
   if (initial) showTab(initial);
 
-  // **Hot-start** : on initialise quand même Tasks et Forecast en arrière-plan
-  // (utile si l’init a besoin de s’exécuter pour préparer des APIs)
-  try { window.Tasks?.init && window.Tasks.init(); } catch(e){ console.warn('Tasks init (background) failed', e); }
-  try { window.ForecastStore?.init && window.ForecastStore.init(); } catch(e){ console.warn('Forecast init (background) failed', e); }
+  // Hot-start pour préparer les stores si besoin
+  try { window.ForecastStore?.init && window.ForecastStore.init(); } catch(e){}
 });
 
-/* =========================
-   TASKS MODULE v2 — Regional, persistent (durci)
-   ========================= */
-window.Tasks = (() => {
-  const LS_PREFIX = 'roman_tasks_v2:';
-  const REGION_DEFAULT = 'EMEA';
-  const $ = (s, r=document) => r.querySelector(s);
-
-  const DEFAULT_ROWS = [
-    { key:'call',         label:'Call',          priority:'high', aht:6,  enabled:true,  notes:'' },
-    { key:'mail',         label:'Mail',          priority:'med', aht:7,  enabled:true,  notes:'' },
-    { key:'chat',         label:'Chat',          priority:'high', aht:4,  enabled:true,  notes:'' },
-    { key:'clienteling',  label:'Clienteling',   priority:'low',aht:10, enabled:true,  notes:'' },
-    { key:'fraud',        label:'Fraud',         priority:'high',aht:12, enabled:true,  notes:'' },
-    { key:'backoffice',   label:'Back Office',   priority:'med', aht:8,  enabled:true,  notes:'' },
-    { key:'lunch',        label:'Lunch',         priority:'high', aht:60, enabled:true,  notes:'Paid/unpaid per policy' },
-    { key:'break',        label:'Break',         priority:'high', aht:15, enabled:true,  notes:'x2 per day' },
-    { key:'training',     label:'Training',      priority:'low', aht:45, enabled:true,  notes:'' },
-    { key:'morningbrief', label:'Morning Brief', priority:'med', aht:15, enabled:true,  notes:'' },
-  ];
-
-  // state
-  let region = REGION_DEFAULT;
-  let rows = [];
-
-  // elements (résolus à l’exécution pour éviter les nulls au parse)
-  const els = {
-    panel:   () => document.getElementById('tasksPanel'),
-    search:  () => document.getElementById('task-search'),
-    fPrio:   () => document.getElementById('task-filter-priority'),
-    region:  () => document.getElementById('task-region'),
-    tbody:   () => document.getElementById('tasksTbody'),
-    counters:() => document.getElementById('task-counters'),
-    createBtn:() => document.getElementById('createTaskBtn'),
-  };
-
-  // storage
-  const key = (reg) => `${LS_PREFIX}${reg || REGION_DEFAULT}`;
-  const clone = (x) => JSON.parse(JSON.stringify(x));
-  const load = (reg) => {
-    const raw = localStorage.getItem(key(reg));
-    if (!raw) return clone(DEFAULT_ROWS);
-    try {
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : clone(DEFAULT_ROWS);
-    } catch { return clone(DEFAULT_ROWS); }
-  };
-  const save = (reg, data) => localStorage.setItem(key(reg), JSON.stringify(data));
-
-  // helpers
-  const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
-
-  // region + render
-  const setRegion = (reg) => { region = reg || REGION_DEFAULT; rows = load(region); render(); };
-
-  const applyFilters = () => {
-    const q  = (els.search()?.value || '').trim().toLowerCase();
-    const fp = (els.fPrio()?.value || '');
-    return rows.filter(r => {
-      if (q && !(r.label.toLowerCase().includes(q) || r.notes?.toLowerCase().includes(q))) return false;
-      if (fp && r.priority !== fp) return false;
-      return true;
-    });
-  };
-
-  const render = () => {
-    const tb = els.tbody(); if (!tb) return;
-    const list = applyFilters();
-    tb.innerHTML = list.map(renderRow).join('') || `<tr><td colspan="6" class="muted">No tasks.</td></tr>`;
-
-    tb.querySelectorAll('select[data-key], input[data-key]').forEach(inp => {
-      inp.addEventListener('change', onCellChange);
-      inp.addEventListener('input',  onCellInput);
-    });
-
-    const cnt = els.counters(); if (cnt) {
-      const enabled = rows.filter(r => r.enabled).length;
-      cnt.innerHTML = [
-        `<span class="counter">Region: <b>${region}</b></span>`,
-        `<span class="counter">Tasks: <b>${rows.length}</b></span>`,
-        `<span class="counter">Enabled: <b>${enabled}</b></span>`
-      ].join('');
-    }
-  };
-
-  const renderRow = (r) => `
-    <tr data-row="${r.key}">
-      <td><input type="text" value="${escapeHtml(r.label)}" data-key="${r.key}" data-field="label" /></td>
-      <td>
-        <select data-key="${r.key}" data-field="priority">
-          <option value="high" ${r.priority==='high'?'selected':''}>High (P1)</option>
-          <option value="med"  ${r.priority==='med'?'selected':''}>Medium (P2)</option>
-          <option value="low"  ${r.priority==='low'?'selected':''}>Low (P3)</option>
-        </select>
-      </td>
-      <td><input type="number" min="0" step="1" value="${Number(r.aht)||0}" data-key="${r.key}" data-field="aht" /></td>
-      <td>
-        <label class="switch">
-          <input type="checkbox" ${r.enabled?'checked':''} data-key="${r.key}" data-field="enabled" />
-          <span class="slider"></span>
-        </label>
-      </td>
-      <td><input type="text" value="${escapeHtml(r.notes||'')}" data-key="${r.key}" data-field="notes" /></td>
-      <td class="row-actions">
-        <button type="button" class="icon-btn" data-action="delete" data-key="${r.key}" title="Delete">🗑</button>
-      </td>
-    </tr>
-  `;
-
-  // cell updates
-  const onCellInput = debounce((e) => onCellChange(e), 200);
-  const onCellChange = (e) => {
-    const el = e.target;
-    const k = el.dataset.key, f = el.dataset.field;
-    const idx = rows.findIndex(x => x.key === k);
-    if (idx === -1) return;
-    let v = el.value;
-    if (f === 'enabled') v = el.checked;
-    if (f === 'aht') v = Number(v)||0;
-    rows[idx][f] = v;
-    save(region, rows);
-  };
-
-  // public API
-  const getConfig = (reg) => load(reg);
-
-  // init (idempotent et safe)
-  let _inited = false;
-  const init = () => {
-    if (_inited) return;
-    const panel = els.panel();
-    if (!panel) return; // pas sur la page
-    _inited = true;
-
-    // Region select : si absent, on simule EMEA
-    const rSel = els.region();
-    const previous = localStorage.getItem('roman_tasks_v2:last_region') || REGION_DEFAULT;
-    if (rSel) {
-      rSel.value = previous;
-      rSel.addEventListener('change', () => {
-        localStorage.setItem('roman_tasks_v2:last_region', rSel.value);
-        setRegion(rSel.value);
-      });
-    }
-    setRegion(rSel?.value || previous);
-
-    els.search()?.addEventListener('input', render);
-    els.fPrio()?.addEventListener('change', render);
-    els.createBtn()?.addEventListener('click', () => {
-      const name = prompt('New task name (ex: QA Review) ?');
-      if (!name) return;
-      const safeKey = name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24) || ('task'+Date.now());
-      rows.push({ key:safeKey, label:name, priority:'low', aht:5, enabled:true, notes:'' });
-      save(region, rows); render();
-    });
-  };
-
-  return { init, getConfig };
-})();
-
-
-/* ===== TABS HANDLER (placer TOUT EN HAUT de app.js) ===== */
-document.addEventListener('DOMContentLoaded', () => {
-  const btns = Array.from(document.querySelectorAll('.tab-btn'));
-  const panels = Array.from(document.querySelectorAll('.tab-panel'));
-  let tasksInitDone = false;
-
-  const showTab = (id) => {
-    panels.forEach(p => {
-      if (p.id === id) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
-    });
-    btns.forEach(b => {
-      const isActive = (b.dataset.tab === id);
-      b.classList.toggle('active', isActive);
-      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(isActive));
-    });
-
-    // Lazy init: Tasks
-    if (id === 'tasks' && !tasksInitDone && window.Tasks?.init) {
-      Tasks.init();
-      tasksInitDone = true;
-    }
-  };
-
-  btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
-
-  // Sélection initiale basée sur le bouton .active
-  const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
-  if (initial) showTab(initial);
-});
-
-
-/* ---------------- Auth Modal ---------------- */
-const authModal = document.getElementById("auth-modal");
-const loginBtn = document.getElementById("login-btn");
-const signupBtn = document.getElementById("signup-btn");
-const forgotLink = document.getElementById("forgot-link");
-const authError = document.getElementById("auth-error");
-const emailEl = document.getElementById("auth-email");
-const passEl = document.getElementById("auth-password");
-const regionEl = document.getElementById("auth-region");
+/* ======================================================================
+   AUTH MODAL + SEED
+   ====================================================================== */
+const authModal   = document.getElementById("auth-modal");
+const loginBtn    = document.getElementById("login-btn");
+const signupBtn   = document.getElementById("signup-btn");
+const forgotLink  = document.getElementById("forgot-link");
+const authError   = document.getElementById("auth-error");
+const emailEl     = document.getElementById("auth-email");
+const passEl      = document.getElementById("auth-password");
+const regionEl    = document.getElementById("auth-region");
 
 async function ensureProfile(userId, email, defaultRegion) {
   const { error } = await supabase
@@ -281,15 +104,14 @@ async function requireAuth() {
     authModal.classList.add("visible"); authModal.setAttribute("aria-hidden", "false");
   } else {
     authModal.classList.remove("visible"); authModal.setAttribute("aria-hidden", "true");
-    // init tabs default region
-    initAttendanceUI();
-    initAgentsUI();
-    initForecastUI();
-    initWeeklyUI();
+    initAttendanceUI?.();  // par défaut affiche le mois courant
+    initAgentsUI?.();
+    ForecastStore?.init?.();
+    initWeeklyUI?.();
   }
 }
 
-loginBtn.addEventListener("click", async () => {
+loginBtn?.addEventListener("click", async () => {
   authError.textContent = "";
   const email = emailEl.value.trim();
   const password = passEl.value;
@@ -306,7 +128,7 @@ loginBtn.addEventListener("click", async () => {
   } catch (e) { console.error(e); }
   await requireAuth();
 });
-signupBtn.addEventListener("click", async () => {
+signupBtn?.addEventListener("click", async () => {
   authError.textContent = "";
   const email = emailEl.value.trim();
   const password = passEl.value;
@@ -325,7 +147,7 @@ signupBtn.addEventListener("click", async () => {
   } catch (e) { console.error(e); }
   await requireAuth();
 });
-forgotLink.addEventListener("click", async (e) => {
+forgotLink?.addEventListener("click", async (e) => {
   e.preventDefault();
   authError.textContent = "";
   const email = emailEl.value.trim();
@@ -335,15 +157,9 @@ forgotLink.addEventListener("click", async (e) => {
   alert("Password reset email sent.");
 });
 
-/* ---------------- Attendance (v3.2) ---------------- */
-const attRegionSel = document.getElementById("att-region");
-const attStartInput = document.getElementById("att-start");
-const attCalcBtn = document.getElementById("att-calc");
-const adherenceLabel = document.getElementById("adherence-label");
-const adherenceFill = document.getElementById("adherence-fill");
-const attTable = document.getElementById("att-table");
-const attWarnings = document.getElementById("att-warnings");
-
+/* ======================================================================
+   HELPERS COMMUNS (Attendance/Agents/Weekly)
+   ====================================================================== */
 function firstDayOfCurrentMonthISO() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
@@ -363,6 +179,17 @@ function isoWeekNumber(d) {
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 }
 
+/* ======================================================================
+   ATTENDANCE (v3.2) — couverture mensuelle & export
+   ====================================================================== */
+const attRegionSel   = document.getElementById("att-region");
+const attStartInput  = document.getElementById("att-start");
+const attCalcBtn     = document.getElementById("att-calc");
+const adherenceLabel = document.getElementById("adherence-label");
+const adherenceFill  = document.getElementById("adherence-fill");
+const attTable       = document.getElementById("att-table");
+const attWarnings    = document.getElementById("att-warnings");
+
 async function fetchAgentsWithPTO(region) {
   const [{ data: agents, error: e1 }, { data: pto, error: e2 }] = await Promise.all([
     supabase.from("agents").select("id, full_name, region, status").eq("region", region).order("full_name", { ascending: true }),
@@ -375,7 +202,6 @@ async function fetchAgentsWithPTO(region) {
   (pto || []).forEach((p) => { if (byId[p.agent_id]) byId[p.agent_id].pto.push(p); });
   return Object.values(byId);
 }
-
 async function fetchRegulations(region) {
   const { data, error } = await supabase.from("regulation_rules").select("rule_key, value_text, enabled").eq("region", region).eq("enabled", true);
   if (error) throw error;
@@ -388,7 +214,6 @@ async function fetchRegulations(region) {
     breakMin: parseInt(map["Break Duration (minutes)"] ?? "15", 10),
   };
 }
-
 async function fetchForecastPieces(region, y, m, d) {
   const week = isoWeekNumber(new Date(y, m - 1, d));
   const weekday = new Date(y, m - 1, d).getDay(); // 0..6
@@ -405,8 +230,8 @@ async function fetchForecastPieces(region, y, m, d) {
   if (ft.error) throw ft.error;
   const total = ft.data?.total_volume ?? 0;
   const monthlyShare = (fm.data?.share_percent ?? 100 / 12) / 100.0;
-  const weeklyShare = (fw.data?.share_percent ?? (100 / 52)) / 100.0;
-  const dailyShare = (fd.data?.share_percent ?? (100 / 7)) / 100.0;
+  const weeklyShare  = (fw.data?.share_percent ?? (100 / 52)) / 100.0;
+  const dailyShare   = (fd.data?.share_percent ?? (100 / 7)) / 100.0;
 
   return {
     totalVolume: total,
@@ -424,17 +249,13 @@ async function fetchForecastPieces(region, y, m, d) {
     tasks: tasks.data || [],
   };
 }
-
 function agentIsOffThatDate(agent, dateISO) {
-  const dOnly = dateISO;
-  for (const p of agent.pto || []) {
-    if (dOnly >= p.start_date && dOnly <= p.end_date) return true;
-  }
+  for (const p of agent.pto || []) if (dateISO >= p.start_date && dateISO <= p.end_date) return true;
   return false;
 }
 function computeNetCapacityPerAgentMin(reg) {
   const workMin = reg.maxHoursPerDay * 60;
-  const breaks = reg.breaksPerDay * reg.breakMin;
+  const breaks  = reg.breaksPerDay * reg.breakMin;
   return Math.max(0, workMin - reg.lunchMin - breaks);
 }
 function sumDemandMinutes(totalVolumeDay, dailyTaskPct, tasks) {
@@ -449,7 +270,6 @@ function sumDemandMinutes(totalVolumeDay, dailyTaskPct, tasks) {
   }
   return minutes;
 }
-
 async function calcAttendance(region, startISO) {
   const start = new Date(startISO);
   const year = start.getFullYear();
@@ -473,7 +293,6 @@ async function calcAttendance(region, startISO) {
   }
   return { results, agents, netCapPerAgentMin };
 }
-
 function renderAttendanceGrid(region, calc) {
   const { results, agents } = calc;
   let thead = `<thead><tr><th class="first-col">Agent</th>`;
@@ -553,11 +372,13 @@ function exportAttendanceToCSV(region, results, agents) {
   URL.revokeObjectURL(url);
 }
 
-/* ---------------- Agents (Directory + PTO) ---------------- */
-const agRegionSel = document.getElementById("ag-region");
-const agAddBtn = document.getElementById("ag-add");
-const agExportBtn = document.getElementById("ag-export");
-const agTable = document.getElementById("ag-table")?.querySelector("tbody");
+/* ======================================================================
+   AGENTS (Directory + PTO Drawer)
+   ====================================================================== */
+const agRegionSel  = document.getElementById("ag-region");
+const agAddBtn     = document.getElementById("ag-add");
+const agExportBtn  = document.getElementById("ag-export");
+const agTable      = document.getElementById("ag-table")?.querySelector("tbody");
 
 const PTO_DRAWER = {
   el: document.getElementById("pto-drawer"),
@@ -573,7 +394,6 @@ const PTO_DRAWER = {
   agentId: null,
   agentName: null,
 };
-
 async function initAgentsUI() {
   if (!agRegionSel) return;
   const def = await getDefaultRegionFromProfile();
@@ -587,7 +407,6 @@ async function initAgentsUI() {
   PTO_DRAWER.closeBtn.addEventListener("click", closePtoDrawer);
   PTO_DRAWER.saveBtn.addEventListener("click", savePtoRange);
 }
-
 async function fetchAgents(region) {
   const { data, error } = await supabase
     .from("agents")
@@ -595,7 +414,6 @@ async function fetchAgents(region) {
     .eq("region", region)
     .order("full_name", { ascending: true });
   if (error) throw error;
-  // fetch skills
   const { data: skills, error: e2 } = await supabase.from("agent_skills").select("*");
   if (e2) throw e2;
   const byId = {};
@@ -610,7 +428,6 @@ async function fetchAgents(region) {
   });
   return Object.values(byId);
 }
-
 function statusSelectHtml(current) {
   const opts = ["Present","PTO","Sick Leave","Unavailable"];
   return `<select class="ag-status">
@@ -627,7 +444,6 @@ function actionsButtons() {
     del: `<button class="mini danger">Delete</button>`
   };
 }
-
 async function renderAgentsTable() {
   if (!agTable) return;
   agTable.innerHTML = `<tr><td colspan="12">Loading…</td></tr>`;
@@ -685,7 +501,6 @@ async function renderAgentsTable() {
           : e.target.classList.contains("can_fraud") ? "can_fraud"
           : "can_backoffice";
         const payload = { [cls]: e.target.checked };
-        // upsert skills row
         const { error } = await supabase.from("agent_skills").upsert({ agent_id: id, ...payload }, { onConflict: "agent_id" });
         if (error) console.error(error);
       });
@@ -709,19 +524,15 @@ async function renderAgentsTable() {
     });
   });
 }
-
 async function onAddAgent() {
   const name = prompt("Agent full name ?");
   if (!name) return;
   const region = agRegionSel.value;
-  // create agent
   const { data, error } = await supabase.from("agents").insert({ full_name: name, region }).select("id").single();
   if (error) { alert(error.message); return; }
-  // create empty skills
   await supabase.from("agent_skills").insert({ agent_id: data.id });
   await renderAgentsTable();
 }
-
 async function exportAgentsCSV() {
   const region = agRegionSel.value;
   const list = await fetchAgents(region);
@@ -736,7 +547,7 @@ async function exportAgentsCSV() {
   URL.revokeObjectURL(url);
 }
 
-/* -------- PTO Drawer logic -------- */
+/* PTO Drawer */
 async function openPtoDrawer(agentId, agentName, opts={}) {
   PTO_DRAWER.agentId = agentId;
   PTO_DRAWER.agentName = agentName;
@@ -749,16 +560,11 @@ async function openPtoDrawer(agentId, agentName, opts={}) {
 
   PTO_DRAWER.el.classList.add("open");
   PTO_DRAWER.el.setAttribute("aria-hidden", "false");
-
-  if (opts.showCalendarOnly) {
-    // no-op; just showing
-  }
 }
 function closePtoDrawer() {
   PTO_DRAWER.el.classList.remove("open");
   PTO_DRAWER.el.setAttribute("aria-hidden", "true");
 }
-
 async function refreshPtoList() {
   const { data, error } = await supabase
     .from("agent_pto")
@@ -768,13 +574,10 @@ async function refreshPtoList() {
   if (error) { console.error(error); return; }
 
   PTO_DRAWER.list.innerHTML = (data||[]).map(p => {
-    const half = `${p.half_day_start||''}-${p.half_day_end||''}`.replace(/^-|-$/g,'');
-    const label = half ? `${p.start_date} (${p.half_day_start||'Full'}) → ${p.end_date} (${p.half_day_end||'Full'})`
-                       : `${p.start_date} → ${p.end_date}`;
+    const label = `${p.start_date} ${p.half_day_start||'Full'} → ${p.end_date} ${p.half_day_end||'Full'}`;
     return `<li data-id="${p.id}">${label} <button class="mini danger" data-del="${p.id}">Delete</button></li>`;
   }).join("") || `<li class="muted">No PTO yet.</li>`;
 
-  // bind delete buttons
   PTO_DRAWER.list.querySelectorAll("[data-del]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-del");
@@ -784,12 +587,11 @@ async function refreshPtoList() {
     });
   });
 }
-
 async function savePtoRange() {
   const start_date = PTO_DRAWER.start.value;
   const end_date = PTO_DRAWER.end.value || start_date;
   const half_day_start = PTO_DRAWER.halfStart.value || null;
-  const half_day_end = PTO_DRAWER.halfEnd.value || null;
+  const half_day_end   = PTO_DRAWER.halfEnd.value || null;
   if (!start_date) { alert("Select a start date"); return; }
   const { error } = await supabase.from("agent_pto").insert({
     agent_id: PTO_DRAWER.agentId, start_date, end_date, half_day_start, half_day_end
@@ -798,12 +600,9 @@ async function savePtoRange() {
   await refreshPtoList();
   await renderPtoMiniCalendar();
 }
-
 async function renderPtoMiniCalendar() {
-  // simple month view around today
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth(); // 0..11
-  const first = new Date(y, m, 1);
   const last = new Date(y, m + 1, 0);
   const days = last.getDate();
 
@@ -816,8 +615,7 @@ async function renderPtoMiniCalendar() {
   function isPto(dStr) {
     for (const p of (data||[])) {
       if (dStr >= p.start_date && dStr <= p.end_date) {
-        const half = (p.half_day_start || p.half_day_end) ? "half" : "full";
-        return half;
+        return (p.half_day_start || p.half_day_end) ? "half" : "full";
       }
     }
     return null;
@@ -832,384 +630,174 @@ async function renderPtoMiniCalendar() {
   html += `</div>`;
   PTO_DRAWER.calendar.innerHTML = html;
 }
-// =======================
-// === TASKS (Step 3) START
-// =======================
 
-/**
- * Modèle de donnée
- * Task = {
- *   id: string,
- *   title: string,
- *   status: 'open'|'in_progress'|'done',
- *   priority: 'low'|'medium'|'high',
- *   assigneeId: string|null,
- *   assigneeName: string|null,
- *   due: 'YYYY-MM-DD'|null,
- *   tags: string[], // en minuscules
- *   notes: string|null,
- *   createdAt: number,
- *   updatedAt: number
- * }
- */
+/* ======================================================================
+   TASKS (Catalogue paramétrique — localStorage par région)
+   ====================================================================== */
+window.Tasks = (() => {
+  const LS_PREFIX = 'roman_tasks_v2:';
+  const REGION_DEFAULT = 'EMEA';
+  const $ = (s, r=document) => r.querySelector(s);
 
-const Tasks = (() => {
-  const STORAGE_KEY = 'app.tasks.v1';
+  const DEFAULT_ROWS = [
+    { key:'call',         label:'Call',          priority:'high', aht:6,  enabled:true,  notes:'' },
+    { key:'mail',         label:'Mail',          priority:'med',  aht:7,  enabled:true,  notes:'' },
+    { key:'chat',         label:'Chat',          priority:'high', aht:4,  enabled:true,  notes:'' },
+    { key:'clienteling',  label:'Clienteling',   priority:'low',  aht:10, enabled:true,  notes:'' },
+    { key:'fraud',        label:'Fraud',         priority:'high', aht:12, enabled:true,  notes:'' },
+    { key:'backoffice',   label:'Back Office',   priority:'med',  aht:8,  enabled:true,  notes:'' },
+    { key:'lunch',        label:'Lunch',         priority:'high', aht:60, enabled:true,  notes:'Paid/unpaid per policy' },
+    { key:'break',        label:'Break',         priority:'high', aht:15, enabled:true,  notes:'x2 per day' },
+    { key:'training',     label:'Training',      priority:'low',  aht:45, enabled:true,  notes:'' },
+    { key:'morningbrief', label:'Morning Brief', priority:'med',  aht:15, enabled:true,  notes:'' },
+  ];
 
-  // ---- State
-  let tasks = [];
-  let filters = {
-    q: '',
-    status: 'all',
-    assignee: 'all',
-    priority: 'all',
-    tags: []
+  let region = REGION_DEFAULT;
+  let rows = [];
+
+  const els = {
+    panel:   () => document.getElementById('tasksPanel'),
+    search:  () => document.getElementById('task-search'),
+    fPrio:   () => document.getElementById('task-filter-priority'),
+    region:  () => document.getElementById('task-region'),
+    tbody:   () => document.getElementById('tasksTbody'),
+    counters:() => document.getElementById('task-counters'),
+    createBtn:() => document.getElementById('createTaskBtn'),
   };
 
-  // ---- Utils
-  const uid = () => Math.random().toString(36).slice(2, 10);
-  const now = () => Date.now();
-
-  const save = () => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch {}
-  };
-  const load = () => {
+  const key = (reg) => `${LS_PREFIX}${reg || REGION_DEFAULT}`;
+  const clone = (x) => JSON.parse(JSON.stringify(x));
+  const load = (reg) => {
+    const raw = localStorage.getItem(key(reg));
+    if (!raw) return clone(DEFAULT_ROWS);
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) tasks = JSON.parse(raw);
-    } catch {}
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : clone(DEFAULT_ROWS);
+    } catch { return clone(DEFAULT_ROWS); }
   };
+  const save = (reg, data) => localStorage.setItem(key(reg), JSON.stringify(data));
 
-  const seedIfEmpty = () => {
-    if (tasks.length) return;
-    tasks = [
-      {
-        id: uid(), title: 'Mettre en place la vue Tasks', status: 'in_progress', priority: 'high',
-        assigneeId: 'u1', assigneeName: 'Roman', due: null, tags:['frontend','repo'], notes:'Wire l’UI et la persistence.',
-        createdAt: now(), updatedAt: now()
-      },
-      {
-        id: uid(), title: 'Écrire la doc README: Tasks', status: 'open', priority: 'medium',
-        assigneeId: 'u2', assigneeName: 'Aline', due: null, tags:['docs'], notes:null,
-        createdAt: now(), updatedAt: now()
-      },
-      {
-        id: uid(), title: 'QA rapide + filtres', status: 'done', priority: 'low',
-        assigneeId: null, assigneeName: null, due: null, tags:['qa'], notes:'Ok sur desktop et 375px.',
-        createdAt: now(), updatedAt: now()
-      }
-    ];
-  };
+  const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
-  // ---- CRUD
-  const add = (payload) => {
-    const t = {
-      id: uid(),
-      title: (payload.title||'').trim(),
-      status: payload.status || 'open',
-      priority: payload.priority || 'medium',
-      assigneeId: payload.assigneeId || null,
-      assigneeName: payload.assigneeName || null,
-      due: payload.due || null,
-      tags: (payload.tags||[]).map(s=>s.toLowerCase()),
-      notes: payload.notes || null,
-      createdAt: now(), updatedAt: now()
-    };
-    tasks.unshift(t);
-    save();
-    return t;
-  };
+  const setRegion = (reg) => { region = reg || REGION_DEFAULT; rows = load(region); render(); };
 
-  const update = (id, patch) => {
-    const i = tasks.findIndex(t=>t.id===id);
-    if (i===-1) return null;
-    tasks[i] = { ...tasks[i], ...patch, updatedAt: now() };
-    save();
-    return tasks[i];
-  };
-
-  const remove = (id) => {
-    tasks = tasks.filter(t=>t.id!==id);
-    save();
-  };
-
-  // ---- Filters
-  const setFilter = (patch) => {
-    filters = { ...filters, ...patch };
-    render();
-  };
-
-  const applyFilters = (list) => {
-    let out = [...list];
-    const q = filters.q.trim().toLowerCase();
-    if (q) {
-      out = out.filter(t =>
-        t.title.toLowerCase().includes(q) ||
-        (t.notes||'').toLowerCase().includes(q) ||
-        t.tags.some(tag=>tag.includes(q))
-      );
-    }
-    if (filters.status !== 'all') {
-      const map = { open:'open', in_progress:'in_progress', done:'done' };
-      out = out.filter(t => t.status === map[filters.status]);
-    }
-    if (filters.assignee !== 'all') {
-      out = out.filter(t => (t.assigneeId||'') === filters.assignee);
-    }
-    if (filters.priority !== 'all') {
-      out = out.filter(t => t.priority === filters.priority);
-    }
-    if (filters.tags.length) {
-      out = out.filter(t => filters.tags.every(tag => t.tags.includes(tag)));
-    }
-    return out;
-  };
-
-  // ---- Render
-  const $ = (sel) => document.querySelector(sel);
-
-  const el = {
-    list: () => $('#tasks-list'),
-    search: () => $('#task-search'),
-    filterStatus: () => $('#task-filter-status'),
-    filterAssignee: () => $('#task-filter-assignee'),
-    filterPriority: () => $('#task-filter-priority'),
-    filterTags: () => $('#task-filter-tags'),
-    form: () => $('#task-form'),
-    counts: {
-      all: () => $('#tasks-count-all'),
-      open: () => $('#tasks-count-open'),
-      prog: () => $('#tasks-count-inprogress'),
-      done: () => $('#tasks-count-done'),
-    }
-  };
-
-  const fmtPrio = (p) => ({low:'Faible',medium:'Moyenne',high:'Élevée'})[p]||p;
-  const fmtStatus = (s) => ({open:'Ouverte',in_progress:'En cours',done:'Terminée'})[s]||s;
-
-  const chipClassForPrio = (p) => p === 'high' ? 'prio-high' : p === 'low' ? 'prio-low' : 'prio-med';
-  const chipClassForStatus = (s) => s === 'done' ? 'status-done' : s === 'in_progress' ? 'status-progress' : 'status-open';
-
-  const renderCounts = (list) => {
-    const $all = el.counts.all(); if ($all) $all.textContent = tasks.length;
-    const $o = el.counts.open(); if ($o) $o.textContent = tasks.filter(t=>t.status==='open').length;
-    const $p = el.counts.prog(); if ($p) $p.textContent = tasks.filter(t=>t.status==='in_progress').length;
-    const $d = el.counts.done(); if ($d) $d.textContent = tasks.filter(t=>t.status==='done').length;
+  const applyFilters = () => {
+    const q  = (els.search()?.value || '').trim().toLowerCase();
+    const fp = (els.fPrio()?.value || '');
+    return rows.filter(r => {
+      if (q && !(r.label.toLowerCase().includes(q) || r.notes?.toLowerCase().includes(q))) return false;
+      if (fp && r.priority !== fp) return false;
+      return true;
+    });
   };
 
   const render = () => {
-    const $list = el.list();
-    if (!$list) return;
+    const tb = els.tbody(); if (!tb) return;
+    const list = applyFilters();
+    tb.innerHTML = list.map(renderRow).join('') || `<tr><td colspan="6" class="muted">No tasks.</td></tr>`;
 
-    const filtered = applyFilters(tasks);
-    renderCounts(filtered);
+    tb.querySelectorAll('select[data-key], input[data-key]').forEach(inp => {
+      inp.addEventListener('change', onCellChange);
+      inp.addEventListener('input',  onCellInput);
+    });
 
-    $list.innerHTML = '';
-    if (!filtered.length) {
-      $list.innerHTML = `<div class="chip">Aucune tâche ne correspond aux filtres</div>`;
-      return;
+    const cnt = els.counters(); if (cnt) {
+      const enabled = rows.filter(r => r.enabled).length;
+      cnt.innerHTML = [
+        `<span class="counter">Region: <b>${region}</b></span>`,
+        `<span class="counter">Tasks: <b>${rows.length}</b></span>`,
+        `<span class="counter">Enabled: <b>${enabled}</b></span>`
+      ].join('');
     }
-
-    const frag = document.createDocumentFragment();
-    filtered.forEach(t => {
-      const row = document.createElement('div');
-      row.className = 'task-item';
-      row.innerHTML = `
-        <div class="task-main">
-          <input type="checkbox" ${t.status==='done'?'checked':''} data-action="toggle" data-id="${t.id}" style="margin-top:4px"/>
-          <div>
-            <div class="task-title">${escapeHtml(t.title)}</div>
-            <div class="task-meta">
-              <span class="chip ${chipClassForStatus(t.status)}">${fmtStatus(t.status)}</span>
-              <span class="chip ${chipClassForPrio(t.priority)}">Priorité ${fmtPrio(t.priority)}</span>
-              ${t.assigneeName?`<span class="chip">@${escapeHtml(t.assigneeName)}</span>`:''}
-              ${t.due?`<span class="chip">Échéance ${t.due}</span>`:''}
-              ${t.tags.map(tag=>`<span class="chip">#${escapeHtml(tag)}</span>`).join('')}
-            </div>
-            ${t.notes?`<div class="task-notes">${escapeHtml(t.notes)}</div>`:''}
-          </div>
-        </div>
-        <div class="task-actions">
-          <button data-action="edit" data-id="${t.id}">Éditer</button>
-          <button class="danger" data-action="delete" data-id="${t.id}">Supprimer</button>
-        </div>
-      `;
-      frag.appendChild(row);
-    });
-    $list.appendChild(frag);
   };
 
-  const escapeHtml = (s) => String(s)
-    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    .replaceAll('"','&quot;').replaceAll("'","&#039;");
+  const renderRow = (r) => `
+    <tr data-row="${r.key}">
+      <td><input type="text" value="${escapeHtml(r.label)}" data-key="${r.key}" data-field="label" /></td>
+      <td>
+        <select data-key="${r.key}" data-field="priority">
+          <option value="high" ${r.priority==='high'?'selected':''}>High (P1)</option>
+          <option value="med"  ${r.priority==='med'?'selected':''}>Medium (P2)</option>
+          <option value="low"  ${r.priority==='low'?'selected':''}>Low (P3)</option>
+        </select>
+      </td>
+      <td><input type="number" min="0" step="1" value="${Number(r.aht)||0}" data-key="${r.key}" data-field="aht" /></td>
+      <td>
+        <label class="switch">
+          <input type="checkbox" ${r.enabled?'checked':''} data-key="${r.key}" data-field="enabled" />
+          <span class="slider"></span>
+        </label>
+      </td>
+      <td><input type="text" value="${escapeHtml(r.notes||'')}" data-key="${r.key}" data-field="notes" /></td>
+      <td class="row-actions">
+        <button type="button" class="mini danger" data-action="delete" data-key="${r.key}" title="Delete">Delete</button>
+      </td>
+    </tr>
+  `;
 
-  // ---- Form handling
-  const readForm = ($form) => {
-    const id = $form.querySelector('#task-id')?.value || null;
-    const title = $form.querySelector('#task-title')?.value || '';
-    const assignee = $form.querySelector('#task-assignee')?.value || '';
-    const [assigneeId, assigneeName] = assignee ? assignee.split('::') : [null, null];
-    const due = $form.querySelector('#task-due')?.value || null;
-    const priority = $form.querySelector('#task-priority')?.value || 'medium';
-    const status = $form.querySelector('#task-status')?.value || 'open';
-    const tagsRaw = $form.querySelector('#task-tags')?.value || '';
-    const notes = $form.querySelector('#task-notes')?.value || null;
-
-    const tags = tagsRaw
-      .split(',')
-      .map(s=>s.trim())
-      .filter(Boolean)
-      .map(s=>s.toLowerCase());
-
-    return { id, title, assigneeId, assigneeName, due, priority, status, tags, notes };
+  const onCellInput = debounce((e) => onCellChange(e), 200);
+  const onCellChange = (e) => {
+    const el = e.target;
+    const k = el.dataset.key, f = el.dataset.field;
+    const idx = rows.findIndex(x => x.key === k);
+    if (idx === -1) return;
+    let v = el.value;
+    if (f === 'enabled') v = el.checked;
+    if (f === 'aht') v = Number(v)||0;
+    rows[idx][f] = v;
+    save(region, rows);
   };
 
-  const fillForm = ($form, t=null) => {
-    const set = (sel, val) => { const n = $form.querySelector(sel); if (n) n.value = val ?? ''; };
-    set('#task-id', t?.id ?? '');
-    set('#task-title', t?.title ?? '');
-    if (t?.assigneeId || t?.assigneeName) set('#task-assignee', `${t.assigneeId||''}::${t.assigneeName||''}`);
-    set('#task-due', t?.due ?? '');
-    set('#task-priority', t?.priority ?? 'medium');
-    set('#task-status', t?.status ?? 'open');
-    set('#task-tags', (t?.tags||[]).join(', '));
-    set('#task-notes', t?.notes ?? '');
-  };
+  const getConfig = (reg) => load(reg);
 
-  const clearForm = ($form) => fillForm($form, null);
-
-  const hookForm = () => {
-    const $form = el.form();
-    if (!$form) return;
-
-    // Submit (create/update)
-    $form.addEventListener('submit', (e)=>{
-      e.preventDefault();
-      const data = readForm($form);
-      if (!data.title.trim()) return;
-
-      if (data.id) {
-        update(data.id, {
-          title:data.title, assigneeId:data.assigneeId, assigneeName:data.assigneeName,
-          due:data.due, priority:data.priority, status:data.status, tags:data.tags, notes:data.notes
-        });
-      } else {
-        add({
-          title:data.title, assigneeId:data.assigneeId, assigneeName:data.assigneeName,
-          due:data.due, priority:data.priority, status:data.status, tags:data.tags, notes:data.notes
-        });
-      }
-      clearForm($form);
-      render();
-    });
-
-    // Reset button (optional)
-    const resetBtn = $form.querySelector('[data-action="reset-form"]');
-    if (resetBtn) resetBtn.addEventListener('click', (e)=>{ e.preventDefault(); clearForm($form); });
-  };
-
-  // ---- List interactions
-  const hookList = () => {
-    const $list = el.list();
-    if (!$list) return;
-
-    $list.addEventListener('click', (e)=>{
-      const btn = e.target.closest('button,[data-action="toggle"]');
-      if (!btn) return;
-      const id = btn.getAttribute('data-id');
-      const action = btn.getAttribute('data-action');
-
-      if (action==='delete') {
-        remove(id);
-        render();
-      } else if (action==='edit') {
-        const t = tasks.find(t=>t.id===id);
-        const $form = el.form(); if ($form && t) fillForm($form, t);
-      } else if (action==='toggle') {
-        const t = tasks.find(t=>t.id===id);
-        if (!t) return;
-        const next = t.status === 'done' ? 'open' : 'done';
-        update(id, { status: next });
-        render();
-      }
-    });
-  };
-
-  // ---- Toolbar (search + filters)
-  const hookToolbar = () => {
-    const $search = el.search();
-    if ($search) $search.addEventListener('input', (e)=> setFilter({ q: e.target.value }));
-
-    const $fs = el.filterStatus();
-    if ($fs) $fs.addEventListener('change', (e)=> setFilter({ status: e.target.value }));
-
-    const $fa = el.filterAssignee();
-    if ($fa) $fa.addEventListener('change', (e)=> setFilter({ assignee: e.target.value }));
-
-    const $fp = el.filterPriority();
-    if ($fp) $fp.addEventListener('change', (e)=> setFilter({ priority: e.target.value }));
-
-    const $ft = el.filterTags();
-    if ($ft) $ft.addEventListener('change', (e)=> {
-      const val = e.target.value.trim();
-      const tags = val ? val.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean) : [];
-      setFilter({ tags });
-    });
-  };
-
-  // ---- Public API
+  let _inited = false;
   const init = () => {
-    load();
-    seedIfEmpty();
-    hookForm();
-    hookList();
-    hookToolbar();
-    render();
+    if (_inited) return;
+    const panel = els.panel();
+    if (!panel) return;
+    _inited = true;
+
+    const rSel = els.region();
+    const previous = localStorage.getItem('roman_tasks_v2:last_region') || REGION_DEFAULT;
+    if (rSel) {
+      rSel.value = previous;
+      rSel.addEventListener('change', () => {
+        localStorage.setItem('roman_tasks_v2:last_region', rSel.value);
+        setRegion(rSel.value);
+      });
+    }
+    setRegion(rSel?.value || previous);
+
+    els.search()?.addEventListener('input', render);
+    els.fPrio()?.addEventListener('change', render);
+    els.createBtn()?.addEventListener('click', () => {
+      const name = prompt('New task name (ex: QA Review) ?');
+      if (!name) return;
+      const safeKey = name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24) || ('task'+Date.now());
+      rows.push({ key:safeKey, label:name, priority:'low', aht:5, enabled:true, notes:'' });
+      save(region, rows); render();
+    });
   };
 
-  return { init, add, update, remove, setFilter };
+  return { init, getConfig };
 })();
 
-// Boot Tasks : initialise si la section existe au chargement (sécurité)
-document.addEventListener('DOMContentLoaded', () => {
-  const hasTasks = document.querySelector('#tasks');
-  if (hasTasks) Tasks.init();
-});
-
-
-// =======================
-// === TASKS (Step 3) END
-// =======================
-
-// =======================
-// === FORECAST (Module) START
-// =======================
-
-/* =========================
-   FORECAST v2 — Render + Persistence per region
-   - HTML IDs attendus :
-     #forecast-section (panel)
-     #fc-region (select région)
-     #fc-total (input)
-     #fc-monthly, #fc-weekly, #fc-daily, #fc-hourly (conteneurs)
-   - Persistance locale (localStorage par région)
-   - Option Supabase (si CONFIG est présent) — voir plus bas
-   ========================= */
+/* ======================================================================
+   FORECAST STORE (localStorage + sync optionnel forecast_values)
+   ====================================================================== */
 window.ForecastStore = (() => {
   const PREFIX = 'roman_forecast_v2:';
   const REGION_DEFAULT = 'EMEA';
   const $ = (s, r=document) => r.querySelector(s);
 
-  // ---------- Définitions des grilles
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const CHANNELS = ['Mail','Call','Chat','Clienteling','Fraud','BackOffice'];
 
-  // ---------- État
   let region = REGION_DEFAULT;
-  let state = null; // { total:number, monthly:{}, weekly:{}, daily:{}, hourly:{} }
+  let state = null;
 
-  // ---------- Storage helpers
   const key = (reg) => `${PREFIX}${reg || REGION_DEFAULT}`;
   const blankState = () => ({
     total: '',
@@ -1218,16 +806,13 @@ window.ForecastStore = (() => {
     daily:   Object.fromEntries(DAYS.map(d => [d, { day:'', ...Object.fromEntries(CHANNELS.map(c=>[c,''])) }])),
     hourly:  Object.fromEntries(Array.from({length:24}, (_,h)=>[String(h), '']))
   });
-
   const load = (reg) => {
     const raw = localStorage.getItem(key(reg));
     if (!raw) return blankState();
     try { 
       const obj = JSON.parse(raw);
-      return mergeBlank(obj); // garantit toutes les clés
-    } catch {
-      return blankState();
-    }
+      return mergeBlank(obj);
+    } catch { return blankState(); }
   };
   const save = () => localStorage.setItem(key(region), JSON.stringify(state));
   const mergeBlank = (obj) => {
@@ -1236,103 +821,21 @@ window.ForecastStore = (() => {
       total: obj?.total ?? base.total,
       monthly: { ...base.monthly, ...(obj?.monthly||{}) },
       weekly:  { ...base.weekly,  ...(obj?.weekly||{}) },
-      daily:   {
-        ...base.daily,
-        ...(obj?.daily||{}),
-      },
+      daily:   { ...base.daily,   ...(obj?.daily||{}) },
       hourly:  { ...base.hourly,  ...(obj?.hourly||{}) }
     };
   };
 
-  // ---------- Rendu
-  const renderAll = () => {
-    renderTotal();
-    renderMonthly();
-    renderWeekly();
-    renderDaily();
-    renderHourly();
-  };
-
+  const renderAll = () => { renderTotal(); renderMonthly(); renderWeekly(); renderDaily(); renderHourly(); };
   const renderTotal = () => {
     const inp = $('#fc-total'); if (!inp) return;
     inp.value = state.total ?? '';
     inp.oninput = () => { state.total = inp.value; save(); maybeSync('total', inp.value); };
   };
-
-  const renderMonthly = () => {
-    const host = $('#fc-monthly'); if (!host) return;
-    host.innerHTML = tableHtml(
-      ['Month', ...MONTHS],
-      [['Share %', ...MONTHS.map(m => inputHtml(`monthly.${m}`, state.monthly[m]))]]
-    );
-    wireInputs(host);
-    // affichage somme %
-    const sumSpan = $('#fc-monthly-sum'); if (sumSpan) {
-      sumSpan.textContent = `Sum: ${sumPercent(Object.values(state.monthly))}%`;
-    }
-  };
-
-  const renderWeekly = () => {
-    const host = $('#fc-weekly'); if (!host) return;
-    const head = ['Week', ...Array.from({length:53}, (_,i)=>String(i+1))];
-    const row = ['Share %', ...Array.from({length:53}, (_,i)=>inputHtml(`weekly.${i+1}`, state.weekly[String(i+1)]))];
-    host.innerHTML = tableHtml(head, [row]);
-    wireInputs(host);
-    const sumSpan = $('#fc-weekly-sum'); if (sumSpan) {
-      sumSpan.textContent = `Sum (guide): ${sumPercent(Object.values(state.weekly))}%`;
-    }
-  };
-
-  const renderDaily = () => {
-    const host = $('#fc-daily'); if (!host) return;
-    // Table 1 : Day %
-    const t1Head = ['Day','%'];
-    const t1Rows = DAYS.map(d => [
-      d,
-      inputHtml(`daily.${d}.day`, state.daily[d]?.day)
-    ]);
-
-    // Table 2 : Channel mix par jour
-    const t2Head = ['Day', ...CHANNELS];
-    const t2Rows = DAYS.map(d => [
-      d,
-      ...CHANNELS.map(c => inputHtml(`daily.${d}.${c}`, state.daily[d]?.[c] ?? ''))
-    ]);
-
-    host.innerHTML = `
-      <div class="forecast-table" style="margin-bottom:8px">
-        ${tableHtml(t1Head, t1Rows, {compact:true})}
-      </div>
-      <div class="forecast-table">
-        ${tableHtml(t2Head, t2Rows, {compact:true})}
-      </div>
-    `;
-    wireInputs(host);
-
-    const sumSpan = $('#fc-daily-check'); 
-    if (sumSpan) {
-      const daySum = sumPercent(DAYS.map(d => state.daily[d]?.day));
-      sumSpan.textContent = `Day% sum: ${daySum}% — Each channel row should total 100%.`;
-    }
-  };
-
-  const renderHourly = () => {
-    const host = $('#fc-hourly'); if (!host) return;
-    const hours = Array.from({length:24}, (_,h)=>String(h));
-    const head = ['Hour', ...hours];
-    const row  = ['Share %', ...hours.map(h => inputHtml(`hourly.${h}`, state.hourly[h]))];
-    host.innerHTML = tableHtml(head, [row]);
-    wireInputs(host);
-    const sumSpan = $('#fc-hourly-sum'); if (sumSpan) {
-      sumSpan.textContent = `Sum: ${sumPercent(Object.values(state.hourly))}%`;
-    }
-  };
-
-  // ---------- HTML helpers
-  const tableHtml = (head, rows, opts={}) => {
+  const tableHtml = (head, rows) => {
     const thead = `<thead><tr>${head.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>`;
     const tbody = `<tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
-    return `<table class="forecast-table" ${opts.compact?'data-compact="1"':''}>${thead}${tbody}</table>`;
+    return `<table class="table">${thead}${tbody}</table>`;
   };
   const inputHtml = (name, value) => {
     const val = (value ?? '') === '' ? '' : String(value);
@@ -1344,141 +847,123 @@ window.ForecastStore = (() => {
       inp.addEventListener('change', onInputChange);
     });
   };
-
-  // ---------- Events
-  const onInputChange = (e) => {
-    const inp = e.target;
-    const path = inp.name.split('.'); // ex: ['monthly','Jan'] ou ['daily','Mon','Mail']
-    if (!path.length) return;
-
-    // navigate in state by path
-    let ref = state;
-    for (let i=0;i<path.length-1;i++){
-      const k = path[i];
-      if (ref[k] == null) ref[k] = {};
-      ref = ref[k];
-    }
-    ref[path[path.length-1]] = inp.value;
-
-    save();
-    maybeSync(inp.name, inp.value);
-
-    // Mets à jour les petits indicateurs de somme
-    if (path[0]==='monthly') {
-      const sumSpan = $('#fc-monthly-sum'); if (sumSpan) sumSpan.textContent = `Sum: ${sumPercent(Object.values(state.monthly))}%`;
-    }
-    if (path[0]==='weekly') {
-      const sumSpan = $('#fc-weekly-sum'); if (sumSpan) sumSpan.textContent = `Sum (guide): ${sumPercent(Object.values(state.weekly))}%`;
-    }
-    if (path[0]==='daily') {
-      const sumSpan = $('#fc-daily-check');
-      if (sumSpan) {
-        const daySum = sumPercent(DAYS.map(d => state.daily[d]?.day));
-        sumSpan.textContent = `Day% sum: ${daySum}% — Each channel row should total 100%.`;
-      }
-    }
-    if (path[0]==='hourly') {
-      const sumSpan = $('#fc-hourly-sum'); if (sumSpan) sumSpan.textContent = `Sum: ${sumPercent(Object.values(state.hourly))}%`;
+  const renderMonthly = () => {
+    const host = document.getElementById('fc-monthly'); if (!host) return;
+    host.innerHTML = tableHtml(
+      ['Month', ...MONTHS],
+      [['Share %', ...MONTHS.map(m => inputHtml(`monthly.${m}`, state.monthly[m]))]]
+    );
+    wireInputs(host);
+    const sumSpan = document.getElementById('fc-monthly-sum'); if (sumSpan) sumSpan.textContent = `Sum: ${sumPercent(Object.values(state.monthly))}%`;
+  };
+  const renderWeekly = () => {
+    const host = document.getElementById('fc-weekly'); if (!host) return;
+    const head = ['Week', ...Array.from({length:53}, (_,i)=>String(i+1))];
+    const row  = ['Share %', ...Array.from({length:53}, (_,i)=>inputHtml(`weekly.${i+1}`, state.weekly[String(i+1)]))];
+    host.innerHTML = tableHtml(head, [row]);
+    wireInputs(host);
+    const sumSpan = document.getElementById('fc-weekly-sum'); if (sumSpan) sumSpan.textContent = `Sum (guide): ${sumPercent(Object.values(state.weekly))}%`;
+  };
+  const renderDaily = () => {
+    const host = document.getElementById('fc-daily'); if (!host) return;
+    const t1Head = ['Day','%'];
+    const t1Rows = DAYS.map(d => [ d, inputHtml(`daily.${d}.day`, state.daily[d]?.day) ]);
+    const t2Head = ['Day', ...CHANNELS];
+    const t2Rows = DAYS.map(d => [ d, ...CHANNELS.map(c => inputHtml(`daily.${d}.${c}`, state.daily[d]?.[c] ?? '')) ]);
+    host.innerHTML = `
+      <div class="forecast-table" style="margin-bottom:8px">${tableHtml(t1Head, t1Rows)}</div>
+      <div class="forecast-table">${tableHtml(t2Head, t2Rows)}</div>
+    `;
+    wireInputs(host);
+    const sumSpan = document.getElementById('fc-daily-check'); 
+    if (sumSpan) {
+      const daySum = sumPercent(DAYS.map(d => state.daily[d]?.day));
+      sumSpan.textContent = `Day% sum: ${daySum}% — Each channel row should total 100%.`;
     }
   };
-
-  // ---------- Utils
+  const renderHourly = () => {
+    const host = document.getElementById('fc-hourly'); if (!host) return;
+    const hours = Array.from({length:24}, (_,h)=>String(h));
+    const head = ['Hour', ...hours];
+    const row  = ['Share %', ...hours.map(h => inputHtml(`hourly.${h}`, state.hourly[h]))];
+    host.innerHTML = tableHtml(head, [row]);
+    wireInputs(host);
+    const sumSpan = document.getElementById('fc-hourly-sum'); if (sumSpan) sumSpan.textContent = `Sum: ${sumPercent(Object.values(state.hourly))}%`;
+  };
+  const onInputChange = (e) => {
+    const inp = e.target;
+    const path = inp.name.split('.');
+    if (!path.length) return;
+    let ref = state;
+    for (let i=0;i<path.length-1;i++){ const k = path[i]; if (ref[k] == null) ref[k] = {}; ref = ref[k]; }
+    ref[path[path.length-1]] = inp.value;
+    save(); maybeSync(inp.name, inp.value);
+    if (path[0]==='monthly') { const s = document.getElementById('fc-monthly-sum'); if (s) s.textContent = `Sum: ${sumPercent(Object.values(state.monthly))}%`; }
+    if (path[0]==='weekly')  { const s = document.getElementById('fc-weekly-sum');  if (s) s.textContent = `Sum (guide): ${sumPercent(Object.values(state.weekly))}%`; }
+    if (path[0]==='daily')   { const s = document.getElementById('fc-daily-check'); if (s) { const daySum = sumPercent(DAYS.map(d => state.daily[d]?.day)); s.textContent = `Day% sum: ${daySum}% — Each channel row should total 100%.`; } }
+    if (path[0]==='hourly')  { const s = document.getElementById('fc-hourly-sum');  if (s) s.textContent = `Sum: ${sumPercent(Object.values(state.hourly))}%`; }
+  };
   const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const escapeAttr = escapeHtml;
   const sumPercent = (arr) => {
     const n = arr.reduce((acc,v)=> acc + (parseFloat(v)||0), 0);
     return (Math.round(n * 100) / 100).toFixed(2);
   };
+  const debounce = (fn, ms) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
 
-  // ---------- Supabase (optionnel) : upsert par région/champ
   const maybeSync = debounce(async (field, value) => {
-    // Nécessite : window.CONFIG.SUPABASE_URL, .SUPABASE_ANON_KEY, .SYNC_FORECAST=true
     const C = window.CONFIG || {};
     if (!C.SYNC_FORECAST || !C.SUPABASE_URL || !C.SUPABASE_ANON_KEY) return;
     try {
-      await upsertRow(region, field, value);
+      const url = `${C.SUPABASE_URL}/rest/v1/forecast_values`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'apikey': C.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${C.SUPABASE_ANON_KEY}`,
+          'Content-Type':'application/json',
+          'Prefer':'resolution=merge-duplicates'
+        },
+        body: JSON.stringify([{ region, field, value, updated_at: new Date().toISOString() }])
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
     } catch (e) {
       console.warn('Supabase sync failed (soft):', e);
     }
   }, 250);
 
-  async function upsertRow(region, field, value) {
-    const url = `${window.CONFIG.SUPABASE_URL}/rest/v1/forecast_values`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'apikey': window.CONFIG.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${window.CONFIG.SUPABASE_ANON_KEY}`,
-        'Content-Type':'application/json',
-        'Prefer':'resolution=merge-duplicates'
-      },
-      body: JSON.stringify([{ region, field, value, updated_at: new Date().toISOString() }])
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(()=> '');
-      throw new Error(`HTTP ${res.status} ${txt}`);
-    }
-  }
-
-  const debounce = (fn, ms) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
-
-  // ---------- Init
   let _inited = false;
   const init = () => {
-    if (_inited) _refreshRegion(); // si déjà prêt, juste recharger la région affichée
     const panel = document.getElementById('forecast-section');
     if (!panel) return;
+    if (_inited) { _refreshRegion(); return; }
     _inited = true;
 
-    const rSel = $('#fc-region', panel);
+    const rSel = document.getElementById('fc-region');
     const prev = localStorage.getItem(`${PREFIX}last_region`) || REGION_DEFAULT;
     if (rSel) {
       rSel.value = prev;
       rSel.addEventListener('change', () => {
         localStorage.setItem(`${PREFIX}last_region`, rSel.value);
-        region = rSel.value;
-        state = load(region);
-        renderAll();
+        region = rSel.value; state = load(region); renderAll();
       });
     }
     region = rSel?.value || prev;
     state = load(region);
     renderAll();
   };
-
   const _refreshRegion = () => {
-    const panel = document.getElementById('forecast-section');
-    if (!panel) return;
-    const rSel = $('#fc-region', panel);
+    const rSel = document.getElementById('fc-region');
     const current = rSel?.value || REGION_DEFAULT;
-    if (current !== region) {
-      region = current;
-      state = load(region);
-      renderAll();
-    }
+    if (current !== region) { region = current; state = load(region); renderAll(); }
   };
 
   return { init };
 })();
-// =======================
-// === FORECAST (Module) END
-// =======================
-// =======================
-// === WEEKLY (Module) START
-// =======================
 
-/**
- * Weekly Planning: timeline 30 min par agent + comparaison demande/capacité
- * Hypothèses:
- * - On réutilise tes helpers existants:
- *   - fetchAgentsWithPTO(region)
- *   - fetchRegulations(region)
- *   - computeNetCapacityPerAgentMin(reg)
- *   - fetchForecastPieces(region, y, m, d)  -> totalVolume, monthlyShare, weeklyShare, dailyShare, dailyTaskPct, tasks
- *   - sumDemandMinutes(totalVolumeDay, dailyTaskPct, tasks)
- * - forecast_hourly (hhmm, share_percent) distribue la journée (somme = 100).
- */
-
+/* ======================================================================
+   WEEKLY (timeline 30 min, demande vs capacité)
+   ====================================================================== */
 const Weekly = (() => {
   const $ = (s)=>document.querySelector(s);
   const els = {
@@ -1489,51 +974,36 @@ const Weekly = (() => {
     load: ()=>$('#wp-load'),
     exportBtn: ()=>$('#wp-export'),
     grid: ()=>$('#wp-grid'),
-
     agentsCount: ()=>$('#wp-agents-count'),
     coverageAvg: ()=>$('#wp-coverage-avg'),
     understaffed: ()=>$('#wp-understaffed'),
   };
-
-  // ---- Utils
   const parseWeekInput = (val) => {
-    // "YYYY-Www" -> date du lundi
     const [y, w] = val.split('-W').map(x=>parseInt(x,10));
-    return isoWeekToDate(y, w); // retourne le lundi de la semaine ISO
+    return isoWeekToDate(y, w);
   };
-
   function isoWeekToDate(year, week) {
-    // Trouve le jeudi de la semaine 1
     const simple = new Date(Date.UTC(year, 0, 4));
     const dayOfWeek = simple.getUTCDay() || 7;
     const thursday = new Date(simple);
     thursday.setUTCDate(simple.getUTCDate() + (4 - dayOfWeek));
-    // Lundi de la semaine demandée
     const monday = new Date(thursday);
     monday.setUTCDate(thursday.getUTCDate() - 3 + (week - 1) * 7);
-    return monday; // UTC
+    return monday;
   }
-
-  function addDays(date, n){
-    const d = new Date(date); d.setUTCDate(d.getUTCDate()+n); return d;
-  }
+  function addDays(date, n){ const d = new Date(date); d.setUTCDate(d.getUTCDate()+n); return d; }
   function ymd(date){ return date.toISOString().slice(0,10); }
-
   function minutesBetween(hhmmStart, hhmmEnd){
     const [sh, sm] = hhmmStart.split(':').map(Number);
     const [eh, em] = hhmmEnd.split(':').map(Number);
     return (eh*60+em) - (sh*60+sm);
   }
-
   function hhmmAdd(hhmm, deltaMin){
     let [h,m] = hhmm.split(':').map(Number);
-    let total = h*60+m + deltaMin;
-    if (total<0) total=0;
+    let total = h*60+m + deltaMin; if (total<0) total=0;
     const nh = Math.floor(total/60), nm = total%60;
     return `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;
   }
-
-  // ---- Forecast hourly (hhmm -> %)
   async function fetchHourlyShares(region){
     const { data, error } = await supabase
       .from('forecast_hourly')
@@ -1543,105 +1013,75 @@ const Weekly = (() => {
     if (error) throw error;
     const map = new Map();
     (data||[]).forEach(r => map.set(r.hhmm, parseFloat(r.share_percent)||0));
-    // Si vide, seed plat 10:00..18:00 (9h -> 18 tranches de 30 min)
     if (!map.size){
       for (let h=10; h<=18; h++){
         map.set(`${String(h).padStart(2,'0')}:00`, +(100/18).toFixed(2));
         map.set(`${String(h).padStart(2,'0')}:30`, +(100/18).toFixed(2));
       }
     }
-    return map; // somme ≈ 100
+    return map;
   }
-
-  // ---- Build slots grid (Mon..Sun x 30 min)
   function buildWeekSlots(mondayUTC, dayStart, dayEnd){
-    // Liste des jours (UTC) + slots internes
     const days = Array.from({length:7}, (_,i)=> addDays(mondayUTC, i));
     const slots = [];
     let cursor = dayStart;
-    while (cursor < dayEnd){
-      slots.push(cursor);
-      cursor = hhmmAdd(cursor, 30);
-    }
-    return { days, slots }; // slots = ["09:00","09:30",...]
+    while (cursor < dayEnd){ slots.push(cursor); cursor = hhmmAdd(cursor, 30); }
+    return { days, slots };
   }
-
-  // ---- Demand per slot
   async function computeDemandPerSlot(region, mondayUTC, dayStart, dayEnd, slots){
-    const demand = {}; // key = YYYY-MM-DD|HH:MM -> minutes
-    const hourly = await fetchHourlyShares(region); // % sur la journée (somme ≈100)
-
+    const demand = {};
+    const hourly = await fetchHourlyShares(region);
     for (let i=0; i<7; i++){
       const d = addDays(mondayUTC, i);
       const dateISO = ymd(d);
       const y = d.getUTCFullYear(), m = d.getUTCMonth()+1, day = d.getUTCDate();
-
-      // Forecast du jour (déjà utilisé par Attendance)
       const f = await fetchForecastPieces(region, y, m, day);
       const totalDay = f.totalVolume * f.monthlyShare * f.weeklyShare * f.dailyShare;
       const demandMinutesDay = sumDemandMinutes(totalDay, f.dailyTaskPct, f.tasks);
-
-      // Normalise part horaire aux slots visibles (dayStart..dayEnd)
       const dayKeys = Array.from(hourly.keys()).filter(h=> h>=dayStart && h<dayEnd);
       const sumVisible = dayKeys.reduce((s,k)=> s+(hourly.get(k)||0), 0) || 1;
-
       for (const hhmm of slots){
         if (!dayKeys.includes(hhmm)) continue;
-        const pct = (hourly.get(hhmm)||0) / sumVisible; // part relative dans la fenêtre visible
+        const pct = (hourly.get(hhmm)||0) / sumVisible;
         const mins = demandMinutesDay * pct;
         demand[`${dateISO}|${hhmm}`] = mins;
       }
     }
-    return demand; // minutes de travail requis par slot
+    return demand;
   }
-
-  // ---- Capacity per slot
   async function computeCapacityPerSlot(region, mondayUTC, dayStart, dayEnd, slots){
     const regs = await fetchRegulations(region);
     const netCapPerAgentMin = computeNetCapacityPerAgentMin(regs);
     const workWindowMin = Math.max(30, minutesBetween(dayStart, dayEnd));
-    const perAgentPerMinute = netCapPerAgentMin / workWindowMin; // capacité lissée
-
+    const perAgentPerMinute = netCapPerAgentMin / workWindowMin;
     const agents = await fetchAgentsWithPTO(region);
-    const cap = {}; // key = YYYY-MM-DD|HH:MM -> minutes de capacité
-    const presentAgentsByDate = {}; // stats
-
+    const cap = {};
+    const presentAgentsByDate = {};
     for (let i=0; i<7; i++){
       const d = addDays(mondayUTC, i);
       const dateISO = ymd(d);
       const present = agents.filter(a => a.status === "Present" && !agentIsOffThatDate(a, dateISO));
       presentAgentsByDate[dateISO] = present.length;
-
       for (const hhmm of slots){
         const slotMin = 30;
         const perAgentSlot = perAgentPerMinute * slotMin;
         cap[`${dateISO}|${hhmm}`] = present.length * perAgentSlot;
       }
     }
-
-    return { cap, presentAgentsByDate, perAgentPerMinute };
+    return { cap, presentAgentsByDate };
   }
-
-  // ---- Render grid
   function renderGrid(days, slots, demand, cap, agents){
-    const $grid = els.grid();
-    if (!$grid) return;
-
-    // THEAD
+    const $grid = els.grid(); if (!$grid) return;
     let thead = `<thead><tr><th class="first-col">Row</th>`;
-    // colonnes par slot avec marqueur d’heure pleine
     slots.forEach((s, idx)=>{
       const hourMark = s.endsWith(':00') ? 'hour-marker' : '';
       thead += `<th class="slot-col ${hourMark}">${s}</th>`;
     });
     thead += `</tr></thead>`;
 
-    // TBODY
     let tbody = '';
-
-    // Ligne 1: Demand vs Capacity (couleurs)
     for (let i=0; i<7; i++){
-      const dateISO = ymd(addDays(days[0], i));
+      const dateISO = ymd(days[i]);
       let row = `<tr><td class="first-col">${dateISO} — Demand vs Cap.</td>`;
       slots.forEach(s=>{
         const key = `${dateISO}|${s}`;
@@ -1653,17 +1093,13 @@ const Weekly = (() => {
       row += `</tr>`;
       tbody += row;
     }
-
-    // Lignes agents: présence vs PTO
     agents.forEach(a=>{
       let row = `<tr><td class="first-col">${a.full_name}</td>`;
       for (let i=0; i<7; i++){
-        const dateISO = ymd(addDays(days[0], i));
+        const dateISO = ymd(days[i]);
         const off = agentIsOffThatDate(a, dateISO);
         const cls = off ? 'pto' : 'present';
-        slots.forEach(s=>{
-          row += `<td><div class="cell ${cls}"></div></td>`;
-        });
+        slots.forEach(()=>{ row += `<td><div class="cell ${cls}"></div></td>`; });
       }
       row += `</tr>`;
       tbody += row;
@@ -1671,18 +1107,13 @@ const Weekly = (() => {
 
     $grid.innerHTML = thead + `<tbody>${tbody}</tbody>`;
   }
-
-  // ---- Summary chips
   function renderSummaries(days, slots, demand, cap, presentAgentsByDate){
-    // Agents (present) = moyenne jour (ou Lundi)
     const agentsAvg = Math.round(
       Object.values(presentAgentsByDate).reduce((a,b)=>a+b,0) / Object.values(presentAgentsByDate).length || 0
     );
-
-    // Coverage avg & understaffed slots
     let totalD=0, totalC=0, gaps=0;
     for (let i=0; i<7; i++){
-      const dateISO = ymd(addDays(days[0], i));
+      const dateISO = ymd(days[i]);
       slots.forEach(s=>{
         const key = `${dateISO}|${s}`;
         const d = demand[key]||0, c = cap[key]||0;
@@ -1691,19 +1122,16 @@ const Weekly = (() => {
       });
     }
     const coverage = totalD>0 ? Math.min(100, Math.round((totalC/totalD)*100)) : 100;
-
     els.agentsCount().textContent = `${agentsAvg}`;
     els.coverageAvg().textContent = `${coverage}%`;
     els.understaffed().textContent = `${gaps}`;
   }
-
-  // ---- Export CSV
   function exportCSV(region, days, slots, demand, cap){
     let csv = `Region,${region}\n`;
     csv += `Slot,Date,Time,Demand_Min,Capacity_Min\n`;
     let idx=1;
     for (let i=0; i<7; i++){
-      const dateISO = ymd(addDays(days[0], i));
+      const dateISO = ymd(days[i]);
       for (const s of slots){
         const key = `${dateISO}|${s}`;
         const d = Math.round(demand[key]||0);
@@ -1719,71 +1147,45 @@ const Weekly = (() => {
     a.click();
     URL.revokeObjectURL(url);
   }
-
-  // ---- INIT / LOAD
   async function load(){
     const region = els.region().value;
     const weekVal = els.week().value;
     const dayStart = els.dayStart().value || '09:00';
-    const dayEnd = els.dayEnd().value || '18:00';
-
+    const dayEnd   = els.dayEnd().value || '18:00';
     if (!weekVal){ alert('Select an ISO week'); return; }
     if (minutesBetween(dayStart, dayEnd) < 30){ alert('Day end must be after start by at least 30 min'); return; }
-
-    const monday = parseWeekInput(weekVal); // UTC
+    const monday = parseWeekInput(weekVal);
     const { days, slots } = buildWeekSlots(monday, dayStart, dayEnd);
-
-    // Demande et capacité
     const demand = await computeDemandPerSlot(region, monday, dayStart, dayEnd, slots);
     const { cap, presentAgentsByDate } = await computeCapacityPerSlot(region, monday, dayStart, dayEnd, slots);
-
-    // Agents (pour les lignes agent)
     const agents = await fetchAgentsWithPTO(region);
-
-    // Render
     renderGrid(days, slots, demand, cap, agents);
     renderSummaries(days, slots, demand, cap, presentAgentsByDate);
-
-    // Hook export
     els.exportBtn().onclick = ()=> exportCSV(region, days, slots, demand, cap);
   }
-
   async function init(){
-    // Defaults
     els.region().value = await getDefaultRegionFromProfile();
-    // ISO week par défaut = semaine courante
     const now = new Date();
-    const week = isoWeekNumber(now); // helper existant
+    const week = isoWeekNumber(now);
     const y = now.getFullYear();
     els.week().value = `${y}-W${String(week).padStart(2,'0')}`;
-
     els.load().addEventListener('click', load);
   }
-
   return { init };
 })();
-
 async function initWeeklyUI(){
   const panel = document.querySelector('#weekly');
   if (!panel) return;
   await Weekly.init();
 }
 
-// =======================
-// === WEEKLY (Module) END
-// =======================
-/* ============================================================
-   REGULATION MODULE — à coller TOUT EN BAS de app.js
-   Gère : CRUD des règles, toggle d’application, validation, export CSV
-   Dépendances : 
-     - supabase (client global déjà initialisé)
-     - éléments HTML/IDs créés dans l’onglet "Regulation"
-   ============================================================ */
+/* ======================================================================
+   REGULATION (CRUD + Validation)
+   ====================================================================== */
 (() => {
   const qs  = (sel, root=document) => root.querySelector(sel);
   const qsa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
-  // --- Sélecteurs UI
   const el = {
     tabPanel: qs('#regulation'),
     enforceToggle: qs('#enforceRegulationsToggle'),
@@ -1791,25 +1193,17 @@ async function initWeeklyUI(){
     validateAllBtn: qs('#validateAllBtn'),
     exportViolationsBtn: qs('#exportViolationsBtn'),
     ruleSearch: qs('#ruleSearch'),
-
-    // Summary
     activeRulesCount: qs('#activeRulesCount'),
     violationsCount: qs('#violationsCount'),
     lastValidationAt: qs('#lastValidationAt'),
-
-    // Tables
     rulesTbody: qs('#regulationTableBody'),
     violationsPanel: qs('#violationsPanel'),
     violationsTbody: qs('#violationsTableBody'),
-
-    // Modal Règle
     ruleModal: qs('#ruleModal'),
     ruleForm: qs('#ruleForm'),
     ruleModalTitle: qs('#ruleModalTitle'),
     closeRuleModal: qs('#closeRuleModal'),
     cancelRuleBtn: qs('#cancelRuleBtn'),
-
-    // Champs formulaire
     ruleId: qs('#ruleId'),
     ruleName: qs('#ruleName'),
     ruleType: qs('#ruleType'),
@@ -1823,195 +1217,79 @@ async function initWeeklyUI(){
     ruleScopeTarget: qs('#ruleScopeTarget'),
     ruleSeverity: qs('#ruleSeverity'),
     ruleActive: qs('#ruleActive'),
-
-    // Confirm delete
     confirmDeleteModal: qs('#confirmDeleteModal'),
     confirmDeleteBtn: qs('#confirmDeleteBtn'),
     cancelDeleteBtn: qs('#cancelDeleteBtn'),
   };
 
-  // --- State
   let rules = [];
   let filteredRules = [];
   let violations = [];
   let pendingDeleteId = null;
 
-  // --- Helpers
   const toBool = (v) => (v === true || v === 'true' || v === 1 || v === '1');
-  const fmtDate = (d) => {
-    try {
-      const x = (d instanceof Date) ? d : new Date(d);
-      return x.toLocaleString();
-    } catch { return '–'; }
-  };
+  const fmtDate = (d) => { try { const x = (d instanceof Date) ? d : new Date(d); return x.toLocaleString(); } catch { return '–'; } };
   const downloadTextFile = (filename, text) => {
     const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    link.href = url; link.download = filename; link.click();
     URL.revokeObjectURL(url);
   };
 
-  // --- Stockage du toggle "enforce"
-  const ENFORCE_LOCAL_KEY = 'pm_enforce_regulations';
-  const loadEnforceLocal = () => toBool(localStorage.getItem(ENFORCE_LOCAL_KEY));
-  const saveEnforceLocal = (v) => localStorage.setItem(ENFORCE_LOCAL_KEY, v ? 'true' : 'false');
-
-  // --- Adaptation labels selon type de règle
-  const updateParamLabels = () => {
-    const t = el.ruleType.value;
-    if (t === 'MAX_HOURS_PER_WEEK') {
-      el.ruleParam1Label.textContent = 'Heures max / semaine';
-      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
-      el.ruleParam1.type = 'number';
-      el.ruleParam2.type = 'number';
-      el.ruleParam1.placeholder = 'Ex: 40';
-      el.ruleParam2.placeholder = '';
-    } else if (t === 'MIN_REST_BETWEEN_SHIFTS') {
-      el.ruleParam1Label.textContent = 'Repos minimum (heures)';
-      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
-      el.ruleParam1.type = 'number';
-      el.ruleParam2.type = 'number';
-      el.ruleParam1.placeholder = 'Ex: 11';
-      el.ruleParam2.placeholder = '';
-    } else if (t === 'NO_OVERLAP_SHIFTS') {
-      el.ruleParam1Label.textContent = 'Paramètre 1 (non requis)';
-      el.ruleParam2Label.textContent = 'Paramètre 2 (non requis)';
-      el.ruleParam1.placeholder = '';
-      el.ruleParam2.placeholder = '';
-    } else if (t === 'NO_PTO_OVERBOOKING') {
-      el.ruleParam1Label.textContent = 'Paramètre 1 (non requis)';
-      el.ruleParam2Label.textContent = 'Paramètre 2 (non requis)';
-      el.ruleParam1.placeholder = '';
-      el.ruleParam2.placeholder = '';
-    } else if (t === 'HOLIDAY_BLACKOUT') {
-      el.ruleParam1Label.textContent = 'Jour férié (AAAA-MM-JJ) ou pattern';
-      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
-      el.ruleParam1.type = 'text';
-      el.ruleParam2.type = 'text';
-      el.ruleParam1.placeholder = 'Ex: 2025-12-25 ou WE';
-      el.ruleParam2.placeholder = '';
-    }
-  };
-
-  const updateScopeVisibility = () => {
-    const s = el.ruleScope.value;
-    if (s === 'REGION') {
-      el.scopeTargetLabel.textContent = 'Code Région (ex: EMEA)';
-      el.scopeTargetField.hidden = false;
-    } else if (s === 'AGENT') {
-      el.scopeTargetLabel.textContent = 'Agent ID';
-      el.scopeTargetField.hidden = false;
-    } else {
-      el.scopeTargetField.hidden = true;
-      el.ruleScopeTarget.value = '';
-    }
-  };
-
-  // --- CRUD Supabase (tables conseillées)
-  // Table "regulations":
-  // id uuid (pk) | name text | type text | param1 numeric? | param2 numeric? | scope text | scope_target text | severity text | active boolean | created_at timestamptz default now()
   const fetchRegulations = async () => {
-    if (!window.supabase) { console.warn('[Regulation] supabase non trouvé'); return []; }
-    const { data, error } = await supabase
-      .from('regulations')
-      .select('*')
-      .order('created_at', { ascending: true });
+    if (!window.supabase) return [];
+    const { data, error } = await supabase.from('regulations').select('*').order('created_at', { ascending: true });
     if (error) { console.warn('[Regulation] fetchRegulations error:', error.message); return []; }
     return data || [];
   };
-
   const upsertRule = async (payload) => {
-    if (!window.supabase) return { error: new Error('Supabase client manquant') };
-    // upsert by id if present
-    const { data, error } = await supabase
-      .from('regulations')
-      .upsert(payload)
-      .select()
-      .single();
+    const { data, error } = await supabase.from('regulations').upsert(payload).select().single();
     return { data, error };
   };
-
   const deleteRule = async (id) => {
-    if (!window.supabase) return { error: new Error('Supabase client manquant') };
     const { error } = await supabase.from('regulations').delete().eq('id', id);
     return { error };
   };
-
-  // --- Validation (lecture des shifts ; ajuster nom de table/colonnes si besoin)
-  // Table "shifts" attendue : id, agent_id, start_time (timestamptz), end_time (timestamptz)
   const fetchShifts = async () => {
-    if (!window.supabase) return [];
-    const { data, error } = await supabase
-      .from('shifts')
-      .select('id,agent_id,start_time,end_time');
+    const { data, error } = await supabase.from('shifts').select('id,agent_id,start_time,end_time');
     if (error) { console.warn('[Regulation] fetchShifts error:', error.message); return []; }
     return data || [];
   };
-
-  // Optionnel : PTO / holidays si tu as ces tables
   const fetchPTO = async () => {
-    if (!window.supabase) return [];
-    const { data, error } = await supabase
-      .from('pto')
-      .select('agent_id,start_date,end_date');
+    const { data, error } = await supabase.from('pto').select('agent_id,start_date,end_date');
     if (error) return [];
     return data || [];
   };
 
-  // --- Moteur de validation de base (MAX_HOURS_PER_WEEK, MIN_REST_BETWEEN_SHIFTS, NO_OVERLAP_SHIFTS, NO_PTO_OVERBOOKING)
   const hoursBetween = (a, b) => Math.abs((new Date(b) - new Date(a)) / 36e5);
   const getISOWeek = (date) => {
     const d = new Date(date);
     d.setHours(0,0,0,0);
-    // jeudi de la semaine
     d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
     const week1 = new Date(d.getFullYear(), 0, 4);
     return 1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
   };
-
   const applyScope = (rule, item) => {
-    // Scope GLOBAL / REGION / AGENT
-    if (rule.scope === 'AGENT' && rule.scope_target) {
-      return String(item.agent_id) === String(rule.scope_target);
-    }
-    if (rule.scope === 'REGION' && rule.scope_target) {
-      // Si tu as une table agents avec region_code, tu peux enrichir "item.agent_region"
-      // Ici on assume que "item.agent_region" pourrait exister ; sinon on traite comme global
-      if (item.agent_region) return String(item.agent_region) === String(rule.scope_target);
-    }
-    // GLOBAL par défaut
+    if (rule.scope === 'AGENT'  && rule.scope_target) return String(item.agent_id) === String(rule.scope_target);
+    if (rule.scope === 'REGION' && rule.scope_target) return true; // si besoin, enrichir item.agent_region
     return true;
   };
-
   const runValidation = (rulesActive, shifts, ptoList=[]) => {
     const out = [];
-    // Préparer shifts triés par agent puis par start_time
     const byAgent = {};
-    shifts.forEach(s => {
-      if (!byAgent[s.agent_id]) byAgent[s.agent_id] = [];
-      byAgent[s.agent_id].push(s);
-    });
+    shifts.forEach(s => { if (!byAgent[s.agent_id]) byAgent[s.agent_id] = []; byAgent[s.agent_id].push(s); });
     Object.values(byAgent).forEach(list => list.sort((a,b) => new Date(a.start_time) - new Date(b.start_time)));
 
-    // PTO map (par agent -> liste de ranges)
     const ptoMap = {};
-    ptoList.forEach(p => {
-      if (!ptoMap[p.agent_id]) ptoMap[p.agent_id] = [];
-      ptoMap[p.agent_id].push([new Date(p.start_date), new Date(p.end_date)]);
-    });
+    ptoList.forEach(p => { if (!ptoMap[p.agent_id]) ptoMap[p.agent_id] = []; ptoMap[p.agent_id].push([new Date(p.start_date), new Date(p.end_date)]); });
 
     const active = rulesActive.filter(r => r.active);
 
     // MAX_HOURS_PER_WEEK
     const maxWeekRules = active.filter(r => r.type === 'MAX_HOURS_PER_WEEK' && r.param1);
     if (maxWeekRules.length) {
-      const weekHours = {}; // key: agent_id|year|week -> hours
+      const weekHours = {};
       shifts.forEach(s => {
         const st = new Date(s.start_time), et = new Date(s.end_time);
         const hrs = Math.max(0, (et - st) / 36e5);
@@ -2025,13 +1303,7 @@ async function initWeeklyUI(){
           const total = weekHours[key];
           if (!applyScope(rule, { agent_id })) continue;
           if (total > Number(rule.param1)) {
-            out.push({
-              rule: rule.name || 'Max heures / semaine',
-              agent_id,
-              shift: `Semaine ${week} ${year}`,
-              detail: `Total ${total.toFixed(1)}h > ${Number(rule.param1)}h`,
-              severity: rule.severity || 'WARN'
-            });
+            out.push({ rule: rule.name || 'Max heures / semaine', agent_id, shift: `Semaine ${week} ${year}`, detail: `Total ${total.toFixed(1)}h > ${Number(rule.param1)}h`, severity: rule.severity || 'WARN' });
           }
         }
       }
@@ -2048,13 +1320,7 @@ async function initWeeklyUI(){
           for (const rule of restRules) {
             if (!applyScope(rule, { agent_id: agentId })) continue;
             if (restH < Number(rule.param1)) {
-              out.push({
-                rule: rule.name || 'Repos minimum',
-                agent_id: agentId,
-                shift: `${fmtDate(cur.start_time)}`,
-                detail: `Repos ${restH.toFixed(1)}h < ${Number(rule.param1)}h`,
-                severity: rule.severity || 'WARN'
-              });
+              out.push({ rule: rule.name || 'Repos minimum', agent_id: agentId, shift: `${fmtDate(cur.start_time)}`, detail: `Repos ${restH.toFixed(1)}h < ${Number(rule.param1)}h`, severity: rule.severity || 'WARN' });
             }
           }
         }
@@ -2071,13 +1337,7 @@ async function initWeeklyUI(){
           if (new Date(cur.start_time) < new Date(prev.end_time)) {
             for (const rule of overlapRules) {
               if (!applyScope(rule, { agent_id: agentId })) continue;
-              out.push({
-                rule: rule.name || 'Pas de chevauchement',
-                agent_id: agentId,
-                shift: `${fmtDate(cur.start_time)}`,
-                detail: `Chevauchement avec shift précédent`,
-                severity: rule.severity || 'BLOCK'
-              });
+              out.push({ rule: rule.name || 'Pas de chevauchement', agent_id: agentId, shift: `${fmtDate(cur.start_time)}`, detail: `Chevauchement avec shift précédent`, severity: rule.severity || 'BLOCK' });
             }
           }
         }
@@ -2098,24 +1358,16 @@ async function initWeeklyUI(){
             if (overlap) {
               for (const rule of ptoRules) {
                 if (!applyScope(rule, { agent_id: agentId })) continue;
-                out.push({
-                  rule: rule.name || 'Interdiction PTO',
-                  agent_id: agentId,
-                  shift: `${fmtDate(st)}`,
-                  detail: `Shift pendant PTO (${pst.toISOString().slice(0,10)}→${pet.toISOString().slice(0,10)})`,
-                  severity: rule.severity || 'BLOCK'
-                });
+                out.push({ rule: rule.name || 'Interdiction PTO', agent_id: agentId, shift: `${fmtDate(st)}`, detail: `Shift pendant PTO (${pst.toISOString().slice(0,10)}→${pet.toISOString().slice(0,10)})`, severity: rule.severity || 'BLOCK' });
               }
             }
           }
         }
       }
     }
-
     return out;
   };
 
-  // --- Rendu UI
   const renderRules = () => {
     const rows = (filteredRules.length ? filteredRules : rules).map(r => {
       const statusBadge = r.active ? '<span class="badge success">Actif</span>' : '<span class="badge muted">Inactif</span>';
@@ -2130,8 +1382,8 @@ async function initWeeklyUI(){
           <td>${statusBadge}</td>
           <td>
             <div class="row-actions">
-              <button class="icon-btn js-edit" title="Éditer">✎</button>
-              <button class="icon-btn js-delete" title="Supprimer">🗑</button>
+              <button class="mini js-edit" title="Éditer">Edit</button>
+              <button class="mini danger js-delete" title="Supprimer">Delete</button>
             </div>
           </td>
         </tr>
@@ -2141,7 +1393,6 @@ async function initWeeklyUI(){
     attachRowActions();
     el.activeRulesCount.textContent = rules.filter(r => r.active).length;
   };
-
   const renderViolations = () => {
     if (!violations.length) {
       el.violationsPanel.hidden = true;
@@ -2162,8 +1413,6 @@ async function initWeeklyUI(){
     `).join('');
     el.violationsTbody.innerHTML = rows;
   };
-
-  // --- Actions lignes (edit/delete)
   const attachRowActions = () => {
     qsa('.js-edit', el.tabPanel).forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2181,8 +1430,6 @@ async function initWeeklyUI(){
       });
     });
   };
-
-  // --- Modal CRUD
   const resetForm = () => {
     el.ruleForm.reset();
     el.ruleId.value = '';
@@ -2193,7 +1440,39 @@ async function initWeeklyUI(){
     el.ruleActive.checked = true;
     el.ruleSeverity.value = 'WARN';
   };
-
+  const updateParamLabels = () => {
+    const t = el.ruleType.value;
+    if (t === 'MAX_HOURS_PER_WEEK') {
+      el.ruleParam1Label.textContent = 'Heures max / semaine';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
+      el.ruleParam1.type = 'number'; el.ruleParam2.type = 'number';
+      el.ruleParam1.placeholder = 'Ex: 40'; el.ruleParam2.placeholder = '';
+    } else if (t === 'MIN_REST_BETWEEN_SHIFTS') {
+      el.ruleParam1Label.textContent = 'Repos minimum (heures)';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
+      el.ruleParam1.type = 'number'; el.ruleParam2.type = 'number';
+      el.ruleParam1.placeholder = 'Ex: 11'; el.ruleParam2.placeholder = '';
+    } else if (t === 'NO_OVERLAP_SHIFTS' || t === 'NO_PTO_OVERBOOKING') {
+      el.ruleParam1Label.textContent = 'Paramètre 1 (non requis)';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (non requis)';
+      el.ruleParam1.placeholder = ''; el.ruleParam2.placeholder = '';
+    } else if (t === 'HOLIDAY_BLACKOUT') {
+      el.ruleParam1Label.textContent = 'Jour férié (AAAA-MM-JJ) ou pattern';
+      el.ruleParam2Label.textContent = 'Paramètre 2 (optionnel)';
+      el.ruleParam1.type = 'text'; el.ruleParam2.type = 'text';
+      el.ruleParam1.placeholder = 'Ex: 2025-12-25 ou WE'; el.ruleParam2.placeholder = '';
+    }
+  };
+  const updateScopeVisibility = () => {
+    const s = el.ruleScope.value;
+    if (s === 'REGION') {
+      el.scopeTargetLabel.textContent = 'Code Région (ex: EMEA)'; el.scopeTargetField.hidden = false;
+    } else if (s === 'AGENT') {
+      el.scopeTargetLabel.textContent = 'Agent ID'; el.scopeTargetField.hidden = false;
+    } else {
+      el.scopeTargetField.hidden = true; el.ruleScopeTarget.value = '';
+    }
+  };
   const openRuleModal = (rule=null) => {
     resetForm();
     if (rule) {
@@ -2214,12 +1493,7 @@ async function initWeeklyUI(){
     }
     if (el.ruleModal?.showModal) el.ruleModal.showModal();
   };
-
-  const closeRuleModal = () => {
-    if (el.ruleModal?.close) el.ruleModal.close();
-  };
-
-  // --- Recherche
+  const closeRuleModal = () => { el.ruleModal?.close?.(); };
   const applySearch = () => {
     const q = (el.ruleSearch.value || '').toLowerCase().trim();
     if (!q) { filteredRules = []; renderRules(); return; }
@@ -2229,8 +1503,6 @@ async function initWeeklyUI(){
     });
     renderRules();
   };
-
-  // --- Export CSV
   const exportViolationsCSV = () => {
     if (!violations.length) return;
     const headers = ['regle','agent','shift','detail','gravite'];
@@ -2245,16 +1517,12 @@ async function initWeeklyUI(){
     );
     downloadTextFile(`violations_${Date.now()}.csv`, lines.join('\n'));
   };
-
-  // --- Init et events
   const initEvents = () => {
     el.addRuleBtn?.addEventListener('click', () => openRuleModal(null));
     el.closeRuleModal?.addEventListener('click', closeRuleModal);
     el.cancelRuleBtn?.addEventListener('click', closeRuleModal);
-
     el.ruleType?.addEventListener('change', updateParamLabels);
     el.ruleScope?.addEventListener('change', updateScopeVisibility);
-
     el.ruleForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const payload = {
@@ -2269,20 +1537,14 @@ async function initWeeklyUI(){
         active: !!el.ruleActive.checked,
       };
       const { error } = await upsertRule(payload);
-      if (error) {
-        console.warn('[Regulation] save error:', error.message);
-      }
+      if (error) console.warn('[Regulation] save error:', error.message);
       closeRuleModal();
       rules = await fetchRegulations();
       renderRules();
     });
-
     el.confirmDeleteBtn?.addEventListener('click', async (e) => {
       e.preventDefault();
-      if (pendingDeleteId) {
-        const { error } = await deleteRule(pendingDeleteId);
-        if (error) console.warn('[Regulation] delete error:', error.message);
-      }
+      if (pendingDeleteId) { await deleteRule(pendingDeleteId); }
       pendingDeleteId = null;
       el.confirmDeleteModal?.close?.();
       rules = await fetchRegulations();
@@ -2292,17 +1554,12 @@ async function initWeeklyUI(){
       pendingDeleteId = null;
       el.confirmDeleteModal?.close?.();
     });
-
     el.ruleSearch?.addEventListener('input', applySearch);
-
-    // Toggle enforce (localStorage ; si tu préfères en DB, on l’ajoutera ensuite)
-    const initialEnforce = loadEnforceLocal();
+    const initialEnforce = localStorage.getItem('pm_enforce_regulations') === 'true';
     el.enforceToggle.checked = !!initialEnforce;
     el.enforceToggle?.addEventListener('change', () => {
-      saveEnforceLocal(!!el.enforceToggle.checked);
+      localStorage.setItem('pm_enforce_regulations', el.enforceToggle.checked ? 'true' : 'false');
     });
-
-    // Validation complète
     el.validateAllBtn?.addEventListener('click', async () => {
       const activeRules = rules.filter(r => r.active);
       const [shifts, pto] = await Promise.all([fetchShifts(), fetchPTO()]);
@@ -2310,29 +1567,17 @@ async function initWeeklyUI(){
       renderViolations();
       el.lastValidationAt.textContent = fmtDate(new Date());
     });
-
     el.exportViolationsBtn?.addEventListener('click', exportViolationsCSV);
   };
-
   const init = async () => {
-    if (!el.tabPanel) return; // onglet absent
-    try {
-      rules = await fetchRegulations();
-    } catch (e) {
-      console.warn('[Regulation] fetchRegulations failed:', e?.message || e);
-      rules = [];
-    }
+    if (!el.tabPanel) return;
+    try { rules = await fetchRegulations(); } catch (e) { rules = []; }
     renderRules();
-    // Ne lance pas la validation auto pour éviter la charge ; l’utilisateur clique quand il veut
   };
-
-  // Initialise quand le DOM est prêt (et que ton app est chargée)
-  document.addEventListener('DOMContentLoaded', () => {
-    initEvents();
-    init();
-  });
+  document.addEventListener('DOMContentLoaded', () => { initEvents(); init(); });
 })();
 
-
-/* ---------------- Boot ---------------- */
+/* ======================================================================
+   BOOT
+   ====================================================================== */
 window.addEventListener("load", requireAuth);
