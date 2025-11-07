@@ -1,0 +1,179 @@
+/* =========================================================
+   ROMAN — Planning Manager  •  style.css  (no-auth v2)
+   Palette minimaliste + composants communs
+   ========================================================= */
+
+:root{
+  --bg:#ffffff;
+  --card:#F4E3C1;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --accent:#111827;
+
+  --primary:#111827;
+  --secondary:#374151;
+  --danger:#dc2626;
+
+  --ok:#059669;       --ok-bg:#059669;
+  --warn:#b45309;     --warn-bg:#b45309;
+  --err:#dc2626;      --err-bg:#dc2626;
+
+  --ring:0 0 0 2px rgba(17,24,39,.08);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.45;
+}
+
+/* ---------- Layout ---------- */
+header{
+  position:sticky; top:0; z-index:10;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+.container{max-width:1200px;margin:0 auto;padding:16px}
+.footer{color:var(--muted); font-size:.9rem; padding:24px 16px; text-align:left}
+
+/* ---------- Breadcrumb ---------- */
+.breadcrumb{font-size:.95rem;color:var(--muted);margin-bottom:8px}
+.breadcrumb b{color:var(--text)}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:8px;flex-wrap:wrap; margin-bottom:16px}
+.tab-btn{
+  appearance:none;border:1px solid var(--border);background:#fff;color:var(--text);
+  padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;
+}
+.tab-btn:hover{box-shadow:var(--ring)}
+.tab-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+.tab-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+
+/* ---------- Forms & Controls ---------- */
+label{font-weight:600;margin-right:8px}
+input[type="date"], input[type="time"], input[type="number"], input[type="text"], select{
+  padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;
+}
+input:focus, select:focus, textarea:focus{outline:none; box-shadow:var(--ring)}
+button{
+  appearance:none; border:1px solid var(--border); background:#fff; color:var(--text);
+  padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600;
+}
+button:hover{box-shadow:var(--ring)}
+button.primary{background:var(--primary); color:#fff; border-color:var(--primary)}
+button.secondary{background:#fff; color:var(--text)}
+button.danger{background:var(--danger); color:#fff; border-color:var(--danger)}
+button.mini{padding:4px 8px; font-size:.9rem; border-radius:8px}
+
+/* ---------- Tables ---------- */
+.table{
+  width:100%; border-collapse:separate; border-spacing:0; overflow:hidden;
+  border:1px solid var(--border); border-radius:12px; background:#fff;
+}
+.table th, .table td{padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:middle}
+.table thead th{background:#fafafa; font-weight:700}
+.table tr:last-child td{border-bottom:none}
+.first-col{position:sticky; left:0; background:#fff;}
+
+/* Muted helper */
+.muted{color:var(--muted)}
+
+/* ---------- Attendance: adherence bar + flags ---------- */
+#adherence-wrap{display:flex; align-items:center; gap:12px}
+#adherence-bar{flex:1; height:10px; background:#f1f5f9; border-radius:999px; overflow:hidden; border:1px solid var(--border)}
+#adherence-fill{height:100%; width:0%; background:var(--ok); transition:width .3s ease}
+.warn-flag{
+  display:inline-block; font-weight:700; color:var(--warn); background:var(--warn-bg);
+  border:1px solid rgba(180,83,9,.25); padding:2px 6px; border-radius:999px; margin:0 2px;
+}
+
+/* Attendance grid cell backgrounds */
+.cell-present{background:rgba(5,150,105,.15)}
+.cell-pto{background:rgba(220,38,38,.16)}
+.cell-pto-half{background:linear-gradient(90deg, rgba(220,38,38,.16) 50%, rgba(5,150,105,.15) 50%)}
+
+/* ---------- Agents: editable cells ---------- */
+.ag-name{min-width:180px; outline:none; border-radius:6px}
+.ag-name:focus{box-shadow:0 0 0 2px rgba(17,24,39,.1) inset}
+
+/* Toggle switch (Tasks) */
+.switch{position:relative; display:inline-block; width:42px; height:24px}
+.switch input{opacity:0; width:0; height:0}
+.slider{
+  position:absolute; inset:0; background:#e5e7eb; border-radius:999px; transition:.2s;
+}
+.slider:before{
+  content:""; position:absolute; height:18px; width:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 1px rgba(0,0,0,.15);
+}
+.switch input:checked + .slider{background:#111827}
+.switch input:checked + .slider:before{transform:translateX(18px)}
+
+/* ---------- PTO Drawer ---------- */
+#pto-drawer{
+  position:fixed; top:0; right:-420px; width:420px; height:100%;
+  background:#fff; border-left:1px solid var(--border);
+  box-shadow:-10px 0 24px rgba(0,0,0,.06); transition:right .28s ease; z-index:50; padding:16px;
+}
+#pto-drawer.open{right:0}
+#pto-title{font-size:1.1rem; font-weight:700; margin:0 0 8px}
+.drawer-row{display:flex; gap:8px; margin-bottom:8px}
+.drawer-row > *{flex:1}
+.mini-cal-grid{
+  display:grid; grid-template-columns: repeat(7, 1fr); gap:4px; margin-top:8px;
+}
+.mini-cal-cell{
+  border:1px solid var(--border); border-radius:6px; padding:6px; text-align:center; font-size:.85rem; background:#fff;
+}
+.mini-cal-cell.pto{background:rgba(220,38,38,.12)}
+.mini-cal-cell.pto-half{background:linear-gradient(180deg, rgba(220,38,38,.12) 50%, transparent 50%)}
+
+/* ---------- Weekly Planner grid ---------- */
+#wp-grid{overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff}
+#wp-grid table{width:100%; border-collapse:separate; border-spacing:0}
+#wp-grid th, #wp-grid td{border-bottom:1px solid var(--border); padding:6px 8px}
+#wp-grid thead th{background:#fafafa; position:sticky; top:0; z-index:1}
+.slot-col.hour-marker{border-left:1px solid #d1d5db}
+.cell{height:18px; border-radius:4px}
+.cell.gap{background:rgba(220,38,38,.22)}
+.cell.over{background:rgba(5,150,105,.22)}
+.cell.present{background:rgba(59,130,246,.15)}
+.cell.pto{background:rgba(107,114,128,.18)}
+
+/* ---------- Forecast matrices ---------- */
+.forecast-table{overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff}
+.forecast-table table{width:100%; border-collapse:separate; border-spacing:0}
+.summary-line{color:var(--muted); font-size:.95rem; margin:6px 0}
+
+/* ---------- Regulation: badges & modals ---------- */
+.badge{
+  display:inline-block; font-size:.75rem; padding:2px 8px; border-radius:999px; border:1px solid var(--border); background:#fafafa;
+}
+.badge.success{color:var(--ok); background:var(--ok-bg); border-color:rgba(5,150,105,.25)}
+.badge.muted{color:var(--muted); background:#f3f4f6}
+
+dialog{border:1px solid var(--border); border-radius:12px; padding:0; max-width:560px; width:min(560px, 92vw)}
+.modal-header{display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); background:#fafafa}
+.modal-body{padding:16px}
+.modal-actions{display:flex; justify-content:flex-end; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:#fafafa}
+
+/* ---------- Utilities ---------- */
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.row > *{margin:2px 0}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.section-title{margin:6px 0 12px}
+.help{font-size:.9rem; color:var(--muted)}
+hr.sep{border:none; border-top:1px solid var(--border); margin:16px 0}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px){
+  .first-col{position:static}
+  #pto-drawer{width:100%}
+  .grid-3{grid-template-columns:1fr}
+}
