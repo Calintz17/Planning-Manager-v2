@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>ROMAN | Resource Optimization & Management Allocation Network</title>
 
+  <!-- Police: Helvetica (fallbacks système) -->
   <style>html, body { font-family: Helvetica, Arial, sans-serif; }</style>
+
+  <!-- Styles globaux -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -15,6 +18,7 @@
       <span class="brand">ROMAN</span>
       <span class="tagline">Resource Optimization &amp; Management Allocation Network</span>
     </div>
+
     <nav class="tabs">
       <button class="tab-btn active" data-tab="attendance">Attendance</button>
       <button class="tab-btn" data-tab="weekly">Weekly Planning</button>
@@ -71,7 +75,7 @@
           </div>
 
           <div class="calendar-scroll">
-            <table id="att-table" class="calendar-table"></table>
+            <table id="att-table" class="calendar-table table"></table>
           </div>
 
           <small class="legend">
@@ -146,7 +150,7 @@
             </select>
           </label>
 
-          <div class="agents-actions">
+          <div class="agents-actions row">
             <button id="ag-add" class="primary">Add agent</button>
             <button id="ag-export" class="secondary">Export CSV</button>
           </div>
@@ -268,7 +272,7 @@
           <p class="muted">Define global planning rules.</p>
         </header>
 
-        <div class="toolbar row" style="justify-content:space-between;flex-wrap:wrap">
+        <div class="toolbar">
           <div class="left">
             <label class="switch"><input type="checkbox" id="enforceRegulationsToggle"/><span class="slider"></span></label>
             <label for="enforceRegulationsToggle" class="switch-label">Apply rules automatically</label>
@@ -286,27 +290,21 @@
         </div>
 
         <div class="card">
-          <div class="card-header">
-            <h3>Rules list</h3>
-            <div class="grow"></div>
-            <input id="ruleSearch" type="search" placeholder="Search..." class="input">
-          </div>
+          <div class="card-header"><h3>Rules list</h3><div class="grow"></div><input id="ruleSearch" type="search" placeholder="Search..." class="input"></div>
           <div class="table-wrapper">
             <table class="table" id="regulationTable">
-              <thead>
-                <tr><th>Name</th><th>Type</th><th>Params</th><th>Scope</th><th>Status</th><th>Actions</th></tr>
-              </thead>
+              <thead><tr><th>Name</th><th>Type</th><th>Params</th><th>Scope</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody id="regulationTableBody"></tbody>
             </table>
           </div>
         </div>
 
         <!-- Violations panel -->
-        <div class="card" id="violationsPanel" hidden>
+        <section id="violationsPanel" class="card" hidden>
           <div class="card-header">
             <h3>Violations</h3>
             <div class="grow"></div>
-            <button id="exportViolationsBtn" class="btn secondary">Export CSV</button>
+            <button id="exportViolationsBtn" class="secondary">Export CSV</button>
           </div>
           <div class="table-wrapper">
             <table class="table">
@@ -314,7 +312,7 @@
               <tbody id="violationsTableBody"></tbody>
             </table>
           </div>
-        </div>
+        </section>
       </div>
     </section>
   </main>
@@ -335,7 +333,7 @@
           <option value="KR">South Korea</option><option value="SEAO">Southeast Asia</option>
         </select>
       </label>
-      <div class="auth-actions">
+      <div class="auth-actions row" style="justify-content:space-between">
         <button id="login-btn" class="primary">Log in</button>
         <button id="signup-btn" class="secondary">Sign up</button>
         <a id="forgot-link" href="#" class="muted">Forgot password?</a>
@@ -349,126 +347,98 @@
     <div class="drawer-inner">
       <div class="drawer-head">
         <h3 id="pto-title">PTO</h3>
-        <button id="pto-close" class="btn">Close</button>
+        <button id="pto-close" class="secondary">Close</button>
       </div>
       <div class="drawer-content">
         <div class="form-grid">
-          <div class="form-field">
-            <label><span>Start date</span><input type="date" id="pto-start"></label>
-          </div>
-          <div class="form-field">
-            <label><span>End date</span><input type="date" id="pto-end"></label>
-          </div>
-          <div class="form-field">
-            <label><span>Half-day start</span>
-              <select id="pto-half-start">
-                <option value="">Full</option>
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </label>
-          </div>
-          <div class="form-field">
-            <label><span>Half-day end</span>
-              <select id="pto-half-end">
-                <option value="">Full</option>
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </label>
-          </div>
+          <label class="field"><span>Start</span><input id="pto-start" type="date"></label>
+          <label class="field"><span>End</span><input id="pto-end" type="date"></label>
+          <label class="field"><span>Half-day start</span>
+            <select id="pto-half-start">
+              <option value="">Full</option><option value="AM">AM</option><option value="PM">PM</option>
+            </select>
+          </label>
+          <label class="field"><span>Half-day end</span>
+            <select id="pto-half-end">
+              <option value="">Full</option><option value="AM">AM</option><option value="PM">PM</option>
+            </select>
+          </label>
         </div>
 
-        <div style="margin-top:12px">
-          <button id="pto-save" class="btn primary">Save PTO</button>
+        <div class="row" style="margin-top:12px; justify-content:flex-end">
+          <button id="pto-save" class="primary">Save PTO</button>
         </div>
 
-        <h4 style="margin-top:16px">This month</h4>
-        <div id="pto-calendar" class="ghost" style="padding:8px;border-radius:10px"></div>
+        <h4 style="margin:12px 0 6px">Existing PTO</h4>
+        <ul id="pto-list" class="task-list"></ul>
 
-        <h4 style="margin-top:16px">Existing ranges</h4>
-        <ul id="pto-list"></ul>
+        <h4 style="margin:12px 0 6px">Mini calendar</h4>
+        <div id="pto-calendar"></div>
       </div>
     </div>
   </aside>
 
-  <!-- Regulation: Rule Modal -->
+  <!-- Rule editor modal -->
   <dialog id="ruleModal" class="modal">
     <div class="modal-box">
       <div class="modal-header">
         <h3 id="ruleModalTitle">New rule</h3>
-        <button id="closeRuleModal" class="btn">Close</button>
+        <button id="closeRuleModal" class="secondary">Close</button>
       </div>
       <form id="ruleForm">
-        <input type="hidden" id="ruleId" />
         <div class="form-grid">
-          <div class="form-field">
-            <label class="field"><span>Name</span><input id="ruleName" type="text" required></label>
-          </div>
-          <div class="form-field">
-            <label class="field">
-              <span>Type</span>
-              <select id="ruleType" required>
-                <option value="">—</option>
-                <option value="MAX_HOURS_PER_WEEK">MAX_HOURS_PER_WEEK</option>
-                <option value="MIN_REST_BETWEEN_SHIFTS">MIN_REST_BETWEEN_SHIFTS</option>
-                <option value="NO_OVERLAP_SHIFTS">NO_OVERLAP_SHIFTS</option>
-                <option value="NO_PTO_OVERBOOKING">NO_PTO_OVERBOOKING</option>
-                <option value="HOLIDAY_BLACKOUT">HOLIDAY_BLACKOUT</option>
-              </select>
+          <label class="form-field"><span>Name</span><input id="ruleName" class="input" type="text" required></label>
+          <label class="form-field">
+            <span>Type</span>
+            <select id="ruleType" class="input" required>
+              <option value="MAX_HOURS_PER_WEEK">MAX_HOURS_PER_WEEK</option>
+              <option value="MIN_REST_BETWEEN_SHIFTS">MIN_REST_BETWEEN_SHIFTS</option>
+              <option value="NO_OVERLAP_SHIFTS">NO_OVERLAP_SHIFTS</option>
+              <option value="NO_PTO_OVERBOOKING">NO_PTO_OVERBOOKING</option>
+              <option value="HOLIDAY_BLACKOUT">HOLIDAY_BLACKOUT</option>
+            </select>
+          </label>
+          <label class="form-field"><span>Param 1</span><input id="ruleParam1" class="input" type="number" step="0.01"></label>
+          <label class="form-field"><span>Param 2</span><input id="ruleParam2" class="input" type="number" step="0.01"></label>
+          <label class="form-field">
+            <span>Scope</span>
+            <select id="ruleScope" class="input">
+              <option value="GLOBAL">GLOBAL</option>
+              <option value="REGION">REGION</option>
+              <option value="AGENT">AGENT</option>
+            </select>
+          </label>
+          <label class="form-field"><span>Scope target</span><input id="ruleScopeTarget" class="input" type="text" placeholder="EMEA ou agent_id"></label>
+          <label class="form-field">
+            <span>Severity</span>
+            <select id="ruleSeverity" class="input">
+              <option value="WARN">WARN</option>
+              <option value="BLOCK">BLOCK</option>
+            </select>
+          </label>
+          <label class="form-field" style="align-self:end">
+            <span>Active</span>
+            <label class="switch">
+              <input id="ruleActive" type="checkbox" checked><span class="slider"></span>
             </label>
-          </div>
-          <div class="form-field">
-            <label class="field"><span id="ruleParam1Label">Param 1</span><input id="ruleParam1" type="number"></label>
-          </div>
-          <div class="form-field">
-            <label class="field"><span id="ruleParam2Label">Param 2</span><input id="ruleParam2" type="number"></label>
-          </div>
-          <div class="form-field">
-            <label class="field">
-              <span>Scope</span>
-              <select id="ruleScope">
-                <option value="GLOBAL">GLOBAL</option>
-                <option value="REGION">REGION</option>
-                <option value="AGENT">AGENT</option>
-              </select>
-            </label>
-          </div>
-          <div class="form-field" id="scopeTargetField" hidden>
-            <label class="field"><span id="scopeTargetLabel">Target</span><input id="ruleScopeTarget" type="text"></label>
-          </div>
-          <div class="form-field">
-            <label class="field"><span>Severity</span>
-              <select id="ruleSeverity">
-                <option value="WARN">WARN</option>
-                <option value="BLOCK">BLOCK</option>
-              </select>
-            </label>
-          </div>
-          <div class="form-field">
-            <label class="field"><span>Active</span>
-              <label class="switch"><input type="checkbox" id="ruleActive" checked><span class="slider"></span></label>
-            </label>
-          </div>
+          </label>
         </div>
         <div class="modal-actions">
-          <button id="cancelRuleBtn" type="button" class="btn">Cancel</button>
-          <button type="submit" class="btn primary">Save</button>
+          <button id="cancelRuleBtn" type="button" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Save</button>
         </div>
       </form>
     </div>
   </dialog>
 
-  <!-- Regulation: Confirm Delete Modal -->
+  <!-- Confirm delete -->
   <dialog id="confirmDeleteModal" class="modal">
     <div class="modal-box">
-      <div class="modal-header">
-        <h3>Delete rule</h3>
-      </div>
+      <div class="modal-header"><h3>Delete rule</h3></div>
       <p>Are you sure you want to delete this rule?</p>
       <div class="modal-actions">
-        <button id="cancelDeleteBtn" class="btn">Cancel</button>
-        <button id="confirmDeleteBtn" class="btn danger">Delete</button>
+        <button id="cancelDeleteBtn" class="secondary" type="button">Cancel</button>
+        <button id="confirmDeleteBtn" class="danger" type="button">Delete</button>
       </div>
     </div>
   </dialog>
