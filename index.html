@@ -1,506 +1,301 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>ROMAN — Planning Manager</title>
   <link rel="stylesheet" href="style.css"/>
-
-  <!-- Inter (optionnel) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header class="site-header">
-    <div class="container head-wrap">
-      <div class="site-title">
-        <span class="brand">ROMAN</span>
-        <span class="tagline">Planning Manager</span>
-      </div>
+<header class="topbar">
+  <div class="brand">ROMAN <span class="muted">Planning Manager</span></div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="attendance" aria-selected="true">Attendance</button>
+    <button class="tab-btn" data-tab="agents">Agents</button>
+    <button class="tab-btn" data-tab="weekly">Weekly Planner</button>
+    <button class="tab-btn" data-tab="forecast">Forecast</button>
+    <button class="tab-btn" data-tab="regulation">Regulation</button>
+    <button class="tab-btn" data-tab="tasks">Tasks</button>
+  </nav>
+</header>
 
-      <nav class="tabs" role="tablist" aria-label="Sections">
-        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="attendance">Attendance</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="agents">Agents</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="weekly">Weekly Planner</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="forecast">Forecast</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="regulation">Regulation</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tasks">Tasks</button>
-      </nav>
+<main class="container">
+
+  <!-- ATTENDANCE -->
+  <section id="attendance" class="tab-panel">
+    <h2>Attendance — couverture mensuelle</h2>
+    <div class="toolbar">
+      <label>Region
+        <select id="att-region">
+          <option value="EMEA">Europe</option>
+          <option value="US">Americas</option>
+          <option value="CN">Greater China</option>
+          <option value="JP">Japan</option>
+          <option value="KR">South Korea</option>
+          <option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+      <label>Mois (1er jour)
+        <input type="date" id="att-start"/>
+      </label>
+      <button id="att-calc" class="primary">Calculer</button>
+      <div class="spacer"></div>
+      <div>Adherence <span id="adherence-label">0%</span></div>
     </div>
-  </header>
+    <div id="att-warnings" class="warnings"></div>
+    <div class="table-wrap">
+      <table id="att-table" class="grid"></table>
+    </div>
+  </section>
 
-  <main class="container">
+  <!-- AGENTS -->
+  <section id="agents" class="tab-panel" hidden>
+    <h2>Agents</h2>
+    <div class="toolbar">
+      <label>Region
+        <select id="ag-region">
+          <option value="EMEA">Europe</option><option value="US">Americas</option>
+          <option value="CN">Greater China</option><option value="JP">Japan</option>
+          <option value="KR">South Korea</option><option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+      <button id="ag-add" class="primary">Add agent</button>
+      <button id="ag-export" class="secondary">Exporter CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table id="ag-table" class="table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Region</th><th>Status</th>
+            <th>Call</th><th>Mail</th><th>Chat</th><th>Clienteling</th><th>Fraud</th><th>Back Office</th>
+            <th>PTO</th><th>Cal</th><th>Del</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
-    <!-- ================= ATTENDANCE ================= -->
-    <section id="attendance" class="tab-panel" aria-labelledby="tab-attendance">
-      <div class="forecast-section-card">
-        <div class="section-header">
-          <h2>Attendance — couverture mensuelle</h2>
-          <div class="muted">Disponibilités vs besoins (par jour), export CSV</div>
+    <!-- PTO Drawer -->
+    <aside id="pto-drawer" class="drawer" aria-hidden="true">
+      <div class="drawer-head">
+        <h3 id="pto-title">PTO</h3>
+        <button id="pto-close" class="icon">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="form-row">
+          <label>Start <input type="date" id="pto-start"></label>
+          <label>End <input type="date" id="pto-end"></label>
         </div>
-
-        <div class="wp-toolbar">
-          <div class="field">
-            <label for="att-region">Region</label>
-            <select id="att-region" class="input">
-              <option value="EMEA">Europe</option>
-              <option value="US">Americas</option>
-              <option value="CN">Greater China</option>
-              <option value="JP">Japan</option>
-              <option value="KR">South Korea</option>
-              <option value="SEAO">Southeast Asia</option>
+        <div class="form-row">
+          <label>Half start
+            <select id="pto-half-start">
+              <option value="">Full</option><option>AM</option><option>PM</option>
             </select>
-          </div>
-
-          <div class="field">
-            <label for="att-start">Mois (1er jour)</label>
-            <input id="att-start" type="date" class="input"/>
-          </div>
-
-          <button id="att-calc" class="btn primary">Calculer</button>
-          <div class="grow"></div>
-
-          <div class="wp-summaries">
-            <div class="wp-chip">
-              <span class="k">Adherence</span>
-              <span class="v" id="adherence-label">0%</span>
-            </div>
-            <button id="att-export" class="btn ghost">Exporter CSV</button>
-          </div>
-        </div>
-
-        <div class="legend">
-          <span><span class="legend-box present"></span>Présent</span>
-          <span><span class="legend-box pto"></span>PTO</span>
-          <span><span class="legend-box gap"></span>Besoin &gt; Capacité</span>
-        </div>
-
-        <div class="table-wrapper">
-          <div class="muted" id="att-warnings">—</div>
-          <table id="att-table" class="table"></table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= AGENTS ================= -->
-    <section id="agents" class="tab-panel" hidden aria-labelledby="tab-agents">
-      <div class="card">
-        <div class="section-header">
-          <h2>Agents & compétences</h2>
-          <div class="muted">Édite le nom, le statut, les skills, PTO (drawer)</div>
-        </div>
-
-        <div class="wp-toolbar">
-          <div class="field">
-            <label for="ag-region">Region</label>
-            <select id="ag-region" class="input">
-              <option value="EMEA">Europe</option>
-              <option value="US">Americas</option>
-              <option value="CN">Greater China</option>
-              <option value="JP">Japan</option>
-              <option value="KR">South Korea</option>
-              <option value="SEAO">Southeast Asia</option>
-            </select>
-          </div>
-
-          <button id="ag-add" class="btn">Ajouter un agent</button>
-          <button id="ag-export" class="btn ghost">Exporter CSV</button>
-          <div class="grow"></div>
-        </div>
-
-        <div class="table-wrapper">
-          <table id="ag-table" class="table">
-            <thead>
-              <tr>
-                <th>Nom</th><th>Région</th><th>Statut</th>
-                <th>Call</th><th>Mail</th><th>Chat</th><th>Clienteling</th><th>Fraud</th><th>Back Office</th>
-                <th>PTO</th><th>📅</th><th>—</th>
-              </tr>
-            </thead>
-            <tbody><!-- rendu dynamique --></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- PTO Drawer -->
-      <div id="pto-drawer" class="drawer" aria-hidden="true">
-        <div class="drawer-inner">
-          <div class="drawer-head">
-            <strong id="pto-title">PTO</strong>
-            <button id="pto-close" class="btn">Close</button>
-          </div>
-          <div class="drawer-content">
-            <div class="form-grid">
-              <div class="form-field">
-                <label>Début</label>
-                <input id="pto-start" type="date" class="input"/>
-              </div>
-              <div class="form-field">
-                <label>Fin</label>
-                <input id="pto-end" type="date" class="input"/>
-              </div>
-              <div class="form-field">
-                <label>Demi-journée début</label>
-                <select id="pto-half-start" class="input">
-                  <option value="">Full</option>
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label>Demi-journée fin</label>
-                <select id="pto-half-end" class="input">
-                  <option value="">Full</option>
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="modal-actions">
-              <button id="pto-save" class="btn primary">Enregistrer</button>
-            </div>
-
-            <h3>Calendrier (mois courant)</h3>
-            <div id="pto-calendar" class="mini-cal-grid"></div>
-
-            <h3>Historique</h3>
-            <ul id="pto-list"></ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= WEEKLY ================= -->
-    <section id="weekly" class="tab-panel" hidden aria-labelledby="tab-weekly">
-      <div class="card">
-        <div class="section-header">
-          <h2>Weekly Planner — slots 30’ (demande vs capacité)</h2>
-          <div class="muted">Alimentation par Forecast + Skills + PTO + Règles</div>
-        </div>
-
-        <div class="wp-toolbar">
-          <div class="field">
-            <label for="wp-region">Region</label>
-            <select id="wp-region" class="input">
-              <option value="EMEA">Europe</option>
-              <option value="US">Americas</option>
-              <option value="CN">Greater China</option>
-              <option value="JP">Japan</option>
-              <option value="KR">South Korea</option>
-              <option value="SEAO">Southeast Asia</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="wp-week">Semaine ISO</label>
-            <input id="wp-week" type="week" class="input"/>
-          </div>
-
-          <div class="field">
-            <label for="wp-day-start">Journée — début</label>
-            <input id="wp-day-start" type="time" class="input" value="09:00"/>
-          </div>
-
-          <div class="field">
-            <label for="wp-day-end">Journée — fin</label>
-            <input id="wp-day-end" type="time" class="input" value="18:00"/>
-          </div>
-
-          <button id="wp-load" class="btn primary">Calculer</button>
-          <div class="grow"></div>
-
-          <div class="wp-summaries">
-            <div class="wp-chip"><span class="k">Agents moyens</span><span class="v" id="wp-agents-count">0</span></div>
-            <div class="wp-chip"><span class="k">Couverture</span><span class="v" id="wp-coverage-avg">0%</span></div>
-            <div class="wp-chip"><span class="k">Slots en manque</span><span class="v" id="wp-understaffed">0</span></div>
-            <button id="wp-export" class="btn ghost">Exporter CSV</button>
-          </div>
-        </div>
-
-        <div class="legend">
-          <span><span class="legend-box present"></span>Capacité OK</span>
-          <span><span class="legend-box over"></span>Surcapacité</span>
-          <span><span class="legend-box gap"></span>Sous-capacité</span>
-          <span><span class="legend-box pto"></span>PTO agent</span>
-        </div>
-
-        <div class="table-wrapper">
-          <table id="wp-grid" class="wp-grid"></table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= FORECAST ================= -->
-    <section id="forecast" class="tab-panel" hidden aria-labelledby="tab-forecast">
-      <div class="forecast-section-card" id="forecast-section">
-        <div class="section-header">
-          <h2>Forecast — Totaux & répartitions</h2>
-          <div class="muted">Les tableaux ci-dessous sont éditables (localStorage + sync REST optionnelle)</div>
-        </div>
-
-        <div class="wp-toolbar">
-          <div class="field">
-            <label for="fc-region">Region</label>
-            <select id="fc-region" class="input">
-              <option value="EMEA">Europe</option>
-              <option value="US">Americas</option>
-              <option value="CN">Greater China</option>
-              <option value="JP">Japan</option>
-              <option value="KR">South Korea</option>
-              <option value="SEAO">Southeast Asia</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Total annuel (contacts)</label>
-            <input id="fc-total" type="number" class="input" min="0" step="1"/>
-          </div>
-        </div>
-
-        <div class="forecast-toolbar">
-          <div class="wp-chip"><span class="k">Mensuel</span><span class="v" id="fc-monthly-sum">Sum: 0%</span></div>
-        </div>
-        <div id="fc-monthly" class="forecast-table"></div>
-
-        <div class="forecast-toolbar">
-          <div class="wp-chip"><span class="k">Hebdo</span><span class="v" id="fc-weekly-sum">Sum (guide): 0%</span></div>
-        </div>
-        <div id="fc-weekly" class="forecast-table"></div>
-
-        <div class="forecast-toolbar">
-          <div class="wp-chip"><span class="k">Quotidien</span><span class="v" id="fc-daily-check">Day% sum: 0%</span></div>
-        </div>
-        <div id="fc-daily" class="forecast-table"></div>
-
-        <div class="forecast-toolbar">
-          <div class="wp-chip"><span class="k">Horaire</span><span class="v" id="fc-hourly-sum">Sum: 0%</span></div>
-        </div>
-        <div id="fc-hourly" class="forecast-table"></div>
-      </div>
-    </section>
-
-    <!-- ================= REGULATION ================= -->
-    <section id="regulation" class="tab-panel" hidden aria-labelledby="tab-regulation">
-      <div class="card">
-        <div class="section-header">
-          <h2>Regulation — règles & validations</h2>
-          <div class="muted">Règles génériques (sans comptes) + validations locales</div>
-        </div>
-
-        <div class="wp-toolbar">
-          <label class="switch">
-            <input id="enforceRegulationsToggle" type="checkbox"/>
-            <span class="slider"></span>
           </label>
-          <span class="switch-label">Enforcer les règles</span>
-
-          <div class="grow"></div>
-          <button id="validateAllBtn" class="btn">Valider</button>
-          <button id="exportViolationsBtn" class="btn ghost">Exporter</button>
+          <label>Half end
+            <select id="pto-half-end">
+              <option value="">Full</option><option>AM</option><option>PM</option>
+            </select>
+          </label>
         </div>
+        <button id="pto-save" class="primary">Add PTO</button>
+        <h4>Dates</h4>
+        <ul id="pto-list" class="list"></ul>
+        <h4>Calendar</h4>
+        <div id="pto-calendar"></div>
+      </div>
+    </aside>
+  </section>
 
-        <div class="cards-grid">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Règles actives</div></div>
-            <div class="card-value" id="activeRulesCount">0</div>
-            <div class="muted">règles</div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Violations</div></div>
-            <div class="card-value" id="violationsCount">0</div>
-            <div class="muted">au dernier run</div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Dernière validation</div></div>
-            <div class="card-value" id="lastValidationAt">—</div>
-          </div>
-        </div>
+  <!-- WEEKLY PLANNER -->
+  <section id="weekly" class="tab-panel" hidden>
+    <h2>Weekly Planner</h2>
+    <div class="toolbar">
+      <label>Region
+        <select id="wp-region">
+          <option value="EMEA">Europe</option><option value="US">Americas</option>
+          <option value="CN">Greater China</option><option value="JP">Japan</option>
+          <option value="KR">South Korea</option><option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+      <label>Semaine <input type="week" id="wp-week"></label>
+      <label>Jour: start <input type="time" id="wp-day-start" value="09:00"></label>
+      <label>end <input type="time" id="wp-day-end" value="18:00"></label>
+      <button id="wp-load" class="primary">Load</button>
+      <div class="spacer"></div>
+      <div class="pill">Agents avg: <b id="wp-agents-count">0</b></div>
+      <div class="pill">Coverage: <b id="wp-coverage-avg">0%</b></div>
+      <div class="pill warn">Gaps: <b id="wp-understaffed">0</b></div>
+      <button id="wp-export" class="secondary">Export CSV</button>
+    </div>
+    <div class="table-wrap horizontal">
+      <table id="wp-grid" class="grid"></table>
+    </div>
+  </section>
 
-        <div class="grid-1-3">
-          <div class="ghost">
-            <div class="wp-toolbar">
-              <div class="field grow">
-                <label for="ruleSearch">Rechercher</label>
-                <input id="ruleSearch" class="input" placeholder="Nom, type, scope…"/>
-              </div>
-              <button id="addRuleBtn" class="btn">Ajouter</button>
-            </div>
-            <div class="table-wrapper">
-              <table class="table">
-                <thead>
-                  <tr><th>Nom</th><th>Type</th><th>Paramètres</th><th>Scope</th><th>Actif</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="regulationTableBody"><tr><td colspan="6">—</td></tr></tbody>
-              </table>
-            </div>
-          </div>
+  <!-- FORECAST -->
+  <section id="forecast" class="tab-panel" hidden>
+    <h2>Forecast</h2>
+    <div class="toolbar">
+      <label>Region
+        <select id="fc-region">
+          <option value="EMEA">Europe</option><option value="US">Americas</option>
+          <option value="CN">Greater China</option><option value="JP">Japan</option>
+          <option value="KR">South Korea</option><option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+      <label>Total annual volume <input id="fc-total" type="number" step="1" placeholder="e.g. 90000"></label>
+    </div>
 
-          <div class="ghost" id="violationsPanel" hidden>
-            <div class="section-header">
-              <h3>Violations</h3>
-            </div>
-            <div class="table-wrapper">
-              <table class="table">
-                <thead><tr><th>Règle</th><th>Agent</th><th>Shift</th><th>Détail</th><th>Gravité</th></tr></thead>
-                <tbody id="violationsTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+    <div id="forecast-section" class="stack">
+      <section>
+        <h3>Monthly (1..12) <small id="fc-monthly-sum" class="muted"></small></h3>
+        <div id="fc-monthly"></div>
+      </section>
+      <section>
+        <h3>Weekly (1..53) <small id="fc-weekly-sum" class="muted"></small></h3>
+        <div id="fc-weekly"></div>
+      </section>
+      <section>
+        <h3>Daily (Mon..Sun) <small id="fc-daily-check" class="muted"></small></h3>
+        <div id="fc-daily"></div>
+      </section>
+      <section>
+        <h3>Hourly (30’ slots) <small id="fc-hourly-sum" class="muted"></small></h3>
+        <div id="fc-hourly"></div>
+      </section>
+    </div>
+  </section>
 
-        <!-- Modal Règle -->
-        <dialog id="ruleModal" class="modal">
-          <form id="ruleForm" method="dialog">
-            <div class="modal-box">
-              <div class="modal-header">
-                <strong id="ruleModalTitle">Nouvelle règle</strong>
-                <button id="closeRuleModal" class="btn">✕</button>
-              </div>
+  <!-- REGULATION -->
+  <section id="regulation" class="tab-panel" hidden>
+    <h2>Regulation</h2>
+    <div class="toolbar">
+      <label class="switch">
+        <input type="checkbox" id="enforceRegulationsToggle">
+        <span class="slider"></span>
+      </label>
+      <span class="muted">Enforce</span>
+      <button id="addRuleBtn" class="primary">Add rule</button>
+      <button id="validateAllBtn" class="secondary">Validate</button>
+      <button id="exportViolationsBtn" class="secondary">Export violations</button>
+      <div class="spacer"></div>
+      <input id="ruleSearch" type="search" placeholder="Search rules…"/>
+      <span class="pill">Active: <b id="activeRulesCount">0</b></span>
+      <span class="pill">Violations: <b id="violationsCount">0</b></span>
+      <span class="muted">Last: <span id="lastValidationAt">—</span></span>
+    </div>
 
-              <input type="hidden" id="ruleId"/>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Name</th><th>Type</th><th>Params</th><th>Scope</th><th>Status</th><th></th></tr></thead>
+        <tbody id="regulationTableBody"></tbody>
+      </table>
+    </div>
 
-              <div class="form-grid">
-                <div class="form-field">
-                  <label for="ruleName">Nom</label>
-                  <input id="ruleName" class="input" required/>
-                </div>
-                <div class="form-field">
-                  <label for="ruleType">Type</label>
-                  <select id="ruleType" class="input" required>
-                    <option value="">—</option>
-                    <option value="MAX_HOURS_PER_WEEK">Max heures / semaine</option>
-                    <option value="MIN_REST_BETWEEN_SHIFTS">Repos min entre shifts</option>
-                    <option value="NO_OVERLAP_SHIFTS">Pas de chevauchement</option>
-                    <option value="NO_PTO_OVERBOOKING">Interdit pendant PTO</option>
-                    <option value="HOLIDAY_BLACKOUT">Jour férié interdit</option>
-                  </select>
-                </div>
-
-                <div class="form-field">
-                  <label id="ruleParam1Label" for="ruleParam1">Paramètre 1</label>
-                  <input id="ruleParam1" class="input" type="number"/>
-                </div>
-                <div class="form-field">
-                  <label id="ruleParam2Label" for="ruleParam2">Paramètre 2</label>
-                  <input id="ruleParam2" class="input" type="number"/>
-                </div>
-
-                <div class="form-field">
-                  <label for="ruleScope">Scope</label>
-                  <select id="ruleScope" class="input">
-                    <option value="GLOBAL">Global</option>
-                    <option value="REGION">Région</option>
-                    <option value="AGENT">Agent</option>
-                  </select>
-                </div>
-                <div class="form-field" id="scopeTargetField" hidden>
-                  <label id="scopeTargetLabel" for="ruleScopeTarget">Cible</label>
-                  <input id="ruleScopeTarget" class="input"/>
-                </div>
-
-                <div class="form-field">
-                  <label for="ruleSeverity">Gravité</label>
-                  <select id="ruleSeverity" class="input">
-                    <option value="WARN">Warn</option>
-                    <option value="BLOCK">Block</option>
-                  </select>
-                </div>
-
-                <div class="form-field">
-                  <label>Active</label>
-                  <label class="switch">
-                    <input id="ruleActive" type="checkbox" checked/>
-                    <span class="slider"></span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="modal-actions">
-                <button id="cancelRuleBtn" class="btn">Annuler</button>
-                <button class="btn primary" type="submit">Enregistrer</button>
-              </div>
-            </div>
-          </form>
-        </dialog>
-
-        <!-- Modal Delete -->
-        <dialog id="confirmDeleteModal" class="modal">
-          <div class="modal-box">
-            <div class="modal-header">
-              <strong>Confirmer la suppression</strong>
-            </div>
-            <p>Supprimer cette règle ?</p>
-            <div class="modal-actions">
-              <button id="cancelDeleteBtn" class="btn">Annuler</button>
-              <button id="confirmDeleteBtn" class="btn danger">Supprimer</button>
-            </div>
-          </div>
-        </dialog>
+    <section id="violationsPanel" hidden>
+      <h3>Violations</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Rule</th><th>Agent</th><th>Shift</th><th>Detail</th><th>Severity</th></tr></thead>
+          <tbody id="violationsTableBody"></tbody>
+        </table>
       </div>
     </section>
 
-    <!-- ================= TASKS ================= -->
-    <section id="tasks" class="tab-panel" hidden aria-labelledby="tab-tasks">
-      <div class="card" id="tasksPanel">
-        <div class="section-header">
-          <h2>Tasks — catalogue par région</h2>
-          <div class="muted">AHT + priorités + activation, persisté localement par région</div>
-        </div>
-
-        <div class="wp-toolbar">
-          <div class="field">
-            <label for="task-region">Region</label>
-            <select id="task-region" class="input">
-              <option value="EMEA">Europe</option>
-              <option value="US">Americas</option>
-              <option value="CN">Greater China</option>
-              <option value="JP">Japan</option>
-              <option value="KR">South Korea</option>
-              <option value="SEAO">Southeast Asia</option>
+    <!-- Rule modal -->
+    <dialog id="ruleModal" class="modal">
+      <form id="ruleForm" method="dialog">
+        <h3 id="ruleModalTitle">Rule</h3>
+        <input type="hidden" id="ruleId"/>
+        <div class="form-grid">
+          <label>Name <input id="ruleName" required></label>
+          <label>Type
+            <select id="ruleType" required>
+              <option value="MAX_HOURS_PER_WEEK">MAX_HOURS_PER_WEEK</option>
+              <option value="MIN_REST_BETWEEN_SHIFTS">MIN_REST_BETWEEN_SHIFTS</option>
+              <option value="NO_OVERLAP_SHIFTS">NO_OVERLAP_SHIFTS</option>
+              <option value="NO_PTO_OVERBOOKING">NO_PTO_OVERBOOKING</option>
+              <option value="HOLIDAY_BLACKOUT">HOLIDAY_BLACKOUT</option>
             </select>
-          </div>
-
-          <div class="field grow">
-            <label for="task-search">Recherche</label>
-            <input id="task-search" class="input" placeholder="Nom ou note…"/>
-          </div>
-
-          <div class="field">
-            <label for="task-filter-priority">Filtre priorité</label>
-            <select id="task-filter-priority" class="input">
-              <option value="">Toutes</option>
-              <option value="high">P1</option>
-              <option value="med">P2</option>
-              <option value="low">P3</option>
+          </label>
+          <label id="ruleParam1Label">Paramètre 1 <input id="ruleParam1" type="number" step="0.1"></label>
+          <label id="ruleParam2Label">Paramètre 2 <input id="ruleParam2" type="number" step="0.1"></label>
+          <label>Scope
+            <select id="ruleScope">
+              <option value="GLOBAL">GLOBAL</option>
+              <option value="REGION">REGION</option>
+              <option value="AGENT">AGENT</option>
             </select>
-          </div>
-
-          <button id="createTaskBtn" class="btn">Ajouter une tâche</button>
-          <div id="task-counters" class="wp-summaries"></div>
+          </label>
+          <label id="scopeTargetField"><span id="scopeTargetLabel">Target</span>
+            <input id="ruleScopeTarget" placeholder="">
+          </label>
+          <label>Severity
+            <select id="ruleSeverity">
+              <option value="WARN">WARN</option>
+              <option value="BLOCK">BLOCK</option>
+            </select>
+          </label>
+          <label>Active <input type="checkbox" id="ruleActive" checked></label>
         </div>
-
-        <div class="table-wrapper">
-          <table class="table table-tasks">
-            <thead>
-              <tr>
-                <th>Tâche</th><th>Priorité</th><th>AHT (min)</th><th>Active</th><th>Notes</th><th>—</th>
-              </tr>
-            </thead>
-            <tbody id="tasksTbody"><tr><td colspan="6">—</td></tr></tbody>
-          </table>
+        <div class="modal-actions">
+          <button class="secondary" id="cancelRuleBtn">Cancel</button>
+          <button class="primary" type="submit">Save</button>
         </div>
+        <button id="closeRuleModal" class="modal-close" type="button">✕</button>
+      </form>
+    </dialog>
+
+    <!-- Delete confirm -->
+    <dialog id="confirmDeleteModal" class="modal">
+      <p>Delete this rule?</p>
+      <div class="modal-actions">
+        <button id="cancelDeleteBtn" class="secondary">Cancel</button>
+        <button id="confirmDeleteBtn" class="danger">Delete</button>
       </div>
-    </section>
+    </dialog>
+  </section>
 
-  </main>
+  <!-- TASKS -->
+  <section id="tasks" class="tab-panel" hidden>
+    <h2>Tasks</h2>
+    <div class="toolbar">
+      <label>Region
+        <select id="task-region">
+          <option value="EMEA">Europe</option><option value="US">Americas</option>
+          <option value="CN">Greater China</option><option value="JP">Japan</option>
+          <option value="KR">South Korea</option><option value="SEAO">Southeast Asia</option>
+        </select>
+      </label>
+      <input id="task-search" type="search" placeholder="Search…"/>
+      <select id="task-filter-priority">
+        <option value="">All</option>
+        <option value="high">High (P1)</option>
+        <option value="med">Medium (P2)</option>
+        <option value="low">Low (P3)</option>
+      </select>
+      <div class="spacer"></div>
+      <span id="task-counters" class="pill">—</span>
+      <button id="createTaskBtn" class="primary">New task</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Label</th><th>Priority</th><th>AHT (min)</th><th>Enabled</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="tasksTbody"></tbody>
+      </table>
+    </div>
+  </section>
 
-  <footer class="footer">
-    <div class="container">© ROMAN — Prototype</div>
-  </footer>
+</main>
 
-  <!-- Libs & App -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+<footer class="footer">
+  © ROMAN — Prototype
+</footer>
+
+<!-- Load order matters: supabase → config → app -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
