@@ -1,18 +1,23 @@
-/* ============================================================
-   APP.JS — ROMAN Planning Manager (no-auth, final)
+/* ======================================================================
+   ROMAN — Planning Manager (no-auth, Supabase facultatif)
    - Tabs handler unique
-   - Supabase client (CONFIG.* requis dans config.js)
-   - Modules: Tasks, ForecastStore, Attendance, Agents+PTO, Weekly, Regulation
-   - Calcul avancé Weekly: total → mois → semaine → jour → heure
-     → répartition par tâches (Task-Mix) → minutes via AHT
-     → comparaison à la capacité nette (règles + PTO + présence)
-   ============================================================ */
+   - Attendance (mensuel)
+   - Agents + Skills + PTO Drawer
+   - Weekly Planner (30 min slots)
+   - Tasks (localStorage, par région)
+   - Forecast Store (lazy-safe: LS + DB si dispo)
+   - Regulation (table simple locale, sans auth)
+   ====================================================================== */
 
-/* ---------- Supabase client ---------- */
-const supabase = window.supabase.createClient(
-  window.CONFIG.SUPABASE_URL,
-  window.CONFIG.SUPABASE_ANON_KEY
-);
+/* ---------- Supabase client (optionnel) ---------- */
+let supabase = null;
+(function initSupabase(){
+  try {
+    if (window.supabase && window.CONFIG?.SUPABASE_URL && window.CONFIG?.SUPABASE_ANON_KEY) {
+      supabase = window.supabase.createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY);
+    }
+  } catch(_) { /* noop */ }
+})();
 
 /* ======================================================================
    TABS HANDLER — unique & robuste
@@ -20,32 +25,42 @@ const supabase = window.supabase.createClient(
 document.addEventListener('DOMContentLoaded', () => {
   const btns   = Array.from(document.querySelectorAll('.tab-btn'));
   const panels = Array.from(document.querySelectorAll('.tab-panel'));
-  const show = (id) => {
-    panels.forEach(p => p.id === id ? p.removeAttribute('hidden') : p.setAttribute('hidden',''));
-    btns.forEach(b => {
-      const on = b.dataset.tab === id;
-      b.classList.toggle('active', on);
-      if (b.hasAttribute('aria-selected')) b.setAttribute('aria-selected', String(on));
-    });
+
+  const showTab = (id) => {
+    panels.forEach(p => { (p.id === id) ? p.removeAttribute('hidden') : p.setAttribute('hidden',''); });
+    btns.forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+
+    // Lazy init, safe
     try {
       if (id === 'attendance') initAttendanceUI();
       if (id === 'agents')     initAgentsUI();
       if (id === 'weekly')     initWeeklyUI();
-      if (id === 'forecast')   ForecastStore.init();
-      if (id === 'regulation') RegulationUI.init();
+      if (id === 'forecast')   ForecastStore.init(getRegionSelValue('fc-region'));
       if (id === 'tasks')      Tasks.init();
+      if (id === 'regulation') Regulation.init();
     } catch(e){ console.error(e); }
   };
-  btns.forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
-  const initial = btns.find(b=>b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
-  if (initial) show(initial);
+
+  btns.forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  const initial = btns.find(b => b.classList.contains('active'))?.dataset.tab || panels[0]?.id;
+  if (initial) showTab(initial);
 });
 
 /* ======================================================================
-   HELPERS
+   UTILITAIRES COMMUNS
    ====================================================================== */
-const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const ymd = (d) => (d instanceof Date ? d : new Date(d)).toISOString().slice(0,10);
+const REGIONS = ['EMEA','US','CN','JP','KR','SEAO'];
+
+function getDefaultRegion(){
+  return localStorage.getItem('roman_default_region') || 'EMEA';
+}
+function setDefaultRegion(code){
+  localStorage.setItem('roman_default_region', code);
+}
+function getRegionSelValue(id){
+  const el = document.getElementById(id);
+  return el?.value || getDefaultRegion();
+}
 function isoWeekNumber(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const dayNum = date.getUTCDay() || 7;
@@ -53,1246 +68,809 @@ function isoWeekNumber(d) {
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 }
-function firstDayOfCurrentMonthISO(){ const n=new Date(); return new Date(n.getFullYear(), n.getMonth(), 1).toISOString().slice(0,10); }
+function ymd(date){ return date.toISOString().slice(0,10); }
+function clamp01(x){ return Math.min(1, Math.max(0, x)); }
+function parsePct(val){ if (val == null || val === '') return 0; return parseFloat(String(val).replace(',','.')) || 0; }
 
 /* ======================================================================
-   REGULATIONS (clé-valeur par région)
+   FORECAST STORE — lazy-safe (LS + DB si dispo)
    ====================================================================== */
-async function fetchRegulationMap(region){
-  // regulation_rules(region, rule_key, value_text, enabled)
-  const { data, error } = await supabase
-    .from('regulation_rules')
-    .select('rule_key,value_text,enabled')
-    .eq('region', region)
-    .eq('enabled', true);
-  if (error) { console.warn(error.message); return defaultRegulations(); }
-  const map = Object.create(null);
-  (data||[]).forEach(r => map[r.rule_key] = r.value_text);
-  // normalisation vers structure de calcul
-  return normalizeRegulations(map);
-}
-function defaultRegulations(){
-  // Valeurs par défaut “France-like”
-  return {
-    maxHoursPerDay: 8,
-    maxHoursPerWeek: 37.5,
-    lunchMin: 60,
-    lunchWindowStart: '12:00',
-    lunchWindowEnd: '15:00',
-    breaksPerDay: 2,
-    breakMin: 15,
-    minRestBetweenShifts: 11,
-    saturdayWork: false,
-    sundayWork: false,
-    businessOpen: '10:00',
-    businessClose: '18:00',
-    minArrival: '09:00',
-    maxDeparture: '21:00',
-    canWorkOutsideBusiness: true
+window.ForecastStore = (() => {
+  const PREFIX = 'roman_forecast_v2:';
+  const REGION_DEFAULT = 'EMEA';
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  let region = REGION_DEFAULT;
+  let state  = null;
+
+  const key = (reg) => `${PREFIX}${reg}`;
+  const blank = () => ({
+    total: '',
+    monthly: Object.fromEntries(MONTHS.map(m => [m, ''])),
+    weekly:  Object.fromEntries(Array.from({length:53}, (_,i)=>[String(i+1), ''])),
+    daily:   Object.fromEntries(DAYS.map(d => [d, ''])),
+    hourly:  Object.fromEntries(Array.from({length:24}, (_,h)=>[`${String(h).padStart(2,'0')}:00`, '']))
+  });
+  const loadLS = (reg) => {
+    try { return Object.assign(blank(), JSON.parse(localStorage.getItem(key(reg)) || '{}')); }
+    catch { return blank(); }
   };
-}
-function normalizeRegulations(map){
-  const num = (k, def) => (map[k]!=null ? parseFloat(String(map[k]).replace(',','.')) : def);
-  const bool = (k, def) => {
-    const v = (map[k]??'').toString().trim().toLowerCase();
-    if (['1','true','yes','oui','y','on'].includes(v)) return true;
-    if (['0','false','no','non','n','off'].includes(v)) return false;
-    return def;
-  };
-  const str = (k, def) => (map[k] ?? def);
-  return {
-    maxHoursPerDay: num('Max Hours per Day', 8),
-    maxHoursPerWeek: num('Max Hours per Week', 37.5),
-    lunchMin: num('Lunch Duration (minutes)', 60),
-    lunchWindowStart: str('Lunch Window Start (HH:MM)', '12:00'),
-    lunchWindowEnd:   str('Lunch Window End (HH:MM)', '15:00'),
-    breaksPerDay: num('Breaks per Day (count)', 2),
-    breakMin: num('Break Duration (minutes)', 15),
-    minRestBetweenShifts: num('Min Rest Between Shifts (hours)', 11),
-    saturdayWork: bool('Saturday Work', false),
-    sundayWork: bool('Sunday Work', false),
-    businessOpen: str('Client facing opening hour is', '10:00'),
-    businessClose: str('Client facing closing hour is', '18:00'),
-    minArrival: str('Minimum arrival date for advisor', '09:00'),
-    maxDeparture: str('Maximum arrival date for advisor is', '21:00'),
-    canWorkOutsideBusiness: bool('Advisor can work in the window outside of the client facing hours', true)
-  };
-}
-function computeNetCapacityPerAgentMin(reg){
-  const workMin = reg.maxHoursPerDay * 60;
-  const breaks  = reg.breaksPerDay * reg.breakMin;
-  return Math.max(0, workMin - reg.lunchMin - breaks);
-}
+  const saveLS = () => localStorage.setItem(key(region), JSON.stringify(state));
+
+  // DB fetchers (tolérants)
+  async function fetchTotalFromDB(reg){
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('forecast_totals')
+      .select('total_volume').eq('region', reg).maybeSingle();
+    if (error) return null;
+    return data?.total_volume ?? null;
+  }
+  async function fetchMonthlyFromDB(reg){
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('forecast_monthly')
+      .select('month_index, share_percent').eq('region', reg).order('month_index');
+    if (error || !data?.length) return null;
+    const m = {};
+    data.forEach(r => m[MONTHS[r.month_index-1]] = String(r.share_percent));
+    return m;
+  }
+  async function fetchWeeklyFromDB(reg){
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('forecast_weekly')
+      .select('week_index, share_percent').eq('region', reg).order('week_index');
+    if (error || !data?.length) return null;
+    const w = {};
+    data.forEach(r => w[String(r.week_index)] = String(r.share_percent));
+    return w;
+  }
+  async function fetchDailyFromDB(reg){
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('forecast_daily')
+      .select('weekday, share_percent').eq('region', reg).order('weekday');
+    if (error || !data?.length) return null;
+    const map = {1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat',7:'Sun'};
+    const d = {};
+    data.forEach(r => d[map[r.weekday]] = String(r.share_percent));
+    return d;
+  }
+  async function fetchHourlyFromDB(reg){
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('forecast_hourly')
+      .select('hhmm, share_percent').eq('region', reg).order('hhmm');
+    if (error || !data?.length) return null;
+    const h = {};
+    data.forEach(r => h[r.hhmm] = String(r.share_percent));
+    return h;
+  }
+
+  async function ensure(reg = region) {
+    if (state) return;
+    region = reg || REGION_DEFAULT;
+    state = loadLS(region);
+
+    try {
+      const [t, m, w, d, h] = await Promise.all([
+        fetchTotalFromDB(region), fetchMonthlyFromDB(region),
+        fetchWeeklyFromDB(region), fetchDailyFromDB(region),
+        fetchHourlyFromDB(region)
+      ]);
+      if (t != null) state.total = String(t);
+      if (m) state.monthly = Object.assign(state.monthly, m);
+      if (w) state.weekly  = Object.assign(state.weekly,  w);
+      if (d) state.daily   = Object.assign(state.daily,   d);
+      if (h) state.hourly  = Object.assign(state.hourly,  h);
+      saveLS();
+    } catch(_) { /* fallback LS */ }
+  }
+
+  async function init(reg){ region = reg || region; await ensure(region); }
+  async function ready(){ await ensure(); }
+
+  // getters safe
+  function getTotal(){ if (!state) state = loadLS(region); return Number(String(state.total).replace(',','.')) || 0; }
+  function getMonthlyShare(idx){ if (!state) state = loadLS(region); return parsePct(state.monthly[['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][idx-1]]); }
+  function getWeeklyShare(idx){ if (!state) state = loadLS(region); return parsePct(state.weekly[String(idx)]); }
+  function getDailyShare(name){ if (!state) state = loadLS(region); return parsePct(state.daily[name]); }
+  function getHourlyShare(hhmm){ if (!state) state = loadLS(region); return parsePct(state.hourly[hhmm]); }
+
+  return { init, ready, getTotal, getMonthlyShare, getWeeklyShare, getDailyShare, getHourlyShare };
+})();
 
 /* ======================================================================
-   TASKS (catalogue local par région)
+   TASKS (localStorage par région) — AHT + priorité + enable
    ====================================================================== */
-const Tasks = (() => {
-  const KEY = 'roman_tasks_v3:';
-  const DEFAULT = [
-    { key:'call',        label:'Call',         priority:'high', aht:7,  enabled:true,  notes:'' },
-    { key:'mail',        label:'Mail',         priority:'med',  aht:8,  enabled:true,  notes:'' },
-    { key:'chat',        label:'Chat',         priority:'high', aht:3,  enabled:true,  notes:'' },
-    { key:'clienteling', label:'Clienteling',  priority:'low',  aht:15, enabled:true,  notes:'' },
-    { key:'backoffice',  label:'Back Office',  priority:'med',  aht:15, enabled:true,  notes:'' },
-    { key:'fraud',       label:'Fraud',        priority:'high', aht:10, enabled:true,  notes:'' },
-    { key:'lunch',       label:'Lunch Break',  priority:'high', aht:60, enabled:true,  notes:'Mandatory by regulation' },
-    { key:'break',       label:'Break',        priority:'high', aht:15, enabled:true,  notes:'x2 per day' },
-    { key:'morning',     label:'Morning Brief',priority:'low',  aht:15, enabled:true,  notes:'' },
-    { key:'training',    label:'Training',     priority:'low',  aht:1,  enabled:true,  notes:'' },
+window.Tasks = (() => {
+  const LS_PREFIX = 'roman_tasks_v2:';
+  const REGION_DEFAULT = 'EMEA';
+  const DEFAULT_ROWS = [
+    { key:'call',         label:'Call',          priority:'P1', aht:7,  enabled:true,  notes:'' },
+    { key:'mail',         label:'Mail',          priority:'P2', aht:8,  enabled:true,  notes:'' },
+    { key:'chat',         label:'Chat',          priority:'P1', aht:3,  enabled:true,  notes:'' },
+    { key:'clienteling',  label:'Clienteling',   priority:'P3', aht:15, enabled:true,  notes:'' },
+    { key:'backoffice',   label:'Back Office',   priority:'P2', aht:15, enabled:true,  notes:'' },
+    { key:'fraud',        label:'Fraud',         priority:'P1', aht:10, enabled:true,  notes:'' },
+    { key:'lunch',        label:'Lunch Break',   priority:'Mandatory', aht:60, enabled:true, notes:'' },
+    { key:'break',        label:'Break',         priority:'Mandatory', aht:15, enabled:true, notes:'' },
+    { key:'morningbrief', label:'Morning Brief', priority:'P3', aht:15, enabled:true,  notes:'' },
+    { key:'training',     label:'Training',      priority:'P3', aht:1,  enabled:true,  notes:'' },
   ];
-  let region = 'EMEA';
-  let rows = [];
   const els = {
     panel:   () => document.getElementById('tasksPanel'),
+    region:  () => document.getElementById('task-region'),
     search:  () => document.getElementById('task-search'),
     fPrio:   () => document.getElementById('task-filter-priority'),
-    region:  () => document.getElementById('task-region'),
     tbody:   () => document.getElementById('tasksTbody'),
     counters:() => document.getElementById('task-counters'),
     createBtn:() => document.getElementById('createTaskBtn'),
   };
-  const key = (reg) => `${KEY}${reg}`;
+  const key = (reg) => `${LS_PREFIX}${reg||REGION_DEFAULT}`;
+  const clone = (x)=> JSON.parse(JSON.stringify(x));
+
+  let region = REGION_DEFAULT;
+  let rows = [];
+
   const load = (reg) => {
-    try{
-      const raw = localStorage.getItem(key(reg));
-      if (!raw) return JSON.parse(JSON.stringify(DEFAULT));
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : JSON.parse(JSON.stringify(DEFAULT));
-    }catch{ return JSON.parse(JSON.stringify(DEFAULT)); }
+    const raw = localStorage.getItem(key(reg));
+    if (!raw) return clone(DEFAULT_ROWS);
+    try { const arr = JSON.parse(raw); return Array.isArray(arr)?arr:clone(DEFAULT_ROWS); }
+    catch { return clone(DEFAULT_ROWS); }
   };
   const save = () => localStorage.setItem(key(region), JSON.stringify(rows));
-  const AHT = () => {
-    const m = Object.create(null);
-    rows.forEach(r => { m[r.label] = Number(r.aht)||0; });
-    // alias vers noms utilisés par le forecast
-    m['Call'] = rows.find(r=>r.key==='call')?.aht ?? 7;
-    m['Mail'] = rows.find(r=>r.key==='mail')?.aht ?? 8;
-    m['Chat'] = rows.find(r=>r.key==='chat')?.aht ?? 3;
-    m['Clienteling'] = rows.find(r=>r.key==='clienteling')?.aht ?? 15;
-    m['Fraud'] = rows.find(r=>r.key==='fraud')?.aht ?? 10;
-    m['Back Office'] = rows.find(r=>r.key==='backoffice')?.aht ?? 15;
-    return m;
-  };
-  const renderRow = (r) => `
-    <tr data-row="${r.key}">
-      <td><input type="text" value="${escapeHtml(r.label)}" data-key="${r.key}" data-field="label" /></td>
-      <td>
-        <select data-key="${r.key}" data-field="priority">
-          <option value="high" ${r.priority==='high'?'selected':''}>High (P1)</option>
-          <option value="med"  ${r.priority==='med'?'selected':''}>Medium (P2)</option>
-          <option value="low"  ${r.priority==='low'?'selected':''}>Low (P3)</option>
-        </select>
-      </td>
-      <td><input type="number" min="0" step="1" value="${Number(r.aht)||0}" data-key="${r.key}" data-field="aht" /></td>
-      <td>
-        <label class="switch">
-          <input type="checkbox" ${r.enabled?'checked':''} data-key="${r.key}" data-field="enabled" />
-          <span class="slider"></span>
-        </label>
-      </td>
-      <td><input type="text" value="${escapeHtml(r.notes||'')}" data-key="${r.key}" data-field="notes" /></td>
-      <td class="row-actions">
-        <button type="button" class="mini danger" data-action="delete" data-key="${r.key}" title="Delete">Delete</button>
-      </td>
-    </tr>
-  `;
-  const escapeHtml=(s='')=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);}};
 
-  const onCellInput = debounce((e)=>onCellChange(e),200);
-  const onCellChange = (e) => {
-    const el=e.target, k=el.dataset.key, f=el.dataset.field;
-    const i=rows.findIndex(x=>x.key===k); if(i<0) return;
-    let v = (f==='enabled') ? el.checked : (f==='aht' ? Number(el.value)||0 : el.value);
-    rows[i][f] = v; save(); renderCounters();
-  };
-  const renderCounters = () => {
-    const cnt = els.counters(); if (!cnt) return;
-    const enabled = rows.filter(r=>r.enabled).length;
-    cnt.innerHTML = [
-      `<span class="counter">Region: <b>${region}</b></span>`,
-      `<span class="counter">Tasks: <b>${rows.length}</b></span>`,
-      `<span class="counter">Enabled: <b>${enabled}</b></span>`
-    ].join('');
-  };
   const render = () => {
     const tb = els.tbody(); if (!tb) return;
-    const q  = (els.search()?.value||'').toLowerCase().trim();
-    const fp = (els.fPrio()?.value||'');
-    const list = rows.filter(r=>{
+    const q = (els.search()?.value || '').toLowerCase().trim();
+    const fp = (els.fPrio()?.value || '');
+    const list = rows.filter(r => {
       if (q && !(r.label.toLowerCase().includes(q) || (r.notes||'').toLowerCase().includes(q))) return false;
-      if (fp && r.priority!==fp) return false;
+      if (fp && r.priority !== fp) return false;
       return true;
     });
-    tb.innerHTML = list.map(renderRow).join('') || `<tr><td colspan="6" class="muted">No tasks.</td></tr>`;
-    tb.querySelectorAll('select[data-key], input[data-key]').forEach(inp=>{
+    tb.innerHTML = list.map(r => `
+      <tr data-row="${r.key}">
+        <td><input type="text" value="${escapeHtml(r.label)}" data-key="${r.key}" data-field="label"></td>
+        <td>
+          <select data-key="${r.key}" data-field="priority">
+            ${['P1','P2','P3','Mandatory'].map(p=>`<option value="${p}" ${p===r.priority?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </td>
+        <td><input type="number" min="0" step="1" value="${Number(r.aht)||0}" data-key="${r.key}" data-field="aht"></td>
+        <td>
+          <label class="switch">
+            <input type="checkbox" ${r.enabled?'checked':''} data-key="${r.key}" data-field="enabled">
+            <span class="slider"></span>
+          </label>
+        </td>
+        <td><input type="text" value="${escapeHtml(r.notes||'')}" data-key="${r.key}" data-field="notes"></td>
+        <td class="row-actions"><button type="button" class="mini danger" data-action="delete" data-key="${r.key}">Delete</button></td>
+      </tr>
+    `).join('') || `<tr><td colspan="6" class="muted">No tasks.</td></tr>`;
+
+    tb.querySelectorAll('input[data-key], select[data-key]').forEach(inp=>{
+      inp.addEventListener('input', onCellChange);
       inp.addEventListener('change', onCellChange);
-      inp.addEventListener('input',  onCellInput);
     });
-    renderCounters();
+    tb.querySelectorAll('[data-action="delete"]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const k = btn.dataset.key;
+        rows = rows.filter(x => x.key !== k);
+        save(); render();
+      });
+    });
+    const cnt = els.counters(); if (cnt) {
+      const enabled = rows.filter(r=>r.enabled).length;
+      cnt.innerHTML = `Region: <b>${region}</b> · Tasks: <b>${rows.length}</b> · Enabled: <b>${enabled}</b>`;
+    }
   };
+  const onCellChange = (e) => {
+    const el = e.target;
+    const k = el.dataset.key, f = el.dataset.field;
+    const idx = rows.findIndex(x => x.key === k);
+    if (idx === -1) return;
+    let v = el.value;
+    if (f === 'enabled') v = el.checked;
+    if (f === 'aht') v = Number(v)||0;
+    rows[idx][f] = v;
+    save();
+  };
+  const escapeHtml = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
   const init = () => {
-    const panel=els.panel(); if(!panel) return;
-    if(init._init) return; init._init=true;
-    const rSel=els.region();
-    region=rSel?.value||'EMEA';
-    rows=load(region); render();
-    rSel?.addEventListener('change', ()=>{ region=rSel.value; rows=load(region); render(); });
+    const panel = els.panel(); if (!panel) return;
+    const rSel = els.region();
+    const prev = getDefaultRegion();
+    if (rSel) {
+      rSel.value = prev;
+      rSel.addEventListener('change', ()=>{ setDefaultRegion(rSel.value); region = rSel.value; rows = load(region); render(); });
+    }
+    region = rSel?.value || prev;
+    rows = load(region);
     els.search()?.addEventListener('input', render);
     els.fPrio()?.addEventListener('change', render);
     els.createBtn()?.addEventListener('click', ()=>{
-      const name=prompt('New task name ?'); if(!name) return;
-      const safe=name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24)||('task'+Date.now());
-      rows.push({ key:safe, label:name, priority:'low', aht:5, enabled:true, notes:'' });
+      const name = prompt('New task name?'); if (!name) return;
+      const safeKey = name.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24) || ('task'+Date.now());
+      rows.push({ key:safeKey, label:name, priority:'P3', aht:5, enabled:true, notes:'' });
       save(); render();
     });
-  };
-  return { init, AHT };
-})();
-
-/* ======================================================================
-   FORECAST STORE (localStorage + sync REST optionnelle)
-   Keys: total, monthly[1..12]%, weekly[1..53]%, daily[Mon..Sun]%,
-         hourly["HH:MM"]% (slots 30’)
-   ====================================================================== */
-const ForecastStore = (() => {
-  const PREFIX = 'roman_forecast_v3:';
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const DAYS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const HOURS  = Array.from({length:24*2},(_,i)=>{
-    const h = Math.floor(i/2), m = (i%2)*30;
-    return `${String(h).padStart(2,'0')}:${m?'30':'00'}`;
-  });
-
-  let region='EMEA', state=null;
-  const key = (reg)=>`${PREFIX}${reg}`;
-  const blank = ()=>({
-    total:'',
-    monthly:Object.fromEntries(MONTHS.map((_,i)=>[String(i+1), ''])),
-    weekly:Object.fromEntries(Array.from({length:53},(_,i)=>[String(i+1), ''])),
-    daily:Object.fromEntries(DAYS.map(d=>[d, ''])),
-    hourly:Object.fromEntries(HOURS.map(h=>[h,'']))
-  });
-  const mergeBlank = (obj)=>{
-    const b = blank();
-    return {
-      total: obj?.total ?? b.total,
-      monthly: { ...b.monthly, ...(obj?.monthly||{}) },
-      weekly:  { ...b.weekly,  ...(obj?.weekly||{}) },
-      daily:   { ...b.daily,   ...(obj?.daily||{}) },
-      hourly:  { ...b.hourly,  ...(obj?.hourly||{}) }
-    };
-  };
-  const load = (reg)=>{
-    try{
-      const raw=localStorage.getItem(key(reg));
-      if(!raw) return blank();
-      return mergeBlank(JSON.parse(raw));
-    }catch{ return blank(); }
-  };
-  const save = ()=> localStorage.setItem(key(region), JSON.stringify(state));
-  const sumPercent = (arr)=> {
-    const n = arr.reduce((s,v)=> s + (parseFloat(String(v).replace(',','.'))||0), 0);
-    return Math.round(n*100)/100;
+    render();
   };
 
-  // UI rendering (index.html already has containers/labels)
-  const inputHtml = (name, value)=> `<input type="number" step="0.01" name="${name}" value="${value??''}"/>`;
-  const table = (head, rows)=>{
-    const th = `<thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
-    const tb = `<tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
-    return `<table class="table">${th}${tb}</table>`;
-  };
-  const wire = (host)=> {
-    host.querySelectorAll('input[name]').forEach(inp=>{
-      inp.addEventListener('input', onChange);
-      inp.addEventListener('change', onChange);
-    });
-  };
-  function onChange(e){
-    const path = e.target.name.split('.');
-    let ref = state;
-    for (let i=0;i<path.length-1;i++){ const k=path[i]; if(ref[k]==null) ref[k]={}; ref=ref[k]; }
-    ref[path.at(-1)] = e.target.value;
-    save(); // optionnel: sync REST ouverte
-    if (window.CONFIG.SYNC_FORECAST) softSyncForecast(e.target.name, e.target.value);
-    refreshSums();
-  }
-  async function softSyncForecast(field, value){
-    try{
-      const url = `${window.CONFIG.SUPABASE_URL}/rest/v1/forecast_values`;
-      await fetch(url, {
-        method: 'POST',
-        headers: {
-          apikey: window.CONFIG.SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${window.CONFIG.SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          Prefer: 'resolution=merge-duplicates'
-        },
-        body: JSON.stringify([{ region, field, value, updated_at: new Date().toISOString() }])
-      });
-    }catch(e){ /* no-crash */ }
-  }
-  const refreshSums = ()=>{
-    const mSpan=document.getElementById('fc-monthly-sum');
-    const wSpan=document.getElementById('fc-weekly-sum');
-    const dSpan=document.getElementById('fc-daily-check');
-    const hSpan=document.getElementById('fc-hourly-sum');
-    if (mSpan) mSpan.textContent = `Sum: ${sumPercent(Object.values(state.monthly))}%`;
-    if (wSpan) wSpan.textContent = `Sum (guide): ${sumPercent(Object.values(state.weekly))}%`;
-    if (dSpan) dSpan.textContent = `Day% sum: ${sumPercent(Object.values(state.daily))}%`;
-    if (hSpan) hSpan.textContent = `Sum: ${sumPercent(Object.values(state.hourly))}%`;
-  };
-
-  // Public getters for calculations
-  const getTotal = ()=> parseFloat(String(state.total).replace(',','.'))||0;
-  const getMonthlyShare = (m1to12)=> (parseFloat(String(state.monthly[String(m1to12)]||'0').replace(',','.'))||0)/100;
-  const getWeeklyShare  = (w1to53)=> (parseFloat(String(state.weekly[String(w1to53)]||'0').replace(',','.'))||0)/100;
-  const getDailyShare   = (dow)=> { // JS 1..7 (Mon..Sun)
-    const map = {1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat',7:'Sun'};
-    return (parseFloat(String(state.daily[map[dow]]||'0').replace(',','.'))||0)/100;
-  };
-  const getHourlyShares = (startHHMM, endHHMM)=>{
-    // returns Map(hhmm -> shareFractionWithinDayWindow)
-    const hours = Object.keys(state.hourly);
-    const window = hours.filter(h => h>=startHHMM && h<endHHMM);
-    const sum = window.reduce((s,h)=> s + (parseFloat(String(state.hourly[h]||'0').replace(',','.'))||0), 0) || 1;
-    const map = new Map();
-    window.forEach(h => {
-      const v = (parseFloat(String(state.hourly[h]||'0').replace(',','.'))||0);
-      map.set(h, v / sum);
-    });
+  const getAHT = () => {
+    const map = {};
+    (rows||[]).forEach(r => map[r.label] = Number(r.aht)||0);
+    // alias
+    map['Back Office'] = map['Back Office'] ?? map['backoffice'] ?? 15;
     return map;
   };
 
-  const init = () => {
-    const host = document.getElementById('forecast-section'); if(!host) return;
-    if (init._init) { // refresh region switch
-      const rSel = document.getElementById('fc-region');
-      const r = rSel?.value || 'EMEA';
-      if (r !== region){ region=r; state=load(region); paint(); }
-      return;
-    }
-    init._init=true;
-    const rSel = document.getElementById('fc-region');
-    region = rSel?.value || 'EMEA';
-    state = load(region);
-    rSel?.addEventListener('change', ()=>{ region=rSel.value; state=load(region); paint(); });
-    paint();
-  };
-  const paint = ()=>{
-    // total
-    const tot = document.getElementById('fc-total');
-    if (tot){ tot.value = state.total??''; tot.oninput = (e)=>{ state.total=e.target.value; save(); }; }
-    // monthly
-    const monthly = document.getElementById('fc-monthly');
-    if (monthly){
-      const head = ['Month', ...Array.from({length:12},(_,i)=>String(i+1))];
-      const row  = ['Share %', ...Array.from({length:12},(_,i)=> inputHtml(`monthly.${String(i+1)}`, state.monthly[String(i+1)]))];
-      monthly.innerHTML = table(head, [row]); wire(monthly);
-    }
-    // weekly
-    const weekly = document.getElementById('fc-weekly');
-    if (weekly){
-      const head=['Week',...Array.from({length:53},(_,i)=>String(i+1))];
-      const row=['Share %',...Array.from({length:53},(_,i)=> inputHtml(`weekly.${String(i+1)}`, state.weekly[String(i+1)]))];
-      weekly.innerHTML = table(head,[row]); wire(weekly);
-    }
-    // daily
-    const daily = document.getElementById('fc-daily');
-    if (daily){
-      const head=['Day','%'];
-      const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-      const rows=days.map(d=> [d, inputHtml(`daily.${d}`, state.daily[d])]);
-      daily.innerHTML = table(head, rows); wire(daily);
-    }
-    // hourly
-    const hourly = document.getElementById('fc-hourly');
-    if (hourly){
-      const head=['Hour', ...Object.keys(state.hourly)];
-      const row =['Share %', ...Object.keys(state.hourly).map(h => inputHtml(`hourly.${h}`, state.hourly[h]))];
-      hourly.innerHTML = table(head,[row]); wire(hourly);
-    }
-    refreshSums();
-  };
-
-  return {
-    init,
-    getTotal, getMonthlyShare, getWeeklyShare, getDailyShare, getHourlyShares
-  };
+  return { init, getAHT };
 })();
 
 /* ======================================================================
    ATTENDANCE — couverture mensuelle
    ====================================================================== */
-const attRegionSel   = document.getElementById("att-region");
-const attStartInput  = document.getElementById("att-start");
-const attCalcBtn     = document.getElementById("att-calc");
-const adherenceLabel = document.getElementById("adherence-label");
-const adherenceFill  = document.getElementById("adherence-fill"); // (style.css gère la barre si présente)
-const attTable       = document.getElementById("att-table");
-const attWarnings    = document.getElementById("att-warnings");
+function firstDayOfCurrentMonthISO() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+}
 
-async function fetchAgentsWithPTO(region){
-  const [{ data: agents, error:e1 }, { data: pto, error:e2 }] = await Promise.all([
-    supabase.from('agents').select('id,full_name,region,status').eq('region', region).order('full_name',{ascending:true}),
-    supabase.from('agent_pto').select('agent_id,start_date,end_date,half_day_start,half_day_end')
+const att = {
+  regionSel:  () => document.getElementById('att-region'),
+  startInput: () => document.getElementById('att-start'),
+  calcBtn:    () => document.getElementById('att-calc'),
+  label:      () => document.getElementById('adherence-label'),
+  fill:       () => document.getElementById('adherence-fill'),
+  table:      () => document.getElementById('att-table'),
+  warns:      () => document.getElementById('att-warnings'),
+  exportBtn:  () => document.getElementById('att-export'),
+};
+
+async function fetchAgentsWithPTO(region) {
+  if (!supabase) return []; // dégradé
+  const [{ data: agents }, { data: pto }] = await Promise.all([
+    supabase.from('agents').select('id, full_name, region, status').eq('region', region).order('full_name'),
+    supabase.from('agent_pto').select('agent_id, start_date, end_date, half_day_start, half_day_end'),
   ]);
-  if (e1) throw e1; if (e2) throw e2;
-  const byId = Object.create(null);
+  const byId = {};
   (agents||[]).forEach(a => byId[a.id] = { ...a, pto: [] });
-  (pto||[]).forEach(p => { if(byId[p.agent_id]) byId[p.agent_id].pto.push(p); });
+  (pto||[]).forEach(p => { if (byId[p.agent_id]) byId[p.agent_id].pto.push(p); });
   return Object.values(byId);
 }
-function agentIsOffThatDate(agent, dateISO){
-  for (const p of agent.pto||[]) if (dateISO >= p.start_date && dateISO <= p.end_date) return true;
+function agentIsOffThatDate(agent, dateISO) {
+  for (const p of agent.pto || []) if (dateISO >= p.start_date && dateISO <= p.end_date) return true;
   return false;
 }
-
-async function fetchDailyTaskMix(region, dow){
-  // Si tu as rempli forecast_daily (email_pct, call_pct, etc.) on l’utilise.
-  const { data, error } = await supabase
-    .from('forecast_daily')
-    .select('email_pct,call_pct,chat_pct,clienteling_pct,fraud_pct,admin_pct')
-    .eq('region', region)
-    .eq('weekday', dow) // 1..7 (Mon..Sun)
-    .maybeSingle();
-  if (error) { return {Mail:.28, Call:.30, Chat:0, Clienteling:.04, Fraud:.02, 'Back Office':.36}; }
+async function fetchDailyTaskPct(region, weekdayName){
+  if (!supabase) {
+    // fallback: simple mix par défaut (Europe-like)
+    return { Call:30/100, Mail:28/100, Chat:0, Clienteling:4/100, Fraud:2/100, "Back Office":36/100 };
+  }
+  // On prend les pourcentages par canal depuis forecast_daily si dispo, sinon fallback
+  const mapDay = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6,Sun:7};
+  const wd = mapDay[weekdayName];
+  const { data, error } = await supabase.from('forecast_daily')
+    .select('email_pct, call_pct, chat_pct, clienteling_pct, fraud_pct, admin_pct')
+    .eq('region', region).eq('weekday', wd).maybeSingle();
+  if (error || !data) return { Call:30/100, Mail:28/100, Chat:0, Clienteling:4/100, Fraud:2/100, "Back Office":36/100 };
   return {
-    Mail: (parseFloat(data?.email_pct)||0)/100,
-    Call: (parseFloat(data?.call_pct)||0)/100,
-    Chat: (parseFloat(data?.chat_pct)||0)/100,
-    Clienteling: (parseFloat(data?.clienteling_pct)||0)/100,
-    Fraud: (parseFloat(data?.fraud_pct)||0)/100,
-    'Back Office': (parseFloat(data?.admin_pct)||0)/100,
+    Mail: (Number(data.email_pct)||0)/100,
+    Call: (Number(data.call_pct)||0)/100,
+    Chat: (Number(data.chat_pct)||0)/100,
+    Clienteling: (Number(data.clienteling_pct)||0)/100,
+    Fraud: (Number(data.fraud_pct)||0)/100,
+    "Back Office": (Number(data.admin_pct)||0)/100,
   };
 }
-async function fetchTotalsAndShares(region, y, m, d){
-  const week = isoWeekNumber(new Date(y,m-1,d));
-  const wd = ((new Date(y,m-1,d).getDay()+6)%7)+1; // 1..7
-  // totals
-  let annual = ForecastStore.getTotal();
-  if (!annual) {
-    // fallback DB: forecast_totals
-    const { data } = await supabase.from('forecast_totals').select('total_volume').eq('region',region).maybeSingle();
-    annual = data?.total_volume||0;
-  }
-  const mShare = ForecastStore.getMonthlyShare(m) || 0;
-  const wShare = ForecastStore.getWeeklyShare(week) || 0;
-  const dShare = ForecastStore.getDailyShare(wd) || 0;
-  return { annual, mShare, wShare, dShare, week, wd };
+function computeNetCapacityPerAgentMin() {
+  // Règles minimales : 8h/jour, 60’ lunch, 2x15’ breaks
+  const workMin = 8*60;
+  const breaks  = 2*15;
+  return Math.max(0, workMin - 60 - breaks); // 360 min
 }
-function sumDemandMinutesFromMix(totalDay, mix, ahtMap){
-  const keys = ['Call','Mail','Chat','Clienteling','Fraud','Back Office'];
+function sumDemandMinutes(totalVolumeDay, dailyTaskPct, AHT) {
+  const keys = ["Call","Mail","Chat","Clienteling","Fraud","Back Office"];
   let minutes = 0;
-  for (const k of keys){
-    const pct = mix[k]??0;
-    const aht = ahtMap[k]??0;
-    const count = totalDay * pct;
+  for (const k of keys) {
+    const pct = dailyTaskPct[k] ?? 0;
+    const aht = AHT[k] ?? 0;
+    const count = totalVolumeDay * pct;
     minutes += count * aht;
   }
   return minutes;
 }
-
-async function calcAttendance(region, startISO){
+async function calcAttendance(region, startISO) {
+  await ForecastStore.ready(); // garantit state
   const start = new Date(startISO);
-  const y = start.getFullYear(), m = start.getMonth()+1;
-  const daysInMonth = new Date(y, m, 0).getDate();
-  const regs = await fetchRegulationMap(region);
-  const netCapPerAgentMin = computeNetCapacityPerAgentMin(regs);
-  const agents = await fetchAgentsWithPTO(region);
-  const ahtMap = Tasks.AHT();
+  const year = start.getFullYear();
+  const month = start.getMonth() + 1;
+  const daysInMonth = new Date(year, month, 0).getDate();
 
-  const results=[];
-  for (let day=1; day<=daysInMonth; day++){
-    const dateISO = ymd(new Date(y,m-1,day));
-    const { annual, mShare, wShare, dShare, wd } = await fetchTotalsAndShares(region, y, m, day);
-    const totalDay = annual * mShare * wShare * dShare;
-    const mix = await fetchDailyTaskMix(region, wd);
-    const demandMin = sumDemandMinutesFromMix(totalDay, mix, ahtMap);
-    const available = agents.filter(a => a.status==='Present' && !agentIsOffThatDate(a, dateISO)).length;
-    const required  = (netCapPerAgentMin>0) ? Math.ceil(demandMin / netCapPerAgentMin) : 0;
-    const adherence = required>0 ? Math.min(100, Math.round((available/required)*100)) : 100;
+  const AHT = Tasks.getAHT();
+  const netCapPerAgentMin = computeNetCapacityPerAgentMin();
+  const agents = await fetchAgentsWithPTO(region);
+
+  const results = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month - 1, day);
+    const dateISO = date.toISOString().slice(0,10);
+    const week = isoWeekNumber(date);
+    const weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()];
+    const weekdayName = weekday === 'Sun' ? 'Sun' : weekday; // align
+
+    const total = ForecastStore.getTotal();
+    const m = ForecastStore.getMonthlyShare(month) / 100;
+    const w = ForecastStore.getWeeklyShare(week) / 100 || (1/52);
+    const d = ForecastStore.getDailyShare(weekdayName) / 100 || (1/7);
+
+    const totalDay = total * m * w * d;
+
+    const dailyTaskPct = await fetchDailyTaskPct(region, weekdayName);
+    const demandMin = sumDemandMinutes(totalDay, dailyTaskPct, AHT);
+    const available = agents.filter(a => a.status === "Present" && !agentIsOffThatDate(a, dateISO)).length;
+    const required = (netCapPerAgentMin > 0) ? Math.ceil(demandMin / netCapPerAgentMin) : 0;
+    const adherence = required > 0 ? Math.min(100, Math.round((available / required) * 100)) : 100;
     results.push({ dateISO, day, available, required, adherence });
   }
-  return { results, agents };
+  return { results, agents, netCapPerAgentMin };
 }
-function renderAttendanceGrid(region, calc){
+function renderAttendanceGrid(region, calc) {
   const { results, agents } = calc;
+  const table = att.table(); if (!table) return;
+
   let thead = `<thead><tr><th class="first-col">Agent</th>`;
-  for (const c of results){
-    const flag = c.required>c.available ? `<span class="warn-flag">/!\\</span>` : "";
+  for (const c of results) {
+    const flag = c.required > c.available ? `<span class="warn-flag">/!\\</span>` : "";
     thead += `<th><div class="day-head">${c.day}</div>${flag}<div class="req-available">${c.available}/${c.required}</div></th>`;
   }
   thead += `</tr></thead>`;
 
   let tbody = `<tbody>`;
-  for (const a of agents){
-    tbody += `<tr><td class="first-col" title="${a.status}">${a.full_name}</td>`;
-    for (const c of results){
+  for (const a of agents) {
+    tbody += `<tr><td class="first-col" title="${a.status??''}">${a.full_name??'-'}</td>`;
+    for (const c of results) {
       const off = agentIsOffThatDate(a, c.dateISO);
-      let cls = off ? 'cell-pto' : 'cell-present';
+      const cls = off ? 'cell-pto' : 'cell-present';
       tbody += `<td class="${cls}"></td>`;
     }
     tbody += `</tr>`;
   }
   tbody += `</tbody>`;
-  attTable.innerHTML = thead + tbody;
+  table.innerHTML = thead + tbody;
 
-  const warnDays = results.filter(r => r.required>r.available);
-  attWarnings.textContent = warnDays.length ? `Manque sur: ${warnDays.map(w=>`D${w.day}`).join(', ')}` : 'All days fully staffed';
+  const warnDays = results.filter(r => r.required > r.available);
+  att.warns().innerHTML = warnDays.length
+    ? warnDays.map(w => `<span class="warn-flag">/!\\ D${w.day}</span>`).join(" ")
+    : "All days fully staffed ✅";
+
+  att.exportBtn()?.addEventListener('click', () => exportAttendanceToCSV(region, results, agents), { once:true });
 }
-function renderAdherenceSummary(results){
-  if (!results.length){ adherenceLabel.textContent='–%'; return; }
-  const avg = Math.round(results.reduce((s,r)=>s+r.adherence,0)/results.length);
-  adherenceLabel.textContent = `${avg}%`;
+function renderAdherenceSummary(results) {
+  if (!results.length) { att.label().textContent = "– %"; att.fill().style.width = "0%"; return; }
+  const avg = Math.round(results.reduce((s, r) => s + r.adherence, 0) / results.length);
+  att.label().textContent = `${avg}%`;
+  att.fill().style.width = `${Math.min(100, Math.max(0, avg))}%`;
 }
-async function initAttendanceUI(){
-  if (initAttendanceUI._init) return;
-  initAttendanceUI._init = true;
-  attRegionSel.value = 'EMEA';
-  attStartInput.value = firstDayOfCurrentMonthISO();
-  const run = async()=>{
-    const calc = await calcAttendance(attRegionSel.value, attStartInput.value);
-    renderAttendanceGrid(attRegionSel.value, calc);
-    renderAdherenceSummary(calc.results);
-  };
-  attCalcBtn?.addEventListener('click', run);
-  await run();
+async function runAttendance() {
+  const region = att.regionSel().value;
+  const startISO = att.startInput().value;
+  await ForecastStore.init(region);
+  const calc = await calcAttendance(region, startISO);
+  renderAttendanceGrid(region, calc);
+  renderAdherenceSummary(calc.results);
+}
+function exportAttendanceToCSV(region, results, agents) {
+  let csv = `Region,${region}\n\nAgent`;
+  for (const c of results) csv += `,Day ${c.day}`;
+  csv += "\n";
+  for (const a of agents) {
+    csv += `"${a.full_name??'-'}"`;
+    for (const c of results) {
+      const off = agentIsOffThatDate(a, c.dateISO);
+      csv += `,${off ? "PTO" : "Present"}`;
+    }
+    csv += "\n";
+  }
+  csv += "\nDay,Available,Required,Adherence\n";
+  for (const c of results) csv += `${c.day},${c.available},${c.required},${c.adherence}%\n`;
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url; link.download = `attendance_${region}_${new Date().toISOString().slice(0,10)}.csv`; link.click();
+  URL.revokeObjectURL(url);
+}
+async function initAttendanceUI() {
+  if (!att.regionSel()) return;
+  att.regionSel().value = getDefaultRegion();
+  att.startInput().value = firstDayOfCurrentMonthISO();
+  att.calcBtn()?.addEventListener('click', runAttendance);
+  await runAttendance();
 }
 
 /* ======================================================================
-   AGENTS (Directory + Skills + PTO Drawer)
+   AGENTS + PTO (dégradé si pas de DB)
    ====================================================================== */
-const agRegionSel  = document.getElementById("ag-region");
-const agAddBtn     = document.getElementById("ag-add");
-const agExportBtn  = document.getElementById("ag-export");
-const agTableBody  = document.getElementById("ag-table")?.querySelector("tbody");
+const ag = {
+  region: ()=>document.getElementById("ag-region"),
+  addBtn: ()=>document.getElementById("ag-add"),
+  exportBtn: ()=>document.getElementById("ag-export"),
+  tbody: ()=>document.querySelector("#ag-table tbody"),
 
-const PTO_DRAWER = {
-  el: document.getElementById("pto-drawer"),
-  title: document.getElementById("pto-title"),
-  closeBtn: document.getElementById("pto-close"),
-  start: document.getElementById("pto-start"),
-  end: document.getElementById("pto-end"),
-  halfStart: document.getElementById("pto-half-start"),
-  halfEnd: document.getElementById("pto-half-end"),
-  saveBtn: document.getElementById("pto-save"),
-  list: document.getElementById("pto-list"),
-  calendar: document.getElementById("pto-calendar"),
-  agentId: null,
-  agentName: null,
+  drawer: {
+    el: document.getElementById("pto-drawer"),
+    title: document.getElementById("pto-title"),
+    closeBtn: document.getElementById("pto-close"),
+    start: document.getElementById("pto-start"),
+    end: document.getElementById("pto-end"),
+    saveBtn: document.getElementById("pto-save"),
+    list: document.getElementById("pto-list"),
+    calendar: document.getElementById("pto-calendar"),
+    agentId: null, agentName: null
+  }
 };
-
-async function fetchAgents(region){
-  const { data, error } = await supabase
-    .from('agents')
-    .select('id,full_name,region,status')
-    .eq('region', region)
-    .order('full_name',{ascending:true});
-  if (error) throw error;
-
-  const { data: skills, error:e2 } = await supabase.from('agent_skills').select('*');
-  if (e2) throw e2;
-
-  const byId = Object.create(null);
-  (data||[]).forEach(a => byId[a.id] = { ...a, skills: { can_call:true, can_mail:true, can_chat:true, can_clienteling:true, can_fraud:true, can_backoffice:true }});
-  (skills||[]).forEach(s => {
-    if (byId[s.agent_id]) {
-      byId[s.agent_id].skills = {
-        can_call: !!s.can_call, can_mail: !!s.can_mail, can_chat: !!s.can_chat,
-        can_clienteling: !!s.can_clienteling, can_fraud: !!s.can_fraud, can_backoffice: !!s.can_backoffice
-      };
-    }
-  });
-  return Object.values(byId);
-}
-function statusSelectHtml(current){
-  const opts = ['Present','PTO','Sick Leave','Unavailable'];
-  return `<select class="ag-status">${opts.map(o=>`<option value="${o}" ${o===current?'selected':''}>${o}</option>`).join('')}</select>`;
-}
-function skillCheckbox(checked, cls){
-  return `<input type="checkbox" class="ag-skill ${cls}" ${checked?'checked':''}/>`;
-}
-function rowActions(){
-  return {
-    pto:`<button class="mini primary">PTO</button>`,
-    cal:`<button class="mini secondary">📅</button>`,
-    del:`<button class="mini danger">Delete</button>`
-  };
+async function fetchAgents(region) {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from("agents")
+    .select("id, full_name, region, status")
+    .eq("region", region).order("full_name");
+  if (error) return [];
+  return data || [];
 }
 async function renderAgentsTable(){
-  if (!agTableBody) return;
-  agTableBody.innerHTML = `<tr><td colspan="12">Loading…</td></tr>`;
-  const rows = await fetchAgents(agRegionSel.value);
-  if (!rows.length){ agTableBody.innerHTML = `<tr><td colspan="12">No agents yet.</td></tr>`; return; }
-  const html = rows.map(r=>{
-    const a=rowActions();
-    return `<tr data-id="${r.id}">
-      <td class="ag-name" contenteditable="true">${r.full_name}</td>
+  const tb = ag.tbody(); if (!tb) return;
+  const region = ag.region().value;
+  const rows = await fetchAgents(region);
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="6">No agents yet.</td></tr>`; return; }
+  tb.innerHTML = rows.map(r=>`
+    <tr data-id="${r.id}">
+      <td>${r.full_name}</td>
       <td>${r.region}</td>
-      <td>${statusSelectHtml(r.status)}</td>
-      <td>${skillCheckbox(r.skills.can_call, "can_call")}</td>
-      <td>${skillCheckbox(r.skills.can_mail, "can_mail")}</td>
-      <td>${skillCheckbox(r.skills.can_chat, "can_chat")}</td>
-      <td>${skillCheckbox(r.skills.can_clienteling, "can_clienteling")}</td>
-      <td>${skillCheckbox(r.skills.can_fraud, "can_fraud")}</td>
-      <td>${skillCheckbox(r.skills.can_backoffice, "can_backoffice")}</td>
-      <td>${a.pto}</td><td>${a.cal}</td><td>${a.del}</td>
-    </tr>`;
-  }).join('');
-  agTableBody.innerHTML = html;
-
-  // bindings
-  agTableBody.querySelectorAll('tr').forEach(tr=>{
-    const id = tr.getAttribute('data-id');
-    // name edit
-    const nameEl = tr.querySelector('.ag-name');
-    nameEl.addEventListener('blur', async ()=>{
-      const newName = nameEl.textContent.trim();
-      await supabase.from('agents').update({ full_name:newName }).eq('id', id);
+      <td>${r.status}</td>
+      <td><button class="mini primary js-pto">PTO</button></td>
+      <td><button class="mini secondary js-cal">📅</button></td>
+      <td><button class="mini danger js-del">Delete</button></td>
+    </tr>
+  `).join('');
+  tb.querySelectorAll('.js-pto').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const tr = e.target.closest('tr'); openPtoDrawer(tr.dataset.id, tr.children[0].textContent);
     });
-    // status
-    tr.querySelector('.ag-status').addEventListener('change', async (e)=>{
-      await supabase.from('agents').update({ status:e.target.value }).eq('id', id);
-    });
-    // skills
-    tr.querySelectorAll('.ag-skill').forEach(cb=>{
-      cb.addEventListener('change', async (e)=>{
-        const cls = e.target.classList.contains('can_call') ? 'can_call'
-          : e.target.classList.contains('can_mail') ? 'can_mail'
-          : e.target.classList.contains('can_chat') ? 'can_chat'
-          : e.target.classList.contains('can_clienteling') ? 'can_clienteling'
-          : e.target.classList.contains('can_fraud') ? 'can_fraud'
-          : 'can_backoffice';
-        const payload = { agent_id:id, [cls]: e.target.checked };
-        await supabase.from('agent_skills').upsert(payload, { onConflict:'agent_id' });
-      });
-    });
-    // PTO drawer
-    tr.querySelector('.mini.primary').addEventListener('click', ()=>{
-      openPtoDrawer(id, tr.querySelector('.ag-name').textContent.trim());
-    });
-    tr.querySelector('.mini.secondary').addEventListener('click', ()=>{
-      openPtoDrawer(id, tr.querySelector('.ag-name').textContent.trim());
-    });
-    // delete
-    tr.querySelector('.mini.danger').addEventListener('click', async ()=>{
-      if (!confirm('Delete agent & related PTO/skills ?')) return;
-      await supabase.from('agent_skills').delete().eq('agent_id', id);
+  });
+  tb.querySelectorAll('.js-del').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      const tr = e.target.closest('tr'); const id = tr.dataset.id;
+      if (!confirm('Delete agent?')) return;
       await supabase.from('agent_pto').delete().eq('agent_id', id);
       await supabase.from('agents').delete().eq('id', id);
-      await renderAgentsTable();
+      renderAgentsTable();
     });
   });
 }
 async function onAddAgent(){
-  const name = prompt('Agent full name ?'); if(!name) return;
-  const region = agRegionSel.value;
-  const { data, error } = await supabase.from('agents').insert({ full_name:name, region }).select('id').single();
-  if (error) { alert(error.message); return; }
-  await supabase.from('agent_skills').insert({ agent_id:data.id });
-  await renderAgentsTable();
+  if (!supabase) return alert('Supabase not configured.');
+  const name = prompt('Agent full name?'); if (!name) return;
+  const region = ag.region().value;
+  const { error } = await supabase.from('agents').insert({ full_name:name, region, status:'Present' });
+  if (error) return alert(error.message);
+  renderAgentsTable();
 }
-async function exportAgentsCSV(){
-  const list = await fetchAgents(agRegionSel.value);
-  let csv = "Name,Region,Status,Call,Mail,Chat,Clienteling,Fraud,Back Office\n";
-  for (const a of list){
-    csv += `"${a.full_name}",${a.region},${a.status},${a.skills.can_call},${a.skills.can_mail},${a.skills.can_chat},${a.skills.can_clienteling},${a.skills.can_fraud},${a.skills.can_backoffice}\n`;
-  }
-  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a'); link.href=url; link.download=`agents_${agRegionSel.value}.csv`; link.click();
-  URL.revokeObjectURL(url);
+async function openPtoDrawer(agentId, name){
+  Object.assign(ag.drawer, { agentId, agentName: name });
+  ag.drawer.title.textContent = `PTO — ${name}`;
+  ag.drawer.start.value = ''; ag.drawer.end.value = '';
+  await refreshPtoList(); await renderPtoCalendar();
+  ag.drawer.el.classList.add('open');
 }
-
-/* PTO Drawer */
-async function openPtoDrawer(agentId, agentName){
-  PTO_DRAWER.agentId = agentId;
-  PTO_DRAWER.agentName = agentName;
-  PTO_DRAWER.title.textContent = `PTO for ${agentName}`;
-  PTO_DRAWER.start.value=''; PTO_DRAWER.end.value='';
-  PTO_DRAWER.halfStart.value=''; PTO_DRAWER.halfEnd.value='';
-  await refreshPtoList();
-  await renderPtoMiniCalendar();
-  PTO_DRAWER.el.classList.add('open'); PTO_DRAWER.el.setAttribute('aria-hidden','false');
-}
-function closePtoDrawer(){ PTO_DRAWER.el.classList.remove('open'); PTO_DRAWER.el.setAttribute('aria-hidden','true'); }
+function closePtoDrawer(){ ag.drawer.el.classList.remove('open'); }
 async function refreshPtoList(){
-  const { data, error } = await supabase
-    .from('agent_pto')
-    .select('id,start_date,end_date,half_day_start,half_day_end')
-    .eq('agent_id', PTO_DRAWER.agentId)
-    .order('start_date',{ascending:true});
-  if (error){ console.error(error); return; }
-  PTO_DRAWER.list.innerHTML = (data||[]).map(p=>{
-    const label = `${p.start_date} ${p.half_day_start||'Full'} → ${p.end_date} ${p.half_day_end||'Full'}`;
-    return `<li data-id="${p.id}">${label} <button class="mini danger" data-del="${p.id}">Delete</button></li>`;
-  }).join('') || `<li class="muted">No PTO yet.</li>`;
-  PTO_DRAWER.list.querySelectorAll('[data-del]').forEach(btn=>{
+  if (!supabase) return ag.drawer.list.innerHTML = `<li class="muted">Not available (no DB)</li>`;
+  const { data } = await supabase.from('agent_pto')
+    .select('id,start_date,end_date').eq('agent_id', ag.drawer.agentId).order('start_date');
+  ag.drawer.list.innerHTML = (data||[]).map(p=>`
+    <li>${p.start_date} → ${p.end_date} <button class="mini danger" data-del="${p.id}">Delete</button></li>
+  `).join('') || `<li class="muted">No PTO yet.</li>`;
+  ag.drawer.list.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
-      await supabase.from('agent_pto').delete().eq('id', btn.getAttribute('data-del'));
-      await refreshPtoList(); await renderPtoMiniCalendar();
+      await supabase.from('agent_pto').delete().eq('id', btn.dataset.del);
+      await refreshPtoList(); await renderPtoCalendar();
     });
   });
 }
 async function savePtoRange(){
-  const start_date = PTO_DRAWER.start.value;
-  const end_date   = PTO_DRAWER.end.value || start_date;
-  const half_day_start = PTO_DRAWER.halfStart.value || null;
-  const half_day_end   = PTO_DRAWER.halfEnd.value || null;
-  if (!start_date) { alert('Select a start date'); return; }
-  const { error } = await supabase.from('agent_pto').insert({
-    agent_id:PTO_DRAWER.agentId, start_date, end_date, half_day_start, half_day_end
-  });
-  if (error){ alert(error.message); return; }
-  await refreshPtoList(); await renderPtoMiniCalendar();
+  if (!supabase) return alert('Supabase not configured.');
+  const start_date = ag.drawer.start.value;
+  const end_date = ag.drawer.end.value || start_date;
+  if (!start_date) return alert('Select a start date');
+  const { error } = await supabase.from('agent_pto')
+    .insert({ agent_id: ag.drawer.agentId, start_date, end_date });
+  if (error) return alert(error.message);
+  await refreshPtoList(); await renderPtoCalendar();
 }
-async function renderPtoMiniCalendar(){
-  const now = new Date(); const y=now.getFullYear(), m=now.getMonth();
-  const last = new Date(y,m+1,0); const days=last.getDate();
-  const { data, error } = await supabase.from('agent_pto')
-    .select('start_date,end_date,half_day_start,half_day_end')
-    .eq('agent_id', PTO_DRAWER.agentId);
-  if (error){ console.error(error); return; }
-  function tag(iso){
-    for (const p of (data||[])) if (iso>=p.start_date && iso<=p.end_date) return (p.half_day_start||p.half_day_end)?'half':'full';
-    return null;
-  }
+async function renderPtoCalendar(){
+  if (!supabase) return ag.drawer.calendar.innerHTML = '';
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const last = new Date(y, m+1, 0).getDate();
+  const { data } = await supabase.from('agent_pto')
+    .select('start_date,end_date').eq('agent_id', ag.drawer.agentId);
+  const isPto = (iso) => (data||[]).some(p => iso >= p.start_date && iso <= p.end_date);
   let html = `<div class="mini-cal-grid">`;
-  for (let d=1; d<=days; d++){
-    const iso = ymd(new Date(y,m,d));
-    const t = tag(iso);
-    html += `<div class="mini-cal-cell ${t==='full'?'pto':t==='half'?'pto-half':''}">${d}</div>`;
+  for (let d=1; d<=last; d++){
+    const iso = new Date(y,m,d).toISOString().slice(0,10);
+    html += `<div class="mini-cal-cell ${isPto(iso)?'pto':''}">${d}</div>`;
   }
   html += `</div>`;
-  PTO_DRAWER.calendar.innerHTML = html;
+  ag.drawer.calendar.innerHTML = html;
 }
-
+async function exportAgentsCSV(){
+  const region = ag.region().value;
+  const rows = await fetchAgents(region);
+  let csv = "Name,Region,Status\n";
+  for (const a of rows) csv += `"${a.full_name}",${a.region},${a.status}\n`;
+  const url = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a = document.createElement('a'); a.href=url; a.download=`agents_${region}.csv`; a.click(); URL.revokeObjectURL(url);
+}
 async function initAgentsUI(){
-  if (initAgentsUI._init) return;
-  initAgentsUI._init = true;
-  agRegionSel.value = 'EMEA';
+  if (!ag.region()) return;
+  ag.region().value = getDefaultRegion();
+  ag.region().addEventListener('change', ()=>{ setDefaultRegion(ag.region().value); renderAgentsTable(); });
+  ag.addBtn()?.addEventListener('click', onAddAgent);
+  ag.exportBtn()?.addEventListener('click', exportAgentsCSV);
+  ag.drawer.closeBtn?.addEventListener('click', closePtoDrawer);
+  ag.drawer.saveBtn?.addEventListener('click', savePtoRange);
   await renderAgentsTable();
-  agRegionSel.addEventListener('change', renderAgentsTable);
-  agAddBtn.addEventListener('click', onAddAgent);
-  agExportBtn.addEventListener('click', exportAgentsCSV);
-  PTO_DRAWER.closeBtn.addEventListener('click', closePtoDrawer);
-  PTO_DRAWER.saveBtn.addEventListener('click', savePtoRange);
 }
 
 /* ======================================================================
-   WEEKLY PLANNER (30’ slots) — calcul avancé
+   WEEKLY PLANNER — demande vs capacité (30 min)
    ====================================================================== */
-const Weekly = (()=>{
-  const $ = (s)=>document.querySelector(s);
-  const els = {
-    region: ()=>$('#wp-region'),
-    week:   ()=>$('#wp-week'),
-    dayStart:()=>$('#wp-day-start'),
-    dayEnd:  ()=>$('#wp-day-end'),
-    load:    ()=>$('#wp-load'),
-    exportBtn:()=>$('#wp-export'),
-    grid:    ()=>$('#wp-grid'),
-    agentsCount:()=>$('#wp-agents-count'),
-    coverageAvg:()=>$('#wp-coverage-avg'),
-    understaffed:()=>$('#wp-understaffed'),
-  };
-  const parseWeekInput = (val)=> {
-    const [y, w] = val.split('-W').map(x=>parseInt(x,10)); return isoWeekToMondayUTC(y,w);
-  };
-  function isoWeekToMondayUTC(year, week){
-    const simple = new Date(Date.UTC(year,0,4));
-    const day = simple.getUTCDay()||7;
-    const thursday = new Date(simple); thursday.setUTCDate(simple.getUTCDate() + (4 - day));
-    const monday = new Date(thursday); monday.setUTCDate(thursday.getUTCDate() - 3 + (week-1)*7);
-    monday.setUTCHours(0,0,0,0);
-    return monday;
-  }
-  function addDays(d,n){ const x=new Date(d); x.setUTCDate(x.getUTCDate()+n); return x; }
-  function minutesBetween(a,b){ const [ah,am]=a.split(':').map(Number), [bh,bm]=b.split(':').map(Number); return (bh*60+bm)-(ah*60+am); }
-  function hhmmAdd(hhmm,delta){ let [h,m]=hhmm.split(':').map(Number); let t=h*60+m+delta; if(t<0)t=0; const nh=Math.floor(t/60), nm=t%60; return `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`; }
-
-  async function computeDemand(region, mondayUTC, start, end){
-    // Build slots
-    const slots=[]; for(let cur=start; cur<end; cur=hhmmAdd(cur,30)) slots.push(cur);
-    // Prepare
-    const regs = await fetchRegulationMap(region);
-    const ahtMap = Tasks.AHT();
-    const demand = {}; // key date|hhmm -> minutes
-    // Loop days
-    for (let i=0;i<7;i++){
-      const d = addDays(mondayUTC,i);
-      const y=d.getUTCFullYear(), m=d.getUTCMonth()+1, day=d.getUTCDate();
-      const wd = ((d.getUTCDay()+6)%7)+1; // 1..7
-      const { annual, mShare, wShare, dShare } = await fetchTotalsAndShares(region, y, m, day);
-      const totalDay = annual * mShare * wShare * dShare;
-
-      // Task mix (par jour)
-      const mix = await fetchDailyTaskMix(region, wd);
-
-      // Hourly repartition (% du jour) — normalisée sur [start,end)
-      const hourShares = ForecastStore.getHourlyShares(start, end); // Map(hhmm -> fraction)
-      for (const hhmm of slots){
-        const frac = hourShares.get(hhmm)||0;
-        const volSlot = totalDay * frac; // contacts toutes tâches
-        // minutes via task mix + AHT
-        const minutes =
-          (volSlot * (mix['Call']||0)        * (ahtMap['Call']||0)) +
-          (volSlot * (mix['Mail']||0)        * (ahtMap['Mail']||0)) +
-          (volSlot * (mix['Chat']||0)        * (ahtMap['Chat']||0)) +
-          (volSlot * (mix['Clienteling']||0) * (ahtMap['Clienteling']||0)) +
-          (volSlot * (mix['Fraud']||0)       * (ahtMap['Fraud']||0)) +
-          (volSlot * (mix['Back Office']||0) * (ahtMap['Back Office']||0));
-        demand[`${ymd(d)}|${hhmm}`] = minutes;
-      }
+const WP = {
+  region: ()=>document.getElementById('wp-region'),
+  week: ()=>document.getElementById('wp-week'),
+  dayStart: ()=>document.getElementById('wp-day-start'),
+  dayEnd: ()=>document.getElementById('wp-day-end'),
+  load: ()=>document.getElementById('wp-load'),
+  exportBtn: ()=>document.getElementById('wp-export'),
+  grid: ()=>document.getElementById('wp-grid'),
+  agentsCount: ()=>document.getElementById('wp-agents-count'),
+  coverageAvg: ()=>document.getElementById('wp-coverage-avg'),
+  understaffed: ()=>document.getElementById('wp-understaffed'),
+};
+function minutesBetween(hhmmStart, hhmmEnd){
+  const [sh,sm]=hhmmStart.split(':').map(Number), [eh,em]=hhmmEnd.split(':').map(Number);
+  return (eh*60+em)-(sh*60+sm);
+}
+function hhmmAdd(hhmm, deltaMin){
+  let [h,m] = hhmm.split(':').map(Number);
+  let total = h*60+m + deltaMin; if (total<0) total=0;
+  const nh = Math.floor(total/60), nm = total%60;
+  return `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;
+}
+function isoWeekToDate(year, week) {
+  const simple = new Date(Date.UTC(year, 0, 4));
+  const dayOfWeek = simple.getUTCDay() || 7;
+  const thursday = new Date(simple);
+  thursday.setUTCDate(simple.getUTCDate() + (4 - dayOfWeek));
+  const monday = new Date(thursday);
+  monday.setUTCDate(thursday.getUTCDate() - 3 + (week - 1) * 7);
+  return monday;
+}
+async function fetchHourlyShares(region){
+  if (!supabase) {
+    // fallback plat (10:00-18:00)
+    const map = new Map();
+    for (let h=10; h<=18; h++){
+      map.set(`${String(h).padStart(2,'0')}:00`, +(100/18).toFixed(2));
+      map.set(`${String(h).padStart(2,'0')}:30`, +(100/18).toFixed(2));
     }
-    return { slots, demand, regs };
+    return map;
   }
+  const { data } = await supabase.from('forecast_hourly')
+    .select('hhmm, share_percent').eq('region', region).order('hhmm');
+  const map = new Map();
+  (data||[]).forEach(r => map.set(r.hhmm, parseFloat(r.share_percent)||0));
+  return map;
+}
+async function computeDemandPerSlot(region, mondayUTC, dayStart, dayEnd, slots){
+  const demand = {};
+  const hourly = await fetchHourlyShares(region);
+  for (let i=0; i<7; i++){
+    const d = new Date(mondayUTC); d.setUTCDate(d.getUTCDate()+i);
+    const dateISO = ymd(d);
+    const y=d.getUTCFullYear(), m=d.getUTCMonth()+1, day=d.getUTCDate();
+    const week = isoWeekNumber(new Date(y, m-1, day));
+    const wdName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()];
+    const total = ForecastStore.getTotal();
+    const mShare = ForecastStore.getMonthlyShare(m)/100;
+    const wShare = ForecastStore.getWeeklyShare(week)/100 || (1/52);
+    const dShare = ForecastStore.getDailyShare(wdName)/100 || (1/7);
+    const totalDay = total * mShare * wShare * dShare;
 
-  async function computeCapacity(region, mondayUTC, start, end){
-    const agents = await fetchAgentsWithPTO(region);
-    const regs = await fetchRegulationMap(region);
-    const netCapPerAgentMin = computeNetCapacityPerAgentMin(regs);
-    const workWindowMin = Math.max(30, minutesBetween(start,end));
-    const perAgentPerSlot = netCapPerAgentMin * (30 / workWindowMin); // proportion sur le slot
+    const AHT = Tasks.getAHT();
+    const dailyTaskPct = await fetchDailyTaskPct(region, wdName);
+    const demandMinutesDay = sumDemandMinutes(totalDay, dailyTaskPct, AHT);
 
-    const cap = {};
-    const presentAgentsByDate = {};
-    for (let i=0;i<7;i++){
-      const d = addDays(mondayUTC,i);
-      const dateISO = ymd(d);
-      const present = agents.filter(a=> a.status==='Present' && !agentIsOffThatDate(a,dateISO));
-      presentAgentsByDate[dateISO] = present.length;
-      for (let cur=start; cur<end; cur=hhmmAdd(cur,30)){
-        cap[`${dateISO}|${cur}`] = present.length * perAgentPerSlot;
-      }
+    const keys = Array.from(hourly.keys()).filter(h=> h>=dayStart && h<dayEnd);
+    const sumVisible = keys.reduce((s,k)=> s+(hourly.get(k)||0), 0) || 1;
+    for (const hhmm of slots){
+      if (!keys.includes(hhmm)) continue;
+      const pct = (hourly.get(hhmm)||0) / sumVisible;
+      demand[`${dateISO}|${hhmm}`] = demandMinutesDay * pct;
     }
-    return { cap, presentAgentsByDate, agents, regs };
   }
-
-  function renderGrid(days, slots, demand, cap, agents){
-    const grid = els.grid(); if(!grid) return;
-    let thead = `<thead><tr><th class="first-col">Row</th>${slots.map(s=>`<th class="slot-col ${s.endsWith(':00')?'hour-marker':''}">${s}</th>`).join('')}</tr></thead>`;
-    let tbody = '';
-
-    // Day rows (Demand vs Capacity)
-    for (const dateISO of days){
-      let row = `<tr><td class="first-col">${dateISO} — Demand vs Cap.</td>`;
-      for (const s of slots){
-        const key = `${dateISO}|${s}`;
-        const dmin = demand[key]||0;
-        const cmin = cap[key]||0;
-        const cls = dmin > cmin ? 'gap' : (cmin > dmin ? 'over' : 'present');
-        row += `<td><div class="cell ${cls}" title="Demand ${Math.round(dmin)}m / Cap ${Math.round(cmin)}m"></div></td>`;
-      }
-      row += `</tr>`;
-      tbody += row;
+  return demand;
+}
+async function fetchAgentsPresentByDate(region, dates){
+  if (!supabase) {
+    // dégradé : 0 agent -> juste la heatmap de demande
+    const map = {}; dates.forEach(d=>map[d]=0); return map;
+  }
+  const agents = await fetchAgentsWithPTO(region);
+  const map = {};
+  dates.forEach(dateISO=>{
+    const present = agents.filter(a => a.status === 'Present' && !agentIsOffThatDate(a, dateISO));
+    map[dateISO] = present.length;
+  });
+  return map;
+}
+function buildWeekSlots(mondayUTC, dayStart, dayEnd){
+  const days = Array.from({length:7}, (_,i)=> {
+    const d = new Date(mondayUTC); d.setUTCDate(d.getUTCDate()+i); return d;
+  });
+  const slots = [];
+  let cursor = dayStart;
+  while (cursor < dayEnd){ slots.push(cursor); cursor = hhmmAdd(cursor, 30); }
+  return { days, slots };
+}
+async function computeCapacityPerSlot(region, mondayUTC, dayStart, dayEnd, slots){
+  const workMin = 8*60, lunch=60, breaks=2*15;
+  const netCapPerAgentMin = Math.max(0, workMin - lunch - breaks);
+  const workWindowMin = Math.max(30, minutesBetween(dayStart, dayEnd));
+  const perAgentPerMinute = netCapPerAgentMin / workWindowMin;
+  const dates = Array.from({length:7}, (_,i)=> ymd(new Date(mondayUTC.getTime()+i*86400000)));
+  const presentByDate = await fetchAgentsPresentByDate(region, dates);
+  const cap = {};
+  for (const dateISO of dates){
+    const present = presentByDate[dateISO] || 0;
+    for (const hhmm of slots){
+      const slotMin = 30;
+      const perAgentSlot = perAgentPerMinute * slotMin;
+      cap[`${dateISO}|${hhmm}`] = present * perAgentSlot;
     }
-
-    // Agent availability rows
-    agents.forEach(a=>{
-      let row = `<tr><td class="first-col">${a.full_name}</td>`;
-      for (const dateISO of days){
-        const off = agentIsOffThatDate(a, dateISO);
-        const cls = off ? 'pto' : 'present';
-        for (let i=0;i<slots.length;i++) row += `<td><div class="cell ${cls}"></div></td>`;
-      }
-      row += `</tr>`;
-      tbody += row;
+  }
+  return { cap, presentByDate };
+}
+function renderWeekGrid(days, slots, demand, cap){
+  const grid = WP.grid(); if (!grid) return;
+  let thead = `<thead><tr><th class="first-col">Row</th>`;
+  slots.forEach(s=> thead += `<th class="slot-col ${s.endsWith(':00')?'hour-marker':''}">${s}</th>`);
+  thead += `</tr></thead>`;
+  let tbody = '';
+  for (let i=0; i<7; i++){
+    const dateISO = ymd(days[i]);
+    let row = `<tr><td class="first-col">${dateISO} — Demand vs Cap.</td>`;
+    slots.forEach(s=>{
+      const key = `${dateISO}|${s}`;
+      const dmin = demand[key]||0;
+      const cmin = cap[key]||0;
+      const cls = dmin > cmin ? 'gap' : (cmin > dmin ? 'over' : 'present');
+      row += `<td><div class="cell ${cls}" title="Demand ${Math.round(dmin)}m / Cap ${Math.round(cmin)}m"></div></td>`;
     });
-
-    grid.innerHTML = thead + `<tbody>${tbody}</tbody>`;
+    row += `</tr>`;
+    tbody += row;
   }
-
-  function renderSummaries(days, slots, demand, cap, presentAgentsByDate){
-    const agentsAvg = Math.round(Object.values(presentAgentsByDate).reduce((a,b)=>a+b,0) / (Object.values(presentAgentsByDate).length||1));
-    let totalD=0,totalC=0,gaps=0;
-    for (const dateISO of days){
-      for (const s of slots){
-        const key=`${dateISO}|${s}`;
-        const d=demand[key]||0, c=cap[key]||0;
-        totalD+=d; totalC+=c; if (d>c) gaps++;
-      }
+  grid.innerHTML = thead + `<tbody>${tbody}</tbody>`;
+}
+function renderWeekSummary(days, slots, demand, cap, presentByDate){
+  const agentsAvg = Math.round(
+    Object.values(presentByDate).reduce((a,b)=>a+b,0) / (Object.keys(presentByDate).length||1)
+  );
+  let totalD=0, totalC=0, gaps=0;
+  for (let i=0; i<7; i++){
+    const dateISO = ymd(days[i]);
+    slots.forEach(s=>{
+      const key = `${dateISO}|${s}`;
+      const d = demand[key]||0, c = cap[key]||0;
+      totalD += d; totalC += c;
+      if (d > c) gaps++;
+    });
+  }
+  const coverage = totalD>0 ? Math.min(100, Math.round((totalC/totalD)*100)) : 100;
+  WP.agentsCount().textContent = `${agentsAvg}`;
+  WP.coverageAvg().textContent = `${coverage}%`;
+  WP.understaffed().textContent = `${gaps}`;
+}
+function exportWeekCSV(region, days, slots, demand, cap){
+  let csv = `Region,${region}\nSlot,Date,Time,Demand_Min,Capacity_Min\n`;
+  let idx=1;
+  for (let i=0; i<7; i++){
+    const dateISO = ymd(days[i]);
+    for (const s of slots){
+      const key = `${dateISO}|${s}`;
+      const d = Math.round(demand[key]||0);
+      const c = Math.round(cap[key]||0);
+      csv += `${idx},${dateISO},${s},${d},${c}\n`; idx++;
     }
-    const coverage = totalD>0 ? Math.min(100, Math.round((totalC/totalD)*100)) : 100;
-    els.agentsCount().textContent = `${agentsAvg}`;
-    els.coverageAvg().textContent = `${coverage}%`;
-    els.understaffed().textContent = `${gaps}`;
   }
-
-  async function load(){
-    const region = els.region().value;
-    const weekVal = els.week().value;
-    const start = els.dayStart().value || '09:00';
-    const end   = els.dayEnd().value   || '18:00';
-    if (!weekVal) { alert('Sélectionne une semaine ISO'); return; }
-    if (minutesBetween(start,end) < 30) { alert('La journée doit couvrir au moins 30 min'); return; }
-
-    const monday = parseWeekInput(weekVal);
-    const days = Array.from({length:7},(_,i)=> ymd(new Date(monday.getTime()+i*86400000)));
-
-    const { slots, demand } = await computeDemand(region, monday, start, end);
-    const { cap, presentAgentsByDate, agents } = await computeCapacity(region, monday, start, end);
-    renderGrid(days, slots, demand, cap, agents);
-    renderSummaries(days, slots, demand, cap, presentAgentsByDate);
-
-    els.exportBtn().onclick = ()=> exportCSV(region, days, slots, demand, cap);
-  }
-
-  function exportCSV(region, days, slots, demand, cap){
-    let csv = `Region,${region}\nSlot,Date,Time,Demand_Min,Capacity_Min\n`;
-    let idx=1;
-    for (const dateISO of days){
-      for (const s of slots){
-        const key=`${dateISO}|${s}`;
-        csv += `${idx},${dateISO},${s},${Math.round(demand[key]||0)},${Math.round(cap[key]||0)}\n`;
-        idx++;
-      }
-    }
-    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href=url; a.download=`weekly_planning_${region}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function init(){
-    els.region().value = 'EMEA';
-    const now = new Date();
-    const week = isoWeekNumber(now);
-    els.week().value = `${now.getFullYear()}-W${String(week).padStart(2,'0')}`;
-    els.load().addEventListener('click', load);
-  }
-  return { init };
-})();
-async function initWeeklyUI(){ if (initWeeklyUI._init) return; initWeeklyUI._init=true; await Weekly.init(); }
+  const url = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a = document.createElement('a'); a.href=url; a.download=`weekly_${region}.csv`; a.click(); URL.revokeObjectURL(url);
+}
+async function loadWeekly(){
+  const region = WP.region().value;
+  await ForecastStore.init(region);
+  const val = WP.week().value; if (!val) return alert('Select week');
+  const [y, W] = val.split('-W').map(x=>parseInt(x,10));
+  const dayStart = WP.dayStart().value || '09:00';
+  const dayEnd   = WP.dayEnd().value || '18:00';
+  const monday = isoWeekToDate(y, W);
+  const { days, slots } = buildWeekSlots(monday, dayStart, dayEnd);
+  const demand = await computeDemandPerSlot(region, monday, dayStart, dayEnd, slots);
+  const { cap, presentByDate } = await computeCapacityPerSlot(region, monday, dayStart, dayEnd, slots);
+  renderWeekGrid(days, slots, demand, cap);
+  renderWeekSummary(days, slots, demand, cap, presentByDate);
+  WP.exportBtn().onclick = ()=> exportWeekCSV(region, days, slots, demand, cap);
+}
+async function initWeeklyUI(){
+  if (!WP.region()) return;
+  WP.region().value = getDefaultRegion();
+  const now = new Date(); const w = isoWeekNumber(now);
+  WP.week().value = `${now.getFullYear()}-W${String(w).padStart(2,'0')}`;
+  WP.load().addEventListener('click', loadWeekly);
+}
 
 /* ======================================================================
-   REGULATION UI (CRUD local sur table public.regulations)
+   FORECAST (simple panneau: total + tables; rely on ForecastStore)
    ====================================================================== */
-const RegulationUI = (()=>{
+// Rien d’interactif ici côté JS (l’édition se fait via LS/DB dans ForecastStore)
+
+/* ======================================================================
+   REGULATION — petite grille locale (sans DB)
+   ====================================================================== */
+const Regulation = (() => {
   const el = {
-    tabPanel: document.getElementById('regulation'),
-    enforceToggle: document.getElementById('enforceRegulationsToggle'),
-    addRuleBtn: document.getElementById('addRuleBtn'),
-    validateAllBtn: document.getElementById('validateAllBtn'),
-    exportViolationsBtn: document.getElementById('exportViolationsBtn'),
-    ruleSearch: document.getElementById('ruleSearch'),
-    activeRulesCount: document.getElementById('activeRulesCount'),
-    violationsCount: document.getElementById('violationsCount'),
-    lastValidationAt: document.getElementById('lastValidationAt'),
-    rulesTbody: document.getElementById('regulationTableBody'),
-    violationsPanel: document.getElementById('violationsPanel'),
-    violationsTbody: document.getElementById('violationsTableBody'),
-    ruleModal: document.getElementById('ruleModal'),
-    ruleForm: document.getElementById('ruleForm'),
-    ruleModalTitle: document.getElementById('ruleModalTitle'),
-    closeRuleModal: document.getElementById('closeRuleModal'),
-    cancelRuleBtn: document.getElementById('cancelRuleBtn'),
-    ruleId: document.getElementById('ruleId'),
-    ruleName: document.getElementById('ruleName'),
-    ruleType: document.getElementById('ruleType'),
-    ruleParam1: document.getElementById('ruleParam1'),
-    ruleParam2: document.getElementById('ruleParam2'),
-    ruleParam1Label: document.getElementById('ruleParam1Label'),
-    ruleParam2Label: document.getElementById('ruleParam2Label'),
-    ruleScope: document.getElementById('ruleScope'),
-    scopeTargetField: document.getElementById('scopeTargetField'),
-    scopeTargetLabel: document.getElementById('scopeTargetLabel'),
-    ruleScopeTarget: document.getElementById('ruleScopeTarget'),
-    ruleSeverity: document.getElementById('ruleSeverity'),
-    ruleActive: document.getElementById('ruleActive'),
-    confirmDeleteModal: document.getElementById('confirmDeleteModal'),
-    confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
-    cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
+    panel: ()=>document.getElementById('regulation'),
+    table: ()=>document.getElementById('regulationTableBody'),
+    add:   ()=>document.getElementById('addRuleBtn')
   };
-  let rules=[], filtered=[], violations=[];
-
-  const fetchRegulations = async ()=>{
-    const { data, error } = await supabase.from('regulations').select('*').order('created_at',{ascending:true});
-    if (error){ console.warn(error.message); return []; }
-    return data||[];
-  };
-  const upsertRule = async (payload)=>{
-    const { data, error } = await supabase.from('regulations').upsert(payload).select().single();
-    if (error) console.warn(error.message);
-    return { data, error };
-  };
-  const deleteRule = async (id)=>{
-    const { error } = await supabase.from('regulations').delete().eq('id', id);
-    if (error) console.warn(error.message);
-  };
-  const fetchShifts = async ()=>{
-    const { data } = await supabase.from('shifts').select('id,agent_id,start_time,end_time');
-    return data||[];
-  };
-  const fetchPTO = async ()=>{
-    const { data } = await supabase.from('pto').select('agent_id,start_date,end_date');
-    return data||[];
-  };
-  const hoursBetween = (a,b)=> Math.abs((new Date(b)-new Date(a))/36e5);
-  const getISOWeek = (date)=>{
-    const d=new Date(date); d.setHours(0,0,0,0);
-    d.setDate(d.getDate()+3-((d.getDay()+6)%7));
-    const week1=new Date(d.getFullYear(),0,4);
-    return 1 + Math.round(((d - week1)/86400000 - 3 + ((week1.getDay()+6)%7))/7);
-  };
-  const applyScope = (rule, item)=>{
-    if (rule.scope==='AGENT'  && rule.scope_target) return String(item.agent_id)===String(rule.scope_target);
-    if (rule.scope==='REGION' && rule.scope_target) return true; // non géré dans ce proto
-    return true;
-  };
-
-  const runValidation = (rulesActive, shifts, ptoList=[])=>{
-    const out=[];
-    const byAgent = {};
-    shifts.forEach(s => { if(!byAgent[s.agent_id]) byAgent[s.agent_id]=[]; byAgent[s.agent_id].push(s); });
-    Object.values(byAgent).forEach(list=> list.sort((a,b)=> new Date(a.start_time)-new Date(b.start_time)));
-
-    const ptoMap={}; ptoList.forEach(p=>{ if(!ptoMap[p.agent_id]) ptoMap[p.agent_id]=[]; ptoMap[p.agent_id].push([new Date(p.start_date), new Date(p.end_date)]); });
-
-    const active = rulesActive.filter(r=>r.active);
-
-    // MAX_HOURS_PER_WEEK
-    const maxWeek = active.filter(r=>r.type==='MAX_HOURS_PER_WEEK' && r.param1);
-    if (maxWeek.length){
-      const weekHours={};
-      shifts.forEach(s=>{
-        const st=new Date(s.start_time), et=new Date(s.end_time);
-        const hrs=Math.max(0,(et-st)/36e5);
-        const week=getISOWeek(st); const key=`${s.agent_id}|${st.getUTCFullYear()}|${week}`;
-        weekHours[key]=(weekHours[key]||0)+hrs;
-      });
-      for (const rule of maxWeek){
-        for (const key in weekHours){
-          const [agent_id,year,week]=key.split('|'); const total=weekHours[key];
-          if (!applyScope(rule,{agent_id})) continue;
-          if (total>Number(rule.param1)){
-            out.push({ rule:rule.name, agent_id, shift:`Week ${week} ${year}`, detail:`${total.toFixed(1)}h > ${Number(rule.param1)}h`, severity:rule.severity||'WARN' });
-          }
-        }
-      }
-    }
-
-    // MIN_REST_BETWEEN_SHIFTS
-    const restRules = active.filter(r=>r.type==='MIN_REST_BETWEEN_SHIFTS' && r.param1);
-    if (restRules.length){
-      for (const agent in byAgent){
-        const list=byAgent[agent];
-        for (let i=1;i<list.length;i++){
-          const prev=list[i-1], cur=list[i];
-          const restH=hoursBetween(prev.end_time, cur.start_time);
-          for (const rule of restRules){
-            if (!applyScope(rule,{agent_id:agent})) continue;
-            if (restH<Number(rule.param1)){
-              out.push({ rule:rule.name, agent_id:agent, shift:`${new Date(cur.start_time).toLocaleString()}`, detail:`Rest ${restH.toFixed(1)}h < ${Number(rule.param1)}h`, severity:rule.severity||'WARN' });
-            }
-          }
-        }
-      }
-    }
-
-    // NO_OVERLAP_SHIFTS
-    const noOverlap = active.filter(r=>r.type==='NO_OVERLAP_SHIFTS');
-    if (noOverlap.length){
-      for (const agent in byAgent){
-        const list=byAgent[agent];
-        for (let i=1;i<list.length;i++){
-          const prev=list[i-1], cur=list[i];
-          if (new Date(cur.start_time) < new Date(prev.end_time)){
-            for (const rule of noOverlap){
-              if (!applyScope(rule,{agent_id:agent})) continue;
-              out.push({ rule:rule.name, agent_id:agent, shift:`${new Date(cur.start_time).toLocaleString()}`, detail:`Overlap with previous shift`, severity:rule.severity||'BLOCK' });
-            }
-          }
-        }
-      }
-    }
-
-    // NO_PTO_OVERBOOKING
-    const ptoRules = active.filter(r=>r.type==='NO_PTO_OVERBOOKING');
-    if (ptoRules.length){
-      for (const agent in byAgent){
-        const list=byAgent[agent]; const ranges=ptoMap[agent]||[];
-        if (!ranges.length) continue;
-        for (const s of list){
-          const st=new Date(s.start_time), et=new Date(s.end_time);
-          for (const [pst,pet] of ranges){
-            const overlap = st<pet && et>pst;
-            if (overlap){
-              for (const rule of ptoRules){
-                if (!applyScope(rule,{agent_id:agent})) continue;
-                out.push({ rule:rule.name, agent_id:agent, shift:`${st.toLocaleString()}`, detail:`Shift overlaps PTO (${pst.toISOString().slice(0,10)}→${pet.toISOString().slice(0,10)})`, severity:rule.severity||'BLOCK' });
-              }
-            }
-          }
-        }
-      }
-    }
-    return out;
-  };
-
-  const renderRules = ()=>{
-    const list = filtered.length ? filtered : rules;
-    el.rulesTbody.innerHTML = list.map(r=>{
-      const status = r.active ? '<span class="badge success">Actif</span>' : '<span class="badge muted">Inactif</span>';
-      const params = [r.param1, r.param2].filter(x=> x!=null && x!=='').join(' · ') || '—';
-      const scope = r.scope==='GLOBAL' ? 'Global' : `${r.scope} : ${r.scope_target||'—'}`;
-      return `<tr data-id="${r.id||''}">
-        <td>${r.name||'—'}</td>
-        <td>${r.type||'—'}</td>
-        <td>${params}</td>
-        <td>${scope}</td>
-        <td>${status}</td>
-        <td><div class="row-actions">
-          <button class="mini js-edit">Edit</button>
-          <button class="mini danger js-delete">Delete</button>
-        </div></td>
-      </tr>`;
-    }).join('') || `<tr><td colspan="6">—</td></tr>`;
-    el.activeRulesCount.textContent = (rules||[]).filter(r=>r.active).length;
-    attachRowActions();
-  };
-  const attachRowActions = ()=>{
-    el.rulesTbody.querySelectorAll('.js-edit').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const tr = btn.closest('tr'); const id = tr?.dataset?.id;
-        const r = rules.find(x=> String(x.id)===String(id));
-        openRuleModal(r||null);
-      });
+  const LS_KEY = 'roman_regulation_rules';
+  let rules = [
+    { name:'Max Hours per Day', value:'8' },
+    { name:'Max Hours per Week', value:'37.5' },
+    { name:'Lunch Duration (minutes)', value:'60' },
+    { name:'Breaks per Day (count)', value:'2' },
+    { name:'Break Duration (minutes)', value:'15' },
+  ];
+  const load = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); } catch { return []; } };
+  const save = () => localStorage.setItem(LS_KEY, JSON.stringify(rules));
+  const render = () => {
+    const tb = el.table(); if (!tb) return;
+    tb.innerHTML = (rules||[]).map((r,i)=>`
+      <tr>
+        <td>${r.name}</td>
+        <td><input type="text" value="${r.value}" data-i="${i}" class="reg-val"></td>
+        <td><button class="mini danger" data-del="${i}">Delete</button></td>
+      </tr>
+    `).join('') || `<tr><td colspan="3" class="muted">No rules.</td></tr>`;
+    tb.querySelectorAll('.reg-val').forEach(inp=>{
+      inp.addEventListener('input', (e)=>{ rules[e.target.dataset.i].value = e.target.value; save(); });
     });
-    el.rulesTbody.querySelectorAll('.js-delete').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const tr=btn.closest('tr'); const id=tr?.dataset?.id;
-        el.confirmDeleteModal.showModal();
-        el.confirmDeleteBtn.onclick = async ()=>{
-          await deleteRule(id); el.confirmDeleteModal.close();
-          rules = await fetchRegulations(); renderRules();
-        };
-        el.cancelDeleteBtn.onclick = ()=> el.confirmDeleteModal.close();
-      });
+    tb.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ rules.splice(Number(btn.dataset.del),1); save(); render(); });
     });
   };
-  const openRuleModal = (rule=null)=>{
-    el.ruleForm.reset(); el.ruleId.value=''; el.ruleScope.value='GLOBAL'; toggleScope();
-    el.ruleActive.checked=true; el.ruleSeverity.value='WARN';
-    if (rule){
-      el.ruleModalTitle.textContent = 'Éditer la règle';
-      el.ruleId.value = rule.id||'';
-      el.ruleName.value = rule.name||'';
-      el.ruleType.value = rule.type||'';
-      el.ruleParam1.value = rule.param1??'';
-      el.ruleParam2.value = rule.param2??'';
-      el.ruleScope.value  = rule.scope||'GLOBAL'; toggleScope();
-      el.ruleScopeTarget.value = rule.scope_target||'';
-      el.ruleSeverity.value = rule.severity||'WARN';
-      el.ruleActive.checked = !!rule.active;
-      updateParamLabels();
-    } else {
-      el.ruleModalTitle.textContent = 'Nouvelle règle';
-    }
-    el.ruleModal.showModal();
-  };
-  const toggleScope = ()=>{
-    const s = el.ruleScope.value;
-    if (s==='GLOBAL'){ el.scopeTargetField.hidden=true; el.ruleScopeTarget.value=''; }
-    else if (s==='REGION'){ el.scopeTargetField.hidden=false; el.scopeTargetLabel.textContent='Code Région'; }
-    else { el.scopeTargetField.hidden=false; el.scopeTargetLabel.textContent='Agent ID'; }
-  };
-  const updateParamLabels = ()=>{
-    const t = el.ruleType.value;
-    if (t==='MAX_HOURS_PER_WEEK'){ el.ruleParam1Label.textContent='Heures max / semaine'; el.ruleParam2Label.textContent='Optionnel'; }
-    else if (t==='MIN_REST_BETWEEN_SHIFTS'){ el.ruleParam1Label.textContent='Repos minimum (heures)'; el.ruleParam2Label.textContent='Optionnel'; }
-    else { el.ruleParam1Label.textContent='Paramètre 1'; el.ruleParam2Label.textContent='Paramètre 2'; }
-  };
-  const applySearch = ()=>{
-    const q=(el.ruleSearch.value||'').toLowerCase().trim();
-    if (!q){ filtered=[]; renderRules(); return; }
-    filtered = rules.filter(r=>{
-      const hay = `${r.name||''} ${r.type||''} ${r.scope||''} ${r.scope_target||''}`.toLowerCase();
-      return hay.includes(q);
+  const init = () => {
+    const persisted = load(); if (persisted?.length) rules = persisted;
+    el.add()?.addEventListener('click', ()=>{
+      const n = prompt('Rule name?'); if (!n) return;
+      const v = prompt('Value?') || '';
+      rules.push({ name:n, value:v }); save(); render();
     });
-    renderRules();
+    render();
   };
-  const exportViolationsCSV = ()=>{
-    if (!violations.length) return;
-    const headers=['regle','agent','shift','detail','gravite'];
-    const lines=[headers.join(',')].concat(
-      violations.map(v=>[
-        `"${String(v.rule).replace(/"/g,'""')}"`,
-        `"${String(v.agent_id).replace(/"/g,'""')}"`,
-        `"${String(v.shift).replace(/"/g,'""')}"`,
-        `"${String(v.detail).replace(/"/g,'""')}"`,
-        `"${String(v.severity).replace(/"/g,'""')}"`
-      ].join(','))
-    );
-    const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-    const url=URL.createObjectURL(blob); const a=document.createElement('a');
-    a.href=url; a.download=`violations_${Date.now()}.csv`; a.click(); URL.revokeObjectURL(url);
-  };
-
-  const init = async ()=>{
-    if (!el.tabPanel) return;
-    if (init._init) return;
-    init._init = true;
-
-    el.addRuleBtn?.addEventListener('click', ()=> openRuleModal(null));
-    el.closeRuleModal?.addEventListener('click', (e)=>{ e.preventDefault(); el.ruleModal.close(); });
-    el.cancelRuleBtn?.addEventListener('click', (e)=>{ e.preventDefault(); el.ruleModal.close(); });
-    el.ruleType?.addEventListener('change', updateParamLabels);
-    el.ruleScope?.addEventListener('change', toggleScope);
-
-    el.ruleForm?.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const payload = {
-        id: el.ruleId.value || undefined,
-        name: el.ruleName.value?.trim(),
-        type: el.ruleType.value,
-        param1: el.ruleParam1.value ? Number(el.ruleParam1.value) : null,
-        param2: el.ruleParam2.value ? Number(el.ruleParam2.value) : null,
-        scope: el.ruleScope.value || 'GLOBAL',
-        scope_target: el.ruleScopeTarget.value?.trim() || null,
-        severity: el.ruleSeverity.value || 'WARN',
-        active: !!el.ruleActive.checked,
-      };
-      await upsertRule(payload);
-      el.ruleModal.close();
-      rules = await fetchRegulations(); renderRules();
-    });
-
-    el.ruleSearch?.addEventListener('input', applySearch);
-    el.enforceToggle?.addEventListener('change', ()=>{
-      localStorage.setItem('pm_enforce_regulations', el.enforceToggle.checked?'true':'false');
-    });
-
-    el.validateAllBtn?.addEventListener('click', async ()=>{
-      const active = rules.filter(r=>r.active);
-      const [shifts, pto] = await Promise.all([fetchShifts(), fetchPTO()]);
-      violations = runValidation(active, shifts, pto);
-      el.violationsCount.textContent = String(violations.length);
-      el.lastValidationAt.textContent = new Date().toLocaleString();
-      el.violationsPanel.hidden = violations.length===0;
-      el.violationsTbody.innerHTML = violations.map(v=>`
-        <tr><td>${v.rule}</td><td>${v.agent_id}</td><td>${v.shift}</td><td>${v.detail}</td><td>${v.severity}</td></tr>
-      `).join('');
-    });
-    el.exportViolationsBtn?.addEventListener('click', exportViolationsCSV);
-
-    // initial
-    const enforce = localStorage.getItem('pm_enforce_regulations')==='true';
-    el.enforceToggle.checked = enforce;
-
-    rules = await fetchRegulations();
-    renderRules();
-  };
-
   return { init };
 })();
 
 /* ======================================================================
-   BOOT minimal (aucune auth)
+   BOOT : rien, tout est lazy sur clic tab
    ====================================================================== */
-window.addEventListener('load', ()=>{
-  // Tab par défaut (Attendance) se charge via Tabs handler
-});
