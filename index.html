@@ -1,476 +1,255 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>ROMAN — Planning Manager</title>
   <link rel="stylesheet" href="style.css"/>
-  <!-- Supabase (pour accès DB via anon key) -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
-  <!-- Config (URL + ANON KEY + flags) -->
-  <script src="config.js" defer></script>
-  <!-- App logic -->
-  <script src="app.js" defer></script>
+
+  <!-- Fonts (optionnel) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
-    <header class="site-title">
-      <div class="brand">ROMAN — Planning Manager</div>
-      <div class="tagline">Forecast → Capacity → Schedule</div>
-    </header>
+  <header class="site-header">
+    <div class="container head-wrap">
+      <h1>ROMAN — Planning Manager</h1>
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="attendance">Attendance</button>
+        <button class="tab-btn" data-tab="agents">Agents</button>
+        <button class="tab-btn" data-tab="weekly">Weekly Planner</button>
+        <button class="tab-btn" data-tab="forecast">Forecast</button>
+        <button class="tab-btn" data-tab="regulation">Regulation</button>
+        <button class="tab-btn" data-tab="tasks">Tasks</button>
+      </nav>
+    </div>
+  </header>
 
-    <!-- TABS -->
-    <nav class="tabs" aria-label="Sections">
-      <button class="tab-btn active" data-tab="attendance" aria-selected="true">Attendance</button>
-      <button class="tab-btn" data-tab="agents">Agents</button>
-      <button class="tab-btn" data-tab="weekly">Weekly Planner</button>
-      <button class="tab-btn" data-tab="forecast-section">Forecast</button>
-      <button class="tab-btn" data-tab="regulation">Regulation</button>
-      <button class="tab-btn" data-tab="tasks">Tasks</button>
-    </nav>
+  <main class="container">
 
-    <!-- ================= ATTENDANCE ================= -->
+    <!-- ============== ATTENDANCE ============== -->
     <section id="attendance" class="tab-panel">
-      <div class="card">
-        <div class="section-header">
-          <h3>Monthly Attendance & Coverage</h3>
-          <p class="muted">Couverture par jour vs besoin (calculé à partir du forecast et des règles).</p>
+      <div class="toolbar">
+        <div class="field">
+          <label>Region</label>
+          <select id="att-region">
+            <option value="EMEA">Europe</option>
+            <option value="US">Americas</option>
+            <option value="CN">Greater China</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="SEAO">Southeast Asia</option>
+          </select>
         </div>
-
-        <div class="grid-1-3">
-          <div class="field">
-            <label for="att-region">Region</label>
-            <select id="att-region" class="input">
-              <option>EMEA</option>
-              <option>US</option>
-              <option>CN</option>
-              <option>JP</option>
-              <option>KR</option>
-              <option>SEAO</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="att-start">Month start</label>
-            <input id="att-start" type="date" class="input"/>
-          </div>
-          <div class="field">
-            <label>&nbsp;</label>
-            <button id="att-calc" class="btn primary">Recalculate</button>
-          </div>
+        <div class="field">
+          <label>Mois (1er jour)</label>
+          <input id="att-start" type="date"/>
         </div>
+        <button id="att-calc" class="btn">Calculer</button>
 
-        <div class="cards-grid">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">Average adherence</div>
-            </div>
-            <div class="card-value" id="adherence-label">– %</div>
-            <div class="ghost" style="height:10px;border-radius:999px;overflow:hidden;margin-top:8px;">
-              <div id="adherence-fill" style="height:10px;width:0%;background:var(--ok)"></div>
-            </div>
+        <div class="spacer"></div>
+
+        <div class="adherence-box">
+          <div class="adherence-top">
+            Adherence moyenne :
+            <strong id="adherence-label">0%</strong>
           </div>
-          <div class="card">
-            <div class="card-title">Warnings</div>
-            <div id="att-warnings" class="card-value">—</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Export</div>
-            <button id="att-export" class="btn">CSV (grid + summary)</button>
+          <div class="adherence-bar">
+            <div id="adherence-fill" class="adherence-fill" style="width:0%"></div>
           </div>
         </div>
 
-        <div class="table-wrapper">
-          <table id="att-table" class="table"></table>
+        <button id="att-export" class="btn ghost">Exporter CSV</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Résumé mensuel</h2>
+          <div id="att-warnings" class="muted">—</div>
+        </div>
+        <div class="table-wrap">
+          <table id="att-table" class="matrix"></table>
         </div>
       </div>
     </section>
 
-    <!-- ================= AGENTS ================= -->
+    <!-- ============== AGENTS ============== -->
     <section id="agents" class="tab-panel" hidden>
-      <div class="card">
-        <div class="section-header">
-          <h3>Agents directory & PTO</h3>
-          <p class="muted">Compétences, statut, congés.</p>
-        </div>
-
-        <div class="row" style="margin-bottom:8px">
-          <label for="ag-region" class="muted">Region</label>
-          <select id="ag-region" class="input" style="max-width:220px">
-            <option>EMEA</option><option>US</option><option>CN</option>
-            <option>JP</option><option>KR</option><option>SEAO</option>
+      <div class="toolbar">
+        <div class="field">
+          <label>Region</label>
+          <select id="ag-region">
+            <option value="EMEA">Europe</option>
+            <option value="US">Americas</option>
+            <option value="CN">Greater China</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="SEAO">Southeast Asia</option>
           </select>
-          <div class="grow"></div>
-          <button id="ag-add" class="btn primary">Add agent</button>
-          <button id="ag-export" class="btn">Export CSV</button>
         </div>
+        <button id="ag-refresh" class="btn">Rafraîchir</button>
 
-        <div class="table-wrapper">
-          <table id="ag-table" class="table">
-            <thead>
-              <tr>
-                <th class="first-col">Name</th>
-                <th>Region</th>
-                <th>Status</th>
-                <th>Call</th>
-                <th>Mail</th>
-                <th>Chat</th>
-                <th>Clienteling</th>
-                <th>Fraud</th>
-                <th>Back Office</th>
-                <th>PTO</th>
-                <th>Cal</th>
-                <th>Del</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="divider"></div>
+
+        <div class="field">
+          <label>Ajouter un agent</label>
+          <input id="ag-name" type="text" placeholder="Nom & prénom"/>
         </div>
+        <button id="ag-add" class="btn">Ajouter</button>
+
+        <div class="spacer"></div>
+
+        <div class="field">
+          <label>PTO — Agent</label>
+          <select id="pto-agent"></select>
+        </div>
+        <div class="field">
+          <label>PTO — Début</label>
+          <input id="pto-start" type="date"/>
+        </div>
+        <div class="field">
+          <label>PTO — Fin</label>
+          <input id="pto-end" type="date"/>
+        </div>
+        <button id="ag-pto-add" class="btn ghost">Ajouter PTO</button>
       </div>
 
-      <!-- PTO Drawer -->
-      <aside id="pto-drawer" class="drawer" aria-hidden="true">
-        <div class="drawer-inner">
-          <div class="drawer-head">
-            <strong id="pto-title">PTO</strong>
-            <button id="pto-close" class="btn">Close</button>
-          </div>
-          <div class="drawer-content">
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="pto-start">Start date</label>
-                <input id="pto-start" type="date" class="input"/>
-              </div>
-              <div class="form-field">
-                <label for="pto-end">End date</label>
-                <input id="pto-end" type="date" class="input"/>
-              </div>
-              <div class="form-field">
-                <label for="pto-half-start">Half day (start)</label>
-                <select id="pto-half-start" class="input">
-                  <option value="">Full day</option>
-                  <option>AM</option>
-                  <option>PM</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label for="pto-half-end">Half day (end)</label>
-                <select id="pto-half-end" class="input">
-                  <option value="">Full day</option>
-                  <option>AM</option>
-                  <option>PM</option>
-                </select>
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px">
-              <button id="pto-save" class="btn primary">Save PTO</button>
-            </div>
-
-            <h4 style="margin-top:16px">Calendar (current month)</h4>
-            <div id="pto-calendar" class="ghost" style="padding:10px"></div>
-
-            <h4 style="margin-top:16px">Existing PTO</h4>
-            <ul id="pto-list"></ul>
-          </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Agents & compétences</h2>
         </div>
-      </aside>
+        <div id="ag-list" class="cards"></div>
+      </div>
     </section>
 
-    <!-- ================= WEEKLY PLANNER ================= -->
+    <!-- ============== WEEKLY PLANNER ============== -->
     <section id="weekly" class="tab-panel" hidden>
-      <div class="card">
-        <div class="section-header">
-          <h3>Weekly Planner (30-min slots)</h3>
-          <p class="muted">Demande vs Capacité, par créneau.</p>
-        </div>
-
-        <div class="wp-toolbar">
-          <div class="field">
-            <label for="wp-region">Region</label>
-            <select id="wp-region" class="input">
-              <option>EMEA</option><option>US</option><option>CN</option>
-              <option>JP</option><option>KR</option><option>SEAO</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="wp-week">ISO week</label>
-            <input id="wp-week" type="week" class="input"/>
-          </div>
-          <div class="field">
-            <label for="wp-day-start">Day start</label>
-            <input id="wp-day-start" type="time" class="input" value="09:00"/>
-          </div>
-          <div class="field">
-            <label for="wp-day-end">Day end</label>
-            <input id="wp-day-end" type="time" class="input" value="18:00"/>
-          </div>
-          <div class="grow"></div>
-          <button id="wp-load" class="btn primary">Load week</button>
-          <button id="wp-export" class="btn">Export CSV</button>
-        </div>
-
-        <div class="wp-summaries" style="margin:8px 0">
-          <span class="wp-chip"><span class="k">Avg present agents:</span> <span id="wp-agents-count" class="v">—</span></span>
-          <span class="wp-chip"><span class="k">Coverage:</span> <span id="wp-coverage-avg" class="v">— %</span></span>
-          <span class="wp-chip"><span class="k">Understaffed slots:</span> <span id="wp-understaffed" class="v">—</span></span>
-        </div>
-
-        <div class="legend">
-          <span><span class="legend-box present"></span> OK</span>
-          <span><span class="legend-box over"></span> Over capacity</span>
-          <span><span class="legend-box gap"></span> Gap</span>
-          <span><span class="legend-box pto"></span> PTO</span>
-        </div>
-
-        <div class="wp-grid-wrap">
-          <table id="wp-grid" class="wp-grid"></table>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= FORECAST ================= -->
-    <section id="forecast-section" class="tab-panel" hidden>
-      <div class="card">
-        <div class="section-header">
-          <h3>Forecast</h3>
-          <p class="muted">Annual total + répartitions mensuelle / hebdo / jour / horaire. Persiste localStorage et DB (si flag SYNC_FORECAST=true).</p>
-        </div>
-
-        <div class="row" style="margin-bottom:10px">
-          <label for="fc-region" class="muted">Region</label>
-          <select id="fc-region" class="input" style="max-width:220px">
-            <option>EMEA</option><option>US</option><option>CN</option>
-            <option>JP</option><option>KR</option><option>SEAO</option>
+      <div class="toolbar">
+        <div class="field">
+          <label>Region</label>
+          <select id="w-region">
+            <option value="EMEA">Europe</option>
+            <option value="US">Americas</option>
+            <option value="CN">Greater China</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="SEAO">Southeast Asia</option>
           </select>
-          <div class="grow"></div>
-          <label for="fc-total" class="muted" style="margin-right:8px">Annual volume</label>
-          <input id="fc-total" type="number" class="input" style="max-width:220px"/>
         </div>
-
-        <div class="forecast-section-card">
-          <h4>Monthly repartition (%)</h4>
-          <div id="fc-monthly"></div>
-          <div class="muted" id="fc-monthly-sum">Sum: 0%</div>
+        <div class="field">
+          <label>Semaine (lundi)</label>
+          <input id="week-start" type="date"/>
         </div>
+        <button id="w-run" class="btn">Calculer</button>
 
-        <div class="forecast-section-card">
-          <h4>Weekly repartition (%)</h4>
-          <div id="fc-weekly"></div>
-          <div class="muted" id="fc-weekly-sum">Sum (guide): 0%</div>
+        <div class="spacer"></div>
+        <div id="week-warnings" class="muted">—</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Couverture hebdomadaire (slots 30’)</h2>
         </div>
-
-        <div class="forecast-section-card">
-          <h4>Daily repartition (%)</h4>
-          <div id="fc-daily"></div>
-          <div class="muted" id="fc-daily-check">Day% sum: 0%</div>
-        </div>
-
-        <div class="forecast-section-card">
-          <h4>Hourly repartition (%)</h4>
-          <div id="fc-hourly"></div>
-          <div class="muted" id="fc-hourly-sum">Sum: 0%</div>
+        <div class="table-wrap">
+          <table id="week-grid" class="matrix"></table>
         </div>
       </div>
     </section>
 
-    <!-- ================= REGULATION ================= -->
+    <!-- ============== FORECAST ============== -->
+    <section id="forecast" class="tab-panel" hidden>
+      <div class="toolbar">
+        <div class="field">
+          <label>Region</label>
+          <select id="fc-region">
+            <option value="EMEA">Europe</option>
+            <option value="US">Americas</option>
+            <option value="CN">Greater China</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="SEAO">Southeast Asia</option>
+          </select>
+        </div>
+        <button id="fc-refresh" class="btn">Rafraîchir</button>
+        <button id="fc-save" class="btn ghost">Enregistrer</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Répartition mensuelle (%)</h2>
+        </div>
+        <div class="table-wrap narrow">
+          <table id="fc-table" class="grid"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== REGULATION ============== -->
     <section id="regulation" class="tab-panel" hidden>
-      <div class="card">
-        <div class="section-header">
-          <h3>Regulation</h3>
-          <p class="muted">Contraintes marché et validations.</p>
+      <div class="toolbar">
+        <div class="field">
+          <label>Region</label>
+          <select id="reg-region">
+            <option value="EMEA">Europe</option>
+            <option value="US">Americas</option>
+            <option value="CN">Greater China</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="SEAO">Southeast Asia</option>
+          </select>
         </div>
-
-        <div class="row" style="margin-bottom:8px">
-          <label class="switch">
-            <input id="enforceRegulationsToggle" type="checkbox">
-            <span class="slider"></span>
-          </label>
-          <span class="switch-label">Enforce rules on calculations</span>
-
-          <div class="grow"></div>
-
-          <input id="ruleSearch" class="input" placeholder="Search rules…" style="max-width:260px"/>
-          <button id="addRuleBtn" class="btn">Add rule</button>
-          <button id="validateAllBtn" class="btn primary">Validate</button>
-          <button id="exportViolationsBtn" class="btn">Export violations</button>
-        </div>
-
-        <div class="cards-grid">
-          <div class="card">
-            <div class="card-title">Active rules</div>
-            <div class="card-value" id="activeRulesCount">0</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Violations</div>
-            <div class="card-value" id="violationsCount">0</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Last validation</div>
-            <div class="card-value" id="lastValidationAt">—</div>
-          </div>
-        </div>
-
-        <div class="table-wrapper">
-          <table class="table">
-            <thead>
-              <tr>
-                <th class="first-col">Name</th>
-                <th>Type</th>
-                <th>Params</th>
-                <th>Scope</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="regulationTableBody"></tbody>
-          </table>
-        </div>
-
-        <div id="violationsPanel" class="table-wrapper" hidden>
-          <h4>Violations</h4>
-          <table class="table">
-            <thead>
-              <tr>
-                <th class="first-col">Rule</th>
-                <th>Agent</th>
-                <th>Shift</th>
-                <th>Detail</th>
-                <th>Severity</th>
-              </tr>
-            </thead>
-            <tbody id="violationsTableBody"></tbody>
-          </table>
-        </div>
+        <button id="reg-refresh" class="btn">Rafraîchir</button>
+        <button id="reg-add" class="btn">Ajouter une règle</button>
+        <button id="reg-save" class="btn ghost">Enregistrer</button>
       </div>
 
-      <!-- Rule modal -->
-      <dialog id="ruleModal" class="modal">
-        <div class="modal-box">
-          <div class="modal-header">
-            <strong id="ruleModalTitle">New rule</strong>
-            <button id="closeRuleModal" class="btn">Close</button>
-          </div>
-          <form id="ruleForm" class="modal-content">
-            <input type="hidden" id="ruleId"/>
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="ruleName">Name</label>
-                <input id="ruleName" class="input" required/>
-              </div>
-              <div class="form-field">
-                <label for="ruleType">Type</label>
-                <select id="ruleType" class="input" required>
-                  <option value="">Select…</option>
-                  <option value="MAX_HOURS_PER_WEEK">MAX_HOURS_PER_WEEK</option>
-                  <option value="MIN_REST_BETWEEN_SHIFTS">MIN_REST_BETWEEN_SHIFTS</option>
-                  <option value="NO_OVERLAP_SHIFTS">NO_OVERLAP_SHIFTS</option>
-                  <option value="NO_PTO_OVERBOOKING">NO_PTO_OVERBOOKING</option>
-                  <option value="HOLIDAY_BLACKOUT">HOLIDAY_BLACKOUT</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label id="ruleParam1Label" for="ruleParam1">Param 1</label>
-                <input id="ruleParam1" class="input" />
-              </div>
-              <div class="form-field">
-                <label id="ruleParam2Label" for="ruleParam2">Param 2</label>
-                <input id="ruleParam2" class="input" />
-              </div>
-              <div class="form-field">
-                <label for="ruleScope">Scope</label>
-                <select id="ruleScope" class="input">
-                  <option>GLOBAL</option>
-                  <option>REGION</option>
-                  <option>AGENT</option>
-                </select>
-              </div>
-              <div id="scopeTargetField" class="form-field" hidden>
-                <label id="scopeTargetLabel" for="ruleScopeTarget">Target</label>
-                <input id="ruleScopeTarget" class="input" />
-              </div>
-              <div class="form-field">
-                <label for="ruleSeverity">Severity</label>
-                <select id="ruleSeverity" class="input">
-                  <option>WARN</option>
-                  <option>BLOCK</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label for="ruleActive">Active</label>
-                <input id="ruleActive" type="checkbox" checked/>
-              </div>
-            </div>
-            <div class="modal-actions">
-              <button id="cancelRuleBtn" type="button" class="btn">Cancel</button>
-              <button type="submit" class="btn primary">Save</button>
-            </div>
-          </form>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Règles & contraintes</h2>
         </div>
-      </dialog>
-
-      <!-- Delete confirm -->
-      <dialog id="confirmDeleteModal" class="modal">
-        <div class="modal-box">
-          <div class="modal-header">
-            <strong>Delete rule</strong>
-          </div>
-          <p>Are you sure you want to delete this rule?</p>
-          <div class="modal-actions">
-            <button id="cancelDeleteBtn" class="btn">Cancel</button>
-            <button id="confirmDeleteBtn" class="btn danger">Delete</button>
-          </div>
+        <div class="table-wrap">
+          <table id="reg-table" class="grid"></table>
         </div>
-      </dialog>
+      </div>
     </section>
 
-    <!-- ================= TASKS ================= -->
+    <!-- ============== TASKS ============== -->
     <section id="tasks" class="tab-panel" hidden>
-      <div class="card" id="tasksPanel">
-        <div class="section-header">
-          <h3>Task catalogue</h3>
-          <p class="muted">Prio, AHT, activation. Impacte le calcul de capacité.</p>
-        </div>
-
-        <div class="row" style="margin-bottom:8px">
-          <label for="task-region" class="muted">Region</label>
-          <select id="task-region" class="input" style="max-width:220px">
-            <option>EMEA</option><option>US</option><option>CN</option>
-            <option>JP</option><option>KR</option><option>SEAO</option>
+      <div class="toolbar">
+        <div class="field">
+          <label>Region</label>
+          <select id="tk-region">
+            <option value="EMEA">Europe</option>
+            <option value="US">Americas</option>
+            <option value="CN">Greater China</option>
+            <option value="JP">Japan</option>
+            <option value="KR">South Korea</option>
+            <option value="SEAO">Southeast Asia</option>
           </select>
-          <div class="grow"></div>
-          <input id="task-search" class="input" placeholder="Search task…" style="max-width:260px"/>
-          <select id="task-filter-priority" class="input" style="max-width:180px">
-            <option value="">All priorities</option>
-            <option value="high">High (P1)</option>
-            <option value="med">Medium (P2)</option>
-            <option value="low">Low (P3)</option>
-          </select>
-          <button id="createTaskBtn" class="btn">Add task</button>
         </div>
+        <button id="tk-refresh" class="btn">Rafraîchir</button>
+        <button id="tk-add" class="btn">Ajouter une tâche</button>
+        <button id="tk-save" class="btn ghost">Enregistrer</button>
+      </div>
 
-        <div class="tasks counters" id="task-counters" style="margin-bottom:8px"></div>
-
-        <div class="table-wrapper">
-          <table class="table table-tasks">
-            <thead>
-              <tr>
-                <th class="first-col">Label</th>
-                <th>Priority</th>
-                <th>AHT (min)</th>
-                <th>Enabled</th>
-                <th>Notes</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tasksTbody"></tbody>
-          </table>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Catalogue des tâches</h2>
+        </div>
+        <div class="table-wrap">
+          <table id="tk-table" class="grid"></table>
         </div>
       </div>
     </section>
 
-    <footer class="footer">
-      ROMAN Planning Manager — prototype
-    </footer>
-  </div>
+  </main>
+
+  <!-- ============== Scripts ============== -->
+  <!-- Supabase SDK v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Config (fourni par toi) : définit window.CONFIG -->
+  <script src="config.js"></script>
+  <!-- App -->
+  <script src="app.js"></script>
 </body>
 </html>
