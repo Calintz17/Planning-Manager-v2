@@ -165,10 +165,10 @@ label{display:block;font-size:.9rem;color:var(--text);margin-bottom:4px}
 .wp-grid{width:100%;border-collapse:separate;border-spacing:0}
 .wp-grid th, .wp-grid td{border-bottom:1px solid var(--border);padding:0}
 .wp-grid thead th{background:#fafafa;font-weight:600;font-size:.85rem}
-.wp-grid .first-col{position:sticky;left:0;background:#fff;z-index:1;padding:8px;border-right:1px solid var(--border);min-width:260px} /* +~20% */
-.wp-grid .slot-col{min-width:52px;text-align:center;border-left:1px solid var(--border)} /* + largeur slot */
+.wp-grid .first-col{position:sticky;left:0;background:#fff;z-index:1;padding:8px;border-right:1px solid var(--border);min-width:260px}
+.wp-grid .slot-col{min-width:52px;text-align:center;border-left:1px solid var(--border)}
 .wp-grid .hour-marker{background:#fcfcfc}
-.wp-grid .cell{width:100%;height:24px} /* lignes plus compactes */
+.wp-grid .cell{width:100%;height:24px}
 .wp-grid .cell.present{background:var(--ok-bg)}
 .wp-grid .cell.gap{background:var(--warn-bg)}
 .wp-grid .cell.over{background:#eef2ff}
@@ -207,9 +207,8 @@ label{display:block;font-size:.9rem;color:var(--text);margin-bottom:4px}
 .muted{color:var(--muted)}
 
 /* =========================
-   Tasks (catalogue + board)
+   Tasks
    ========================= */
-/* Corrections sélecteurs : .tasks .toolbar / .tasks .counters */
 .tasks .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tasks .counters{display:flex;gap:12px;align-items:center}
 .counter{color:var(--muted)}
@@ -239,7 +238,7 @@ label{display:block;font-size:.9rem;color:var(--text);margin-bottom:4px}
 .prio-med{border-color:#d1d5db}
 .prio-high{border-color:#fecaca;background:#fef2f2}
 
-/* État “validé” générique (à activer dans l’UI plus tard) */
+/* État “validé” générique (à activer plus tard) */
 .is-validated{outline:2px solid #10b981; outline-offset:2px; box-shadow:0 0 0 2px rgba(16,185,129,.15)}
 
 /* =========================
