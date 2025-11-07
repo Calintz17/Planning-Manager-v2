@@ -1577,6 +1577,40 @@ async function initWeeklyUI(){
   document.addEventListener('DOMContentLoaded', () => { initEvents(); init(); });
 })();
 
+// 1) S'assurer que le JS est exécuté quand le DOM est prêt
+window.addEventListener('DOMContentLoaded', () => {
+  // 2) Event delegation pour Regulations
+  const rulesTable = document.querySelector('#rulesTable'); // <tbody> ou conteneur
+  if (rulesTable) {
+    rulesTable.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;    // "edit" | "delete"
+      const id = btn.dataset.id;            // row id
+      if (!id) return;
+
+      if (action === 'delete') {
+        deleteRule(id); // -> à implémenter côté Supabase delete
+      } else if (action === 'edit') {
+        openRuleEditor(id); // -> ouvre le formulaire avec data préchargées
+      }
+    });
+  }
+
+  // 3) Add rule
+  const addBtn = document.querySelector('#ruleAddBtn'); // bouton "Add Rule"
+  if (addBtn) {
+    addBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const form = document.querySelector('#ruleForm');
+      if (!form) return;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      upsertRule(payload); // -> à implémenter
+    });
+  }
+});
+
+
 /* ======================================================================
    BOOT
    ====================================================================== */
