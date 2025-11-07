@@ -12,21 +12,11 @@ const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABA
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const fmtPct = n => `${(n||0).toFixed(1)}%`;
-const fmtNum = n => n?.toLocaleString?.() ?? n;
-const today = new Date().toISOString().slice(0,10);
-
-// Helpers
-const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // ======================================================
 // GLOBAL STATE
 // ======================================================
 let CURRENT_USER = null;
-let AGENTS = [];
-let TASKS = [];
-let PTO = [];
-let FORECAST = {};
-let RULES = [];
 
 // ======================================================
 // AUTHENTICATION
@@ -36,6 +26,14 @@ async function initAuth() {
   modal.classList.add('visible');
   $('#login-btn').onclick = () => login('login');
   $('#signup-btn').onclick = () => login('signup');
+  $('#forgot-link').onclick = async (e)=>{
+    e.preventDefault();
+    const email = $('#auth-email').value;
+    if(!email) return alert('Enter your email first');
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/index.html" });
+    if(error) return alert(error.message);
+    alert('Password reset email sent.');
+  };
 
   async function login(mode){
     const email = $('#auth-email').value;
@@ -65,8 +63,8 @@ async function initAuth() {
 // ======================================================
 async function initApp(){
   initTabs();
-  initAgentsUI();
-  initTasksUI();
+  await initAgentsUI();
+  await initTasksUI();
   initForecastUI();
   initWeekly();
   initRegulationUI();
@@ -95,47 +93,88 @@ async function initAgentsUI(){
   const tbody = $('#ag-table tbody');
 
   async function loadAgents(){
-    const { data } = await supabase.from('agents').select('*, agent_skills(*), agent_pto(*)').eq('owner_id', CURRENT_USER.id);
-    AGENTS = data || [];
-    render();
+    const { data } = await supabase
+      .from('agents')
+      .select('id, full_name, region, status, agent_skills(*), agent_pto(*)')
+      .eq('owner_id', CURRENT_USER.id)
+      .order('full_name',{ascending:true});
+    const rows = data || [];
+    render(rows);
   }
 
-  function render(){
+  function render(rows){
     tbody.innerHTML='';
-    for(const ag of AGENTS){
+    if(!rows.length){
+      tbody.innerHTML='<tr><td colspan="12">No agents yet.</td></tr>';
+      return;
+    }
+    for(const ag of rows){
       const tr=document.createElement('tr');
       tr.innerHTML=`
-        <td>${ag.full_name}</td>
+        <td class="ag-name" contenteditable="true">${ag.full_name}</td>
         <td>${ag.region}</td>
-        <td>${ag.status}</td>
-        <td>${ag.agent_skills?.can_call?'✅':'❌'}</td>
-        <td>${ag.agent_skills?.can_mail?'✅':'❌'}</td>
-        <td>${ag.agent_skills?.can_chat?'✅':'❌'}</td>
-        <td>${ag.agent_skills?.can_clienteling?'✅':'❌'}</td>
-        <td>${ag.agent_skills?.can_fraud?'✅':'❌'}</td>
-        <td>${ag.agent_skills?.can_backoffice?'✅':'❌'}</td>
+        <td>
+          <select class="ag-status" data-id="${ag.id}">
+            ${['Present','PTO','Sick Leave','Unavailable'].map(s=>`<option value="${s}" ${ag.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </td>
+        <td>${checkbox('can_call',ag)}</td>
+        <td>${checkbox('can_mail',ag)}</td>
+        <td>${checkbox('can_chat',ag)}</td>
+        <td>${checkbox('can_clienteling',ag)}</td>
+        <td>${checkbox('can_fraud',ag)}</td>
+        <td>${checkbox('can_backoffice',ag)}</td>
         <td><button class="mini pto-btn" data-id="${ag.id}">PTO</button></td>
-        <td><button class="mini cal-btn" data-id="${ag.id}">Calendar</button></td>
-        <td><button class="mini danger del-btn" data-id="${ag.id}">✖</button></td>`;
+        <td><button class="mini secondary cal-btn" data-id="${ag.id}">📅</button></td>
+        <td><button class="mini danger del-btn" data-id="${ag.id}">Delete</button></td>`;
       tbody.appendChild(tr);
     }
   }
 
+  function checkbox(key, ag){
+    const v = ag.agent_skills?.[key] ?? true;
+    return `<input type="checkbox" class="ag-skill" data-key="${key}" data-id="${ag.id}" ${v?'checked':''}/>`;
+  }
+
   addBtn.onclick = async ()=>{
-    const fullName = prompt('Agent name:');
+    const fullName = prompt('Agent full name:');
     if(!fullName) return;
     await supabase.rpc('add_agent_for_current_user',{p_full_name:fullName,p_region:regionSel.value});
     await loadAgents();
   };
 
-  tbody.onclick = async e=>{
+  tbody.addEventListener('change', async e=>{
+    const id = e.target.dataset.id;
+    if(e.target.classList.contains('ag-status')){
+      await supabase.from('agents').update({status:e.target.value}).eq('id',id);
+    }
+    if(e.target.classList.contains('ag-skill')){
+      const key = e.target.dataset.key;
+      const val = e.target.checked;
+      await supabase.from('agent_skills').upsert({agent_id:id, [key]:val},{onConflict:'agent_id'});
+    }
+  });
+
+  tbody.addEventListener('click', async e=>{
     const id = e.target.dataset.id;
     if(e.target.classList.contains('del-btn')){
+      if(!confirm('Delete this agent?')) return;
+      await supabase.from('agent_skills').delete().eq('agent_id',id);
+      await supabase.from('agent_pto').delete().eq('agent_id',id);
       await supabase.from('agents').delete().eq('id',id);
       await loadAgents();
     }
     if(e.target.classList.contains('pto-btn')) openPTODrawer(id);
-  };
+  });
+
+  tbody.addEventListener('blur', async e=>{
+    if(e.target.classList.contains('ag-name')){
+      const tr = e.target.closest('tr');
+      const id = tr.querySelector('.del-btn')?.dataset?.id;
+      const newName = e.target.textContent.trim();
+      await supabase.from('agents').update({full_name:newName}).eq('id',id);
+    }
+  }, true);
 
   await loadAgents();
 }
@@ -148,21 +187,31 @@ function openPTODrawer(agentId){
   const list = $('#pto-list');
 
   drawer.classList.add('open');
-  closeBtn.onclick = ()=>drawer.classList.remove('open');
+  drawer.setAttribute('aria-hidden','false');
+
+  closeBtn.onclick = ()=>{ drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); };
 
   saveBtn.onclick = async ()=>{
-    const s=$('#pto-start').value, e=$('#pto-end').value;
-    const hs=$('#pto-half-start').value, he=$('#pto-half-end').value;
-    if(!s||!e)return alert('Pick dates');
-    await supabase.from('agent_pto').insert({agent_id:agentId,start_date:s,end_date:e,half_day_start:hs,half_day_end:he});
-    alert('Saved PTO');
-    drawer.classList.remove('open');
+    const s=$('#pto-start').value, e=$('#pto-end').value || s;
+    const hs=$('#pto-half-start').value || null, he=$('#pto-half-end').value || null;
+    if(!s) return alert('Pick a start date');
+    const { error } = await supabase.from('agent_pto').insert({agent_id:agentId,start_date:s,end_date:e,half_day_start:hs,half_day_end:he});
+    if(error) return alert(error.message);
+    await refreshList();
   };
 
-  // Display existing PTOs
-  supabase.from('agent_pto').select('*').eq('agent_id',agentId).then(({data})=>{
-    list.innerHTML=data.map(p=>`<li>${p.start_date} → ${p.end_date}</li>`).join('')||'<li>No PTO</li>';
-  });
+  async function refreshList(){
+    const { data } = await supabase.from('agent_pto').select('*').eq('agent_id',agentId).order('start_date',{ascending:true});
+    list.innerHTML = (data||[]).map(p=>`<li>${p.start_date} ${p.half_day_start||'Full'} → ${p.end_date} ${p.half_day_end||'Full'} <button class="mini danger" data-del="${p.id}">Delete</button></li>`).join('') || '<li class="muted">No PTO yet.</li>';
+    list.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        await supabase.from('agent_pto').delete().eq('id',btn.dataset.del);
+        await refreshList();
+      };
+    });
+  }
+
+  refreshList();
 }
 
 // ======================================================
@@ -175,18 +224,25 @@ async function initTasksUI(){
   const filter = $('#task-filter-priority');
   const createBtn = $('#createTaskBtn');
 
+  let TASKS = [];
+
   async function loadTasks(){
-    const { data } = await supabase.from('tasks').select('*').eq('owner_id',CURRENT_USER.id).eq('region',regionSel.value);
+    const { data } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('owner_id',CURRENT_USER.id)
+      .eq('region',regionSel.value)
+      .order('name',{ascending:true});
     TASKS = data || [];
     render();
   }
 
   function render(){
-    const q = search.value.toLowerCase();
+    const q = (search.value||'').toLowerCase();
     const pr = filter.value;
     tbody.innerHTML='';
     TASKS.filter(t=>{
-      if(q && !t.name.toLowerCase().includes(q)) return false;
+      if(q && !`${t.name} ${t.notes||''}`.toLowerCase().includes(q)) return false;
       if(pr==='high' && t.priority!=='P1')return false;
       if(pr==='med' && t.priority!=='P2')return false;
       if(pr==='low' && t.priority!=='P3')return false;
@@ -200,8 +256,8 @@ async function initTasksUI(){
         <td><input type="checkbox" ${t.enabled?'checked':''} data-id="${t.id}" class="toggle"></td>
         <td>${t.notes||''}</td>
         <td class="row-actions">
-          <button class="mini edit" data-id="${t.id}">✎</button>
-          <button class="mini danger del" data-id="${t.id}">✖</button>
+          <button class="mini edit" data-id="${t.id}">Edit</button>
+          <button class="mini danger del" data-id="${t.id}">Delete</button>
         </td>`;
       tbody.appendChild(tr);
     });
@@ -237,21 +293,21 @@ async function initTasksUI(){
 }
 
 // ======================================================
-// FORECAST
+// FORECAST (placeholder save total)
 // ======================================================
 function initForecastUI(){
   const regionSel = $('#fc-region');
   const loadBtn = $('#fc-load');
 
   async function loadForecast(){
-    const { data } = await supabase.from('forecast_totals').select('*').eq('owner_id',CURRENT_USER.id).eq('region',regionSel.value);
-    FORECAST[regionSel.value] = data||[];
+    const { data } = await supabase.from('forecast_totals').select('*')
+      .eq('owner_id',CURRENT_USER.id).eq('region',regionSel.value);
     $('#fc-total').value = data?.[0]?.total_volume||0;
   }
 
   $('#fc-save-total').onclick = async ()=>{
     const total = +$('#fc-total').value;
-    await supabase.from('forecast_totals').upsert({region:regionSel.value,total_volume:total});
+    await supabase.from('forecast_totals').upsert({owner_id:CURRENT_USER.id,region:regionSel.value,total_volume:total},{onConflict:'owner_id,region'});
     alert('Saved total');
   };
 
@@ -260,36 +316,61 @@ function initForecastUI(){
 }
 
 // ======================================================
-// WEEKLY PLANNING (basic logic)
+// WEEKLY PLANNING (baseline)
 // ======================================================
 function initWeekly(){
   const loadBtn=$('#wp-load');
   const grid=$('#wp-grid');
+  const agentsCount=$('#wp-agents-count');
+  const coverageAvg=$('#wp-coverage-avg');
+  const understaffed=$('#wp-understaffed');
+
+  function hoursRange(start,end){
+    const res=[]; 
+    let [h,m]=start.split(':').map(Number);
+    let [H,M]=end.split(':').map(Number);
+    for(let cur=h*60+m; cur<=(H*60+M-30); cur+=30){
+      const hh=String(Math.floor(cur/60)).padStart(2,'0');
+      const mm=String(cur%60).padStart(2,'0');
+      res.push(`${hh}:${mm}`);
+    }
+    return res;
+  }
 
   async function build(){
     grid.innerHTML='';
     const region=$('#wp-region').value;
-    const start=$('#wp-day-start').value;
-    const end=$('#wp-day-end').value;
-    const agents=await supabase.from('agents').select('*').eq('region',region);
-    const pto=await supabase.from('agent_pto').select('*');
-    const sick=agents.data.filter(a=>a.status==='Sick Leave').map(a=>a.id);
-    const hours=[];
-    for(let h=parseInt(start);h<=parseInt(end);h++)hours.push(`${h}:00`);
+    const start=$('#wp-day-start').value||'09:00';
+    const end=$('#wp-day-end').value||'21:00';
 
-    const header=`<thead><tr><th class="first-col">Agent</th>${hours.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
-    const rows=agents.data.map(a=>{
-      let row=`<tr><td class="first-col">${a.full_name}</td>`;
-      hours.forEach(h=>{
-        const isSick=sick.includes(a.id);
-        const isPTO=pto.data.some(p=>p.agent_id===a.id);
-        row+=`<td class="slot-col"><div class="cell ${isSick?'gap':isPTO?'pto':'present'}"></div></td>`;
-      });
-      row+='</tr>';
+    const { data:agents } = await supabase.from('agents').select('*').eq('region',region);
+    const { data:pto } = await supabase.from('agent_pto').select('*');
+
+    const sickIds = new Set((agents||[]).filter(a=>a.status==='Sick Leave').map(a=>a.id));
+    const slots = hoursRange(start,end);
+
+    // header
+    let thead = `<thead><tr><th class="first-col">Agent</th>${slots.map(s=>`<th class="slot-col ${s.endsWith(':00')?'hour-marker':''}">${s}</th>`).join('')}</tr></thead>`;
+
+    // rows
+    const bodyRows = (agents||[]).map(a=>{
+      let row = `<tr><td class="first-col">${a.full_name}</td>`;
+      for(const s of slots){
+        const isSick = sickIds.has(a.id);
+        const hasPTO = (pto||[]).some(p=>p.agent_id===a.id); // simplifié (par jour/heure à raffiner ensuite)
+        row += `<td><div class="cell ${isSick?'gap':hasPTO?'pto':'present'}"></div></td>`;
+      }
+      row += `</tr>`;
       return row;
     }).join('');
-    grid.innerHTML=header+`<tbody>${rows}</tbody>`;
+
+    grid.innerHTML = thead + `<tbody>${bodyRows}</tbody>`;
+    agentsCount.textContent = String((agents||[]).filter(a=>a.status==='Present').length);
+    coverageAvg.textContent = '— %';
+    understaffed.textContent = '—';
   }
+
+  $('#wp-export').onclick = ()=> alert('CSV export will include demand vs capacity in v2.');
   loadBtn.onclick=build;
 }
 
@@ -306,6 +387,8 @@ function initRegulationUI(){
   const cancelBtn=$('#cancelRuleBtn');
   const confirmBtn=$('#confirmDeleteBtn');
   const cancelDelBtn=$('#cancelDeleteBtn');
+
+  let RULES = [];
   let currentId=null, deleteId=null;
 
   async function loadRules(){
@@ -316,18 +399,21 @@ function initRegulationUI(){
 
   function render(){
     table.innerHTML='';
+    if(!RULES.length){ table.innerHTML='<tr><td colspan="6">No rules yet.</td></tr>'; return; }
     RULES.forEach(r=>{
       const tr=document.createElement('tr');
+      const params = [r.param1, r.param2].filter(x=>x!==null && x!=='' && x!==undefined).join(' · ') || '—';
       tr.innerHTML=`
         <td>${r.name}</td><td>${r.type}</td>
-        <td>${r.param1??''}</td><td>${r.scope}</td>
+        <td>${params}</td><td>${r.scope}${r.scope_target?` : ${r.scope_target}`:''}</td>
         <td>${r.active?'✅':'❌'}</td>
         <td class="row-actions">
-          <button class="mini edit" data-id="${r.id}">✎</button>
-          <button class="mini danger del" data-id="${r.id}">✖</button>
+          <button class="mini edit" data-id="${r.id}">Edit</button>
+          <button class="mini danger del" data-id="${r.id}">Delete</button>
         </td>`;
       table.appendChild(tr);
     });
+    $('#activeRulesCount').textContent = String(RULES.filter(r=>r.active).length);
   }
 
   addBtn.onclick = ()=>openModal();
@@ -358,10 +444,10 @@ function initRegulationUI(){
     const payload={
       name:$('#ruleName').value,
       type:$('#ruleType').value,
-      param1:$('#ruleParam1').value,
-      param2:$('#ruleParam2').value,
+      param1:valOrNull($('#ruleParam1').value),
+      param2:valOrNull($('#ruleParam2').value),
       scope:$('#ruleScope').value,
-      scope_target:$('#ruleScopeTarget').value,
+      scope_target:valOrNull($('#ruleScopeTarget').value),
       severity:$('#ruleSeverity').value,
       active:$('#ruleActive').checked
     };
@@ -373,19 +459,21 @@ function initRegulationUI(){
     await loadRules();
   };
 
+  function valOrNull(v){ const t=(v??'').toString().trim(); return t===''?null:t; }
+
   function openModal(rule){
     currentId=rule?.id||null;
     $('#ruleModalTitle').textContent=rule?'Edit rule':'New rule';
-    form.reset();
+    $('#ruleForm').reset();
     if(rule){
       $('#ruleName').value=rule.name;
       $('#ruleType').value=rule.type;
-      $('#ruleParam1').value=rule.param1||'';
-      $('#ruleParam2').value=rule.param2||'';
+      $('#ruleParam1').value=rule.param1??'';
+      $('#ruleParam2').value=rule.param2??'';
       $('#ruleScope').value=rule.scope;
-      $('#ruleScopeTarget').value=rule.scope_target||'';
+      $('#ruleScopeTarget').value=rule.scope_target??'';
       $('#ruleSeverity').value=rule.severity;
-      $('#ruleActive').checked=rule.active;
+      $('#ruleActive').checked=!!rule.active;
     }
     modal.showModal();
   }
@@ -394,7 +482,7 @@ function initRegulationUI(){
 }
 
 // ======================================================
-// ATTENDANCE (simple placeholder calc for adherence)
+// ATTENDANCE (mini-demo pour l’adherence bar)
 // ======================================================
 function initAttendance(){
   $('#att-calc').onclick = ()=>{
