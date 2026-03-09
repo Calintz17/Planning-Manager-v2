@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planning Manager</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 14px; background: #f5f5f5; color: #222; }
+
+    #header { background: #1a1a2e; color: white; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    #header h1 { font-size: 18px; font-weight: bold; margin-right: auto; }
+    #header label { font-size: 12px; color: #aaa; display: block; margin-bottom: 3px; }
+    select { padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; background: white; cursor: pointer; }
+
+    .week-nav { display: flex; align-items: center; gap: 8px; }
+    .week-nav button { background: #16213e; color: white; border: 1px solid #444; cursor: pointer; padding: 6px 12px; border-radius: 4px; font-size: 14px; }
+    .week-nav button:hover { background: #0f3460; }
+    #week-label { color: white; font-size: 13px; min-width: 160px; text-align: center; }
+
+    #tabs { display: flex; background: white; border-bottom: 2px solid #ddd; padding: 0 24px; }
+    .tab-btn { padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .tab-btn.active { color: #1a1a2e; border-bottom-color: #1a1a2e; font-weight: bold; }
+    .tab-btn:hover { color: #1a1a2e; }
+
+    .tab-content { display: none; padding: 24px; }
+    .tab-content.active { display: block; }
+
+    .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    #planning-grid { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 700px; }
+    th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: center; font-size: 13px; }
+    th.today-col { background: #0f3460; }
+    td { padding: 8px 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px; vertical-align: middle; }
+    td.agent-name { text-align: left; font-weight: bold; background: #f9f9f9; white-space: nowrap; min-width: 150px; }
+
+    .shift-morning   { background: #dbeafe; color: #1d4ed8; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
+    .shift-afternoon { background: #fed7aa; color: #c2410c; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
+    .shift-rest      { background: #e5e7eb; color: #6b7280; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
+    .shift-absent    { background: #fce7f3; color: #9d174d; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
+
+    tr.summary-row td { background: #f0fdf4; font-size: 11px; }
+    tr.summary-row td.understaffed { background: #fff1f2; }
+
+    .agent-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    .agent-row:last-child { border-bottom: none; }
+    .agent-row span { flex: 1; }
+
+    .btn { padding: 6px 14px; border-radius: 4px; border: none; cursor: pointer; font-size: 13px; }
+    .btn-primary { background: #1a1a2e; color: white; }
+    .btn-primary:hover { background: #0f3460; }
+    .btn-danger  { background: #fee2e2; color: #b91c1c; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-save    { background: #dcfce7; color: #166534; }
+    .btn-save:hover { background: #bbf7d0; }
+
+    #add-agent-form { display: none; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-top: 12px; }
+    #add-agent-form input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-right: 8px; margin-bottom: 6px; }
+
+    .forecast-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+    @media (max-width: 900px) { .forecast-grid { grid-template-columns: repeat(3, 1fr); } }
+    .forecast-day-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
+    .forecast-day-card h4 { font-size: 12px; font-weight: bold; color: #1a1a2e; margin-bottom: 8px; text-align: center; }
+    .forecast-day-card.today-card { border-color: #1a1a2e; background: #eff6ff; }
+    .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
+    .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+
+    .regulations-placeholder { text-align: center; padding: 48px; color: #666; }
+    .regulations-placeholder h3 { font-size: 16px; margin-bottom: 10px; color: #1a1a2e; }
+
+    #loader { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.75); z-index: 999; align-items: center; justify-content: center; font-size: 16px; color: #1a1a2e; }
+    #loader.active { display: flex; }
+
+    #toast { position: fixed; bottom: 24px; right: 24px; color: white; padding: 12px 20px; border-radius: 6px; font-size: 13px; display: none; z-index: 1000; }
+    #toast.success { background: #166534; }
+    #toast.error   { background: #b91c1c; }
+
+    #status-bar { background: white; border-top: 1px solid #eee; padding: 8px 24px; font-size: 12px; color: #888; }
+  </style>
+</head>
+<body>
+
+<div id="loader">⏳ Loading…</div>
+<div id="toast"></div>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>📋 Planning Manager</h1>
+  <div>
+    <label>Region</label>
+    <select id="region-select"><option value="">— Select region —</option></select>
+  </div>
+  <div class="week-nav">
+    <button onclick="changeWeek(-1)">◀</button>
+    <div id="week-label">Week —</div>
+    <button onclick="changeWeek(+1)">▶</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div id="tabs">
+  <button class="tab-btn active" onclick="switchTab('planning', this)">📅 Planning</button>
+  <button class="tab-btn" onclick="switchTab('agents', this)">👥 Agents</button>
+  <button class="tab-btn" onclick="switchTab('forecast', this)">📊 Forecast</button>
+  <button class="tab-btn" onclick="switchTab('regulations', this)">📜 Regulations</button>
+</div>
+
+<!-- PLANNING TAB -->
+<div id="tab-planning" class="tab-content active">
+  <div class="card">
+    <div id="planning-grid"><p style="color:#888">Select a region to view the planning.</p></div>
+  </div>
+</div>
+
+<!-- AGENTS TAB -->
+<div id="tab-agents" class="tab-content">
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h2 style="font-size:15px;">Agent List</h2>
+      <button class="btn btn-primary" onclick="toggleAddAgentForm()">+ Add Agent</button>
+    </div>
+    <div id="add-agent-form">
+      <input type="text" id="new-first-name" placeholder="First name" />
+      <input type="text" id="new-last-name"  placeholder="Last name" />
+      <button class="btn btn-save" onclick="addAgent()">Save</button>
+      <button class="btn" onclick="toggleAddAgentForm()" style="background:#f3f4f6;">Cancel</button>
+    </div>
+    <div id="agent-list"><p style="color:#888">Select a region to view agents.</p></div>
+  </div>
+</div>
+
+<!-- FORECAST TAB -->
+<div id="tab-forecast" class="tab-content">
+  <div class="card">
+    <h2 style="font-size:15px; margin-bottom:16px;">Weekly Forecast Input</h2>
+    <div id="forecast-grid"><p style="color:#888">Select a region to input forecast.</p></div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-primary" onclick="saveForecast()">💾 Save Forecast</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGULATIONS TAB -->
+<div id="tab-regulations" class="tab-content">
+  <div class="card">
+    <div class="regulations-placeholder">
+      <h3>📜 Regulations</h3>
+      <p>Regulation rules have not been configured yet.</p>
+      <p style="margin-top:8px; font-size:12px; color:#aaa;">This section will be activated once region-specific rules are provided.</p>
+    </div>
+  </div>
+</div>
+
+<div id="status-bar">Planning Manager — Ready</div>
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────
+const SUPABASE_URL = 'https://miawersffeosiovqdokw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXdlcnNmZmVvc2lvdnFkb2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMDY4NTYsImV4cCI6MjA3Njc4Mjg1Nn0.ixCX8Zh8QLxJrnV7ncpNSCv3KtL0ao0PqsFmA6xYYyA';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── STATE ─────────────────────────────────────────────────
+let currentRegionId   = null;
+let currentRegionName = '';
+let currentWeekMonday = getMondayOfCurrentWeek();
+let agents       = [];
+let forecasts    = {};    // { 'YYYY-MM-DD': { contact_volume, aht_minutes } }
+let availability = {};    // { agent_id: { 'YYYY-MM-DD': true/false } }
+
+// ── DATE HELPERS ──────────────────────────────────────────
+function getMondayOfCurrentWeek() {
+  const today = new Date();
+  const day   = today.getDay();
+  const diff  = day === 0 ? -6 : 1 - day;
+  const mon   = new Date(today);
+  mon.setDate(today.getDate() + diff);
+  mon.setHours(0, 0, 0, 0);
+  return mon;
+}
+
+function getWeekDays(monday) {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function toDateStr(date) {
+  return date.toISOString().split('T')[0];
+}
+
+function getWeekNumber(date) {
+  const d      = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}
+
+function isToday(date) {
+  return toDateStr(date) === toDateStr(new Date());
+}
+
+function changeWeek(dir) {
+  currentWeekMonday.setDate(currentWeekMonday.getDate() + dir * 7);
+  updateWeekLabel();
+  if (currentRegionId) loadWeekData();
+}
+
+function updateWeekLabel() {
+  const days   = getWeekDays(currentWeekMonday);
+  const wn     = getWeekNumber(currentWeekMonday);
+  document.getElementById('week-label').textContent =
+    `W${wn} · ${formatDate(days[0])} → ${formatDate(days[6])}`;
+}
+
+// ── UI HELPERS ────────────────────────────────────────────
+function showLoader() { document.getElementById('loader').classList.add('active'); }
+function hideLoader() { document.getElementById('loader').classList.remove('active'); }
+function setStatus(msg) { document.getElementById('status-bar').textContent = msg; }
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent  = msg;
+  t.className    = type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggleAddAgentForm() {
+  const f = document.getElementById('add-agent-form');
+  f.style.display = f.style.display === 'block' ? 'none' : 'block';
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  updateWeekLabel();
+  showLoader();
+  const { data, error } = await sb.from('regions').select('*').order('name');
+  hideLoader();
+  if (error) { showToast('Failed to load regions', 'error'); return; }
+
+  const sel = document.getElementById('region-select');
+  sel.innerHTML = '<option value="">— Select region —</option>';
+  data.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value       = r.id;
+    opt.textContent = `${r.name} · ${r.city}`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', onRegionChange);
+  setStatus('Ready — select a region to begin');
+}
+
+async function onRegionChange() {
+  const sel = document.getElementById('region-select');
+  currentRegionId   = sel.value;
+  currentRegionName = sel.options[sel.selectedIndex].text;
+  if (!currentRegionId) return;
+  await loadWeekData();
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────
+async function loadWeekData() {
+  showLoader();
+  setStatus(`Loading ${currentRegionName}…`);
+  const days      = getWeekDays(currentWeekMonday);
+  const startDate = toDateStr(days[0]);
+  const endDate   = toDateStr(days[6]);
+
+  // Agents
+  const { data: agentData, error: e1 } = await sb
+    .from('agents').select('*')
+    .eq('region_id', currentRegionId).eq('is_active', true).order('last_name');
+  if (e1) { hideLoader(); showToast('Error loading agents', 'error'); return; }
+  agents = agentData || [];
+
+  // Forecasts
+  const { data: fcData, error: e2 } = await sb
+    .from('forecasts').select('*')
+    .eq('region_id', currentRegionId)
+    .gte('forecast_date', startDate).lte('forecast_date', endDate);
+  if (e2) { hideLoader(); showToast('Error loading forecasts', 'error'); return; }
+  forecasts = {};
+  (fcData || []).forEach(f => { forecasts[f.forecast_date] = f; });
+
+  // Availability
+  availability = {};
+  if (agents.length > 0) {
+    const { data: avData, error: e3 } = await sb
+      .from('agent_availability').select('*')
+      .in('agent_id', agents.map(a => a.id))
+      .gte('week_date', startDate).lte('week_date', endDate);
+    if (e3) { hideLoader(); showToast('Error loading availability', 'error'); return; }
+    (avData || []).forEach(a => {
+      if (!availability[a.agent_id]) availability[a.agent_id] = {};
+      availability[a.agent_id][a.week_date] = a.is_present;
+    });
+  }
+
+  hideLoader();
+  setStatus(`${currentRegionName} · W${getWeekNumber(currentWeekMonday)} · ${agents.length} agents`);
+  renderPlanning();
+  renderAgents();
+  renderForecast();
+}
+
+// ── PLANNING ENGINE ───────────────────────────────────────
+function agentIsPresent(agent, dayStr) {
+  const av = availability[agent.id];
+  if (!av || av[dayStr] === undefined) return true; // default = present
+  return av[dayStr];
+}
+
+function computeDayShifts(dayStr) {
+  const f              = forecasts[dayStr];
+  const presentAgents  = agents.filter(a => agentIsPresent(a, dayStr));
+
+  let assignedCount = 0;
+  if (f && f.contact_volume > 0) {
+    const workload_hours      = (f.contact_volume * f.aht_minutes) / 60;
+    const theoretical_needed  = Math.ceil(workload_hours / 8);
+    assignedCount             = Math.min(theoretical_needed, presentAgents.length);
+  }
+
+  let cursor = 0;
+  return agents.map(a => {
+    if (!agentIsPresent(a, dayStr)) return { agent: a, shift: 'Absent' };
+    if (cursor < assignedCount) {
+      const half  = Math.ceil(assignedCount / 2);
+      const shift = cursor < half ? 'Morning' : 'Afternoon';
+      cursor++;
+      return { agent: a, shift };
+    }
+    return { agent: a, shift: 'Rest' };
+  });
+}
+
+function shiftBadge(shift) {
+  const map = {
+    Morning:   '<span class="shift-morning">Morning</span>',
+    Afternoon: '<span class="shift-afternoon">Afternoon</span>',
+    Rest:      '<span class="shift-rest">Rest</span>',
+    Absent:    '<span class="shift-absent">Absent</span>'
+  };
+  return map[shift] || map.Rest;
+}
+
+// ── RENDER PLANNING ───────────────────────────────────────
+function renderPlanning() {
+  const container = document.getElementById('planning-grid');
+  if (!agents.length) {
+    container.innerHTML = '<p style="color:#888">No agents for this region. Add agents in the Agents tab.</p>';
+    return;
+  }
+
+  const days     = getWeekDays(currentWeekMonday);
+  const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  // Build full matrix
+  const matrix  = {};
+  const summary = {};
+  days.forEach((day, i) => {
+    const ds     = toDateStr(day);
+    const shifts = computeDayShifts(ds);
+    summary[ds]  = { morning: 0, afternoon: 0, need: 0 };
+    shifts.forEach(s => {
+      if (!matrix[s.agent.id]) matrix[s.agent.id] = {};
+      matrix[s.agent.id][ds] = s.shift;
+      if (s.shift === 'Morning')   summary[ds].morning++;
+      if (s.shift === 'Afternoon') summary[ds].afternoon++;
+    });
+    const f = forecasts[ds];
+    if (f && f.contact_volume > 0)
+      summary[ds].need = Math.ceil((f.contact_volume * f.aht_minutes / 60) / 8);
+  });
+
+  // Table
+  let html = '<table><tr><th style="text-align:left">Agent</th>';
+  days.forEach((day, i) => {
+    const cls = isToday(day) ? ' class="today-col"' : '';
+    html += `<th${cls}>${dayNames[i]}<br><small style="font-weight:normal">${formatDate(day)}</small></th>`;
+  });
+  html += '</tr>';
+
+  agents.forEach(a => {
+    html += '<tr>';
+    html += `<td class="agent-name">${a.first_name} ${a.last_name}</td>`;
+    days.forEach(day => {
+      const ds   = toDateStr(day);
+      const shift = (matrix[a.id] && matrix[a.id][ds]) ? matrix[a.id][ds] : 'Rest';
+      const bg   = isToday(day) ? ' style="background:#f0f9ff"' : '';
+      const chk  = agentIsPresent(a, ds) ? 'checked' : '';
+      html += `<td${bg}>
+        ${shiftBadge(shift)}
+        <br>
+        <input type="checkbox" title="Present this day" ${chk}
+          onchange="togglePresence('${a.id}','${ds}',this.checked)"
+          style="margin-top:5px;cursor:pointer;">
+      </td>`;
+    });
+    html += '</tr>';
+  });
+
+  // Summary row
+  html += '<tr class="summary-row"><td style="text-align:left;font-weight:bold;font-size:11px;">Staffing</td>';
+  days.forEach(day => {
+    const ds  = toDateStr(day);
+    const s   = summary[ds];
+    const ok  = (s.morning + s.afternoon) >= s.need;
+    const cls = !ok && s.need > 0 ? ' understaffed' : '';
+    html += `<td class="${cls}" style="font-size:11px;">
+      Need: <b>${s.need}</b><br>
+      🌅 ${s.morning} &nbsp; 🌇 ${s.afternoon}
+    </td>`;
+  });
+  html += '</tr></table>';
+
+  container.innerHTML = html;
+}
+
+// ── TOGGLE PRESENCE ───────────────────────────────────────
+async function togglePresence(agentId, dayStr, present) {
+  const { error } = await sb.from('agent_availability')
+    .upsert({ agent_id: agentId, week_date: dayStr, is_present: present },
+             { onConflict: 'agent_id,week_date' });
+  if (error) { showToast('Failed to save', 'error'); return; }
+  if (!availability[agentId]) availability[agentId] = {};
+  availability[agentId][dayStr] = present;
+  renderPlanning();
+  showToast(present ? 'Marked present' : 'Marked absent');
+}
+
+// ── RENDER AGENTS ─────────────────────────────────────────
+function renderAgents() {
+  const container = document.getElementById('agent-list');
+  if (!agents.length) {
+    container.innerHTML = '<p style="color:#888">No agents yet. Click Add Agent above.</p>';
+    return;
+  }
+  container.innerHTML = agents.map(a => `
+    <div class="agent-row">
+      <span>${a.first_name} ${a.last_name}</span>
+      <button class="btn btn-danger" onclick="deleteAgent('${a.id}')">Delete</button>
+    </div>`).join('');
+}
+
+// ── ADD AGENT ─────────────────────────────────────────────
+async function addAgent() {
+  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  const first = document.getElementById('new-first-name').value.trim();
+  const last  = document.getElementById('new-last-name').value.trim();
+  if (!first || !last) { showToast('Enter first and last name', 'error'); return; }
+  showLoader();
+  const { error } = await sb.from('agents')
+    .insert({ region_id: currentRegionId, first_name: first, last_name: last, is_active: true });
+  hideLoader();
+  if (error) { showToast('Failed to add agent', 'error'); return; }
+  document.getElementById('new-first-name').value = '';
+  document.getElementById('new-last-name').value  = '';
+  document.getElementById('add-agent-form').style.display = 'none';
+  showToast(`${first} ${last} added`);
+  await loadWeekData();
+}
+
+// ── DELETE AGENT ──────────────────────────────────────────
+async function deleteAgent(id) {
+  if (!confirm('Delete this agent? This cannot be undone.')) return;
+  showLoader();
+  const { error } = await sb.from('agents').delete().eq('id', id);
+  hideLoader();
+  if (error) { showToast('Failed to delete', 'error'); return; }
+  showToast('Agent deleted');
+  await loadWeekData();
+}
+
+// ── RENDER FORECAST ───────────────────────────────────────
+function renderForecast() {
+  const container = document.getElementById('forecast-grid');
+  if (!currentRegionId) { container.innerHTML = '<p style="color:#888">Select a region first.</p>'; return; }
+  const days     = getWeekDays(currentWeekMonday);
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  container.innerHTML = '<div class="forecast-grid">' +
+    days.map((day, i) => {
+      const ds  = toDateStr(day);
+      const f   = forecasts[ds] || { contact_volume: 0, aht_minutes: 0 };
+      const cls = isToday(day) ? ' today-card' : '';
+      return `<div class="forecast-day-card${cls}">
+        <h4>${dayNames[i]}<br><span style="font-weight:normal">${formatDate(day)}</span></h4>
+        <label>Volume</label>
+        <input type="number" id="vol-${ds}" value="${f.contact_volume}" min="0" placeholder="0">
+        <label>AHT (min)</label>
+        <input type="number" id="aht-${ds}" value="${f.aht_minutes}" min="0" step="0.5" placeholder="0">
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// ── SAVE FORECAST ─────────────────────────────────────────
+async function saveForecast() {
+  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  const days    = getWeekDays(currentWeekMonday);
+  const upserts = days.map(day => {
+    const ds = toDateStr(day);
+    return {
+      region_id:      currentRegionId,
+      forecast_date:  ds,
+      contact_volume: parseFloat(document.getElementById(`vol-${ds}`)?.value || 0),
+      aht_minutes:    parseFloat(document.getElementById(`aht-${ds}`)?.value || 0)
+    };
+  });
+  showLoader();
+  const { error } = await sb.from('forecasts')
+    .upsert(upserts, { onConflict: 'region_id,forecast_date' });
+  hideLoader();
+  if (error) { showToast('Failed to save forecast', 'error'); return; }
+  showToast('Forecast saved ✓');
+  await loadWeekData();
+}
+
+// ── START ─────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
