@@ -634,14 +634,8 @@ function renderRegulations() {
     '<table class="hours-table"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
     hoursRows + '</table></div>' +
 
-    '<div class="reg-section"><h3>Mandatory Closed Days</h3>' +
-    '<p style="font-size:12px;color:#6b7280;margin-bottom:10px;">Entire center closed. All agents show \ud83d\udd12 Closed.</p>' +
-    '<div class="date-tags" id="closed-dates-tags">' + closedTagsHtml + '</div>' +
-    '<div class="date-add-row"><input type="date" id="new-closed-date">' +
-    '<button class="btn btn-primary" onclick="addClosedDate()">+ Add date</button></div></div>' +
-
-    '<div class="reg-section"><h3>Public Holidays</h3>' +
-    '<p style="font-size:12px;color:#6b7280;margin-bottom:10px;">National holidays. All agents show \ud83c\udf8c Holiday.</p>' +
+    '<div class="reg-section"><h3>Bank Holidays</h3>' +
+    '<p style="font-size:12px;color:#6b7280;margin-bottom:10px;">All agents show \ud83c\udf8c Holiday. Does not consume an agent\u2019s rest day.</p>' +
     '<div class="date-tags" id="holiday-dates-tags">' + holidayTagsHtml + '</div>' +
     '<div class="date-add-row"><input type="date" id="new-holiday-date">' +
     '<button class="btn btn-primary" onclick="addHoliday()">+ Add date</button></div></div>' +
@@ -730,8 +724,10 @@ async function loadWeekData() {
 
 // ── REGULATION HELPER ─────────────────────────────────────────────────────
 function getDayClosureType(dayStr) {
+  // Both public_holidays and closed_dates are treated identically as bank holidays.
+  // closed_dates is kept for backward compatibility with existing DB records.
   if (regulations.public_holidays.includes(dayStr)) return 'holiday';
-  if (regulations.closed_dates.includes(dayStr))    return 'closed';
+  if (regulations.closed_dates.includes(dayStr))    return 'holiday';
   const dow = new Date(dayStr + 'T12:00:00').getDay();
   if (dow === 6 && regulations.saturday_rest) return 'weekend';
   if (dow === 0 && regulations.sunday_rest)   return 'weekend';
@@ -844,9 +840,7 @@ function computeDayShifts(dayStr) {
   // Step 1 — Centre-level closures (apply to all agents equally)
   const closureType = getDayClosureType(dayStr);
   if (closureType) {
-    const shift = closureType === 'holiday' ? 'Holiday'
-                : closureType === 'closed'  ? 'Closed'
-                : 'Rest';
+    const shift = closureType === 'weekend' ? 'Rest' : 'Holiday';
     return agents.map(function(a) { return { agent: a, shift: shift }; });
   }
 
@@ -902,7 +896,7 @@ function shiftBadge(shift, agentId, dayStr) {
     case 'Afternoon':     return '<span class="shift-afternoon">\ud83c\udf07 Afternoon</span>';
     case 'Rest':          return '<span class="shift-rest">Rest</span>';
     case 'Absent':        return '<span class="shift-absent">\ud83c\udfe5 Absent</span>';
-    case 'Closed':        return '<span class="shift-closed">\ud83d\udd12 Closed</span>';
+    case 'Closed':
     case 'Holiday':       return '<span class="shift-holiday">\ud83c\udf8c Holiday</span>';
     case 'ScheduledRest':
       // Clickable — manager can reassign rest day
@@ -1008,9 +1002,7 @@ function renderPlanning() {
     const ds = toDateStr(day);
     const s  = summary[ds];
     if (s.closure) {
-      const label = s.closure === 'holiday' ? '\ud83c\udf8c Holiday'
-                  : s.closure === 'weekend' ? '\ud83c\udfd6 Weekend'
-                  : '\ud83d\udd12 Closed';
+      const label = s.closure === 'weekend' ? '\ud83c\udfd6 Weekend' : '\ud83c\udf8c Holiday';
       html += '<td class="day-neutral" style="font-size:11px;">' + label + '</td>';
     } else {
       const ok  = (s.morning + s.afternoon) >= s.need;
@@ -1185,9 +1177,7 @@ function renderForecast() {
 
     const statusNote = isBlocked
       ? '<div style="font-size:10px;color:#9ca3af;margin-top:4px;">' +
-        (closure === 'holiday' ? '\ud83c\udf8c Holiday'
-        : closure === 'weekend' ? '\ud83c\udfd6 Weekend off'
-        : '\ud83d\udd12 Closed') + '</div>'
+        (closure === 'weekend' ? '\ud83c\udfd6 Weekend off' : '\ud83c\udf8c Holiday') + '</div>'
       : '';
 
     const disabledAttr = isBlocked ? ' disabled style="opacity:0.5"' : '';
