@@ -739,17 +739,24 @@ function getDayClosureType(dayStr) {
 }
 
 // ── ROTATION ENGINE ───────────────────────────────────────────────────────
-// Called once after loading week data.
-// For regions with >5 open days: assigns 2 scheduled rest days per agent.
-// Uses a sliding-window approach across agents so rest days rotate evenly.
-// Only runs for agents that have NO records for this week yet (preserves overrides).
+// Runs on every week load. Always recalculates auto rest days fresh.
+//
+// Rest days needed = open days − 5.
+// "Open days" = days not blocked by regulation (weekends, holidays, closed dates).
+// Bank holidays and closed dates are free days — they do NOT consume a rest day.
+// Agents must always work exactly 5 days unless a bank holiday/closure reduces the week.
+//
+// Statuses:
+//   'working'        — auto-assigned, always recalculated
+//   'rest_scheduled' — auto-assigned rotation rest, always recalculated
+//   'rest_override'  — manually set by manager via popup, NEVER overwritten by engine
+//   'absent'         — unplanned absence set by manager, NEVER overwritten by engine
 async function computeAndSaveRotation() {
   const days     = getWeekDays(currentWeekMonday);
   const openDays = days.filter(function(day) { return !getDayClosureType(toDateStr(day)); });
   const restDaysNeeded = Math.max(0, openDays.length - 5);
 
-  // No rotation needed (France, USA, SEAO, Korea — weekend already provides rest)
-  if (restDaysNeeded === 0 || agents.length === 0) return;
+  if (agents.length === 0) return;
 
   // Rank open days by workload ascending — lowest workload = preferred rest day
   var ranked = openDays.map(function(day) {
@@ -763,38 +770,52 @@ async function computeAndSaveRotation() {
   var upserts = [];
 
   agents.forEach(function(agent, i) {
-    // Skip this agent if they already have ANY records for this week (rotation done / override set)
-    var agentAv  = availability[agent.id] || {};
-    var hasAny   = openDays.some(function(day) {
-      return agentAv[toDateStr(day)] !== undefined;
-    });
-    if (hasAny) return;
+    var agentAv = availability[agent.id] || {};
 
-    // Assign rest days using sliding window
-    var restDays = [];
-    for (var r = 0; r < restDaysNeeded; r++) {
-      var idx = (i + r) % ranked.length;
-      // Avoid duplicates if restDaysNeeded > 1 and window wraps identically
-      var candidate = ranked[idx].ds;
-      if (!restDays.includes(candidate)) {
-        restDays.push(candidate);
+    // Count manual overrides on open days — engine respects these and reduces auto quota
+    var overrideDays = openDays
+      .map(function(d) { return toDateStr(d); })
+      .filter(function(ds) { return agentAv[ds] === 'rest_override'; });
+
+    var remainingRestNeeded = Math.max(0, restDaysNeeded - overrideDays.length);
+
+    // Candidates for auto rest: open days that are not already manually overridden or absent
+    var candidates = ranked.filter(function(r) {
+      return !overrideDays.includes(r.ds) && agentAv[r.ds] !== 'absent';
+    });
+
+    // Assign auto rest days using sliding window across agents
+    var autoRestDays = [];
+    for (var r = 0; r < remainingRestNeeded; r++) {
+      var idx       = (i + r) % Math.max(1, candidates.length);
+      var candidate = candidates[idx] ? candidates[idx].ds : null;
+      if (candidate && !autoRestDays.includes(candidate)) {
+        autoRestDays.push(candidate);
       } else {
-        // Pick next available
-        for (var alt = 0; alt < ranked.length; alt++) {
-          var altDs = ranked[(i + r + alt + 1) % ranked.length].ds;
-          if (!restDays.includes(altDs)) { restDays.push(altDs); break; }
+        // Find next available candidate not already picked
+        for (var alt = 1; alt <= candidates.length; alt++) {
+          var altDs = candidates[(idx + alt) % candidates.length]
+            ? candidates[(idx + alt) % candidates.length].ds : null;
+          if (altDs && !autoRestDays.includes(altDs)) {
+            autoRestDays.push(altDs);
+            break;
+          }
         }
       }
     }
 
-    // Build DB records for all open days
+    // Build upserts for all open days — skip only absent and manual overrides
     openDays.forEach(function(day) {
-      var ds     = toDateStr(day);
-      var isRest = restDays.includes(ds);
+      var ds             = toDateStr(day);
+      var existingStatus = agentAv[ds];
+
+      // Preserve manager decisions — never overwrite
+      if (existingStatus === 'absent' || existingStatus === 'rest_override') return;
+
       upserts.push({
         agent_id:   agent.id,
         week_date:  ds,
-        day_status: isRest ? 'rest_scheduled' : 'working'
+        day_status: autoRestDays.includes(ds) ? 'rest_scheduled' : 'working'
       });
     });
   });
@@ -805,7 +826,6 @@ async function computeAndSaveRotation() {
     .upsert(upserts, { onConflict: 'agent_id,week_date' });
 
   if (!error) {
-    // Update local state so rendering is correct immediately
     upserts.forEach(function(u) {
       if (!availability[u.agent_id]) availability[u.agent_id] = {};
       availability[u.agent_id][u.week_date] = u.day_status;
@@ -838,7 +858,7 @@ function computeDayShifts(dayStr) {
   const working  = []; // will receive Morning or Afternoon
   const results  = agents.map(function(agent, agentGlobalIdx) {
     const status = getAgentStatus(agent.id, dayStr);
-    if (status === 'rest_scheduled') return { agent: agent, shift: 'ScheduledRest' };
+    if (status === 'rest_scheduled' || status === 'rest_override') return { agent: agent, shift: 'ScheduledRest' };
     if (status === 'absent')         return { agent: agent, shift: 'Absent' };
     // status === 'working'
     working.push({ agent: agent, globalIdx: agentGlobalIdx });
@@ -1090,7 +1110,7 @@ async function applyRestOverride(agentId, oldRestDay, newRestDay) {
   showLoader();
   const upserts = [
     { agent_id: agentId, week_date: oldRestDay, day_status: 'working' },
-    { agent_id: agentId, week_date: newRestDay, day_status: 'rest_scheduled' },
+    { agent_id: agentId, week_date: newRestDay, day_status: 'rest_override' },
   ];
   const { error } = await sb.from('agent_availability')
     .upsert(upserts, { onConflict: 'agent_id,week_date' });
