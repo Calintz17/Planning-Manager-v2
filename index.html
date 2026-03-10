@@ -265,7 +265,15 @@ function getWeekDays(monday) {
   });
 }
 
-function toDateStr(date) { return date.toISOString().split('T')[0]; }
+// CRITICAL: never use toISOString() — it converts to UTC and shifts the date
+// in timezones ahead of UTC (e.g. Paris UTC+1, Tokyo UTC+9).
+// Always build the date string from local year/month/day.
+function toDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 function getWeekNumber(date) {
   const d      = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -536,7 +544,7 @@ function renderRegulations() {
     const restNote  = isRestDay ? '<span class="rest-badge">rest day</span>' : '';
     const trClass   = isRestDay ? ' class="rest-day"' : '';
 
-    hoursRows += `<tr${trClass}>
+    hoursRows += `<tr${trClass} data-day="${key}">
       <td style="font-weight:bold;color:#374151;">${DAY_NAMES[i]} ${restNote}</td>
       <td>${hourSelectHtml(`reg-open-${key}`, h.open)}</td>
       <td style="text-align:center;color:#9ca3af;">→</td>
@@ -641,13 +649,35 @@ function renderRegulations() {
     </div>
   `;
 
+  function updateHoursTableReactivity() {
+    const satChecked = document.getElementById('reg-saturday').checked;
+    const sunChecked = document.getElementById('reg-sunday').checked;
+
+    // Saturday = DAY_KEYS index 5, Sunday = index 6
+    const satRow = document.querySelector('.hours-table tr[data-day="sat"]');
+    const sunRow = document.querySelector('.hours-table tr[data-day="sun"]');
+
+    if (satRow) {
+      satRow.classList.toggle('rest-day', satChecked);
+      const badge = satRow.querySelector('.rest-badge');
+      if (badge) badge.style.display = satChecked ? '' : 'none';
+    }
+    if (sunRow) {
+      sunRow.classList.toggle('rest-day', sunChecked);
+      const badge = sunRow.querySelector('.rest-badge');
+      if (badge) badge.style.display = sunChecked ? '' : 'none';
+    }
+  }
+
   document.getElementById('reg-saturday').addEventListener('change', function() {
     document.getElementById('sat-label').textContent = this.checked
       ? 'Yes — Saturday is a rest day' : 'No — Saturday is a working day';
+    updateHoursTableReactivity();
   });
   document.getElementById('reg-sunday').addEventListener('change', function() {
     document.getElementById('sun-label').textContent = this.checked
       ? 'Yes — Sunday is a rest day' : 'No — Sunday is a working day';
+    updateHoursTableReactivity();
   });
 }
 
