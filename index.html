@@ -9,46 +9,50 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; font-size: 14px; background: #f5f5f5; color: #222; }
 
+    /* ── HEADER ── */
     #header { background: #1a1a2e; color: white; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     #header h1 { font-size: 18px; font-weight: bold; margin-right: auto; }
     #header label { font-size: 12px; color: #aaa; display: block; margin-bottom: 3px; }
     select { padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; background: white; cursor: pointer; }
-
     .week-nav { display: flex; align-items: center; gap: 8px; }
     .week-nav button { background: #16213e; color: white; border: 1px solid #444; cursor: pointer; padding: 6px 12px; border-radius: 4px; font-size: 14px; }
     .week-nav button:hover { background: #0f3460; }
     #week-label { color: white; font-size: 13px; min-width: 160px; text-align: center; }
 
+    /* ── TABS ── */
     #tabs { display: flex; background: white; border-bottom: 2px solid #ddd; padding: 0 24px; }
     .tab-btn { padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; }
     .tab-btn.active { color: #1a1a2e; border-bottom-color: #1a1a2e; font-weight: bold; }
     .tab-btn:hover { color: #1a1a2e; }
 
+    /* ── LAYOUT ── */
     .tab-content { display: none; padding: 24px; }
     .tab-content.active { display: block; }
-
     .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-    /* ── PLANNING ── */
+    /* ── PLANNING TABLE ── */
     #planning-grid { overflow-x: auto; }
     table { border-collapse: collapse; width: 100%; min-width: 700px; }
-    th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: center; font-size: 13px; }
-    th.today-col { background: #0f3460; }
+    th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: center; font-size: 13px; vertical-align: middle; }
+    th.today-col  { background: #0f3460; }
     th.closed-col { background: #6b7280; }
+    th.dayoff-col { background: #4c1d95; }
     td { padding: 8px 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px; vertical-align: middle; }
     td.agent-name { text-align: left; font-weight: bold; background: #f9f9f9; white-space: nowrap; min-width: 150px; }
-    td.day-closed-cell { background: #f3f4f6; color: #9ca3af; }
 
+    /* ── SHIFT BADGES ── */
     .shift-morning   { background: #dbeafe; color: #1d4ed8; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
     .shift-afternoon { background: #fed7aa; color: #c2410c; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
     .shift-rest      { background: #e5e7eb; color: #6b7280; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
     .shift-absent    { background: #fce7f3; color: #9d174d; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
     .shift-closed    { background: #f3f4f6; color: #9ca3af; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
     .shift-holiday   { background: #fef9c3; color: #92400e; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
+    .shift-dayoff    { background: #f3e8ff; color: #7c3aed; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
 
+    /* ── SUMMARY ROW ── */
     tr.summary-row td { background: #f0fdf4; font-size: 11px; }
     tr.summary-row td.understaffed { background: #fff1f2; }
-    tr.summary-row td.day-closed-cell { background: #f3f4f6; }
+    tr.summary-row td.day-neutral  { background: #f3f4f6; color: #9ca3af; }
 
     /* ── AGENTS ── */
     .agent-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
@@ -60,10 +64,11 @@
     .btn-primary { background: #1a1a2e; color: white; }
     .btn-primary:hover { background: #0f3460; }
     .btn-danger  { background: #fee2e2; color: #b91c1c; }
-    .btn-danger:hover { background: #fecaca; }
+    .btn-danger:hover  { background: #fecaca; }
     .btn-save    { background: #dcfce7; color: #166534; }
-    .btn-save:hover { background: #bbf7d0; }
+    .btn-save:hover    { background: #bbf7d0; }
 
+    /* ── ADD AGENT FORM ── */
     #add-agent-form { display: none; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-top: 12px; }
     #add-agent-form input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-right: 8px; margin-bottom: 6px; }
 
@@ -72,7 +77,7 @@
     @media (max-width: 900px) { .forecast-grid { grid-template-columns: repeat(3, 1fr); } }
     .forecast-day-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
     .forecast-day-card h4 { font-size: 12px; font-weight: bold; color: #1a1a2e; margin-bottom: 8px; text-align: center; }
-    .forecast-day-card.today-card { border-color: #1a1a2e; background: #eff6ff; }
+    .forecast-day-card.today-card  { border-color: #1a1a2e; background: #eff6ff; }
     .forecast-day-card.closed-card { background: #f3f4f6; opacity: 0.6; }
     .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
     .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
@@ -80,12 +85,8 @@
     /* ── REGULATIONS ── */
     .reg-section { margin-bottom: 24px; }
     .reg-section h3 { font-size: 13px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
-    .reg-row { display: flex; align-items: center; gap: 16px; padding: 10px 0; border-bottom: 1px solid #f9fafb; flex-wrap: wrap; }
-    .reg-row:last-child { border-bottom: none; }
-    .reg-label { min-width: 220px; font-size: 13px; color: #374151; }
-    .reg-value { font-size: 13px; color: #6b7280; font-style: italic; }
 
-    /* Toggle switch */
+    /* Toggle */
     .toggle-wrap { display: flex; align-items: center; gap: 10px; }
     .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
     .toggle input { opacity: 0; width: 0; height: 0; }
@@ -95,10 +96,14 @@
     input:checked + .toggle-slider:before { transform: translateX(20px); }
     .toggle-label { font-size: 13px; color: #374151; }
 
-    /* Hour dropdowns */
-    .hour-row { display: flex; align-items: center; gap: 10px; }
-    .hour-row select { padding: 6px 10px; border-radius: 4px; border: 1px solid #d1d5db; font-size: 13px; background: white; }
-    .hour-row span { color: #6b7280; font-size: 13px; }
+    /* Hours table */
+    .hours-table { width: 100%; border-collapse: collapse; }
+    .hours-table th { background: #f9fafb; color: #6b7280; font-size: 11px; text-transform: uppercase; font-weight: 600; padding: 8px 12px; text-align: left; border: 1px solid #e5e7eb; }
+    .hours-table td { padding: 8px 12px; border: 1px solid #e5e7eb; font-size: 13px; vertical-align: middle; }
+    .hours-table tr.rest-day td { opacity: 0.45; }
+    .hours-table tr.rest-day td:first-child { opacity: 1; }
+    .hours-table select { padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; background: white; }
+    .rest-badge { background: #f3f4f6; color: #6b7280; border-radius: 4px; padding: 2px 8px; font-size: 11px; margin-left: 8px; }
 
     /* Date tags */
     .date-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 10px; min-height: 32px; }
@@ -109,7 +114,8 @@
     .date-add-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
     .date-add-row input[type="date"] { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; }
 
-    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    /* Info boxes */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 8px; }
     .info-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
     .info-box .info-val { font-size: 18px; font-weight: bold; color: #1a1a2e; margin-top: 4px; }
     .info-box .info-lbl { font-size: 11px; color: #9ca3af; text-transform: uppercase; }
@@ -195,41 +201,52 @@
 <div id="status-bar">Planning Manager — Ready</div>
 
 <script>
-// ── SUPABASE ──────────────────────────────────────────────
+// ── SUPABASE ──────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://miawersffeosiovqdokw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXdlcnNmZmVvc2lvdnFkb2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMDY4NTYsImV4cCI6MjA3Njc4Mjg1Nn0.ixCX8Zh8QLxJrnV7ncpNSCv3KtL0ao0PqsFmA6xYYyA';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── REGULATION DEFAULTS PER REGION (by city) ─────────────
+// ── CONSTANTS ─────────────────────────────────────────────────────────────
+const DAY_KEYS  = ['mon','tue','wed','thu','fri','sat','sun'];
+const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAY_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
 const REGION_DEFAULTS = {
-  'Paris':     { opening_hour: 10, closing_hour: 18, saturday_rest: true,  sunday_rest: true,  weekly_hours: 37.5, max_daily_hours: 8 },
-  'New York':  { opening_hour: 10, closing_hour: 19, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40,   max_daily_hours: 8 },
-  'Shanghai':  { opening_hour: 10, closing_hour: 20, saturday_rest: false, sunday_rest: false, weekly_hours: 40,   max_daily_hours: 8 },
-  'Tokyo':     { opening_hour: 10, closing_hour: 20, saturday_rest: false, sunday_rest: false, weekly_hours: 40,   max_daily_hours: 8 },
-  'Singapore': { opening_hour: 7,  closing_hour: 20, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40,   max_daily_hours: 8 },
-  'Seoul':     { opening_hour: 10, closing_hour: 19, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40,   max_daily_hours: 8 },
+  'Paris':     { open: 10, close: 18, saturday_rest: true,  sunday_rest: true,  weekly_hours: 37.5 },
+  'New York':  { open: 10, close: 19, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40   },
+  'Shanghai':  { open: 10, close: 20, saturday_rest: false, sunday_rest: false, weekly_hours: 40   },
+  'Tokyo':     { open: 10, close: 20, saturday_rest: false, sunday_rest: false, weekly_hours: 40   },
+  'Singapore': { open: 7,  close: 20, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40   },
+  'Seoul':     { open: 10, close: 19, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40   },
 };
 
-// ── STATE ─────────────────────────────────────────────────
+function buildDefaultDayHours(open, close) {
+  const h = {};
+  DAY_KEYS.forEach(k => { h[k] = { open, close }; });
+  return h;
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────
 let currentRegionId   = null;
 let currentRegionName = '';
 let currentRegionCity = '';
 let currentWeekMonday = getMondayOfCurrentWeek();
-let agents       = [];
-let forecasts    = {};
-let availability = {};
-let regulations  = {
-  opening_hour:    10,
-  closing_hour:    18,
+let agents            = [];
+let forecasts         = {};
+let availability      = {};
+let activeWorkingDays = new Set();
+
+let regulations = {
   saturday_rest:   true,
   sunday_rest:     true,
   weekly_hours:    40,
   max_daily_hours: 8,
   closed_dates:    [],
-  public_holidays: []
+  public_holidays: [],
+  day_hours:       buildDefaultDayHours(10, 18),
 };
 
-// ── DATE HELPERS ──────────────────────────────────────────
+// ── DATE HELPERS ──────────────────────────────────────────────────────────
 function getMondayOfCurrentWeek() {
   const today = new Date();
   const day   = today.getDay();
@@ -248,9 +265,7 @@ function getWeekDays(monday) {
   });
 }
 
-function toDateStr(date) {
-  return date.toISOString().split('T')[0];
-}
+function toDateStr(date) { return date.toISOString().split('T')[0]; }
 
 function getWeekNumber(date) {
   const d      = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -269,8 +284,22 @@ function formatDateDisplay(dateStr) {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function isToday(date) {
-  return toDateStr(date) === toDateStr(new Date());
+function isToday(date) { return toDateStr(date) === toDateStr(new Date()); }
+
+// JS getDay() returns 0=Sun,1=Mon...6=Sat → convert to DAY_KEYS index (0=Mon...6=Sun)
+function dowToKeyIndex(dow) { return dow === 0 ? 6 : dow - 1; }
+
+function getDayHoursForDate(dateStr) {
+  const d   = new Date(dateStr + 'T12:00:00');
+  const key = DAY_KEYS[dowToKeyIndex(d.getDay())];
+  return (regulations.day_hours && regulations.day_hours[key])
+    ? regulations.day_hours[key]
+    : { open: 10, close: 18 };
+}
+
+function getDayHoursLabel(dateStr) {
+  const h = getDayHoursForDate(dateStr);
+  return `${String(h.open).padStart(2,'0')}:00–${String(h.close).padStart(2,'0')}:00`;
 }
 
 function changeWeek(dir) {
@@ -286,7 +315,7 @@ function updateWeekLabel() {
     `W${wn} · ${formatDate(days[0])} → ${formatDate(days[6])}`;
 }
 
-// ── UI HELPERS ────────────────────────────────────────────
+// ── UI HELPERS ────────────────────────────────────────────────────────────
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
 function setStatus(msg) { document.getElementById('status-bar').textContent = msg; }
@@ -312,7 +341,7 @@ function toggleAddAgentForm() {
   f.style.display = f.style.display === 'block' ? 'none' : 'block';
 }
 
-// ── INIT ──────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
   updateWeekLabel();
   showLoader();
@@ -324,9 +353,9 @@ async function init() {
   sel.innerHTML = '<option value="">— Select region —</option>';
   data.forEach(r => {
     const opt = document.createElement('option');
-    opt.value            = r.id;
-    opt.dataset.city     = r.city;
-    opt.textContent      = `${r.name} · ${r.city}`;
+    opt.value        = r.id;
+    opt.dataset.city = r.city;
+    opt.textContent  = `${r.name} · ${r.city}`;
     sel.appendChild(opt);
   });
   sel.addEventListener('change', onRegionChange);
@@ -334,7 +363,7 @@ async function init() {
 }
 
 async function onRegionChange() {
-  const sel = document.getElementById('region-select');
+  const sel         = document.getElementById('region-select');
   currentRegionId   = sel.value;
   currentRegionName = sel.options[sel.selectedIndex].text;
   currentRegionCity = sel.options[sel.selectedIndex].dataset.city || '';
@@ -343,87 +372,83 @@ async function onRegionChange() {
   await loadWeekData();
 }
 
-// ── LOAD REGULATIONS ──────────────────────────────────────
+// ── LOAD REGULATIONS ──────────────────────────────────────────────────────
 async function loadRegulations() {
   const { data, error } = await sb
     .from('regulations').select('*')
-    .eq('region_id', currentRegionId);
-
+    .eq('region_id', currentRegionId);     // ← region silo: strict filter
   if (error) { showToast('Error loading regulations', 'error'); return; }
 
-  // Start with defaults for this region
-  const defaults = REGION_DEFAULTS[currentRegionCity] || REGION_DEFAULTS['Paris'];
+  const def = REGION_DEFAULTS[currentRegionCity] || REGION_DEFAULTS['Paris'];
   regulations = {
-    opening_hour:    defaults.opening_hour,
-    closing_hour:    defaults.closing_hour,
-    saturday_rest:   defaults.saturday_rest,
-    sunday_rest:     defaults.sunday_rest,
-    weekly_hours:    defaults.weekly_hours,
-    max_daily_hours: defaults.max_daily_hours,
+    saturday_rest:   def.saturday_rest,
+    sunday_rest:     def.sunday_rest,
+    weekly_hours:    def.weekly_hours,
+    max_daily_hours: 8,
     closed_dates:    [],
-    public_holidays: []
+    public_holidays: [],
+    day_hours:       buildDefaultDayHours(def.open, def.close),
   };
 
-  // Override with stored values
   (data || []).forEach(row => {
     switch (row.rule_key) {
-      case 'opening_hour':    regulations.opening_hour    = parseInt(row.rule_value);        break;
-      case 'closing_hour':    regulations.closing_hour    = parseInt(row.rule_value);         break;
-      case 'saturday_rest':   regulations.saturday_rest   = row.rule_value === 'true';        break;
-      case 'sunday_rest':     regulations.sunday_rest     = row.rule_value === 'true';         break;
-      case 'weekly_hours':    regulations.weekly_hours    = parseFloat(row.rule_value);       break;
+      case 'saturday_rest':
+        regulations.saturday_rest = row.rule_value === 'true'; break;
+      case 'sunday_rest':
+        regulations.sunday_rest = row.rule_value === 'true'; break;
+      case 'weekly_hours':
+        regulations.weekly_hours = parseFloat(row.rule_value); break;
       case 'closed_dates':
-        try { regulations.closed_dates = JSON.parse(row.rule_value); } catch(e) {}
-        break;
+        try { regulations.closed_dates = JSON.parse(row.rule_value); } catch(e) {} break;
       case 'public_holidays':
-        try { regulations.public_holidays = JSON.parse(row.rule_value); } catch(e) {}
-        break;
+        try { regulations.public_holidays = JSON.parse(row.rule_value); } catch(e) {} break;
+      case 'day_hours':
+        try { regulations.day_hours = JSON.parse(row.rule_value); } catch(e) {} break;
     }
   });
 
-  // If no stored regs exist yet, seed defaults silently
-  if (!data || data.length === 0) {
-    await seedRegulations();
-  }
+  if (!data || data.length === 0) await seedRegulations();
 }
 
 async function seedRegulations() {
   const rows = [
-    { region_id: currentRegionId, rule_key: 'opening_hour',    rule_value: String(regulations.opening_hour) },
-    { region_id: currentRegionId, rule_key: 'closing_hour',    rule_value: String(regulations.closing_hour) },
     { region_id: currentRegionId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
     { region_id: currentRegionId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
     { region_id: currentRegionId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
     { region_id: currentRegionId, rule_key: 'closed_dates',    rule_value: '[]' },
     { region_id: currentRegionId, rule_key: 'public_holidays', rule_value: '[]' },
+    { region_id: currentRegionId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
   ];
   await sb.from('regulations').upsert(rows, { onConflict: 'region_id,rule_key' });
 }
 
-// ── SAVE REGULATIONS ──────────────────────────────────────
+// ── SAVE REGULATIONS ──────────────────────────────────────────────────────
 async function saveRegulations() {
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
 
-  // Read current form values
-  regulations.opening_hour    = parseInt(document.getElementById('reg-opening').value);
-  regulations.closing_hour    = parseInt(document.getElementById('reg-closing').value);
-  regulations.saturday_rest   = document.getElementById('reg-saturday').checked;
-  regulations.sunday_rest     = document.getElementById('reg-sunday').checked;
+  regulations.saturday_rest = document.getElementById('reg-saturday').checked;
+  regulations.sunday_rest   = document.getElementById('reg-sunday').checked;
 
-  // Validate
-  if (regulations.closing_hour <= regulations.opening_hour) {
-    showToast('Closing hour must be after opening hour', 'error');
-    return;
-  }
+  let valid = true;
+  DAY_KEYS.forEach(k => {
+    const openEl  = document.getElementById(`reg-open-${k}`);
+    const closeEl = document.getElementById(`reg-close-${k}`);
+    if (openEl && closeEl) {
+      const o = parseInt(openEl.value);
+      const c = parseInt(closeEl.value);
+      if (c <= o) valid = false;
+      regulations.day_hours[k] = { open: o, close: c };
+    }
+  });
+  if (!valid) { showToast('Each day: closing hour must be after opening hour', 'error'); return; }
 
   const rows = [
-    { region_id: currentRegionId, rule_key: 'opening_hour',    rule_value: String(regulations.opening_hour) },
-    { region_id: currentRegionId, rule_key: 'closing_hour',    rule_value: String(regulations.closing_hour) },
     { region_id: currentRegionId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
     { region_id: currentRegionId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
     { region_id: currentRegionId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
     { region_id: currentRegionId, rule_key: 'closed_dates',    rule_value: JSON.stringify(regulations.closed_dates) },
     { region_id: currentRegionId, rule_key: 'public_holidays', rule_value: JSON.stringify(regulations.public_holidays) },
+    { region_id: currentRegionId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
   ];
 
   showLoader();
@@ -431,13 +456,15 @@ async function saveRegulations() {
     .upsert(rows, { onConflict: 'region_id,rule_key' });
   hideLoader();
 
-  if (error) { showToast('Failed to save regulations', 'error'); return; }
+  if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
   showToast('Regulations saved ✓');
   renderRegulations();
+  refreshActiveWorkingDays();
   renderPlanning();
+  renderForecast();
 }
 
-// ── DATE MANAGEMENT FOR REGULATIONS ───────────────────────
+// ── DATE TAG MANAGEMENT ───────────────────────────────────────────────────
 function addClosedDate() {
   const input = document.getElementById('new-closed-date');
   const val   = input.value;
@@ -474,7 +501,7 @@ function renderDateTags(containerId, dates, type) {
   const container = document.getElementById(containerId);
   if (!container) return;
   if (!dates.length) {
-    container.innerHTML = '<span style="color:#9ca3af; font-size:12px;">No dates added yet.</span>';
+    container.innerHTML = '<span style="color:#9ca3af;font-size:12px;">No dates added yet.</span>';
     return;
   }
   container.innerHTML = dates.map(d =>
@@ -485,21 +512,37 @@ function renderDateTags(containerId, dates, type) {
   ).join('');
 }
 
-// ── RENDER REGULATIONS ────────────────────────────────────
+// ── RENDER REGULATIONS ────────────────────────────────────────────────────
+function hourSelectHtml(id, selected) {
+  let opts = '';
+  for (let h = 0; h <= 23; h++) {
+    const lbl = `${String(h).padStart(2,'0')}:00`;
+    opts += `<option value="${h}" ${h === selected ? 'selected' : ''}>${lbl}</option>`;
+  }
+  return `<select id="${id}">${opts}</select>`;
+}
+
 function renderRegulations() {
   if (!currentRegionId) return;
 
-  const defaults = REGION_DEFAULTS[currentRegionCity] || {};
+  // Per-day hours rows
+  let hoursRows = '';
+  DAY_KEYS.forEach((key, i) => {
+    const h = (regulations.day_hours && regulations.day_hours[key])
+      ? regulations.day_hours[key] : { open: 10, close: 18 };
+    const isSat     = i === 5;
+    const isSun     = i === 6;
+    const isRestDay = (isSat && regulations.saturday_rest) || (isSun && regulations.sunday_rest);
+    const restNote  = isRestDay ? '<span class="rest-badge">rest day</span>' : '';
+    const trClass   = isRestDay ? ' class="rest-day"' : '';
 
-  // Build hour options
-  function hourOptions(selected) {
-    let html = '';
-    for (let h = 0; h <= 23; h++) {
-      const label = `${String(h).padStart(2, '0')}:00`;
-      html += `<option value="${h}" ${h === selected ? 'selected' : ''}>${label}</option>`;
-    }
-    return html;
-  }
+    hoursRows += `<tr${trClass}>
+      <td style="font-weight:bold;color:#374151;">${DAY_NAMES[i]} ${restNote}</td>
+      <td>${hourSelectHtml(`reg-open-${key}`, h.open)}</td>
+      <td style="text-align:center;color:#9ca3af;">→</td>
+      <td>${hourSelectHtml(`reg-close-${key}`, h.close)}</td>
+    </tr>`;
+  });
 
   const closedTagsHtml = regulations.closed_dates.length
     ? regulations.closed_dates.map(d =>
@@ -507,7 +550,7 @@ function renderRegulations() {
           ${formatDateDisplay(d)}
           <button onclick="removeClosedDate('${d}')" title="Remove">✕</button>
         </span>`).join('')
-    : '<span style="color:#9ca3af; font-size:12px;">No dates added yet.</span>';
+    : '<span style="color:#9ca3af;font-size:12px;">No dates added yet.</span>';
 
   const holidayTagsHtml = regulations.public_holidays.length
     ? regulations.public_holidays.map(d =>
@@ -515,79 +558,67 @@ function renderRegulations() {
           ${formatDateDisplay(d)}
           <button onclick="removeHoliday('${d}')" title="Remove">✕</button>
         </span>`).join('')
-    : '<span style="color:#9ca3af; font-size:12px;">No dates added yet.</span>';
+    : '<span style="color:#9ca3af;font-size:12px;">No dates added yet.</span>';
 
   document.getElementById('regulations-content').innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <h2 style="font-size:15px;">📜 Regulations — ${currentRegionName}</h2>
       <button class="btn btn-save" onclick="saveRegulations()">💾 Save Regulations</button>
     </div>
 
-    <!-- FIXED INFO -->
     <div class="reg-section">
-      <h3>Fixed Rules</h3>
+      <h3>Fixed Rules (all regions)</h3>
       <div class="info-grid">
-        <div class="info-box">
-          <div class="info-lbl">Max hours / day</div>
-          <div class="info-val">8h</div>
-        </div>
-        <div class="info-box">
-          <div class="info-lbl">Max hours / week</div>
-          <div class="info-val">${regulations.weekly_hours}h</div>
-        </div>
-        <div class="info-box">
-          <div class="info-lbl">Break / day</div>
-          <div class="info-val">1h30</div>
-        </div>
-        <div class="info-box">
-          <div class="info-lbl">Min rest between shifts</div>
-          <div class="info-val">11h</div>
-        </div>
+        <div class="info-box"><div class="info-lbl">Max working days / week</div><div class="info-val">5 days</div></div>
+        <div class="info-box"><div class="info-lbl">Max hours / day</div><div class="info-val">8h</div></div>
+        <div class="info-box"><div class="info-lbl">Max hours / week</div><div class="info-val">${regulations.weekly_hours}h</div></div>
+        <div class="info-box"><div class="info-lbl">Break / day</div><div class="info-val">1h30</div></div>
+        <div class="info-box"><div class="info-lbl">Min rest between shifts</div><div class="info-val">11h</div></div>
       </div>
     </div>
 
-    <!-- OPENING HOURS -->
-    <div class="reg-section">
-      <h3>Opening Hours</h3>
-      <div class="reg-row">
-        <div class="reg-label">Operation hours</div>
-        <div class="hour-row">
-          <select id="reg-opening">${hourOptions(regulations.opening_hour)}</select>
-          <span>→</span>
-          <select id="reg-closing">${hourOptions(regulations.closing_hour)}</select>
-        </div>
-      </div>
-    </div>
-
-    <!-- WEEKEND RULES -->
     <div class="reg-section">
       <h3>Weekend Rules</h3>
-      <div class="reg-row">
-        <div class="reg-label">Saturday is a rest day</div>
-        <div class="toggle-wrap">
-          <label class="toggle">
-            <input type="checkbox" id="reg-saturday" ${regulations.saturday_rest ? 'checked' : ''}>
-            <span class="toggle-slider"></span>
-          </label>
-          <span class="toggle-label" id="sat-label">${regulations.saturday_rest ? 'Yes — agents rest on Saturday' : 'No — Saturday is a working day'}</span>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="min-width:220px;font-size:13px;color:#374151;">Saturday is a rest day</div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="reg-saturday" ${regulations.saturday_rest ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label" id="sat-label">${regulations.saturday_rest ? 'Yes — Saturday is a rest day' : 'No — Saturday is a working day'}</span>
+          </div>
         </div>
-      </div>
-      <div class="reg-row">
-        <div class="reg-label">Sunday is a rest day</div>
-        <div class="toggle-wrap">
-          <label class="toggle">
-            <input type="checkbox" id="reg-sunday" ${regulations.sunday_rest ? 'checked' : ''}>
-            <span class="toggle-slider"></span>
-          </label>
-          <span class="toggle-label" id="sun-label">${regulations.sunday_rest ? 'Yes — agents rest on Sunday' : 'No — Sunday is a working day'}</span>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="min-width:220px;font-size:13px;color:#374151;">Sunday is a rest day</div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" id="reg-sunday" ${regulations.sunday_rest ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label" id="sun-label">${regulations.sunday_rest ? 'Yes — Sunday is a rest day' : 'No — Sunday is a working day'}</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- CLOSED DATES -->
+    <div class="reg-section">
+      <h3>Operating Hours (per day)</h3>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:12px;">
+        Dimmed rows are current rest days. Hours are saved and will apply if the rest rule is toggled off.
+      </p>
+      <table class="hours-table">
+        <tr>
+          <th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th>
+        </tr>
+        ${hoursRows}
+      </table>
+    </div>
+
     <div class="reg-section">
       <h3>Mandatory Closed Days</h3>
-      <p style="font-size:12px; color:#6b7280; margin-bottom:10px;">Days when the entire center is closed. All agents will show as Rest.</p>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:10px;">Entire center closed. All agents show 🔒 Closed.</p>
       <div class="date-tags" id="closed-dates-tags">${closedTagsHtml}</div>
       <div class="date-add-row">
         <input type="date" id="new-closed-date" />
@@ -595,10 +626,9 @@ function renderRegulations() {
       </div>
     </div>
 
-    <!-- PUBLIC HOLIDAYS -->
     <div class="reg-section">
       <h3>Public Holidays</h3>
-      <p style="font-size:12px; color:#6b7280; margin-bottom:10px;">National holidays. All agents will show as Holiday.</p>
+      <p style="font-size:12px;color:#6b7280;margin-bottom:10px;">National holidays. All agents show 🎌 Holiday.</p>
       <div class="date-tags" id="holiday-dates-tags">${holidayTagsHtml}</div>
       <div class="date-add-row">
         <input type="date" id="new-holiday-date" />
@@ -611,18 +641,17 @@ function renderRegulations() {
     </div>
   `;
 
-  // Live toggle labels
   document.getElementById('reg-saturday').addEventListener('change', function() {
     document.getElementById('sat-label').textContent = this.checked
-      ? 'Yes — agents rest on Saturday' : 'No — Saturday is a working day';
+      ? 'Yes — Saturday is a rest day' : 'No — Saturday is a working day';
   });
   document.getElementById('reg-sunday').addEventListener('change', function() {
     document.getElementById('sun-label').textContent = this.checked
-      ? 'Yes — agents rest on Sunday' : 'No — Sunday is a working day';
+      ? 'Yes — Sunday is a rest day' : 'No — Sunday is a working day';
   });
 }
 
-// ── LOAD WEEK DATA ────────────────────────────────────────
+// ── LOAD WEEK DATA ────────────────────────────────────────────────────────
 async function loadWeekData() {
   showLoader();
   setStatus(`Loading ${currentRegionName}…`);
@@ -658,25 +687,46 @@ async function loadWeekData() {
   }
 
   hideLoader();
+  refreshActiveWorkingDays();
   setStatus(`${currentRegionName} · W${getWeekNumber(currentWeekMonday)} · ${agents.length} agents`);
   renderPlanning();
   renderAgents();
   renderForecast();
 }
 
-// ── REGULATION HELPERS ────────────────────────────────────
-// Returns: null | 'weekend' | 'closed' | 'holiday'
+// ── REGULATION HELPERS ────────────────────────────────────────────────────
 function getDayClosureType(dayStr) {
   if (regulations.public_holidays.includes(dayStr)) return 'holiday';
   if (regulations.closed_dates.includes(dayStr))    return 'closed';
-  const d   = new Date(dayStr + 'T12:00:00');
-  const dow = d.getDay(); // 0=Sun, 6=Sat
+  const dow = new Date(dayStr + 'T12:00:00').getDay();
   if (dow === 6 && regulations.saturday_rest) return 'weekend';
   if (dow === 0 && regulations.sunday_rest)   return 'weekend';
   return null;
 }
 
-// ── PLANNING ENGINE ───────────────────────────────────────
+// ── 5-DAY RULE ────────────────────────────────────────────────────────────
+// Computes which days agents actively work this week.
+// If open days > 5, selects 5 highest-workload days (ties: earlier day wins).
+function refreshActiveWorkingDays() {
+  const days     = getWeekDays(currentWeekMonday);
+  const openDays = days.filter(day => !getDayClosureType(toDateStr(day)));
+
+  if (openDays.length <= 5) {
+    activeWorkingDays = new Set(openDays.map(d => toDateStr(d)));
+    return;
+  }
+
+  const ranked = openDays.map((day, i) => {
+    const ds = toDateStr(day);
+    const f  = forecasts[ds];
+    const wl = f ? (f.contact_volume * f.aht_minutes) / 60 : 0;
+    return { ds, workload: wl, order: i };
+  }).sort((a, b) => b.workload - a.workload || a.order - b.order);
+
+  activeWorkingDays = new Set(ranked.slice(0, 5).map(x => x.ds));
+}
+
+// ── PLANNING ENGINE ───────────────────────────────────────────────────────
 function agentIsPresent(agent, dayStr) {
   const av = availability[agent.id];
   if (!av || av[dayStr] === undefined) return true;
@@ -684,30 +734,32 @@ function agentIsPresent(agent, dayStr) {
 }
 
 function computeDayShifts(dayStr) {
+  // 1. Regulation closure
   const closureType = getDayClosureType(dayStr);
-
-  // Day is closed → all agents get the closure label
   if (closureType) {
-    const shiftLabel = closureType === 'holiday' ? 'Holiday'
-                     : closureType === 'closed'  ? 'Closed'
-                     : 'Rest';
-    return agents.map(a => ({ agent: a, shift: shiftLabel }));
+    const shift = closureType === 'holiday' ? 'Holiday'
+                : closureType === 'closed'  ? 'Closed' : 'Rest';
+    return agents.map(a => ({ agent: a, shift }));
   }
 
-  // Normal working day
+  // 2. 5-day rule rest
+  if (!activeWorkingDays.has(dayStr)) {
+    return agents.map(a => ({ agent: a, shift: 'DayOff' }));
+  }
+
+  // 3. Normal working day
   const f             = forecasts[dayStr];
   const presentAgents = agents.filter(a => agentIsPresent(a, dayStr));
-  const operatingHours = regulations.closing_hour - regulations.opening_hour;
+  let   assignedCount = 0;
 
-  let assignedCount = 0;
   if (f && f.contact_volume > 0) {
     const workload_hours     = (f.contact_volume * f.aht_minutes) / 60;
     const theoretical_needed = Math.ceil(workload_hours / regulations.max_daily_hours);
     assignedCount            = Math.min(theoretical_needed, presentAgents.length);
   }
 
-  const half = Math.ceil(assignedCount / 2);
-  let cursor = 0;
+  const half   = Math.ceil(assignedCount / 2);
+  let   cursor = 0;
 
   return agents.map(a => {
     if (!agentIsPresent(a, dayStr)) return { agent: a, shift: 'Absent' };
@@ -720,7 +772,6 @@ function computeDayShifts(dayStr) {
   });
 }
 
-// ── SHIFT BADGE ───────────────────────────────────────────
 function shiftBadge(shift) {
   const map = {
     Morning:   '<span class="shift-morning">🌅 Morning</span>',
@@ -729,11 +780,12 @@ function shiftBadge(shift) {
     Absent:    '<span class="shift-absent">Absent</span>',
     Closed:    '<span class="shift-closed">🔒 Closed</span>',
     Holiday:   '<span class="shift-holiday">🎌 Holiday</span>',
+    DayOff:    '<span class="shift-dayoff">📅 Day Off</span>',
   };
   return map[shift] || map.Rest;
 }
 
-// ── RENDER PLANNING ───────────────────────────────────────
+// ── RENDER PLANNING ───────────────────────────────────────────────────────
 function renderPlanning() {
   const container = document.getElementById('planning-grid');
   if (!agents.length) {
@@ -741,17 +793,16 @@ function renderPlanning() {
     return;
   }
 
-  const days     = getWeekDays(currentWeekMonday);
-  const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-
-  const matrix  = {};
+  const days   = getWeekDays(currentWeekMonday);
+  const matrix = {};
   const summary = {};
 
-  days.forEach((day) => {
-    const ds      = toDateStr(day);
-    const shifts  = computeDayShifts(ds);
-    const closure = getDayClosureType(ds);
-    summary[ds]   = { morning: 0, afternoon: 0, need: 0, closure };
+  days.forEach(day => {
+    const ds       = toDateStr(day);
+    const shifts   = computeDayShifts(ds);
+    const closure  = getDayClosureType(ds);
+    const isDayOff = !closure && !activeWorkingDays.has(ds);
+    summary[ds]    = { morning: 0, afternoon: 0, need: 0, closure, isDayOff };
 
     shifts.forEach(s => {
       if (!matrix[s.agent.id]) matrix[s.agent.id] = {};
@@ -760,55 +811,61 @@ function renderPlanning() {
       if (s.shift === 'Afternoon') summary[ds].afternoon++;
     });
 
-    if (!closure) {
+    if (!closure && !isDayOff) {
       const f = forecasts[ds];
       if (f && f.contact_volume > 0)
         summary[ds].need = Math.ceil((f.contact_volume * f.aht_minutes / 60) / regulations.max_daily_hours);
     }
   });
 
-  // Build opening hours label
-  const ohLabel = `${String(regulations.opening_hour).padStart(2,'0')}:00 – ${String(regulations.closing_hour).padStart(2,'0')}:00`;
-
-  let html = `
-    <div style="margin-bottom:12px; font-size:12px; color:#6b7280;">
-      🕐 Operating hours: <strong>${ohLabel}</strong> &nbsp;|&nbsp;
-      Max ${regulations.max_daily_hours}h/day &nbsp;|&nbsp;
-      ${regulations.weekly_hours}h/week
-    </div>
-    <table><tr><th style="text-align:left">Agent</th>`;
-
+  // Headers
+  let html = '<table><tr><th style="text-align:left">Agent</th>';
   days.forEach((day, i) => {
-    const ds      = toDateStr(day);
-    const closure = getDayClosureType(ds);
-    let thClass   = '';
-    if (isToday(day))    thClass = ' class="today-col"';
-    else if (closure)    thClass = ' class="closed-col"';
-    const closureLabel = closure === 'holiday' ? ' 🎌' : closure === 'closed' ? ' 🔒' : closure === 'weekend' ? ' 🏖' : '';
-    html += `<th${thClass}>${dayNames[i]}${closureLabel}<br><small style="font-weight:normal">${formatDate(day)}</small></th>`;
+    const ds       = toDateStr(day);
+    const closure  = getDayClosureType(ds);
+    const isDayOff = !closure && !activeWorkingDays.has(ds);
+
+    let thClass = '';
+    if      (isToday(day)) thClass = ' class="today-col"';
+    else if (isDayOff)     thClass = ' class="dayoff-col"';
+    else if (closure)      thClass = ' class="closed-col"';
+
+    const icon = closure === 'holiday' ? ' 🎌'
+               : closure === 'closed'  ? ' 🔒'
+               : closure === 'weekend' ? ' 🏖'
+               : isDayOff              ? ' 📅'
+               : '';
+
+    html += `<th${thClass}>
+      ${DAY_NAMES[i]}${icon}<br>
+      <small style="font-weight:normal">${formatDate(day)}</small><br>
+      <small style="font-weight:normal;opacity:0.75;font-size:10px">${getDayHoursLabel(ds)}</small>
+    </th>`;
   });
   html += '</tr>';
 
+  // Agent rows
   agents.forEach(a => {
     html += '<tr>';
     html += `<td class="agent-name">${a.first_name} ${a.last_name}</td>`;
     days.forEach(day => {
-      const ds      = toDateStr(day);
-      const shift   = (matrix[a.id] && matrix[a.id][ds]) ? matrix[a.id][ds] : 'Rest';
-      const closure = getDayClosureType(ds);
-      const isClosed = closure === 'closed' || closure === 'holiday' || closure === 'weekend';
-      let cellStyle = '';
-      if (isToday(day))  cellStyle = ' style="background:#f0f9ff"';
-      if (isClosed)      cellStyle = ' style="background:#f9fafb"';
+      const ds        = toDateStr(day);
+      const shift     = (matrix[a.id] && matrix[a.id][ds]) ? matrix[a.id][ds] : 'Rest';
+      const closure   = getDayClosureType(ds);
+      const isDayOff  = !closure && !activeWorkingDays.has(ds);
+      const isBlocked = !!closure || isDayOff;
 
-      const showCheckbox = !isClosed;
+      let cellBg = '';
+      if (isToday(day))  cellBg = 'background:#f0f9ff;';
+      if (isBlocked)     cellBg = 'background:#f9fafb;';
 
-      html += `<td${cellStyle}>
+      html += `<td style="${cellBg}">
         ${shiftBadge(shift)}
-        ${showCheckbox ? `<br>
-        <input type="checkbox" title="Present this day" ${agentIsPresent(a, ds) ? 'checked' : ''}
-          onchange="togglePresence('${a.id}','${ds}',this.checked)"
-          style="margin-top:5px;cursor:pointer;">` : ''}
+        ${!isBlocked ? `<br>
+          <input type="checkbox" title="Present this day"
+            ${agentIsPresent(a, ds) ? 'checked' : ''}
+            onchange="togglePresence('${a.id}','${ds}',this.checked)"
+            style="margin-top:5px;cursor:pointer;">` : ''}
       </td>`;
     });
     html += '</tr>';
@@ -817,17 +874,21 @@ function renderPlanning() {
   // Summary row
   html += '<tr class="summary-row"><td style="text-align:left;font-weight:bold;font-size:11px;">Staffing</td>';
   days.forEach(day => {
-    const ds      = toDateStr(day);
-    const s       = summary[ds];
+    const ds = toDateStr(day);
+    const s  = summary[ds];
+
     if (s.closure) {
-      const label = s.closure === 'holiday' ? '🎌 Holiday' : s.closure === 'weekend' ? '🏖 Weekend' : '🔒 Closed';
-      html += `<td class="day-closed-cell" style="font-size:11px;">${label}</td>`;
+      const label = s.closure === 'holiday' ? '🎌 Holiday'
+                  : s.closure === 'weekend' ? '🏖 Weekend' : '🔒 Closed';
+      html += `<td class="day-neutral" style="font-size:11px;">${label}</td>`;
+    } else if (s.isDayOff) {
+      html += `<td class="day-neutral" style="font-size:11px;">📅 Day Off<br>
+        <span style="color:#a78bfa;font-size:10px;">5-day rule</span></td>`;
     } else {
       const ok  = (s.morning + s.afternoon) >= s.need;
-      const cls = !ok && s.need > 0 ? ' understaffed' : '';
+      const cls = !ok && s.need > 0 ? 'understaffed' : '';
       html += `<td class="${cls}" style="font-size:11px;">
-        Need: <b>${s.need}</b><br>
-        🌅 ${s.morning} &nbsp; 🌇 ${s.afternoon}
+        Need: <b>${s.need}</b><br>🌅 ${s.morning} &nbsp;🌇 ${s.afternoon}
       </td>`;
     }
   });
@@ -836,7 +897,7 @@ function renderPlanning() {
   container.innerHTML = html;
 }
 
-// ── TOGGLE PRESENCE ───────────────────────────────────────
+// ── TOGGLE PRESENCE ───────────────────────────────────────────────────────
 async function togglePresence(agentId, dayStr, present) {
   const { error } = await sb.from('agent_availability')
     .upsert({ agent_id: agentId, week_date: dayStr, is_present: present },
@@ -848,7 +909,7 @@ async function togglePresence(agentId, dayStr, present) {
   showToast(present ? 'Marked present' : 'Marked absent');
 }
 
-// ── RENDER AGENTS ─────────────────────────────────────────
+// ── RENDER AGENTS ─────────────────────────────────────────────────────────
 function renderAgents() {
   const container = document.getElementById('agent-list');
   if (!agents.length) {
@@ -862,7 +923,6 @@ function renderAgents() {
     </div>`).join('');
 }
 
-// ── ADD AGENT ─────────────────────────────────────────────
 async function addAgent() {
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
   const first = document.getElementById('new-first-name').value.trim();
@@ -880,7 +940,6 @@ async function addAgent() {
   await loadWeekData();
 }
 
-// ── DELETE AGENT ──────────────────────────────────────────
 async function deleteAgent(id) {
   if (!confirm('Delete this agent? This cannot be undone.')) return;
   showLoader();
@@ -891,34 +950,48 @@ async function deleteAgent(id) {
   await loadWeekData();
 }
 
-// ── RENDER FORECAST ───────────────────────────────────────
+// ── RENDER FORECAST ───────────────────────────────────────────────────────
 function renderForecast() {
   const container = document.getElementById('forecast-grid');
-  if (!currentRegionId) { container.innerHTML = '<p style="color:#888">Select a region first.</p>'; return; }
-  const days     = getWeekDays(currentWeekMonday);
-  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  if (!currentRegionId) {
+    container.innerHTML = '<p style="color:#888">Select a region first.</p>';
+    return;
+  }
+  const days = getWeekDays(currentWeekMonday);
 
   container.innerHTML = '<div class="forecast-grid">' +
     days.map((day, i) => {
-      const ds      = toDateStr(day);
-      const f       = forecasts[ds] || { contact_volume: 0, aht_minutes: 0 };
-      const closure = getDayClosureType(ds);
+      const ds        = toDateStr(day);
+      const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0 };
+      const closure   = getDayClosureType(ds);
+      const isDayOff  = !closure && !activeWorkingDays.has(ds);
+      const isBlocked = !!closure || isDayOff;
+
       let cls = '';
       if (isToday(day)) cls += ' today-card';
-      if (closure)      cls += ' closed-card';
-      const closedNote = closure ? `<div style="font-size:10px;color:#9ca3af;margin-top:6px;">${closure === 'holiday' ? '🎌 Holiday' : closure === 'weekend' ? '🏖 Weekend' : '🔒 Closed'}</div>` : '';
+      if (isBlocked)    cls += ' closed-card';
+
+      const statusNote = isBlocked
+        ? `<div style="font-size:10px;color:#9ca3af;margin-top:4px;">
+            ${closure === 'holiday' ? '🎌 Holiday'
+            : closure === 'weekend' ? '🏖 Weekend off'
+            : closure === 'closed'  ? '🔒 Closed'
+            : '📅 Day Off (5-day rule)'}</div>`
+        : '';
+
       return `<div class="forecast-day-card${cls}">
-        <h4>${dayNames[i]}<br><span style="font-weight:normal">${formatDate(day)}</span></h4>
-        ${closedNote}
+        <h4>${DAY_SHORT[i]}<br><span style="font-weight:normal">${formatDate(day)}</span></h4>
+        ${statusNote}
         <label>Volume</label>
-        <input type="number" id="vol-${ds}" value="${f.contact_volume}" min="0" placeholder="0" ${closure ? 'disabled style="opacity:0.5"' : ''}>
+        <input type="number" id="vol-${ds}" value="${f.contact_volume}" min="0" placeholder="0"
+          ${isBlocked ? 'disabled style="opacity:0.5"' : ''}>
         <label>AHT (min)</label>
-        <input type="number" id="aht-${ds}" value="${f.aht_minutes}" min="0" step="0.5" placeholder="0" ${closure ? 'disabled style="opacity:0.5"' : ''}>
+        <input type="number" id="aht-${ds}" value="${f.aht_minutes}" min="0" step="0.5" placeholder="0"
+          ${isBlocked ? 'disabled style="opacity:0.5"' : ''}>
       </div>`;
     }).join('') + '</div>';
 }
 
-// ── SAVE FORECAST ─────────────────────────────────────────
 async function saveForecast() {
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
   const days    = getWeekDays(currentWeekMonday);
@@ -928,7 +1001,7 @@ async function saveForecast() {
       region_id:      currentRegionId,
       forecast_date:  ds,
       contact_volume: parseFloat(document.getElementById(`vol-${ds}`)?.value || 0),
-      aht_minutes:    parseFloat(document.getElementById(`aht-${ds}`)?.value || 0)
+      aht_minutes:    parseFloat(document.getElementById(`aht-${ds}`)?.value || 0),
     };
   });
   showLoader();
@@ -940,7 +1013,7 @@ async function saveForecast() {
   await loadWeekData();
 }
 
-// ── START ─────────────────────────────────────────────────
+// ── START ─────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
