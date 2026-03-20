@@ -79,8 +79,38 @@
     .forecast-day-card h4 { font-size: 12px; font-weight: bold; color: #1a1a2e; margin-bottom: 8px; text-align: center; }
     .forecast-day-card.today-card  { border-color: #1a1a2e; background: #eff6ff; }
     .forecast-day-card.closed-card { background: #f3f4f6; opacity: 0.6; }
+    .forecast-day-card.auto-filled { border-color: #a5b4fc; }
     .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
     .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+    .auto-badge { display:inline-block; font-size:9px; background:#ede9fe; color:#5b21b6; border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
+    .hourly-chart { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+    .hourly-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+    .hourly-label { font-size: 9px; color: #9ca3af; width: 28px; flex-shrink: 0; text-align: right; }
+    .hourly-bar-wrap { flex: 1; height: 10px; background: #f3f4f6; border-radius: 3px; overflow: hidden; display: flex; }
+    .hourly-bar-call        { background: #ef4444; height: 100%; }
+    .hourly-bar-chat        { background: #f97316; height: 100%; }
+    .hourly-bar-mail        { background: #6366f1; height: 100%; }
+    .hourly-bar-clienteling { background: #10b981; height: 100%; }
+    .hourly-bar-back-office { background: #0891b2; height: 100%; }
+    .hourly-vol { font-size: 9px; color: #6b7280; width: 24px; flex-shrink: 0; }
+    .breaks-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .breaks-table th { background:#f9fafb; color:#6b7280; padding:6px 8px; text-align:left; border:1px solid #e5e7eb; font-size:11px; text-transform:uppercase; }
+    .breaks-table td { padding:6px 8px; border:1px solid #e5e7eb; vertical-align:middle; }
+    .breaks-table input[type="text"] { width:90px; padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; }
+    .breaks-table input[type="number"] { width:55px; padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; }
+    .breaks-table select { padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; background:white; }
+    .btn-xs { padding:2px 8px; font-size:11px; border-radius:4px; border:none; cursor:pointer; }
+    .btn-xs-danger { background:#fee2e2; color:#b91c1c; }
+    .trend-wrap { display:flex; align-items:center; gap:10px; }
+    .trend-wrap input { width:70px; padding:6px 10px; border:1px solid #d1d5db; border-radius:4px; font-size:14px; font-weight:bold; text-align:center; }
+    .trend-note { font-size:12px; color:#6b7280; }
+    /* Forecast header band */
+    .forecast-header { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid #e5e7eb; }
+    .aht-task-table { border-collapse:collapse; font-size:12px; }
+    .aht-task-table th { background:#f9fafb; color:#6b7280; padding:5px 10px; border:1px solid #e5e7eb; font-size:11px; text-transform:uppercase; }
+    .aht-task-table td { padding:5px 10px; border:1px solid #e5e7eb; vertical-align:middle; }
+    .aht-task-table input { width:50px; padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; text-align:center; }
+    .task-dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:middle; }
 
     /* ── REGULATIONS ── */
     .reg-section { margin-bottom: 24px; }
@@ -206,7 +236,8 @@
 <!-- FORECAST TAB -->
 <div id="tab-forecast" class="tab-content">
   <div class="card">
-    <h2 style="font-size:15px;margin-bottom:16px;">Weekly Forecast Input</h2>
+    <div id="forecast-header-band"></div>
+    <h2 style="font-size:15px;margin-bottom:16px;">Weekly Forecast</h2>
     <div id="forecast-grid"><p style="color:#888">Select a region to input forecast.</p></div>
     <div style="margin-top:16px;">
       <button class="btn btn-primary" onclick="saveForecast()">💾 Save Forecast</button>
@@ -256,7 +287,8 @@ let currentRegionCity = '';
 let currentWeekMonday = getMondayOfCurrentWeek();
 let agents            = [];
 let forecasts         = {};
-// availability[agentId][dateStr] = 'working' | 'rest_scheduled' | 'absent'
+let historicalVolume  = {}; // historicalVolume[dateStr][task][hour] = volume
+// availability[agentId][dateStr] = 'working' | 'rest_scheduled' | 'rest_override' | 'absent'
 let availability      = {};
 
 let regulations = {
@@ -264,6 +296,18 @@ let regulations = {
   sunday_rest:     true,
   weekly_hours:    40,
   max_daily_hours: 8,
+  trend_pct:       0,
+  aht_tasks: {
+    CALL:         10,
+    CHAT:         8,
+    MAIL:         5,
+    CLIENTELING:  15,
+    'BACK-OFFICE': 10,
+  },
+  breaks: [
+    { name: 'Lunch',  duration: 45, window_start: 12, window_end: 14 },
+    { name: 'Break',  duration: 15, window_start: 10, window_end: 11 },
+  ],
   closed_dates:    [],
   public_holidays: [],
   day_hours:       buildDefaultDayHours(10, 18),
@@ -331,6 +375,166 @@ function getDayHoursForDate(dateStr) {
 function getDayHoursLabel(dateStr) {
   const h = getDayHoursForDate(dateStr);
   return String(h.open).padStart(2, '0') + ':00\u2013' + String(h.close).padStart(2, '0') + ':00';
+}
+
+// ── HISTORICAL VOLUME HELPERS ─────────────────────────────────────────────
+function getEquivalentLastYearDate(dateStr) {
+  var d    = new Date(dateStr + 'T12:00:00');
+  var wn   = getWeekNumber(d);
+  var dow  = d.getDay();
+  var ly   = d.getFullYear() - 1;
+  var jan4 = new Date(Date.UTC(ly, 0, 4));
+  var jan4dow = jan4.getUTCDay() || 7;
+  var w1Mon = new Date(jan4);
+  w1Mon.setUTCDate(jan4.getUTCDate() - jan4dow + 1);
+  var tgtMon = new Date(w1Mon);
+  tgtMon.setUTCDate(w1Mon.getUTCDate() + (wn - 1) * 7);
+  var dayOff = dow === 0 ? 6 : dow - 1;
+  var tgt = new Date(tgtMon);
+  tgt.setUTCDate(tgtMon.getUTCDate() + dayOff);
+  return tgt.getUTCFullYear() + '-' +
+    String(tgt.getUTCMonth() + 1).padStart(2,'0') + '-' +
+    String(tgt.getUTCDate()).padStart(2,'0');
+}
+
+async function loadHistoricalVolume(histDates) {
+  historicalVolume = {};
+  if (!histDates.length) return;
+  var { data, error } = await sb
+    .from('historical_volume').select('date,hour,task,volume')
+    .eq('region_id', currentRegionId).in('date', histDates);
+  if (error || !data) return;
+  data.forEach(function(row) {
+    if (!historicalVolume[row.date]) historicalVolume[row.date] = {};
+    if (!historicalVolume[row.date][row.task]) historicalVolume[row.date][row.task] = {};
+    historicalVolume[row.date][row.task][row.hour] = row.volume;
+  });
+}
+
+// ── FORECAST HELPERS ──────────────────────────────────────────────────────
+// Net productive minutes per agent per day:
+// (weekly_hours / working_days × 60) − total break minutes
+function getNetProductiveMinPerDay(openDaysCount) {
+  var workingDays   = Math.min(openDaysCount, 5); // max 5 working days
+  if (workingDays === 0) return 480; // fallback
+  var shiftMin      = (regulations.weekly_hours / workingDays) * 60;
+  var breakMin      = (regulations.breaks || []).reduce(function(s, b) { return s + (b.duration || 0); }, 0);
+  return Math.max(60, shiftMin - breakMin);
+}
+
+// Build auto-forecast for all 7 days from history × trend.
+// contact_volume = weighted workload in minutes: sum(volume_task × AHT_task).
+// EMAIL BACKLOG RULE:
+//   Emails received on closed days (weekend/holiday/closed) are added to the
+//   opening hour of the next open day. If no open day remains in the week,
+//   they carry to Monday of next week (noted but not displayed in this week).
+function buildAutoForecast(days) {
+  var trend  = 1 + (regulations.trend_pct || 0) / 100;
+  var aht    = regulations.aht_tasks || {};
+  var TASKS  = ['CALL','CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
+  var openDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
+
+  // Step 1: compute raw hourly volumes for every day (including closed days for mail)
+  var rawHourly = {}; // rawHourly[ds][taskKey][hour] = volume
+  days.forEach(function(day) {
+    var ds     = toDateStr(day);
+    var histDs = getEquivalentLastYearDate(ds);
+    var hist   = historicalVolume[histDs] || {};
+    var hours  = getDayHoursForDate(ds);
+    rawHourly[ds] = {};
+
+    TASKS.forEach(function(task) {
+      var taskData = hist[task] || {};
+      var key      = task.toLowerCase();
+      rawHourly[ds][key] = {};
+      var isMail   = (task === 'MAIL');
+      // For mail: collect ALL 24 hours. For others: operating hours only.
+      var hStart   = isMail ? 0  : hours.open;
+      var hEnd     = isMail ? 24 : hours.close;
+      for (var h = hStart; h < hEnd; h++) {
+        var vol = Math.round((taskData[h] || 0) * trend);
+        if (vol > 0) rawHourly[ds][key][h] = vol;
+      }
+    });
+  });
+
+  // Step 2: redistribute mail from closed days to next open day's opening hour
+  var mailCarryToNextWeek = 0;
+  days.forEach(function(day, idx) {
+    var ds      = toDateStr(day);
+    var closure = getDayClosureType(ds);
+    if (!closure) return; // open day — nothing to redistribute
+
+    // Collect all mail volume from this closed day
+    var closedMail = rawHourly[ds]['mail'] || {};
+    var totalMail  = Object.values(closedMail).reduce(function(s, v) { return s + v; }, 0);
+    if (totalMail === 0) return;
+
+    // Find next open day
+    var nextOpenDay = null;
+    for (var j = idx + 1; j < days.length; j++) {
+      if (!getDayClosureType(toDateStr(days[j]))) { nextOpenDay = days[j]; break; }
+    }
+
+    if (nextOpenDay) {
+      var nextDs   = toDateStr(nextOpenDay);
+      var nextOpen = getDayHoursForDate(nextDs).open;
+      if (!rawHourly[nextDs]['mail']) rawHourly[nextDs]['mail'] = {};
+      rawHourly[nextDs]['mail'][nextOpen] = (rawHourly[nextDs]['mail'][nextOpen] || 0) + totalMail;
+      // Mark the backlog so the UI can highlight it
+      if (!rawHourly[nextDs]._backlog) rawHourly[nextDs]._backlog = 0;
+      rawHourly[nextDs]._backlog += totalMail;
+    } else {
+      // No open day left this week — carries to Monday next week
+      mailCarryToNextWeek += totalMail;
+    }
+
+    // Clear mail from closed day (it's been moved)
+    rawHourly[ds]['mail'] = {};
+  });
+
+  // Step 3: build result — only for open days, skip closed
+  var result = {};
+  days.forEach(function(day) {
+    var ds      = toDateStr(day);
+    var closure = getDayClosureType(ds);
+    var hours   = getDayHoursForDate(ds);
+    var hourly  = rawHourly[ds] || {};
+    var totalWorkloadMin = 0;
+
+    if (!closure) {
+      TASKS.forEach(function(task) {
+        var key     = task.toLowerCase();
+        var taskAht = aht[task] || 0;
+        Object.values(hourly[key] || {}).forEach(function(vol) {
+          totalWorkloadMin += vol * taskAht;
+        });
+      });
+    }
+
+    var fte = 0;
+    if (totalWorkloadMin > 0) {
+      var netMin = getNetProductiveMinPerDay(openDays.length);
+      fte = Math.ceil(totalWorkloadMin / netMin);
+    }
+
+    result[ds] = {
+      contact_volume: Math.round(totalWorkloadMin),
+      aht_minutes:    0,
+      auto:           true,
+      hourly:         hourly,
+      fte:            fte,
+      backlog:        hourly._backlog || 0,
+    };
+  });
+
+  // Attach carry-over note to last open day if needed
+  if (mailCarryToNextWeek > 0 && openDays.length > 0) {
+    var lastOpenDs = toDateStr(openDays[openDays.length - 1]);
+    if (result[lastOpenDs]) result[lastOpenDs].carryToNextWeek = mailCarryToNextWeek;
+  }
+
+  return result;
 }
 
 function changeWeek(dir) {
@@ -427,6 +631,13 @@ async function loadRegulations() {
       case 'saturday_rest':   regulations.saturday_rest = row.rule_value === 'true'; break;
       case 'sunday_rest':     regulations.sunday_rest   = row.rule_value === 'true'; break;
       case 'weekly_hours':    regulations.weekly_hours  = parseFloat(row.rule_value); break;
+      case 'trend_pct':       regulations.trend_pct     = parseFloat(row.rule_value) || 0; break;
+      case 'aht_tasks':
+        try { regulations.aht_tasks = JSON.parse(row.rule_value); } catch(e) {}
+        break;
+      case 'breaks':
+        try { regulations.breaks = JSON.parse(row.rule_value); } catch(e) {}
+        break;
       case 'closed_dates':
         try { regulations.closed_dates = JSON.parse(row.rule_value); } catch(e) {}
         break;
@@ -447,6 +658,9 @@ async function seedRegulations() {
     { region_id: currentRegionId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
     { region_id: currentRegionId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
     { region_id: currentRegionId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
+    { region_id: currentRegionId, rule_key: 'trend_pct',       rule_value: '0' },
+    { region_id: currentRegionId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
+    { region_id: currentRegionId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
     { region_id: currentRegionId, rule_key: 'closed_dates',    rule_value: '[]' },
     { region_id: currentRegionId, rule_key: 'public_holidays', rule_value: '[]' },
     { region_id: currentRegionId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
@@ -474,10 +688,37 @@ async function saveRegulations() {
   });
   if (!valid) { showToast('Each day: closing hour must be after opening hour', 'error'); return; }
 
+  // Read trend % (now in Forecast tab header)
+  const trendEl = document.getElementById('reg-trend-pct') || document.getElementById('fc-trend-pct');
+  if (trendEl) regulations.trend_pct = parseFloat(trendEl.value) || 0;
+
+  // Read AHT per task (from Forecast tab header)
+  var newAht = {};
+  document.querySelectorAll('.aht-task-row').forEach(function(row) {
+    var task = row.dataset.task;
+    var val  = parseFloat(row.querySelector('.aht-val').value) || 0;
+    if (task) newAht[task] = val;
+  });
+  if (Object.keys(newAht).length > 0) regulations.aht_tasks = newAht;
+
+  // Read breaks
+  var newBreaks = [];
+  document.querySelectorAll('.break-row').forEach(function(row) {
+    var name  = row.querySelector('.break-name').value.trim();
+    var dur   = parseInt(row.querySelector('.break-dur').value) || 0;
+    var wStart= parseInt(row.querySelector('.break-ws').value) || 0;
+    var wEnd  = parseInt(row.querySelector('.break-we').value) || 0;
+    if (name && dur > 0) newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd });
+  });
+  regulations.breaks = newBreaks;
+
   const rows = [
     { region_id: currentRegionId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
     { region_id: currentRegionId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
     { region_id: currentRegionId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
+    { region_id: currentRegionId, rule_key: 'trend_pct',       rule_value: String(regulations.trend_pct) },
+    { region_id: currentRegionId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
+    { region_id: currentRegionId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
     { region_id: currentRegionId, rule_key: 'closed_dates',    rule_value: JSON.stringify(regulations.closed_dates) },
     { region_id: currentRegionId, rule_key: 'public_holidays', rule_value: JSON.stringify(regulations.public_holidays) },
     { region_id: currentRegionId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
@@ -634,6 +875,28 @@ function renderRegulations() {
     '<table class="hours-table"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
     hoursRows + '</table></div>' +
 
+    '<div class="reg-section"><h3>Break Structure</h3>' +
+    '<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Define breaks per shift. The engine places each break in the lowest-volume slot within its window.</p>' +
+    '<table class="breaks-table">' +
+      '<tr><th>Name</th><th>Duration (min)</th><th>Window start</th><th>Window end</th><th></th></tr>' +
+      (regulations.breaks || []).map(function(b, bi) {
+        var wsOpts = '', weOpts = '';
+        for (var h = 0; h <= 23; h++) {
+          wsOpts += '<option value="' + h + '"' + (h === b.window_start ? ' selected' : '') + '>' + String(h).padStart(2,'0') + ':00</option>';
+          weOpts += '<option value="' + h + '"' + (h === b.window_end   ? ' selected' : '') + '>' + String(h).padStart(2,'0') + ':00</option>';
+        }
+        return '<tr class="break-row">' +
+          '<td><input type="text" class="break-name" value="' + b.name + '"></td>' +
+          '<td><input type="number" class="break-dur" value="' + b.duration + '" min="5" max="120"></td>' +
+          '<td><select class="break-ws">' + wsOpts + '</select></td>' +
+          '<td><select class="break-we">' + weOpts + '</select></td>' +
+          '<td><button class="btn-xs btn-xs-danger" onclick="removeBreakRow(this)">✕</button></td>' +
+          '</tr>';
+      }).join('') +
+    '</table>' +
+    '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
+    '</div>' +
+
     '<div class="reg-section"><h3>Bank Holidays</h3>' +
     '<p style="font-size:12px;color:#6b7280;margin-bottom:10px;">All agents show \ud83c\udf8c Holiday. Does not consume an agent\u2019s rest day.</p>' +
     '<div class="date-tags" id="holiday-dates-tags">' + holidayTagsHtml + '</div>' +
@@ -713,6 +976,23 @@ async function loadWeekData() {
 
   hideLoader();
 
+  // Load historical volume for the equivalent week last year
+  const histDates = days.map(function(day) { return getEquivalentLastYearDate(toDateStr(day)); });
+  await loadHistoricalVolume(histDates);
+
+  // Auto-fill forecast for days with no saved data
+  const autoFc = buildAutoForecast(days);
+  days.forEach(function(day) {
+    var ds = toDateStr(day);
+    if (!forecasts[ds] || forecasts[ds].contact_volume === 0) {
+      forecasts[ds] = autoFc[ds];
+    } else {
+      // Attach hourly breakdown to saved records too (for bar chart display)
+      forecasts[ds].hourly = autoFc[ds].hourly;
+      forecasts[ds].auto   = false;
+    }
+  });
+
   // Run rotation engine BEFORE rendering
   await computeAndSaveRotation();
 
@@ -758,7 +1038,7 @@ async function computeAndSaveRotation() {
   var ranked = openDays.map(function(day) {
     var ds = toDateStr(day);
     var f  = forecasts[ds];
-    var wl = f ? (f.contact_volume * f.aht_minutes) / 60 : 0;
+    var wl = f ? f.contact_volume : 0; // already in minutes
     return { ds: ds, workload: wl };
   });
   ranked.sort(function(a, b) { return a.workload - b.workload; });
@@ -859,11 +1139,12 @@ function computeDayShifts(dayStr) {
     return null; // placeholder, filled below
   });
 
-  // Step 4 — Calculate staffing need based on workload and max daily hours
+  // Step 4 — Calculate staffing need from pre-computed workload minutes
   const f             = forecasts[dayStr];
   let   assignedCount = 0;
   if (f && f.contact_volume > 0) {
-    const workload_hours     = (f.contact_volume * f.aht_minutes) / 60;
+    // contact_volume = total workload in minutes (sum of volume_task × AHT_task)
+    const workload_hours     = f.contact_volume / 60;
     const theoretical_needed = Math.ceil(workload_hours / regulations.max_daily_hours);
     assignedCount            = Math.min(theoretical_needed, working.length);
   }
@@ -941,7 +1222,7 @@ function renderPlanning() {
     if (!closure) {
       const f = forecasts[ds];
       if (f && f.contact_volume > 0) {
-        summary[ds].need = Math.ceil((f.contact_volume * f.aht_minutes / 60) / regulations.max_daily_hours);
+        summary[ds].need = Math.ceil((f.contact_volume / 60) / regulations.max_daily_hours);
       }
     }
   });
@@ -1049,7 +1330,7 @@ function showRestOverridePicker(agentId, currentRestDay, event) {
   const daysHtml = openDays.map(function(day, i) {
     const ds        = toDateStr(day);
     const f         = forecasts[ds];
-    const wlH       = f ? Math.round((f.contact_volume * f.aht_minutes) / 60) : 0;
+    const wlH       = f ? Math.round(f.contact_volume / 60) : 0; // contact_volume is already minutes
     const isCurrent = ds === currentRestDay;
     const agentAv   = availability[agentId] || {};
     const isOtherRest = agentAv[ds] === 'rest_scheduled' && !isCurrent;
@@ -1095,6 +1376,27 @@ function closeRestOverrideOnOutside(e) {
 function closeRestOverride() {
   document.getElementById('rest-override-popup').style.display = 'none';
   document.removeEventListener('click', closeRestOverrideOnOutside);
+}
+
+function addBreakRow() {
+  var tbody = document.querySelector('.breaks-table');
+  if (!tbody) return;
+  var opts = '';
+  for (var h = 0; h <= 23; h++) {
+    opts += '<option value="' + h + '">' + String(h).padStart(2,'0') + ':00</option>';
+  }
+  var tr = document.createElement('tr');
+  tr.className = 'break-row';
+  tr.innerHTML = '<td><input type="text" class="break-name" placeholder="Name" value="Break"></td>' +
+    '<td><input type="number" class="break-dur" value="15" min="5" max="120"></td>' +
+    '<td><select class="break-ws">' + opts + '</select></td>' +
+    '<td><select class="break-we">' + opts + '</select></td>' +
+    '<td><button class="btn-xs btn-xs-danger" onclick="removeBreakRow(this)">\u2715</button></td>';
+  tbody.appendChild(tr);
+}
+
+function removeBreakRow(btn) {
+  btn.closest('tr').remove();
 }
 
 async function applyRestOverride(agentId, oldRestDay, newRestDay) {
@@ -1156,13 +1458,84 @@ async function deleteAgent(id) {
 }
 
 // ── RENDER FORECAST ───────────────────────────────────────────────────────
+var TASK_META = {
+  'call':        { label: 'CALL',        color: '#ef4444', priority: 1 },
+  'chat':        { label: 'CHAT',        color: '#f97316', priority: 2 },
+  'mail':        { label: 'MAIL',        color: '#6366f1', priority: 3 },
+  'clienteling': { label: 'CLIENTELING', color: '#10b981', priority: 4 },
+  'back-office': { label: 'BACK-OFFICE', color: '#0891b2', priority: 5 },
+};
+
+function renderForecastHeader() {
+  var band = document.getElementById('forecast-header-band');
+  if (!band || !currentRegionId) return;
+  var aht   = regulations.aht_tasks || {};
+  var trend = regulations.trend_pct || 0;
+
+  var ahtRows = Object.entries(TASK_META).map(function(entry) {
+    var key   = entry[0];
+    var meta  = entry[1];
+    var task  = meta.label;
+    var val   = aht[task] || 0;
+    return '<tr class="aht-task-row" data-task="' + task + '">' +
+      '<td><span class="task-dot" style="background:' + meta.color + '"></span>' + task + '</td>' +
+      '<td><input class="aht-val" type="number" value="' + val + '" min="0" step="0.5"> min</td>' +
+      '</tr>';
+  }).join('');
+
+  var trendSign = trend > 0 ? '+' : '';
+  var trendDesc = trend === 0 ? 'flat — using history as-is'
+                : trend > 0  ? 'volume growing vs last year'
+                : 'volume declining vs last year';
+
+  band.innerHTML =
+    '<div class="forecast-header">' +
+      '<div>' +
+        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">AHT per task</div>' +
+        '<table class="aht-task-table"><tr><th>Task</th><th>AHT</th></tr>' + ahtRows + '</table>' +
+      '</div>' +
+      '<div style="border-left:1px solid #e5e7eb;padding-left:24px;">' +
+        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Forecast trend</div>' +
+        '<div class="trend-wrap">' +
+          '<input type="number" id="fc-trend-pct" value="' + trend + '" step="0.1" placeholder="0">' +
+          '<span style="font-size:18px;font-weight:bold;color:#374151;">%</span>' +
+        '</div>' +
+        '<div class="trend-note" style="margin-top:6px;">' + trendSign + trend + '% &mdash; ' + trendDesc + '</div>' +
+        '<button class="btn btn-save" style="margin-top:12px;font-size:12px;" onclick="saveForecastSettings()">💾 Save AHT &amp; Trend</button>' +
+      '</div>' +
+    '</div>';
+}
+
+async function saveForecastSettings() {
+  // Reads AHT + trend from forecast header and saves to regulations
+  await saveRegulations();
+  // Reload to recompute auto-forecast with new AHT/trend
+  await loadWeekData();
+}
+
 function renderForecast() {
   const container = document.getElementById('forecast-grid');
   if (!currentRegionId) {
     container.innerHTML = '<p style="color:#888">Select a region first.</p>';
     return;
   }
+
+  renderForecastHeader();
+
   const days = getWeekDays(currentWeekMonday);
+  const forecastOpenDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
+
+  // Max hourly volume for proportional bars
+  var maxHourlyVol = 1;
+  days.forEach(function(day) {
+    var f = forecasts[toDateStr(day)];
+    if (!f || !f.hourly) return;
+    Object.keys(TASK_META).forEach(function(tk) {
+      Object.values(f.hourly[tk] || {}).forEach(function(v) {
+        if (v > maxHourlyVol) maxHourlyVol = v;
+      });
+    });
+  });
 
   let html = '<div class="forecast-grid">';
   days.forEach(function(day, i) {
@@ -1170,50 +1543,98 @@ function renderForecast() {
     const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0 };
     const closure   = getDayClosureType(ds);
     const isBlocked = !!closure;
+    const isAuto    = !!f.auto;
+    const hours     = getDayHoursForDate(ds);
 
     let cls = 'forecast-day-card';
     if (isToday(day)) cls += ' today-card';
     if (isBlocked)    cls += ' closed-card';
+    if (isAuto && !isBlocked) cls += ' auto-filled';
 
     const statusNote = isBlocked
       ? '<div style="font-size:10px;color:#9ca3af;margin-top:4px;">' +
         (closure === 'weekend' ? '\ud83c\udfd6 Weekend off' : '\ud83c\udf8c Holiday') + '</div>'
       : '';
 
-    const disabledAttr = isBlocked ? ' disabled style="opacity:0.5"' : '';
+    const autoBadge    = (isAuto && !isBlocked) ? '<span class="auto-badge">auto</span>' : '';
+
+    // Workload summary + FTE
+    var workloadH  = f.contact_volume > 0 ? (f.contact_volume / 60).toFixed(1) : '\u2014';
+    var fteVal     = f.fte || 0;
+    var netMin     = getNetProductiveMinPerDay(forecastOpenDays.length);
+
+    var workloadLine = !isBlocked
+      ? '<div style="margin-top:8px;padding:6px 8px;background:#f0fdf4;border-radius:4px;font-size:10px;color:#374151;">' +
+        '<div>\u23f1 <b>' + workloadH + 'h</b> workload</div>' +
+        (fteVal > 0
+          ? '<div style="margin-top:2px;">\ud83d\udc65 <b>' + fteVal + ' FTE</b> needed' +
+            '<span style="color:#9ca3af;margin-left:4px;">(' + Math.round(netMin) + 'min/agent)</span></div>'
+          : '<div style="color:#9ca3af;">No forecast data</div>') +
+        (f.backlog > 0
+          ? '<div style="margin-top:2px;color:#6366f1;">\ud83d\udce7 incl. ' + f.backlog + ' mail backlog</div>'
+          : '') +
+        (f.carryToNextWeek
+          ? '<div style="margin-top:2px;color:#f97316;">\u27a1 ' + f.carryToNextWeek + ' mail carry \u2192 next week</div>'
+          : '') +
+        '</div>'
+      : '';
+
+    // Hourly bar chart
+    var hourlyHtml = '';
+    if (!isBlocked && f.hourly) {
+      // Legend
+      var legendItems = Object.entries(TASK_META).map(function(e) {
+        return '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' +
+          e[1].color + ';margin-right:2px;"></span>' + e[1].label + '</span>';
+      }).join('');
+
+      hourlyHtml = '<div class="hourly-chart">' +
+        '<div style="font-size:9px;color:#9ca3af;margin-bottom:4px;display:flex;gap:6px;flex-wrap:wrap;">' +
+        legendItems + '</div>';
+
+      // Mail backlog (outside hours)
+      var mailBacklog = 0;
+      Object.keys(f.hourly['mail'] || {}).forEach(function(h) {
+        h = parseInt(h);
+        if (h < hours.open || h >= hours.close) mailBacklog += f.hourly['mail'][h];
+      });
+
+      for (var h = hours.open; h < hours.close; h++) {
+        var rowTotal = 0;
+        var bars = '';
+        Object.entries(TASK_META).forEach(function(e) {
+          var tk  = e[0];
+          var col = e[1].color;
+          var vol = (f.hourly[tk] || {})[h] || 0;
+          rowTotal += vol;
+          if (vol > 0) {
+            var pct = Math.round((vol / maxHourlyVol) * 100);
+            bars += '<div style="background:' + col + ';height:100%;width:' + pct + '%;"></div>';
+          }
+        });
+        if (rowTotal === 0) continue;
+        hourlyHtml += '<div class="hourly-row">' +
+          '<div class="hourly-label">' + String(h).padStart(2,'0') + 'h</div>' +
+          '<div class="hourly-bar-wrap">' + bars + '</div>' +
+          '<div class="hourly-vol">' + rowTotal + '</div>' +
+          '</div>';
+      }
+      if (mailBacklog > 0) {
+        hourlyHtml += '<div style="font-size:9px;color:#6366f1;margin-top:4px;">' +
+          '\ud83d\udce7 +' + mailBacklog + ' mail outside hours</div>';
+      }
+      hourlyHtml += '</div>';
+    }
 
     html += '<div class="' + cls + '">' +
-      '<h4>' + DAY_SHORT[i] + '<br><span style="font-weight:normal">' + formatDate(day) + '</span></h4>' +
+      '<h4>' + DAY_SHORT[i] + autoBadge + '<br><span style="font-weight:normal">' + formatDate(day) + '</span></h4>' +
       statusNote +
-      '<label>Volume</label>' +
-      '<input type="number" id="vol-' + ds + '" value="' + f.contact_volume + '" min="0" placeholder="0"' + disabledAttr + '>' +
-      '<label>AHT (min)</label>' +
-      '<input type="number" id="aht-' + ds + '" value="' + f.aht_minutes + '" min="0" step="0.5" placeholder="0"' + disabledAttr + '>' +
+      workloadLine +
+      hourlyHtml +
       '</div>';
   });
   html += '</div>';
   container.innerHTML = html;
-}
-
-async function saveForecast() {
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
-  const days    = getWeekDays(currentWeekMonday);
-  const upserts = days.map(function(day) {
-    const ds = toDateStr(day);
-    return {
-      region_id:      currentRegionId,
-      forecast_date:  ds,
-      contact_volume: parseFloat(document.getElementById('vol-' + ds) ? document.getElementById('vol-' + ds).value : 0) || 0,
-      aht_minutes:    parseFloat(document.getElementById('aht-' + ds) ? document.getElementById('aht-' + ds).value : 0) || 0,
-    };
-  });
-  showLoader();
-  const { error } = await sb.from('forecasts')
-    .upsert(upserts, { onConflict: 'region_id,forecast_date' });
-  hideLoader();
-  if (error) { showToast('Failed to save forecast', 'error'); return; }
-  showToast('Forecast saved \u2713');
-  await loadWeekData();
 }
 
 // ── START ─────────────────────────────────────────────────────────────────
