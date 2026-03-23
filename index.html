@@ -38,7 +38,7 @@
     th.closed-col { background: #6b7280; }
     td { padding: 8px 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px; vertical-align: middle; }
     td.agent-name { text-align: left; font-weight: bold; background: #f9f9f9; white-space: nowrap; min-width: 150px; }
-    .planning-cell { display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .planning-cell { display:flex; align-items:center; justify-content:center; gap:6px; }
 
     /* ── SHIFT BADGES ── */
     .shift-badge     { border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; font-weight: 600; }
@@ -47,7 +47,7 @@
     .shift-holiday   { background: #fef9c3; color: #92400e; }
     .shift-scheduled { background: #f3e8ff; color: #7c3aed; cursor: pointer; border: 1px dashed #c4b5fd; }
     .shift-scheduled:hover { background: #ede9fe; }
-    .shift-working   { background: #dbeafe; color: #1e40af; cursor: pointer; }
+    .shift-working   { background: #dbeafe; color: #1e40af; }
 
     /* ── SUMMARY ROW ── */
     tr.summary-row td { background: #f0fdf4; font-size: 11px; }
@@ -172,7 +172,12 @@
     .intraday-agent-cell{padding:7px 10px;font-size:12px;font-weight:600;background:#f9fafb;border:1px solid #e5e7eb;white-space:nowrap;display:flex;align-items:center;min-height:56px;}
     .intraday-hour-header{padding:5px 4px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;}
     .intraday-block{border:1px solid #e5e7eb;min-height:56px;position:relative;background:white;}
-    .task-block{position:absolute;top:3px;bottom:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;padding:0 3px;}
+    .task-block { position:absolute;top:3px;bottom:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;padding:0 3px;cursor:grab; }
+    .task-block[draggable="true"]:active { cursor:grabbing; }
+    .task-block.dragging { opacity:0.4; }
+    .intraday-block.drag-over { outline:2px dashed #6366f1; background:#f0f0ff; }
+    .intraday-reset-btn { font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid #d1d5db;background:white;color:#6b7280;cursor:pointer;margin-left:8px; }
+    .intraday-reset-btn:hover { background:#fee2e2;color:#b91c1c;border-color:#fca5a5; }
     .intraday-rest-cell{background:#f9fafb;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af;min-height:56px;}
     .intraday-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;}
     /* ── TASKS CONFIG ── */
@@ -383,6 +388,7 @@ let ropState = { agentId: null, currentRestDay: null };
 var currentPlanningView = 'weekly';
 var currentIntradayDate = null;
 var tasks = [];  // loaded from tasks table
+var scheduleOverrides = {}; // [date][agentId][start_min] = {end_min, task}
 
 // Default task config (pastel colors, used for seeding and fallback)
 var TASK_DEFAULTS = [
@@ -1195,6 +1201,7 @@ async function loadWeekData() {
 
   // Run rotation engine BEFORE rendering
   await computeAndSaveRotation();
+  await loadScheduleOverrides();
 
   // Set intraday default date to first open day of week
   var _days = getWeekDays(currentWeekMonday);
@@ -1404,6 +1411,111 @@ async function computeAndSaveRotation() {
 }
 
 // ── PLANNING ENGINE ───────────────────────────────────────────────────────
+// ── SCHEDULE OVERRIDES (drag & drop persistence) ──────────────────────────
+async function loadScheduleOverrides() {
+  scheduleOverrides = {};
+  if (!currentRegionId || !agents.length) return;
+  var days = getWeekDays(currentWeekMonday);
+  var start = toDateStr(days[0]), end = toDateStr(days[6]);
+  var { data, error } = await sb.from('schedule_overrides')
+    .select('*').eq('region_id', currentRegionId)
+    .gte('date', start).lte('date', end);
+  if (error || !data) return;
+  data.forEach(function(row) {
+    if (!scheduleOverrides[row.date]) scheduleOverrides[row.date] = {};
+    if (!scheduleOverrides[row.date][row.agent_id]) scheduleOverrides[row.date][row.agent_id] = {};
+    scheduleOverrides[row.date][row.agent_id][row.start_min] = { end_min: row.end_min, task: row.task };
+  });
+}
+
+// Patch computed blocks with any stored overrides for this agent/day
+function applyOverrides(blocks, agentId, ds) {
+  var dayOv = scheduleOverrides[ds] && scheduleOverrides[ds][agentId];
+  if (!dayOv) return blocks;
+  return blocks.map(function(b) {
+    var ov = dayOv[b.start];
+    if (ov && ov.end_min === b.end) {
+      return { start: b.start, end: b.end, task: ov.task, label: ov.task, isLunch: b.isLunch };
+    }
+    return b;
+  });
+}
+
+// Drag state
+var dragState = null;
+
+function onBlockDragStart(event, agentId, ds, startMin, endMin, task) {
+  dragState = { agentId: agentId, ds: ds, startMin: startMin, endMin: endMin, task: task };
+  event.target.classList.add('dragging');
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+function onBlockDragEnd(event) {
+  event.target.classList.remove('dragging');
+}
+
+function onCellDragOver(event) {
+  event.preventDefault();
+  event.currentTarget.classList.add('drag-over');
+  event.dataTransfer.dropEffect = 'move';
+}
+
+function onCellDragLeave(event) {
+  event.currentTarget.classList.remove('drag-over');
+}
+
+function onCellDrop(event, agentId, ds, startMin, endMin, task) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+  if (!dragState) return;
+  // Can't drop on self
+  if (dragState.agentId === agentId && dragState.startMin === startMin) return;
+  // Perform the swap
+  swapBlocks(
+    dragState.agentId, dragState.ds, dragState.startMin, dragState.endMin, dragState.task,
+    agentId, ds, startMin, endMin, task
+  );
+  dragState = null;
+}
+
+async function swapBlocks(agentA, dsA, startA, endA, taskA, agentB, dsB, startB, endB, taskB) {
+  // Breaks cannot be swapped (they are structural)
+  if (taskA === '__break__' || taskB === '__break__') {
+    showToast('Breaks cannot be swapped', 'error'); return;
+  }
+  // Build the two override upserts
+  var upserts = [
+    { region_id: currentRegionId, agent_id: agentA, date: dsA, start_min: startA, end_min: endA, task: taskB },
+    { region_id: currentRegionId, agent_id: agentB, date: dsB, start_min: startB, end_min: endB, task: taskA },
+  ];
+  var { error } = await sb.from('schedule_overrides')
+    .upsert(upserts, { onConflict: 'agent_id,date,start_min' });
+  if (error) { showToast('Swap failed: ' + error.message, 'error'); return; }
+  // Update local override cache
+  [upserts[0], upserts[1]].forEach(function(u) {
+    if (!scheduleOverrides[u.date]) scheduleOverrides[u.date] = {};
+    if (!scheduleOverrides[u.date][u.agent_id]) scheduleOverrides[u.date][u.agent_id] = {};
+    scheduleOverrides[u.date][u.agent_id][u.start_min] = { end_min: u.end_min, task: u.task };
+  });
+  renderIntraday(currentIntradayDate);
+  showToast('\u21C4 Swapped');
+}
+
+async function resetDayOverrides(ds) {
+  if (!confirm('Reset all manual overrides for this day?')) return;
+  if (!agents.length) return;
+  var agentIds = agents.map(function(a){return a.id;});
+  var { error } = await sb.from('schedule_overrides')
+    .delete()
+    .eq('region_id', currentRegionId)
+    .eq('date', ds)
+    .in('agent_id', agentIds);
+  if (error) { showToast('Reset failed', 'error'); return; }
+  if (scheduleOverrides[ds]) delete scheduleOverrides[ds];
+  renderIntraday(ds);
+  showToast('Overrides cleared \u2713');
+}
+
 // ── RENDER PLANNING ───────────────────────────────────────────────────────
 function renderPlanning() {
   renderWeeklyPlanning();
@@ -1501,7 +1613,7 @@ function renderWeeklyPlanning() {
           badge = '<span class="shift-partial" onclick="openIntradayForDay(\''+ds+'\')" style="cursor:pointer;">' +
             String(hoursInfo.open).padStart(2,'0')+':00\u2013'+formatMinutes(pd.closeMin)+'</span>';
         } else {
-          badge = '<span class="shift-badge shift-working" onclick="openIntradayForDay(\''+ds+'\')" style="cursor:pointer;">\uD83D\uDCC5 Working</span>';
+          badge = '<span class="shift-badge shift-working">\uD83D\uDCC5 Working</span>';
         }
       }
 
@@ -1891,10 +2003,21 @@ function renderIntraday(ds) {
         rows += '<div class="intraday-rest-cell">'+(hh===hours.open?lbl:'')+'</div>';
       return;
     }
+    // Apply any stored overrides on top of computed blocks
+    var blocks = applyOverrides(entry.blocks, a.id, target);
     for (var h=hours.open; h<hours.close; h++) {
       var hS=h*60, hE=(h+1)*60;
-      var ov = entry.blocks.filter(function(b){return b.start<hE&&b.end>hS;});
-      var cell = '<div class="intraday-block">';
+      var ov = blocks.filter(function(b){return b.start<hE&&b.end>hS;});
+      // For drop target: find the first non-break block that covers this hour
+      var dropBlock = ov.find(function(b){return b.task!=='__break__';});
+      var dropAttrs = '';
+      if (dropBlock) {
+        var dTask = dropBlock.task.replace(/'/g,"\\'");
+        dropAttrs = ' ondragover="onCellDragOver(event)"' +
+          ' ondragleave="onCellDragLeave(event)"' +
+          ' ondrop="onCellDrop(event,\''+a.id+'\',\''+target+'\','+dropBlock.start+','+dropBlock.end+',\''+dTask+'\')"';
+      }
+      var cell = '<div class="intraday-block"'+dropAttrs+'>';
       ov.forEach(function(b){
         var bS=Math.max(b.start,hS), bE=Math.min(b.end,hE);
         var pL=((bS-hS)/60)*100, pW=((bE-bS)/60)*100;
@@ -1902,7 +2025,14 @@ function renderIntraday(ds) {
         var brCol = b.isLunch ? BREAK_COLORS.lunch : BREAK_COLORS.short;
         var bg  = t ? t.color_bg  : brCol.bg;
         var txt = t ? t.color_text : brCol.text;
-        cell += '<div class="task-block" style="left:'+pL+'%;width:'+pW+'%;background:'+bg+
+        var isDraggable = b.task !== '__break__';
+        var dragAttrs = isDraggable
+          ? ' draggable="true"' +
+            ' ondragstart="onBlockDragStart(event,\''+a.id+'\',\''+target+'\','+b.start+','+b.end+',\''+b.task.replace(/'/g,"\\'")+'\')' +
+            '"' +
+            ' ondragend="onBlockDragEnd(event)"'
+          : '';
+        cell += '<div class="task-block"'+dragAttrs+' style="left:'+pL+'%;width:'+pW+'%;background:'+bg+
           ';color:'+txt+';border:1px solid '+(b.task==='__break__' ? txt : txt+'25')+
           ';font-size:'+(pW>15?'9':'7')+'px;">'+(pW>12?b.label:'')+'</div>';
       });
@@ -1927,8 +2057,14 @@ function renderIntraday(ds) {
     needRow += '<div style="border:1px solid #e5e7eb;background:#f8fafc;min-height:40px;">'+needHtml+'</div>';
   }
 
+  // Check if this day has any overrides
+  var hasOverrides = !!(scheduleOverrides[target] && Object.keys(scheduleOverrides[target]).length);
+  var resetBtn = hasOverrides
+    ? '<button class="intraday-reset-btn" onclick="resetDayOverrides(\''+target+'\')">\u21BA Reset overrides</button>'
+    : '';
+
   container.innerHTML =
-    '<div class="intraday-day-btns">'+dayBtns+'</div>' + legend +
+    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' + legend +
     '<div id="intraday-container"><div class="intraday-grid" style="grid-template-columns:'+cols+
     ';grid-auto-rows:auto;">'+header+rows+needRow+'</div></div>';
 }
