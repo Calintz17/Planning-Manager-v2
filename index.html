@@ -1154,9 +1154,13 @@ async function loadWeekData() {
     if (!forecasts[ds] || forecasts[ds].contact_volume === 0) {
       forecasts[ds] = autoFc[ds];
     } else {
-      // Attach hourly breakdown to saved records too (for bar chart display)
-      forecasts[ds].hourly = autoFc[ds].hourly;
-      forecasts[ds].auto   = false;
+      // Saved forecast — keep volume but attach computed display fields from auto engine
+      forecasts[ds].hourly   = autoFc[ds].hourly;
+      forecasts[ds].carryIn  = autoFc[ds].carryIn;
+      forecasts[ds].fte      = autoFc[ds].fte;
+      forecasts[ds].netMin   = autoFc[ds].netMin;
+      forecasts[ds].carryToNextWeek = autoFc[ds].carryToNextWeek;
+      forecasts[ds].auto     = false;
     }
   });
 
