@@ -1749,22 +1749,23 @@ function renderForecast() {
 
     const autoBadge    = (isAuto && !isBlocked) ? '<span class="auto-badge">auto</span>' : '';
 
-    // Carry-in banner (top of card)
-    var carryInBanner = (f.carryIn > 0 && !isBlocked)
-      ? '<div style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:4px 7px;font-size:10px;margin-bottom:6px;">' +
-        '\u27a1 ' + f.carryIn + ' contacts carried over from previous day</div>'
-      : '';
+    // Carry-in banner (top of card) — past-looking: shows what was received FROM previous period
+    var carryInBanner = '';
+    if (f.carryIn > 0 && !isBlocked) {
+      var prevDayClosed = (i === 0) ? true
+        : !!getDayClosureType(toDateStr(days[i - 1]));
+      var carryLabel = (day.getDay() === 1 || prevDayClosed)
+        ? 'from last open day / weekend'
+        : 'from yesterday (after-hours)';
+      carryInBanner =
+        '<div style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:4px 7px;font-size:10px;margin-bottom:6px;">' +
+        '\u27a1 <b>' + f.carryIn + '</b> contacts carried over ' + carryLabel + '</div>';
+    }
 
-    // Carry-to-next-week note
-    var carryOutNote = (f.carryToNextWeek && !isBlocked)
-      ? '<div style="font-size:9px;color:#f97316;margin-top:4px;">' +
-        '\u27a1 ' + f.carryToNextWeek + ' contacts carry \u2192 next Monday</div>'
-      : '';
-
-    // Workload summary + FTE
-    var workloadH  = f.contact_volume > 0 ? (f.contact_volume / 60).toFixed(1) : '\u2014';
-    var fteVal     = f.fte || 0;
-    var netMin     = f.netMin || getNetProductiveMinPerDay(forecastOpenDays.length);
+    // Workload summary + FTE — no future carry note (irrelevant to manager)
+    var workloadH = f.contact_volume > 0 ? (f.contact_volume / 60).toFixed(1) : '\u2014';
+    var fteVal    = f.fte || 0;
+    var netMin    = f.netMin || getNetProductiveMinPerDay(forecastOpenDays.length);
 
     var workloadLine = !isBlocked
       ? '<div style="margin-top:8px;padding:6px 8px;background:#f0fdf4;border-radius:4px;font-size:10px;color:#374151;">' +
@@ -1773,7 +1774,6 @@ function renderForecast() {
           ? '<div style="margin-top:2px;">\ud83d\udc65 <b>' + fteVal + ' FTE</b> needed' +
             '<span style="color:#9ca3af;margin-left:4px;">(' + Math.round(netMin) + ' min/agent)</span></div>'
           : '<div style="color:#9ca3af;">No forecast data</div>') +
-        carryOutNote +
         '</div>'
       : '';
 
