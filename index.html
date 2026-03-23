@@ -415,11 +415,171 @@ async function loadHistoricalVolume(histDates) {
 // Net productive minutes per agent per day:
 // (weekly_hours / working_days × 60) − total break minutes
 function getNetProductiveMinPerDay(openDaysCount) {
-  var workingDays   = Math.min(openDaysCount, 5); // max 5 working days
-  if (workingDays === 0) return 480; // fallback
-  var shiftMin      = (regulations.weekly_hours / workingDays) * 60;
-  var breakMin      = (regulations.breaks || []).reduce(function(s, b) { return s + (b.duration || 0); }, 0);
+  var workingDays = Math.min(openDaysCount, 5);
+  if (workingDays === 0) return 480;
+  var shiftMin    = (regulations.weekly_hours / workingDays) * 60;
+  var breakMin    = (regulations.breaks || []).reduce(function(s, b) { return s + (b.duration || 0); }, 0);
   return Math.max(60, shiftMin - breakMin);
+}
+
+// Build auto-forecast for all 7 days from history × trend.
+//
+// CARRY-OVER RULES (all non-CALL tasks: MAIL, CHAT, CLIENTELING, BACK-OFFICE):
+//   • Received BEFORE opening hour of an open day → redistributed to opening hour (same day)
+//   • Received AFTER closing hour of an open day  → carried to next open day's opening hour
+//   • Any volume on a fully CLOSED day (weekend/holiday) → carried to next open day
+//   • If no next open day in this week → noted as carry-to-next-week
+//
+// CALL cannot be received outside operating hours (phones are closed).
+//
+// Incoming carry from PREVIOUS week is computed from the 3 days before days[0]
+// (already loaded into historicalVolume).
+function buildAutoForecast(days) {
+  var trend    = 1 + (regulations.trend_pct || 0) / 100;
+  var aht      = regulations.aht_tasks || {};
+  var ALL_TASKS     = ['CALL','CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
+  var NON_CALL      = ['CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
+  var openDays      = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
+
+  // ── Step 1: compute carry-over coming IN from previous week ──────────────
+  // Walk backwards from days[0] up to 3 days; accumulate non-CALL volume
+  // from closed days AND after-hours volume from the first open day we hit.
+  var prevCarryIn = 0;
+  var firstOpenDayDate = days[0]; // fallback
+  for (var k = 0; k < openDays.length; k++) { firstOpenDayDate = openDays[k]; break; }
+
+  for (var pi = 1; pi <= 3; pi++) {
+    var prevDate   = new Date(days[0]);
+    prevDate.setDate(days[0].getDate() - pi);
+    var prevDs     = toDateStr(prevDate);
+    var prevHistDs = getEquivalentLastYearDate(prevDs);
+    var prevHist   = historicalVolume[prevHistDs] || {};
+    var prevClosed = !!getDayClosureType(prevDs);
+
+    if (prevClosed) {
+      // Fully closed day — ALL non-CALL volume carries forward
+      NON_CALL.forEach(function(task) {
+        var d = prevHist[task] || {};
+        Object.values(d).forEach(function(v) { prevCarryIn += Math.round(v * trend); });
+      });
+      // Keep going backwards (might be multiple closed days)
+    } else {
+      // Open day — only AFTER-hours non-CALL carries forward
+      var prevHours = getDayHoursForDate(prevDs);
+      NON_CALL.forEach(function(task) {
+        var d = prevHist[task] || {};
+        Object.keys(d).forEach(function(h) {
+          if (parseInt(h) >= prevHours.close) {
+            prevCarryIn += Math.round(d[h] * trend);
+          }
+        });
+      });
+      break; // stop at the first open day we reach going backwards
+    }
+  }
+
+  // ── Step 2: process each day in order ────────────────────────────────────
+  var carryOver = prevCarryIn; // rolls forward through the week
+  var result    = {};
+
+  days.forEach(function(day) {
+    var ds      = toDateStr(day);
+    var closure = getDayClosureType(ds);
+    var histDs  = getEquivalentLastYearDate(ds);
+    var hist    = historicalVolume[histDs] || {};
+    var hours   = getDayHoursForDate(ds);
+
+    if (closure) {
+      // Fully closed day: collect ALL non-CALL volume → carry forward
+      NON_CALL.forEach(function(task) {
+        var d = hist[task] || {};
+        Object.values(d).forEach(function(v) { carryOver += Math.round(v * trend); });
+      });
+      result[ds] = { contact_volume: 0, aht_minutes: 0, auto: true,
+                     hourly: {}, fte: 0, carryIn: 0, closed: true };
+      return;
+    }
+
+    // Open day ─────────────────────────────────────────────────────────────
+    var dayCarryIn   = carryOver;
+    carryOver        = 0;
+    var newCarryOut  = 0;
+    var hourly       = {};
+
+    ALL_TASKS.forEach(function(task) {
+      var taskData = hist[task] || {};
+      var key      = task.toLowerCase();
+      hourly[key]  = {};
+      var isCall   = (task === 'CALL');
+
+      Object.keys(taskData).forEach(function(hStr) {
+        var h   = parseInt(hStr);
+        var vol = Math.round((taskData[h] || 0) * trend);
+        if (vol === 0) return;
+
+        if (isCall) {
+          // CALL: only operating hours
+          if (h >= hours.open && h < hours.close) {
+            hourly[key][h] = (hourly[key][h] || 0) + vol;
+          }
+          // outside hours: irrelevant (phone is closed)
+        } else {
+          // Non-CALL redistribution
+          if (h < hours.open) {
+            // Before opening → add to opening hour (overnight backlog, same day)
+            hourly[key][hours.open] = (hourly[key][hours.open] || 0) + vol;
+          } else if (h >= hours.close) {
+            // After closing → carry to next open day
+            newCarryOut += vol;
+          } else {
+            // During operating hours → keep
+            hourly[key][h] = (hourly[key][h] || 0) + vol;
+          }
+        }
+      });
+    });
+
+    // Inject carry-in from previous day/weekend into MAIL at opening hour
+    if (dayCarryIn > 0) {
+      hourly['mail'] = hourly['mail'] || {};
+      hourly['mail'][hours.open] = (hourly['mail'][hours.open] || 0) + dayCarryIn;
+    }
+
+    // Roll over after-hours volume to next day
+    carryOver = newCarryOut;
+
+    // Compute total workload (minutes)
+    var totalWorkloadMin = 0;
+    ALL_TASKS.forEach(function(task) {
+      var key     = task.toLowerCase();
+      var taskAht = aht[task] || 0;
+      Object.values(hourly[key] || {}).forEach(function(vol) {
+        totalWorkloadMin += vol * taskAht;
+      });
+    });
+
+    var fte    = 0;
+    var netMin = getNetProductiveMinPerDay(openDays.length);
+    if (totalWorkloadMin > 0) fte = Math.ceil(totalWorkloadMin / netMin);
+
+    result[ds] = {
+      contact_volume: Math.round(totalWorkloadMin),
+      aht_minutes:    0,
+      auto:           true,
+      hourly:         hourly,
+      fte:            fte,
+      carryIn:        dayCarryIn,
+      netMin:         netMin,
+    };
+  });
+
+  // Note any remaining carry (last open day's after-hours → next week Monday)
+  if (carryOver > 0 && openDays.length > 0) {
+    var lastDs = toDateStr(openDays[openDays.length - 1]);
+    if (result[lastDs]) result[lastDs].carryToNextWeek = carryOver;
+  }
+
+  return result;
 }
 
 // Build auto-forecast for all 7 days from history × trend.
@@ -898,7 +1058,7 @@ function renderRegulations() {
     '</div>' +
 
     '<div class="reg-section"><h3>Bank Holidays</h3>' +
-    '<p style="font-size:12px;color:#6b7280;margin-bottom:10px;">All agents show \ud83c\udf8c Holiday. Does not consume an agent\u2019s rest day.</p>' +
+    '<p style="font-size:12px;color:#6b7280;margin-bottom:10px;">All agents show \ud83c\udfd6\ufe0f Holiday. Does not consume an agent\u2019s rest day.</p>' +
     '<div class="date-tags" id="holiday-dates-tags">' + holidayTagsHtml + '</div>' +
     '<div class="date-add-row"><input type="date" id="new-holiday-date">' +
     '<button class="btn btn-primary" onclick="addHoliday()">+ Add date</button></div></div>' +
@@ -976,8 +1136,15 @@ async function loadWeekData() {
 
   hideLoader();
 
-  // Load historical volume for the equivalent week last year
-  const histDates = days.map(function(day) { return getEquivalentLastYearDate(toDateStr(day)); });
+  // Load historical volume for the equivalent week last year.
+  // Also load equiv of prev 3 days (Fri/Sat/Sun) so we can compute
+  // carry-over INTO this week's first open day.
+  var histDates = days.map(function(day) { return getEquivalentLastYearDate(toDateStr(day)); });
+  for (var pi = 1; pi <= 3; pi++) {
+    var prevDay = new Date(days[0]);
+    prevDay.setDate(days[0].getDate() - pi);
+    histDates.push(getEquivalentLastYearDate(toDateStr(prevDay)));
+  }
   await loadHistoricalVolume(histDates);
 
   // Auto-fill forecast for days with no saved data
@@ -1178,7 +1345,7 @@ function shiftBadge(shift, agentId, dayStr) {
     case 'Rest':          return '<span class="shift-rest">Rest</span>';
     case 'Absent':        return '<span class="shift-absent">\ud83c\udfe5 Absent</span>';
     case 'Closed':
-    case 'Holiday':       return '<span class="shift-holiday">\ud83c\udf8c Holiday</span>';
+    case 'Holiday':       return '<span class="shift-holiday">\ud83c\udfd6\ufe0f Holiday</span>';
     case 'ScheduledRest':
       // Clickable — manager can reassign rest day
       return '<span class="shift-scheduled" onclick="showRestOverridePicker(\'' +
@@ -1236,9 +1403,9 @@ function renderPlanning() {
     if      (isToday(day)) thClass = ' class="today-col"';
     else if (closure)      thClass = ' class="closed-col"';
 
-    const icon = closure === 'holiday' ? ' \ud83c\udf8c'
+    const icon = closure === 'holiday' ? ' \ud83c\udfd6\ufe0f'
                : closure === 'closed'  ? ' \ud83d\udd12'
-               : closure === 'weekend' ? ' \ud83c\udfd6'
+               : closure === 'weekend' ? ' \ud83c\udf34'
                : '';
 
     html += '<th' + thClass + '>' +
@@ -1283,7 +1450,7 @@ function renderPlanning() {
     const ds = toDateStr(day);
     const s  = summary[ds];
     if (s.closure) {
-      const label = s.closure === 'weekend' ? '\ud83c\udfd6 Weekend' : '\ud83c\udf8c Holiday';
+      const label = s.closure === 'weekend' ? '\ud83c\udf34 Weekend' : '\ud83c\udfd6\ufe0f Holiday';
       html += '<td class="day-neutral" style="font-size:11px;">' + label + '</td>';
     } else {
       const ok  = (s.morning + s.afternoon) >= s.need;
@@ -1507,9 +1674,33 @@ function renderForecastHeader() {
 }
 
 async function saveForecastSettings() {
-  // Reads AHT + trend from forecast header and saves to regulations
-  await saveRegulations();
-  // Reload to recompute auto-forecast with new AHT/trend
+  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+
+  // Read trend % from forecast header
+  var trendEl = document.getElementById('fc-trend-pct');
+  if (trendEl) regulations.trend_pct = parseFloat(trendEl.value) || 0;
+
+  // Read AHT per task from forecast header
+  var newAht = {};
+  document.querySelectorAll('.aht-task-row').forEach(function(row) {
+    var task = row.dataset.task;
+    var val  = parseFloat(row.querySelector('.aht-val').value) || 0;
+    if (task) newAht[task] = val;
+  });
+  if (Object.keys(newAht).length > 0) regulations.aht_tasks = newAht;
+
+  // Save only these two keys — do NOT touch breaks or other regulation fields
+  showLoader();
+  var { error } = await sb.from('regulations').upsert([
+    { region_id: currentRegionId, rule_key: 'trend_pct',  rule_value: String(regulations.trend_pct) },
+    { region_id: currentRegionId, rule_key: 'aht_tasks',  rule_value: JSON.stringify(regulations.aht_tasks) },
+  ], { onConflict: 'region_id,rule_key' });
+  hideLoader();
+
+  if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
+  showToast('AHT & Trend saved \u2713');
+
+  // Reload week to recompute auto-forecast with new settings
   await loadWeekData();
 }
 
@@ -1553,29 +1744,36 @@ function renderForecast() {
 
     const statusNote = isBlocked
       ? '<div style="font-size:10px;color:#9ca3af;margin-top:4px;">' +
-        (closure === 'weekend' ? '\ud83c\udfd6 Weekend off' : '\ud83c\udf8c Holiday') + '</div>'
+        (closure === 'weekend' ? '\ud83c\udf34 Weekend off' : '\ud83c\udfd6\ufe0f Holiday') + '</div>'
       : '';
 
     const autoBadge    = (isAuto && !isBlocked) ? '<span class="auto-badge">auto</span>' : '';
 
+    // Carry-in banner (top of card)
+    var carryInBanner = (f.carryIn > 0 && !isBlocked)
+      ? '<div style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:4px 7px;font-size:10px;margin-bottom:6px;">' +
+        '\u27a1 ' + f.carryIn + ' contacts carried over from previous day</div>'
+      : '';
+
+    // Carry-to-next-week note
+    var carryOutNote = (f.carryToNextWeek && !isBlocked)
+      ? '<div style="font-size:9px;color:#f97316;margin-top:4px;">' +
+        '\u27a1 ' + f.carryToNextWeek + ' contacts carry \u2192 next Monday</div>'
+      : '';
+
     // Workload summary + FTE
     var workloadH  = f.contact_volume > 0 ? (f.contact_volume / 60).toFixed(1) : '\u2014';
     var fteVal     = f.fte || 0;
-    var netMin     = getNetProductiveMinPerDay(forecastOpenDays.length);
+    var netMin     = f.netMin || getNetProductiveMinPerDay(forecastOpenDays.length);
 
     var workloadLine = !isBlocked
       ? '<div style="margin-top:8px;padding:6px 8px;background:#f0fdf4;border-radius:4px;font-size:10px;color:#374151;">' +
         '<div>\u23f1 <b>' + workloadH + 'h</b> workload</div>' +
         (fteVal > 0
           ? '<div style="margin-top:2px;">\ud83d\udc65 <b>' + fteVal + ' FTE</b> needed' +
-            '<span style="color:#9ca3af;margin-left:4px;">(' + Math.round(netMin) + 'min/agent)</span></div>'
+            '<span style="color:#9ca3af;margin-left:4px;">(' + Math.round(netMin) + ' min/agent)</span></div>'
           : '<div style="color:#9ca3af;">No forecast data</div>') +
-        (f.backlog > 0
-          ? '<div style="margin-top:2px;color:#6366f1;">\ud83d\udce7 incl. ' + f.backlog + ' mail backlog</div>'
-          : '') +
-        (f.carryToNextWeek
-          ? '<div style="margin-top:2px;color:#f97316;">\u27a1 ' + f.carryToNextWeek + ' mail carry \u2192 next week</div>'
-          : '') +
+        carryOutNote +
         '</div>'
       : '';
 
@@ -1591,13 +1789,6 @@ function renderForecast() {
       hourlyHtml = '<div class="hourly-chart">' +
         '<div style="font-size:9px;color:#9ca3af;margin-bottom:4px;display:flex;gap:6px;flex-wrap:wrap;">' +
         legendItems + '</div>';
-
-      // Mail backlog (outside hours)
-      var mailBacklog = 0;
-      Object.keys(f.hourly['mail'] || {}).forEach(function(h) {
-        h = parseInt(h);
-        if (h < hours.open || h >= hours.close) mailBacklog += f.hourly['mail'][h];
-      });
 
       for (var h = hours.open; h < hours.close; h++) {
         var rowTotal = 0;
@@ -1619,16 +1810,14 @@ function renderForecast() {
           '<div class="hourly-vol">' + rowTotal + '</div>' +
           '</div>';
       }
-      if (mailBacklog > 0) {
-        hourlyHtml += '<div style="font-size:9px;color:#6366f1;margin-top:4px;">' +
-          '\ud83d\udce7 +' + mailBacklog + ' mail outside hours</div>';
-      }
-      hourlyHtml += '</div>';
+    // Mail backlog already absorbed into opening hour — no separate note needed
+    hourlyHtml += '</div>';
     }
 
     html += '<div class="' + cls + '">' +
       '<h4>' + DAY_SHORT[i] + autoBadge + '<br><span style="font-weight:normal">' + formatDate(day) + '</span></h4>' +
       statusNote +
+      carryInBanner +
       workloadLine +
       hourlyHtml +
       '</div>';
