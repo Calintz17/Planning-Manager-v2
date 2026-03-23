@@ -162,6 +162,29 @@
     .rop-cancel { margin-top: 12px; width: 100%; background: #f3f4f6; color: #374151; padding: 7px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .rop-cancel:hover { background: #e5e7eb; }
 
+    /* ── VIEW TOGGLE ── */
+    .view-toggle{display:flex;gap:8px;margin-bottom:16px;}
+    .view-toggle button{padding:6px 16px;border-radius:6px;border:1px solid #e5e7eb;background:white;cursor:pointer;font-size:13px;color:#6b7280;}
+    .view-toggle button.active{background:#1a1a2e;color:white;border-color:#1a1a2e;}
+    /* ── INTRADAY TIMELINE ── */
+    #intraday-container{overflow-x:auto;}
+    .intraday-day-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+    .intraday-day-btn{padding:5px 14px;border-radius:20px;border:1px solid #e5e7eb;background:white;cursor:pointer;font-size:12px;color:#6b7280;}
+    .intraday-day-btn.active{background:#1a1a2e;color:white;border-color:#1a1a2e;}
+    .intraday-day-btn.closed-day{background:#f3f4f6;color:#bbb;cursor:not-allowed;}
+    .intraday-grid{display:grid;}
+    .intraday-agent-cell{padding:7px 10px;font-size:12px;font-weight:600;background:#f9fafb;border:1px solid #e5e7eb;white-space:nowrap;display:flex;align-items:center;min-height:56px;}
+    .intraday-hour-header{padding:5px 4px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;}
+    .intraday-block{border:1px solid #e5e7eb;min-height:56px;position:relative;background:white;}
+    .task-block{position:absolute;top:3px;bottom:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;padding:0 3px;}
+    .intraday-rest-cell{background:#f9fafb;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af;min-height:56px;}
+    .intraday-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;}
+    /* ── TASKS CONFIG ── */
+    .tasks-config-table{width:100%;border-collapse:collapse;font-size:12px;}
+    .tasks-config-table th{background:#f9fafb;color:#6b7280;padding:7px 10px;text-align:left;border:1px solid #e5e7eb;font-size:11px;text-transform:uppercase;}
+    .tasks-config-table td{padding:7px 10px;border:1px solid #e5e7eb;vertical-align:middle;}
+    .filler-tag{font-size:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:10px;padding:1px 7px;margin-left:4px;}
+
     /* ── SYSTEM ── */
     #loader { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.75); z-index: 999; align-items: center; justify-content: center; font-size: 16px; color: #1a1a2e; }
     #loader.active { display: flex; }
@@ -169,12 +192,45 @@
     #toast.success { background: #166534; }
     #toast.error   { background: #b91c1c; }
     #status-bar { background: white; border-top: 1px solid #eee; padding: 8px 24px; font-size: 12px; color: #888; }
+
+    /* ── WEEK PICKER ── */
+    #week-picker-popup {
+      display:none; position:fixed; background:white; border:1px solid #e5e7eb;
+      border-radius:10px; padding:16px; box-shadow:0 8px 28px rgba(0,0,0,.18);
+      z-index:700; min-width:280px;
+    }
+    .wkp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .wkp-month-label { font-size:14px; font-weight:bold; color:#1a1a2e; }
+    .wkp-nav { background:none; border:none; cursor:pointer; color:#6b7280; font-size:16px; padding:2px 8px; border-radius:4px; }
+    .wkp-nav:hover { background:#f3f4f6; }
+    .wkp-grid { display:grid; grid-template-columns:auto repeat(7,1fr); gap:2px; font-size:11px; }
+    .wkp-day-hdr { text-align:center; color:#9ca3af; padding:3px 0; font-weight:600; }
+    .wkp-wn { color:#9ca3af; font-size:10px; padding:3px 4px; display:flex; align-items:center; justify-content:center; }
+    .wkp-day { text-align:center; padding:5px 3px; border-radius:4px; cursor:pointer; color:#374151; }
+    .wkp-day:hover { background:#f3f4f6; }
+    .wkp-day.other-month { color:#d1d5db; }
+    .wkp-day.today { font-weight:bold; color:#1a1a2e; }
+    .wkp-day.in-selected-week { background:#e0e7ff; color:#3730a3; border-radius:0; }
+    .wkp-day.week-start { border-radius:4px 0 0 4px; }
+    .wkp-day.week-end { border-radius:0 4px 4px 0; }
+    #week-label { cursor:pointer; border-radius:4px; padding:4px 8px; }
+    #week-label:hover { background:rgba(255,255,255,.15); }
   </style>
 </head>
 <body>
 
 <div id="loader">⏳ Loading…</div>
 <div id="toast"></div>
+
+<!-- WEEK PICKER POPUP -->
+<div id="week-picker-popup">
+  <div class="wkp-header">
+    <button class="wkp-nav" onclick="wkpChangeMonth(-1)">&#9664;</button>
+    <div class="wkp-month-label" id="wkp-month-label"></div>
+    <button class="wkp-nav" onclick="wkpChangeMonth(+1)">&#9654;</button>
+  </div>
+  <div class="wkp-grid" id="wkp-grid"></div>
+</div>
 
 <!-- REST OVERRIDE POPUP -->
 <div id="rest-override-popup">
@@ -193,7 +249,7 @@
   </div>
   <div class="week-nav">
     <button onclick="changeWeek(-1)">◀</button>
-    <div id="week-label">Week —</div>
+    <div id="week-label" onclick="toggleWeekPicker(event)" title="Click to jump to any week">Week —</div>
     <button onclick="changeWeek(+1)">▶</button>
   </div>
 </div>
@@ -209,10 +265,17 @@
 <!-- PLANNING TAB -->
 <div id="tab-planning" class="tab-content active">
   <div class="card">
-    <div id="planning-legend" style="font-size:11px;color:#6b7280;margin-bottom:12px;display:none;">
-      💡 Click a <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">📅 Sched. Rest</span> cell to reassign an agent's rest day
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+      <div class="view-toggle">
+        <button id="btn-view-weekly" class="active" onclick="switchPlanningView('weekly')">📅 Weekly</button>
+        <button id="btn-view-intraday" onclick="switchPlanningView('intraday')">⏱ Intraday</button>
+      </div>
+      <div id="planning-legend" style="font-size:11px;color:#6b7280;display:none;">
+        💡 Click <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">📅 Sched. Rest</span> to reassign rest day
+      </div>
     </div>
-    <div id="planning-grid"><p style="color:#888">Select a region to view the planning.</p></div>
+    <div id="planning-weekly"><p style="color:#888">Select a region to view the planning.</p></div>
+    <div id="planning-intraday" style="display:none;"><p style="color:#888">Select a region.</p></div>
   </div>
 </div>
 
@@ -316,6 +379,24 @@ let regulations = {
 // Rest override popup state
 let ropState = { agentId: null, currentRestDay: null };
 
+// Planning view state
+var currentPlanningView = 'weekly';
+var currentIntradayDate = null;
+var tasks = [];  // loaded from tasks table
+
+// Default task config (pastel colors, used for seeding and fallback)
+var TASK_DEFAULTS = [
+  { name:'CALL',        priority:1, is_filler:false, color_bg:'#fef2f2', color_text:'#dc2626', aht_minutes:10 },
+  { name:'CHAT',        priority:2, is_filler:false, color_bg:'#fff7ed', color_text:'#ea580c', aht_minutes:8  },
+  { name:'MAIL',        priority:3, is_filler:false, color_bg:'#eff6ff', color_text:'#2563eb', aht_minutes:5  },
+  { name:'BACK-OFFICE', priority:4, is_filler:false, color_bg:'#f5f3ff', color_text:'#7c3aed', aht_minutes:10 },
+  { name:'CLIENTELING', priority:5, is_filler:true,  color_bg:'#f0fdf4', color_text:'#16a34a', aht_minutes:15 },
+];
+var BREAK_COLORS = {
+  lunch: { bg:'#fef9c3', text:'#a16207' },   // yellow-100 — soft, clearly lunch
+  short: { bg:'#fefce8', text:'#ca8a04' },   // yellow-50  — very subtle, short break
+};
+
 // ── DATE HELPERS ──────────────────────────────────────────────────────────
 function getMondayOfCurrentWeek() {
   const today = new Date();
@@ -375,6 +456,78 @@ function getDayHoursForDate(dateStr) {
 function getDayHoursLabel(dateStr) {
   const h = getDayHoursForDate(dateStr);
   return String(h.open).padStart(2, '0') + ':00\u2013' + String(h.close).padStart(2, '0') + ':00';
+}
+
+// ── TASK HELPERS ──────────────────────────────────────────────────────────
+function getTask(name) {
+  return tasks.find(function(t){return t.name===name;}) ||
+    TASK_DEFAULTS.find(function(t){return t.name===name;}) ||
+    {name:name,color_bg:'#f3f4f6',color_text:'#374151',priority:99,is_filler:false,aht_minutes:5};
+}
+function tasksSortedByPriority() {
+  var src = tasks.length ? tasks : TASK_DEFAULTS;
+  return src.slice().sort(function(a,b){return a.priority-b.priority;});
+}
+
+async function loadTasks() {
+  var {data,error} = await sb.from('tasks').select('*')
+    .eq('region_id', currentRegionId).order('priority');
+  if (error) { showToast('Error loading tasks','error'); return; }
+  if (!data || data.length === 0) { await seedTasks(); return; }
+  tasks = data;
+  var aht = {};
+  tasks.forEach(function(t){ aht[t.name] = t.aht_minutes; });
+  regulations.aht_tasks = aht;
+}
+
+async function seedTasks() {
+  var rows = TASK_DEFAULTS.map(function(t){
+    return Object.assign({}, t, {region_id: currentRegionId});
+  });
+  var {data, error} = await sb.from('tasks')
+    .upsert(rows, {onConflict:'region_id,name'}).select();
+  if (!error && data) {
+    tasks = data;
+    var aht = {}; tasks.forEach(function(t){aht[t.name]=t.aht_minutes;});
+    regulations.aht_tasks = aht;
+  }
+}
+
+async function saveTasks() {
+  if (!currentRegionId) return;
+  var upserts = [];
+  document.querySelectorAll('.task-cfg-row').forEach(function(row){
+    upserts.push({
+      region_id:   currentRegionId,
+      name:        row.dataset.name,
+      priority:    parseInt(row.querySelector('.task-pri').value) || 99,
+      aht_minutes: parseFloat(row.querySelector('.task-aht').value) || 0,
+      color_bg:    row.querySelector('.task-cbg').value,
+      color_text:  row.querySelector('.task-ctxt').value,
+      is_filler:   row.dataset.filler === 'true',
+    });
+  });
+  showLoader();
+  var {error} = await sb.from('tasks').upsert(upserts, {onConflict:'region_id,name'});
+  hideLoader();
+  if (error) { showToast('Save failed','error'); return; }
+  showToast('Tasks saved \u2713');
+  await loadTasks(); renderPlanning(); renderForecast();
+}
+
+// ── PLANNING VIEW SWITCH ──────────────────────────────────────────────────
+function switchPlanningView(v) {
+  currentPlanningView = v;
+  document.getElementById('btn-view-weekly').classList.toggle('active', v==='weekly');
+  document.getElementById('btn-view-intraday').classList.toggle('active', v==='intraday');
+  document.getElementById('planning-weekly').style.display   = v==='weekly'   ? '' : 'none';
+  document.getElementById('planning-intraday').style.display = v==='intraday' ? '' : 'none';
+  if (v==='intraday') renderIntraday(currentIntradayDate);
+}
+
+function openIntradayForDay(ds) {
+  currentIntradayDate = ds;
+  switchPlanningView('intraday');
 }
 
 // ── HISTORICAL VOLUME HELPERS ─────────────────────────────────────────────
@@ -616,6 +769,7 @@ async function onRegionChange() {
   currentRegionCity = sel.options[sel.selectedIndex].dataset.city || '';
   if (!currentRegionId) return;
   await loadRegulations();
+  await loadTasks();
   await loadWeekData();
 }
 
@@ -852,6 +1006,24 @@ function renderRegulations() {
     '</div>' +
     rotationNote +
 
+    '<div class="reg-section"><h3>Tasks &amp; Priorities</h3>' +
+    '<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Priority 1 = highest urgency. Filler tasks are assigned when no primary work remains.</p>' +
+    '<table class="tasks-config-table"><tr><th>Task</th><th>Priority</th><th>AHT (min)</th><th>Background</th><th>Text</th></tr>' +
+    tasksSortedByPriority().map(function(t) {
+      var ft = t.is_filler ? '<span class="filler-tag">filler</span>' : '';
+      var cbg = t.color_bg || '#f3f4f6', ctxt = t.color_text || '#374151';
+      return '<tr class="task-cfg-row" data-name="'+t.name+'" data-filler="'+t.is_filler+'">' +
+        '<td><span class="task-dot" style="background:'+cbg+';border:1px solid '+ctxt+'30;"></span><strong>'+t.name+'</strong>'+ft+'</td>' +
+        '<td><input type="number" class="task-pri" value="'+t.priority+'" min="1" max="10" style="width:48px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"></td>' +
+        '<td><input type="number" class="task-aht" value="'+t.aht_minutes+'" min="0" step="0.5" style="width:55px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"> min</td>' +
+        '<td><input type="color" class="task-cbg" value="'+cbg+'" style="width:36px;height:26px;padding:0;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;"></td>' +
+        '<td><input type="color" class="task-ctxt" value="'+ctxt+'" style="width:36px;height:26px;padding:0;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;"></td>' +
+        '</tr>';
+    }).join('') +
+    '</table>' +
+    '<button class="btn btn-save" style="margin-top:10px;font-size:12px;" onclick="saveTasks()">\ud83d\udcbe Save Tasks</button>' +
+    '</div>' +
+
     '<div class="reg-section"><h3>Fixed Rules (all regions)</h3>' +
     '<div class="info-grid">' +
       '<div class="info-box"><div class="info-lbl">Max working days / week</div><div class="info-val">5 days</div></div>' +
@@ -1024,6 +1196,11 @@ async function loadWeekData() {
 
   // Run rotation engine BEFORE rendering
   await computeAndSaveRotation();
+
+  // Set intraday default date to first open day of week
+  var _days = getWeekDays(currentWeekMonday);
+  var _firstOpen = _days.find(function(d){return !getDayClosureType(toDateStr(d));});
+  if (_firstOpen) currentIntradayDate = toDateStr(_firstOpen);
 
   setStatus(currentRegionName + ' \u00b7 W' + getWeekNumber(currentWeekMonday) + ' \u00b7 ' + agents.length + ' agents');
   renderPlanning();
@@ -1218,7 +1395,12 @@ function shiftBadge(shift, agentId, dayStr) {
 
 // ── RENDER PLANNING ───────────────────────────────────────────────────────
 function renderPlanning() {
-  const container = document.getElementById('planning-grid');
+  renderWeeklyPlanning();
+  if (currentPlanningView === 'intraday') renderIntraday(currentIntradayDate);
+}
+
+function renderWeeklyPlanning() {
+  const container = document.getElementById('planning-weekly');
   const legend    = document.getElementById('planning-legend');
   if (!agents.length) {
     container.innerHTML = '<p style="color:#888">No agents for this region. Add agents in the Agents tab.</p>';
@@ -1446,6 +1628,256 @@ async function applyRestOverride(agentId, oldRestDay, newRestDay) {
   renderPlanning();
 }
 
+// ── INTRADAY ENGINE ───────────────────────────────────────────────────────
+function computeIntradaySchedule(ds) {
+  var closure  = getDayClosureType(ds);
+  var hours    = getDayHoursForDate(ds);
+  var openDays = getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));});
+  var workingDays = Math.min(openDays.length, 5);
+  var breaks   = regulations.breaks || [];
+  var sorted   = tasksSortedByPriority();
+  var filler   = sorted.find(function(t){return t.is_filler;}) || null;
+  var primary  = sorted.filter(function(t){return !t.is_filler;});
+  var f = forecasts[ds] || {};
+  var hourly = f.hourly || {};
+
+  var demand = {};
+  for (var h = hours.open; h < hours.close; h++) {
+    demand[h] = {};
+    sorted.forEach(function(t){
+      demand[h][t.name] = (hourly[t.name.toLowerCase()] || {})[h] || 0;
+    });
+  }
+
+  var working = agents.filter(function(a){
+    if (closure) return false;
+    var s = (availability[a.id] && availability[a.id][ds]) || 'working';
+    return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent';
+  });
+
+  if (closure || !working.length) {
+    return agents.map(function(a){
+      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
+      return { agent:a, blocks:[], isClosed:!!closure,
+               isRest:['rest_scheduled','rest_override'].includes(s), isAbsent:s==='absent' };
+    });
+  }
+
+  var nW = working.length;
+  var lunch = breaks.find(function(b){return b.duration>=30;}) ||
+    {name:'Lunch',duration:60,window_start:12,window_end:14};
+  var lDur = lunch.duration;
+  var lSlots = Math.max(1, Math.floor((lunch.window_end-lunch.window_start)*60/lDur));
+  var lGroup = Math.max(1, Math.ceil(nW/lSlots));
+  var shorts = breaks.filter(function(b){return b.duration<30;});
+
+  var agBrk = {};
+  working.forEach(function(a,i){
+    agBrk[a.id] = [];
+    var ls = lunch.window_start*60 + Math.floor(i/lGroup)*lDur;
+    agBrk[a.id].push({startMin:ls, endMin:ls+lDur, name:lunch.name, isLunch:true});
+    shorts.forEach(function(br){
+      var sl=Math.max(1,Math.floor((br.window_end-br.window_start)*60/br.duration));
+      var gr=Math.max(1,Math.ceil(nW/sl));
+      var bs=br.window_start*60+Math.floor(i/gr)*br.duration;
+      agBrk[a.id].push({startMin:bs,endMin:bs+br.duration,name:br.name,isLunch:false});
+    });
+  });
+
+  var equity = {};
+  working.forEach(function(a){equity[a.id]=0;});
+  var agHour = {};
+  working.forEach(function(a){agHour[a.id]={};});
+
+  // Compute effective minutes for a given agent in a given hour slot
+  function effectiveMinForHour(ag, hStart, hEnd) {
+    return (agBrk[ag.id]||[]).reduce(function(rem, br){
+      return rem - Math.max(0, Math.min(br.endMin,hEnd) - Math.max(br.startMin,hStart));
+    }, 60);
+  }
+
+  for (var h = hours.open; h < hours.close; h++) {
+    var hS=h*60, hE=(h+1)*60;
+
+    var allSorted = working.slice().sort(function(a,b){
+      return (equity[a.id]||0)-(equity[b.id]||0);
+    });
+
+    var pool = allSorted.slice();
+    primary.forEach(function(t){
+      var vol=(demand[h]||{})[t.name]||0; if(!vol||!pool.length) return;
+      // Total work minutes needed this hour for this task
+      var workMinNeeded = vol * t.aht_minutes;
+      // Sum of effective minutes across all remaining pool agents
+      var totalEff = pool.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
+      // Agents needed = ceil(work / capacity_per_agent)
+      // capacity_per_agent = totalEff / pool.length
+      var avgEff = totalEff / pool.length;
+      var need = Math.min(Math.ceil(workMinNeeded / Math.max(1, avgEff)), pool.length);
+      for(var i=0;i<need;i++){
+        var ag=pool.shift();
+        agHour[ag.id][h]=t.name;
+        if(t.priority<=2) equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
+      }
+    });
+    pool.forEach(function(ag){agHour[ag.id][h]=filler?filler.name:'CLIENTELING';});
+  }
+
+  function buildBlocks(aid) {
+    var brks=agBrk[aid]||[], evts=[];
+    for (var h=hours.open; h<hours.close; h++) {
+      var hS=h*60, hE=(h+1)*60, task=agHour[aid]?agHour[aid][h]:null;
+
+      // Push break events that fall within this hour
+      brks.forEach(function(br){
+        var s=Math.max(br.startMin,hS), e=Math.min(br.endMin,hE);
+        if(s<e) evts.push({start:s,end:e,task:'__break__',label:br.name,isLunch:br.isLunch});
+      });
+
+      if (task) {
+        // Find all breaks overlapping this hour, sorted by startMin
+        var brsInHour = brks.filter(function(br){
+          return br.startMin<hE && br.endMin>hS;
+        }).sort(function(a,b){return a.startMin-b.startMin;});
+
+        if (!brsInHour.length) {
+          evts.push({start:hS, end:hE, task:task, label:task});
+        } else {
+          // Fill task into the gaps between breaks within this hour
+          var cursor = hS;
+          brsInHour.forEach(function(br){
+            var bS = Math.max(br.startMin, hS);
+            var bE = Math.min(br.endMin, hE);
+            if (cursor < bS) evts.push({start:cursor, end:bS, task:task, label:task});
+            cursor = bE;
+          });
+          if (cursor < hE) evts.push({start:cursor, end:hE, task:task, label:task});
+        }
+      }
+    }
+    evts.sort(function(a,b){return a.start-b.start;});
+    var merged=[];
+    evts.forEach(function(ev){
+      if(ev.start>=ev.end) return;
+      var last=merged[merged.length-1];
+      if(last&&last.task===ev.task&&last.end===ev.start){last.end=ev.end;}
+      else merged.push({start:ev.start,end:ev.end,task:ev.task,label:ev.label});
+    });
+    return merged;
+  }
+
+  return agents.map(function(a){
+    var s=(availability[a.id]&&availability[a.id][ds])||'working';
+    var isRest=['rest_scheduled','rest_override'].includes(s), isAbsent=s==='absent';
+    if(closure||isRest||isAbsent) return {agent:a,blocks:[],isClosed:!!closure,isRest:isRest,isAbsent:isAbsent};
+    return {agent:a,blocks:buildBlocks(a.id),isClosed:false,isRest:false,isAbsent:false};
+  });
+}
+
+function renderIntraday(ds) {
+  var container = document.getElementById('planning-intraday');
+  if (!currentRegionId) { container.innerHTML='<p style="color:#888">Select a region.</p>'; return; }
+  var days   = getWeekDays(currentWeekMonday);
+  var target = ds || toDateStr(days.find(function(d){return !getDayClosureType(toDateStr(d));}) || days[0]);
+  currentIntradayDate = target;
+
+  var dayBtns = days.map(function(day,i){
+    var dayDs=toDateStr(day), cl=getDayClosureType(dayDs), isSel=dayDs===target;
+    var cls='intraday-day-btn'+(cl?' closed-day':'')+(isSel?' active':'');
+    var oc = cl ? '' : ' onclick="renderIntraday(\'' + dayDs + '\')"';
+    return '<button class="'+cls+'"'+oc+'>'+DAY_SHORT[i]+' '+formatDate(day)+'</button>';
+  }).join('');
+
+  var closure = getDayClosureType(target);
+  if (closure) {
+    var msg = closure==='holiday' ? '\uD83C\uDFD6\uFE0F Bank holiday \u2014 center closed'
+                                  : '\uD83C\uDF34 Weekend \u2014 center closed';
+    container.innerHTML = '<div class="intraday-day-btns">'+dayBtns+'</div>' +
+      '<p style="color:#9ca3af;padding:32px 0;text-align:center;">'+msg+'</p>';
+    return;
+  }
+
+  var hours    = getDayHoursForDate(target);
+  var schedule = computeIntradaySchedule(target);
+  var nH = hours.close - hours.open;
+  var AGENT_W = 150, HOUR_W = Math.max(68, Math.floor(1100/nH));
+  var cols = AGENT_W+'px ' + Array(nH).fill(HOUR_W+'px').join(' ');
+
+  // Legend
+  var legend = '<div class="intraday-legend">';
+  tasksSortedByPriority().forEach(function(t){
+    var fTag = t.is_filler ? ' <em style="font-weight:normal;font-size:9px;">(filler)</em>' : '';
+    legend += '<span style="background:'+t.color_bg+';color:'+t.color_text+
+      ';border-radius:4px;padding:2px 9px;border:1px solid '+t.color_text+
+      '30;font-weight:600;">'+t.name+fTag+'</span>';
+  });
+  legend += '<span style="background:'+BREAK_COLORS.lunch.bg+';color:'+BREAK_COLORS.lunch.text+
+    ';border-radius:4px;padding:2px 9px;border:1px solid '+BREAK_COLORS.lunch.text+'40;">LUNCH</span> ';
+  legend += '<span style="background:'+BREAK_COLORS.short.bg+';color:'+BREAK_COLORS.short.text+
+    ';border-radius:4px;padding:2px 9px;border:1px solid '+BREAK_COLORS.short.text+'40;">BREAK</span></div>';
+
+  // Header
+  var header = '<div class="intraday-agent-cell" style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Agent</div>';
+  for (var h=hours.open; h<hours.close; h++) {
+    var nextH = h + 1;
+    header += '<div class="intraday-hour-header">' +
+      String(h).padStart(2,'0') + '\u2013' + String(nextH).padStart(2,'0') + 'h</div>';
+  }
+
+  // Rows
+  var rows = '';
+  schedule.forEach(function(entry){
+    var a = entry.agent;
+    rows += '<div class="intraday-agent-cell">'+a.first_name+' '+a.last_name+'</div>';
+    if (entry.isClosed||entry.isRest||entry.isAbsent) {
+      var lbl = entry.isAbsent ? '\uD83C\uDFE5 Absent'
+              : entry.isClosed ? '\uD83D\uDD12 Closed' : '\uD83D\uDCC5 Rest';
+      for (var hh=hours.open; hh<hours.close; hh++)
+        rows += '<div class="intraday-rest-cell">'+(hh===hours.open?lbl:'')+'</div>';
+      return;
+    }
+    for (var h=hours.open; h<hours.close; h++) {
+      var hS=h*60, hE=(h+1)*60;
+      var ov = entry.blocks.filter(function(b){return b.start<hE&&b.end>hS;});
+      var cell = '<div class="intraday-block">';
+      ov.forEach(function(b){
+        var bS=Math.max(b.start,hS), bE=Math.min(b.end,hE);
+        var pL=((bS-hS)/60)*100, pW=((bE-bS)/60)*100;
+        var t   = b.task==='__break__' ? null : getTask(b.task);
+        var brCol = b.isLunch ? BREAK_COLORS.lunch : BREAK_COLORS.short;
+        var bg  = t ? t.color_bg  : brCol.bg;
+        var txt = t ? t.color_text : brCol.text;
+        cell += '<div class="task-block" style="left:'+pL+'%;width:'+pW+'%;background:'+bg+
+          ';color:'+txt+';border:1px solid '+(b.task==='__break__' ? txt : txt+'25')+
+          ';font-size:'+(pW>15?'9':'7')+'px;">'+(pW>12?b.label:'')+'</div>';
+      });
+      cell += '</div>';
+      rows += cell;
+    }
+  });
+
+  // Staffing need summary row
+  var needRow = '<div class="intraday-agent-cell" style="font-size:10px;color:#6b7280;background:#f1f5f9;">Need</div>';
+  for (var h=hours.open; h<hours.close; h++) {
+    var hS2=h*60, hE2=(h+1)*60;
+    var needHtml='<div style="padding:2px 1px;">';
+    primary.forEach(function(t){
+      var vol=(f&&f.hourly&&f.hourly[t.name.toLowerCase()])?((f.hourly[t.name.toLowerCase()]||{})[h]||0):0;
+      if(!vol) return;
+      var needed=Math.ceil(vol*t.aht_minutes/60);
+      needHtml+='<div style="font-size:8px;color:'+t.color_text+';font-weight:600;">'+
+        t.name.substring(0,3)+': '+needed+'</div>';
+    });
+    needHtml+='</div>';
+    needRow+='<div style="border:1px solid #e5e7eb;background:#f8fafc;min-height:40px;">'+needHtml+'</div>';
+  }
+
+  container.innerHTML =
+    '<div class="intraday-day-btns">'+dayBtns+'</div>' + legend +
+    '<div id="intraday-container"><div class="intraday-grid" style="grid-template-columns:'+cols+
+    ';grid-auto-rows:auto;">'+header+rows+needRow+'</div></div>';
+}
+
 // ── RENDER AGENTS ─────────────────────────────────────────────────────────
 function renderAgents() {
   const container = document.getElementById('agent-list');
@@ -1583,7 +2015,7 @@ function renderForecast() {
   days.forEach(function(day) {
     var f = forecasts[toDateStr(day)];
     if (!f || !f.hourly) return;
-    Object.keys(TASK_META).forEach(function(tk) {
+    Object.keys(f.hourly).forEach(function(tk) {
       Object.values(f.hourly[tk] || {}).forEach(function(v) {
         if (v > maxHourlyVol) maxHourlyVol = v;
       });
@@ -1643,9 +2075,9 @@ function renderForecast() {
     var hourlyHtml = '';
     if (!isBlocked && f.hourly) {
       // Legend
-      var legendItems = Object.entries(TASK_META).map(function(e) {
+      var legendItems = tasksSortedByPriority().map(function(t) {
         return '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' +
-          e[1].color + ';margin-right:2px;"></span>' + e[1].label + '</span>';
+          t.color_bg + ';border:1px solid ' + t.color_text + '40;margin-right:2px;"></span>' + t.name + '</span>';
       }).join('');
 
       hourlyHtml = '<div class="hourly-chart">' +
@@ -1655,14 +2087,14 @@ function renderForecast() {
       for (var h = hours.open; h < hours.close; h++) {
         var rowTotal = 0;
         var bars = '';
-        Object.entries(TASK_META).forEach(function(e) {
-          var tk  = e[0];
-          var col = e[1].color;
+        tasksSortedByPriority().forEach(function(t) {
+          var tk  = t.name.toLowerCase();
+          var col = t.color_bg;
           var vol = (f.hourly[tk] || {})[h] || 0;
           rowTotal += vol;
           if (vol > 0) {
             var pct = Math.round((vol / maxHourlyVol) * 100);
-            bars += '<div style="background:' + col + ';height:100%;width:' + pct + '%;"></div>';
+            bars += '<div style="background:' + col + ';height:100%;width:' + pct + '%;border-right:1px solid ' + t.color_text + '20;"></div>';
           }
         });
         if (rowTotal === 0) continue;
@@ -1686,6 +2118,95 @@ function renderForecast() {
   });
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ── WEEK PICKER ───────────────────────────────────────────────────────────
+var wkpDate = new Date(); // month currently shown in picker
+
+function toggleWeekPicker(event) {
+  event.stopPropagation();
+  var popup = document.getElementById('week-picker-popup');
+  if (popup.style.display === 'block') { closeWeekPicker(); return; }
+  wkpDate = new Date(currentWeekMonday);
+  renderWeekPicker();
+  popup.style.display = 'block';
+  // Position below the week label
+  var lbl = document.getElementById('week-label');
+  var rect = lbl.getBoundingClientRect();
+  popup.style.top  = (rect.bottom + 8) + 'px';
+  popup.style.left = Math.max(8, rect.left - 100) + 'px';
+  setTimeout(function() { document.addEventListener('click', closeWeekPickerOutside); }, 0);
+}
+
+function closeWeekPickerOutside(e) {
+  var popup = document.getElementById('week-picker-popup');
+  if (popup && !popup.contains(e.target)) closeWeekPicker();
+}
+
+function closeWeekPicker() {
+  document.getElementById('week-picker-popup').style.display = 'none';
+  document.removeEventListener('click', closeWeekPickerOutside);
+}
+
+function wkpChangeMonth(dir) {
+  wkpDate.setMonth(wkpDate.getMonth() + dir);
+  renderWeekPicker();
+}
+
+function renderWeekPicker() {
+  var y = wkpDate.getFullYear(), m = wkpDate.getMonth();
+  document.getElementById('wkp-month-label').textContent =
+    new Date(y, m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+
+  // First day of grid: Monday on or before the 1st of the month
+  var first = new Date(y, m, 1);
+  var dow = first.getDay() || 7; // 1=Mon..7=Sun
+  var gridStart = new Date(first);
+  gridStart.setDate(first.getDate() - (dow - 1));
+
+  var todayStr = toDateStr(new Date());
+  var selMon   = toDateStr(currentWeekMonday);
+
+  var html = '<div class="wkp-wn"></div>' +
+    ['Mo','Tu','We','Th','Fr','Sa','Su'].map(function(d){
+      return '<div class="wkp-day-hdr">'+d+'</div>';
+    }).join('');
+
+  // 6 weeks
+  for (var week = 0; week < 6; week++) {
+    var weekMonday = new Date(gridStart);
+    weekMonday.setDate(gridStart.getDate() + week * 7);
+    var wn = getWeekNumber(weekMonday);
+    html += '<div class="wkp-wn">W'+wn+'</div>';
+
+    for (var d = 0; d < 7; d++) {
+      var day = new Date(weekMonday);
+      day.setDate(weekMonday.getDate() + d);
+      var ds   = toDateStr(day);
+      var wMon = toDateStr(weekMonday);
+      var cls  = 'wkp-day';
+      if (day.getMonth() !== m) cls += ' other-month';
+      if (ds === todayStr)       cls += ' today';
+      if (wMon === selMon) {
+        cls += ' in-selected-week';
+        if (d === 0) cls += ' week-start';
+        if (d === 6) cls += ' week-end';
+      }
+      html += '<div class="'+cls+'" onclick="pickWeek(\''+wMon+'\')">'+day.getDate()+'</div>';
+    }
+  }
+  document.getElementById('wkp-grid').innerHTML = html;
+}
+
+function pickWeek(mondayStr) {
+  // Parse YYYY-MM-DD into local date
+  var parts = mondayStr.split('-');
+  var newMon = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  newMon.setHours(0,0,0,0);
+  currentWeekMonday = newMon;
+  updateWeekLabel();
+  closeWeekPicker();
+  if (currentRegionId) loadWeekData();
 }
 
 // ── START ─────────────────────────────────────────────────────────────────
