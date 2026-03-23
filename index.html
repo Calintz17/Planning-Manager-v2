@@ -1417,100 +1417,119 @@ async function loadScheduleOverrides() {
   if (!currentRegionId || !agents.length) return;
   var days = getWeekDays(currentWeekMonday);
   var start = toDateStr(days[0]), end = toDateStr(days[6]);
-  var { data, error } = await sb.from('schedule_overrides')
-    .select('*').eq('region_id', currentRegionId)
-    .gte('date', start).lte('date', end);
+  var { data, error } = await sb.from('schedule_overrides').select('*')
+    .eq('region_id', currentRegionId).gte('date', start).lte('date', end);
   if (error || !data) return;
   data.forEach(function(row) {
     if (!scheduleOverrides[row.date]) scheduleOverrides[row.date] = {};
-    if (!scheduleOverrides[row.date][row.agent_id]) scheduleOverrides[row.date][row.agent_id] = {};
-    scheduleOverrides[row.date][row.agent_id][row.start_min] = { end_min: row.end_min, task: row.task };
-  });
-}
-
-// Patch computed blocks with any stored overrides for this agent/day
-function applyOverrides(blocks, agentId, ds) {
-  var dayOv = scheduleOverrides[ds] && scheduleOverrides[ds][agentId];
-  if (!dayOv) return blocks;
-  return blocks.map(function(b) {
-    var ov = dayOv[b.start];
-    if (ov && ov.end_min === b.end) {
-      return { start: b.start, end: b.end, task: ov.task, label: ov.task, isLunch: b.isLunch };
-    }
-    return b;
+    if (!scheduleOverrides[row.date][row.agent_id])
+      scheduleOverrides[row.date][row.agent_id] = { tasks:{}, breaks:{} };
+    if (row.override_type === 'task')
+      scheduleOverrides[row.date][row.agent_id].tasks[parseInt(row.slot_key)] = row.value;
+    else if (row.override_type === 'break')
+      scheduleOverrides[row.date][row.agent_id].breaks[row.slot_key] = parseInt(row.value);
   });
 }
 
 // Drag state
 var dragState = null;
 
-function onBlockDragStart(event, agentId, ds, startMin, endMin, task) {
-  dragState = { agentId: agentId, ds: ds, startMin: startMin, endMin: endMin, task: task };
-  event.target.classList.add('dragging');
+function onBlockDragStart(event) {
+  var d = event.currentTarget.dataset;
+  dragState = {
+    dtype:     d.dtype,
+    agentId:   d.agent,
+    ds:        d.date,
+    hour:      d.hour !== undefined ? parseInt(d.hour) : null,
+    task:      d.task || null,
+    breakName: d.bname || null,
+    startMin:  d.bstart !== undefined ? parseInt(d.bstart) : null,
+  };
+  event.currentTarget.classList.add('dragging');
   event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', d.dtype); // required for Firefox
 }
 
 function onBlockDragEnd(event) {
-  event.target.classList.remove('dragging');
+  event.currentTarget.classList.remove('dragging');
 }
 
 function onCellDragOver(event) {
   event.preventDefault();
   event.currentTarget.classList.add('drag-over');
-  event.dataTransfer.dropEffect = 'move';
 }
 
 function onCellDragLeave(event) {
   event.currentTarget.classList.remove('drag-over');
 }
 
-function onCellDrop(event, agentId, ds, startMin, endMin, task) {
+// Drop on a task hour cell — swap task labels between two hour slots
+function onTaskCellDrop(event) {
   event.preventDefault();
+  event.stopPropagation();
   event.currentTarget.classList.remove('drag-over');
-  if (!dragState) return;
-  // Can't drop on self
-  if (dragState.agentId === agentId && dragState.startMin === startMin) return;
-  // Perform the swap
-  swapBlocks(
-    dragState.agentId, dragState.ds, dragState.startMin, dragState.endMin, dragState.task,
-    agentId, ds, startMin, endMin, task
-  );
+  if (!dragState || dragState.dtype !== 'task') return;
+  var d = event.currentTarget.dataset;
+  var tAgent = d.agent, tDs = d.date, tHour = parseInt(d.hour), tTask = d.task;
+  // No-op: same cell
+  if (dragState.agentId === tAgent && dragState.hour === tHour) return;
+  swapTaskHours(dragState.agentId, dragState.ds, dragState.hour, dragState.task,
+                tAgent, tDs, tHour, tTask);
   dragState = null;
 }
 
-async function swapBlocks(agentA, dsA, startA, endA, taskA, agentB, dsB, startB, endB, taskB) {
-  // Breaks cannot be swapped (they are structural)
-  if (taskA === '__break__' || taskB === '__break__') {
-    showToast('Breaks cannot be swapped', 'error'); return;
-  }
-  // Build the two override upserts
+// Drop on a break chip — swap break start times between two chips of same type
+function onBreakChipDrop(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.currentTarget.classList.remove('drag-over');
+  if (!dragState || dragState.dtype !== 'break') return;
+  var d = event.currentTarget.dataset;
+  if (d.bname !== dragState.breakName) { showToast('Can only swap same break type', 'error'); return; }
+  if (dragState.agentId === d.agent && dragState.startMin === parseInt(d.bstart)) return;
+  swapBreakSlots(dragState.agentId, dragState.ds, dragState.breakName, dragState.startMin,
+                 d.agent, d.date, parseInt(d.bstart));
+  dragState = null;
+}
+
+async function swapTaskHours(agA, dsA, hA, taskA, agB, dsB, hB, taskB) {
   var upserts = [
-    { region_id: currentRegionId, agent_id: agentA, date: dsA, start_min: startA, end_min: endA, task: taskB },
-    { region_id: currentRegionId, agent_id: agentB, date: dsB, start_min: startB, end_min: endB, task: taskA },
+    { region_id:currentRegionId, agent_id:agA, date:dsA, override_type:'task', slot_key:String(hA), value:taskB },
+    { region_id:currentRegionId, agent_id:agB, date:dsB, override_type:'task', slot_key:String(hB), value:taskA },
   ];
-  var { error } = await sb.from('schedule_overrides')
-    .upsert(upserts, { onConflict: 'agent_id,date,start_min' });
-  if (error) { showToast('Swap failed: ' + error.message, 'error'); return; }
-  // Update local override cache
-  [upserts[0], upserts[1]].forEach(function(u) {
-    if (!scheduleOverrides[u.date]) scheduleOverrides[u.date] = {};
-    if (!scheduleOverrides[u.date][u.agent_id]) scheduleOverrides[u.date][u.agent_id] = {};
-    scheduleOverrides[u.date][u.agent_id][u.start_min] = { end_min: u.end_min, task: u.task };
+  var { error } = await sb.from('schedule_overrides').upsert(upserts, {onConflict:'agent_id,date,override_type,slot_key'});
+  if (error) { showToast('Swap failed: '+error.message,'error'); return; }
+  // Update cache
+  [{ ag:agA,ds:dsA,h:hA,task:taskB }, { ag:agB,ds:dsB,h:hB,task:taskA }].forEach(function(u){
+    if (!scheduleOverrides[u.ds]) scheduleOverrides[u.ds]={};
+    if (!scheduleOverrides[u.ds][u.ag]) scheduleOverrides[u.ds][u.ag]={tasks:{},breaks:{}};
+    scheduleOverrides[u.ds][u.ag].tasks[u.h] = u.task;
   });
   renderIntraday(currentIntradayDate);
   showToast('\u21C4 Swapped');
 }
 
+async function swapBreakSlots(agA, dsA, bName, startA, agB, dsB, startB) {
+  var upserts = [
+    { region_id:currentRegionId, agent_id:agA, date:dsA, override_type:'break', slot_key:bName, value:String(startB) },
+    { region_id:currentRegionId, agent_id:agB, date:dsB, override_type:'break', slot_key:bName, value:String(startA) },
+  ];
+  var { error } = await sb.from('schedule_overrides').upsert(upserts, {onConflict:'agent_id,date,override_type,slot_key'});
+  if (error) { showToast('Swap failed: '+error.message,'error'); return; }
+  [{ ag:agA,ds:dsA,start:startB }, { ag:agB,ds:dsB,start:startA }].forEach(function(u){
+    if (!scheduleOverrides[u.ds]) scheduleOverrides[u.ds]={};
+    if (!scheduleOverrides[u.ds][u.ag]) scheduleOverrides[u.ds][u.ag]={tasks:{},breaks:{}};
+    scheduleOverrides[u.ds][u.ag].breaks[bName] = u.start;
+  });
+  renderIntraday(currentIntradayDate);
+  showToast('\u21C4 Break swapped');
+}
+
 async function resetDayOverrides(ds) {
   if (!confirm('Reset all manual overrides for this day?')) return;
-  if (!agents.length) return;
-  var agentIds = agents.map(function(a){return a.id;});
   var { error } = await sb.from('schedule_overrides')
-    .delete()
-    .eq('region_id', currentRegionId)
-    .eq('date', ds)
-    .in('agent_id', agentIds);
-  if (error) { showToast('Reset failed', 'error'); return; }
+    .delete().eq('region_id', currentRegionId).eq('date', ds);
+  if (error) { showToast('Reset failed','error'); return; }
   if (scheduleOverrides[ds]) delete scheduleOverrides[ds];
   renderIntraday(ds);
   showToast('Overrides cleared \u2713');
@@ -1883,6 +1902,25 @@ function computeIntradaySchedule(ds) {
     pool.forEach(function(ag){agHour[ag.id][h]=filler?filler.name:'CLIENTELING';});
   }
 
+  // ── Apply stored overrides on top of computed schedule ───────────────────
+  working.forEach(function(a) {
+    var agOv = scheduleOverrides[ds] && scheduleOverrides[ds][a.id];
+    if (!agOv) return;
+    // Task overrides: replace computed task for specific hours
+    if (agOv.tasks) Object.keys(agOv.tasks).forEach(function(hStr) {
+      var hh = parseInt(hStr);
+      if (agHour[a.id] && hh >= hours.open && hh < hours.close) {
+        agHour[a.id][hh] = agOv.tasks[hStr];
+      }
+    });
+    // Break overrides: shift break start/end times
+    if (agOv.breaks) Object.keys(agOv.breaks).forEach(function(bName) {
+      var newStart = agOv.breaks[bName];
+      var brk = agBrk[a.id] && agBrk[a.id].find(function(b){ return b.name === bName; });
+      if (brk) { var dur = brk.endMin - brk.startMin; brk.startMin = newStart; brk.endMin = newStart + dur; }
+    });
+  });
+
   function buildBlocks(aid) {
     var brks=agBrk[aid]||[], evts=[];
     var personalClose = agentCloseMin[aid] || (hours.close * 60);
@@ -2003,37 +2041,50 @@ function renderIntraday(ds) {
         rows += '<div class="intraday-rest-cell">'+(hh===hours.open?lbl:'')+'</div>';
       return;
     }
-    // Apply any stored overrides on top of computed blocks
-    var blocks = applyOverrides(entry.blocks, a.id, target);
     for (var h=hours.open; h<hours.close; h++) {
       var hS=h*60, hE=(h+1)*60;
-      var ov = blocks.filter(function(b){return b.start<hE&&b.end>hS;});
-      // For drop target: find the first non-break block that covers this hour
-      var dropBlock = ov.find(function(b){return b.task!=='__break__';});
-      var dropAttrs = '';
-      if (dropBlock) {
-        var dTask = dropBlock.task.replace(/'/g,"\\'");
-        dropAttrs = ' ondragover="onCellDragOver(event)"' +
-          ' ondragleave="onCellDragLeave(event)"' +
-          ' ondrop="onCellDrop(event,\''+a.id+'\',\''+target+'\','+dropBlock.start+','+dropBlock.end+',\''+dTask+'\')"';
-      }
-      var cell = '<div class="intraday-block"'+dropAttrs+'>';
+      var ov = entry.blocks.filter(function(b){return b.start<hE&&b.end>hS;});
+
+      // Determine the task for this hour (for drag purposes)
+      var hourTask = null;
+      ov.forEach(function(b){ if(b.task!=='__break__') hourTask=b.task; });
+
+      // Hour cell — is a drop zone for task drops
+      var cellAttrs = hourTask
+        ? ' data-agent="'+a.id+'" data-date="'+target+'" data-hour="'+h+'" data-task="'+hourTask+'"'+
+          ' ondragover="onCellDragOver(event)" ondragleave="onCellDragLeave(event)"'+
+          ' ondrop="onTaskCellDrop(event)"'
+        : '';
+      var cell = '<div class="intraday-block"'+cellAttrs+'>';
+
       ov.forEach(function(b){
         var bS=Math.max(b.start,hS), bE=Math.min(b.end,hE);
         var pL=((bS-hS)/60)*100, pW=((bE-bS)/60)*100;
-        var t   = b.task==='__break__' ? null : getTask(b.task);
+        var isBreak = b.task==='__break__';
+        var t   = isBreak ? null : getTask(b.task);
         var brCol = b.isLunch ? BREAK_COLORS.lunch : BREAK_COLORS.short;
         var bg  = t ? t.color_bg  : brCol.bg;
         var txt = t ? t.color_text : brCol.text;
-        var isDraggable = b.task !== '__break__';
-        var dragAttrs = isDraggable
-          ? ' draggable="true"' +
-            ' ondragstart="onBlockDragStart(event,\''+a.id+'\',\''+target+'\','+b.start+','+b.end+',\''+b.task.replace(/'/g,"\\'")+'\')' +
-            '"' +
-            ' ondragend="onBlockDragEnd(event)"'
-          : '';
-        cell += '<div class="task-block"'+dragAttrs+' style="left:'+pL+'%;width:'+pW+'%;background:'+bg+
-          ';color:'+txt+';border:1px solid '+(b.task==='__break__' ? txt : txt+'25')+
+
+        var chipAttrs = '';
+        if (isBreak) {
+          // Break chip: draggable, droppable (for break swaps)
+          chipAttrs = ' data-dtype="break" data-agent="'+a.id+'" data-date="'+target+
+            '" data-bname="'+b.label+'" data-bstart="'+b.start+'"'+
+            ' draggable="true"'+
+            ' ondragstart="onBlockDragStart(event)" ondragend="onBlockDragEnd(event)"'+
+            ' ondragover="onCellDragOver(event)" ondragleave="onCellDragLeave(event)"'+
+            ' ondrop="onBreakChipDrop(event)"';
+        } else {
+          // Task chip: draggable, covers the whole hour slot
+          chipAttrs = ' data-dtype="task" data-agent="'+a.id+'" data-date="'+target+
+            '" data-hour="'+h+'" data-task="'+b.task+'"'+
+            ' draggable="true"'+
+            ' ondragstart="onBlockDragStart(event)" ondragend="onBlockDragEnd(event)"';
+        }
+
+        cell += '<div class="task-block"'+chipAttrs+' style="left:'+pL+'%;width:'+pW+'%;background:'+bg+
+          ';color:'+txt+';border:1px solid '+(isBreak ? txt : txt+'25')+
           ';font-size:'+(pW>15?'9':'7')+'px;">'+(pW>12?b.label:'')+'</div>';
       });
       cell += '</div>';
