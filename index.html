@@ -38,16 +38,16 @@
     th.closed-col { background: #6b7280; }
     td { padding: 8px 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px; vertical-align: middle; }
     td.agent-name { text-align: left; font-weight: bold; background: #f9f9f9; white-space: nowrap; min-width: 150px; }
+    .planning-cell { display:flex; flex-direction:column; align-items:center; gap:4px; }
 
     /* ── SHIFT BADGES ── */
-    .shift-morning   { background: #dbeafe; color: #1d4ed8; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
-    .shift-afternoon { background: #fed7aa; color: #c2410c; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
-    .shift-rest      { background: #e5e7eb; color: #6b7280; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
-    .shift-absent    { background: #fce7f3; color: #9d174d; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
-    .shift-closed    { background: #f3f4f6; color: #9ca3af; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
-    .shift-holiday   { background: #fef9c3; color: #92400e; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; }
-    .shift-scheduled { background: #f3e8ff; color: #7c3aed; border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; cursor: pointer; border: 1px dashed #c4b5fd; }
+    .shift-badge     { border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; font-weight: 600; }
+    .shift-rest      { background: #e5e7eb; color: #6b7280; }
+    .shift-absent    { background: #fce7f3; color: #9d174d; }
+    .shift-holiday   { background: #fef9c3; color: #92400e; }
+    .shift-scheduled { background: #f3e8ff; color: #7c3aed; cursor: pointer; border: 1px dashed #c4b5fd; }
     .shift-scheduled:hover { background: #ede9fe; }
+    .shift-working   { background: #dbeafe; color: #1e40af; cursor: pointer; }
 
     /* ── SUMMARY ROW ── */
     tr.summary-row td { background: #f0fdf4; font-size: 11px; }
@@ -75,11 +75,12 @@
     /* ── FORECAST ── */
     .forecast-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
     @media (max-width: 900px) { .forecast-grid { grid-template-columns: repeat(3, 1fr); } }
-    .forecast-day-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
+    .forecast-day-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; }
     .forecast-day-card h4 { font-size: 12px; font-weight: bold; color: #1a1a2e; margin-bottom: 8px; text-align: center; }
-    .forecast-day-card.today-card  { border-color: #1a1a2e; background: #eff6ff; }
-    .forecast-day-card.closed-card { background: #f3f4f6; opacity: 0.6; }
-    .forecast-day-card.auto-filled { border-color: #a5b4fc; }
+    .forecast-day-card.today-card  { border-color: #1a1a2e; background: #f0f9ff; }
+    .forecast-day-card.closed-card { background: #f8fafc; opacity: 0.6; }
+    .forecast-day-card.auto-filled { border-color: #a5b4fc; background: #fafbff; }
+    .hourly-bar-wrap { flex: 1; height: 10px; background: #e2e8f0; border-radius: 3px; overflow: hidden; display: flex; }
     .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
     .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
     .auto-badge { display:inline-block; font-size:9px; background:#ede9fe; color:#5b21b6; border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
@@ -87,11 +88,6 @@
     .hourly-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
     .hourly-label { font-size: 9px; color: #9ca3af; width: 28px; flex-shrink: 0; text-align: right; }
     .hourly-bar-wrap { flex: 1; height: 10px; background: #f3f4f6; border-radius: 3px; overflow: hidden; display: flex; }
-    .hourly-bar-call        { background: #ef4444; height: 100%; }
-    .hourly-bar-chat        { background: #f97316; height: 100%; }
-    .hourly-bar-mail        { background: #6366f1; height: 100%; }
-    .hourly-bar-clienteling { background: #10b981; height: 100%; }
-    .hourly-bar-back-office { background: #0891b2; height: 100%; }
     .hourly-vol { font-size: 9px; color: #6b7280; width: 24px; flex-shrink: 0; }
     .breaks-table { width:100%; border-collapse:collapse; font-size:12px; }
     .breaks-table th { background:#f9fafb; color:#6b7280; padding:6px 8px; text-align:left; border:1px solid #e5e7eb; font-size:11px; text-transform:uppercase; }
@@ -184,6 +180,10 @@
     .tasks-config-table th{background:#f9fafb;color:#6b7280;padding:7px 10px;text-align:left;border:1px solid #e5e7eb;font-size:11px;text-transform:uppercase;}
     .tasks-config-table td{padding:7px 10px;border:1px solid #e5e7eb;vertical-align:middle;}
     .filler-tag{font-size:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:10px;padding:1px 7px;margin-left:4px;}
+
+    .shift-parttime { background:#fef9c3; color:#854d0e; border-radius:4px; padding:3px 8px; display:inline-block; font-size:11px; font-weight:600; }
+    .shift-partial  { background:#dbeafe; color:#1e40af; border-radius:4px; padding:3px 8px; display:inline-block; font-size:11px; font-weight:600; }
+    .pct-badge      { font-size:10px; background:#f3f4f6; color:#6b7280; border-radius:10px; padding:1px 7px; margin-left:6px; }
 
     /* ── SYSTEM ── */
     #loader { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.75); z-index: 999; align-items: center; justify-content: center; font-size: 16px; color: #1a1a2e; }
@@ -502,8 +502,8 @@ async function saveTasks() {
       name:        row.dataset.name,
       priority:    parseInt(row.querySelector('.task-pri').value) || 99,
       aht_minutes: parseFloat(row.querySelector('.task-aht').value) || 0,
-      color_bg:    row.querySelector('.task-cbg').value,
-      color_text:  row.querySelector('.task-ctxt').value,
+      color_bg:    row.dataset.cbg   || '#f3f4f6',
+      color_text:  row.dataset.ctxt  || '#374151',
       is_filler:   row.dataset.filler === 'true',
     });
   });
@@ -1008,16 +1008,15 @@ function renderRegulations() {
 
     '<div class="reg-section"><h3>Tasks &amp; Priorities</h3>' +
     '<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Priority 1 = highest urgency. Filler tasks are assigned when no primary work remains.</p>' +
-    '<table class="tasks-config-table"><tr><th>Task</th><th>Priority</th><th>AHT (min)</th><th>Background</th><th>Text</th></tr>' +
+    '<table class="tasks-config-table"><tr><th>Task</th><th>Priority</th><th>AHT (min)</th></tr>' +
     tasksSortedByPriority().map(function(t) {
       var ft = t.is_filler ? '<span class="filler-tag">filler</span>' : '';
       var cbg = t.color_bg || '#f3f4f6', ctxt = t.color_text || '#374151';
-      return '<tr class="task-cfg-row" data-name="'+t.name+'" data-filler="'+t.is_filler+'">' +
+      return '<tr class="task-cfg-row" data-name="'+t.name+'" data-filler="'+t.is_filler+
+        '" data-cbg="'+cbg+'" data-ctxt="'+ctxt+'">' +
         '<td><span class="task-dot" style="background:'+cbg+';border:1px solid '+ctxt+'30;"></span><strong>'+t.name+'</strong>'+ft+'</td>' +
         '<td><input type="number" class="task-pri" value="'+t.priority+'" min="1" max="10" style="width:48px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"></td>' +
         '<td><input type="number" class="task-aht" value="'+t.aht_minutes+'" min="0" step="0.5" style="width:55px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"> min</td>' +
-        '<td><input type="color" class="task-cbg" value="'+cbg+'" style="width:36px;height:26px;padding:0;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;"></td>' +
-        '<td><input type="color" class="task-ctxt" value="'+ctxt+'" style="width:36px;height:26px;padding:0;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;"></td>' +
         '</tr>';
     }).join('') +
     '</table>' +
@@ -1220,6 +1219,82 @@ function getDayClosureType(dayStr) {
   return null;
 }
 
+// ── PART-TIME ENGINE ──────────────────────────────────────────────────────
+// For an agent with work_pct < 100, computes:
+//   forcedRestDays: [dateStr] — full days removed (lowest volume first)
+//   partialDay:     { ds, closeMin, workMin } | null — shortened day
+//
+// Algorithm: greedy removal from lowest-volume days until target is met.
+//   to_remove_min = total_net_min - target_min
+//   Remove full days while to_remove >= net_per_day; remainder = partial day.
+function computePartTimeForAgent(agent, openDays) {
+  var pct = agent.work_pct || 100;
+  if (pct >= 100) return { forcedRestDays: [], partialDay: null };
+
+  var nDays       = Math.min(openDays.length, 5);
+  if (nDays === 0)  return { forcedRestDays: [], partialDay: null };
+
+  var totalBreakMin = (regulations.breaks || []).reduce(function(s,b){return s+(b.duration||0);},0);
+  var netPerDay   = (regulations.weekly_hours / nDays) * 60 - totalBreakMin;
+  var totalNet    = nDays * netPerDay;
+  var targetMin   = regulations.weekly_hours * pct / 100 * 60;
+  var toRemoveMin = Math.max(0, totalNet - targetMin);
+
+  // Sort open days by volume ascending (least busy = first to remove)
+  var sorted = openDays.slice().sort(function(a, b) {
+    var vA = (forecasts[toDateStr(a)] || {}).contact_volume || 0;
+    var vB = (forecasts[toDateStr(b)] || {}).contact_volume || 0;
+    return vA - vB;
+  });
+
+  var forcedRestDays = [], partialDay = null, remaining = toRemoveMin;
+
+  for (var i = 0; i < sorted.length; i++) {
+    if (remaining <= 0) break;
+    var ds = toDateStr(sorted[i]);
+    if (remaining >= netPerDay) {
+      forcedRestDays.push(ds);
+      remaining -= netPerDay;
+    } else if (remaining > 0) {
+      var workMin   = netPerDay - remaining;
+      var closeMin  = computeCloseMinFromWork(ds, workMin);
+      partialDay    = { ds: ds, closeMin: closeMin, workMin: Math.round(workMin) };
+      remaining     = 0;
+    }
+  }
+
+  return { forcedRestDays: forcedRestDays, partialDay: partialDay };
+}
+
+// Walk forward from opening hour, skip break windows, accumulate worked minutes.
+// Returns the minute (from midnight) when workMin productive minutes are reached.
+function computeCloseMinFromWork(ds, workMin) {
+  var hours  = getDayHoursForDate(ds);
+  var breaks = regulations.breaks || [];
+  var cursor = hours.open * 60;
+  var worked = 0;
+  var closeMin = hours.close * 60; // fallback
+
+  while (cursor < hours.close * 60) {
+    var inBreak = breaks.some(function(br) {
+      return cursor >= br.window_start * 60 && cursor < (br.window_start * 60 + br.duration);
+    });
+    if (!inBreak) {
+      worked++;
+      if (worked >= workMin) { closeMin = cursor + 1; break; }
+    }
+    cursor++;
+  }
+  // Round to nearest 5 minutes for cleanliness
+  closeMin = Math.round(closeMin / 5) * 5;
+  return closeMin;
+}
+
+function formatMinutes(totalMin) {
+  var h = Math.floor(totalMin / 60), m = totalMin % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+
 // ── ROTATION ENGINE ───────────────────────────────────────────────────────
 // Runs on every week load. Always recalculates auto rest days fresh.
 //
@@ -1302,13 +1377,26 @@ async function computeAndSaveRotation() {
     });
   });
 
-  if (upserts.length === 0) return;
+  // ── Part-time agents: add rest_parttime on forced rest days ──────────────
+  var ptUpserts = [];
+  agents.forEach(function(agent) {
+    if ((agent.work_pct || 100) >= 100) return;
+    var pt = computePartTimeForAgent(agent, openDays);
+    pt.forcedRestDays.forEach(function(ds) {
+      var existing = availability[agent.id] && availability[agent.id][ds];
+      if (existing === 'absent' || existing === 'rest_override') return;
+      ptUpserts.push({ agent_id: agent.id, week_date: ds, day_status: 'rest_parttime' });
+    });
+  });
+
+  var allUpserts = upserts.concat(ptUpserts);
+  if (allUpserts.length === 0) return;
 
   var { error } = await sb.from('agent_availability')
-    .upsert(upserts, { onConflict: 'agent_id,week_date' });
+    .upsert(allUpserts, { onConflict: 'agent_id,week_date' });
 
   if (!error) {
-    upserts.forEach(function(u) {
+    allUpserts.forEach(function(u) {
       if (!availability[u.agent_id]) availability[u.agent_id] = {};
       availability[u.agent_id][u.week_date] = u.day_status;
     });
@@ -1316,83 +1404,6 @@ async function computeAndSaveRotation() {
 }
 
 // ── PLANNING ENGINE ───────────────────────────────────────────────────────
-function getAgentStatus(agentId, dayStr) {
-  return (availability[agentId] && availability[agentId][dayStr] !== undefined)
-    ? availability[agentId][dayStr]
-    : 'working';
-}
-
-function computeDayShifts(dayStr) {
-  // Step 1 — Centre-level closures (apply to all agents equally)
-  const closureType = getDayClosureType(dayStr);
-  if (closureType) {
-    const shift = closureType === 'weekend' ? 'Rest' : 'Holiday';
-    return agents.map(function(a) { return { agent: a, shift: shift }; });
-  }
-
-  // Step 2 — Get day index in the week (0=Mon … 6=Sun) for shift rotation
-  const days     = getWeekDays(currentWeekMonday);
-  const dayIndex = days.findIndex(function(d) { return toDateStr(d) === dayStr; });
-
-  // Step 3 — Separate agents by their status on this day
-  const working  = []; // will receive Morning or Afternoon
-  const results  = agents.map(function(agent, agentGlobalIdx) {
-    const status = getAgentStatus(agent.id, dayStr);
-    if (status === 'rest_scheduled' || status === 'rest_override') return { agent: agent, shift: 'ScheduledRest' };
-    if (status === 'absent')         return { agent: agent, shift: 'Absent' };
-    // status === 'working'
-    working.push({ agent: agent, globalIdx: agentGlobalIdx });
-    return null; // placeholder, filled below
-  });
-
-  // Step 4 — Calculate staffing need from pre-computed workload minutes
-  const f             = forecasts[dayStr];
-  let   assignedCount = 0;
-  if (f && f.contact_volume > 0) {
-    // contact_volume = total workload in minutes (sum of volume_task × AHT_task)
-    const workload_hours     = f.contact_volume / 60;
-    const theoretical_needed = Math.ceil(workload_hours / regulations.max_daily_hours);
-    assignedCount            = Math.min(theoretical_needed, working.length);
-  }
-
-  // Step 5 — Assign shifts with Morning/Afternoon rotation
-  // Rotation: agent at global index G on day index D → (G + D) % 2
-  //   even → Morning, odd → Afternoon
-  // This guarantees each agent alternates shift every day they work.
-  let assignedSoFar = 0;
-  working.forEach(function(w) {
-    let shift;
-    if (assignedSoFar < assignedCount) {
-      shift = (w.globalIdx + dayIndex) % 2 === 0 ? 'Morning' : 'Afternoon';
-      assignedSoFar++;
-    } else {
-      shift = 'Rest';
-    }
-    // Write back into results array at correct position
-    const idx = agents.findIndex(function(a) { return a.id === w.agent.id; });
-    results[idx] = { agent: w.agent, shift: shift };
-  });
-
-  return results;
-}
-
-// ── SHIFT BADGE ───────────────────────────────────────────────────────────
-function shiftBadge(shift, agentId, dayStr) {
-  switch (shift) {
-    case 'Morning':       return '<span class="shift-morning">\ud83c\udf05 Morning</span>';
-    case 'Afternoon':     return '<span class="shift-afternoon">\ud83c\udf07 Afternoon</span>';
-    case 'Rest':          return '<span class="shift-rest">Rest</span>';
-    case 'Absent':        return '<span class="shift-absent">\ud83c\udfe5 Absent</span>';
-    case 'Closed':
-    case 'Holiday':       return '<span class="shift-holiday">\ud83c\udfd6\ufe0f Holiday</span>';
-    case 'ScheduledRest':
-      // Clickable — manager can reassign rest day
-      return '<span class="shift-scheduled" onclick="showRestOverridePicker(\'' +
-        agentId + '\',\'' + dayStr + '\',event)" title="Click to change rest day">\ud83d\udcc5 Sched. Rest</span>';
-    default:              return '<span class="shift-rest">Rest</span>';
-  }
-}
-
 // ── RENDER PLANNING ───────────────────────────────────────────────────────
 function renderPlanning() {
   renderWeeklyPlanning();
@@ -1409,33 +1420,26 @@ function renderWeeklyPlanning() {
   }
 
   const days    = getWeekDays(currentWeekMonday);
-  const matrix  = {};
   const summary = {};
 
   // Determine if rotation is active (open days > 5)
   const openDays = days.filter(function(day) { return !getDayClosureType(toDateStr(day)); });
-  const rotationActive = openDays.length > 5;
-  if (legend) legend.style.display = rotationActive ? 'block' : 'none';
+  if (legend) legend.style.display = openDays.length > 5 ? 'block' : 'none';
 
   days.forEach(function(day) {
     const ds      = toDateStr(day);
-    const shifts  = computeDayShifts(ds);
     const closure = getDayClosureType(ds);
-    summary[ds]   = { morning: 0, afternoon: 0, need: 0, closure: closure };
-
-    shifts.forEach(function(s) {
-      if (!matrix[s.agent.id]) matrix[s.agent.id] = {};
-      matrix[s.agent.id][ds] = s.shift;
-      if (s.shift === 'Morning')   summary[ds].morning++;
-      if (s.shift === 'Afternoon') summary[ds].afternoon++;
+    var working   = 0;
+    agents.forEach(function(a) {
+      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
+      if (!closure && s === 'working') working++;
     });
-
+    var need = 0;
     if (!closure) {
       const f = forecasts[ds];
-      if (f && f.contact_volume > 0) {
-        summary[ds].need = Math.ceil((f.contact_volume / 60) / regulations.max_daily_hours);
-      }
+      if (f && f.contact_volume > 0) need = Math.ceil((f.contact_volume / 60) / regulations.max_daily_hours);
     }
+    summary[ds] = { working: working, need: need, closure: closure };
   });
 
   // Table headers
@@ -1462,28 +1466,53 @@ function renderWeeklyPlanning() {
 
   // Agent rows
   agents.forEach(function(a) {
-    html += '<tr><td class="agent-name">' + a.first_name + ' ' + a.last_name + '</td>';
+    var pct = a.work_pct || 100;
+    var ptSchedule = pct < 100 ? computePartTimeForAgent(a, openDays) : null;
+    var nameLabel = a.first_name + ' ' + a.last_name +
+      (pct < 100 ? ' <span class="pct-badge">'+pct+'%</span>' : '');
+    html += '<tr><td class="agent-name">' + nameLabel + '</td>';
     days.forEach(function(day) {
       const ds      = toDateStr(day);
-      const shift   = (matrix[a.id] && matrix[a.id][ds]) ? matrix[a.id][ds] : 'Rest';
+      const status  = (availability[a.id] && availability[a.id][ds]) || 'working';
       const closure = getDayClosureType(ds);
 
       let cellBg = '';
       if (isToday(day))  cellBg = 'background:#f0f9ff;';
       if (closure)       cellBg = 'background:#f9fafb;';
-      if (shift === 'ScheduledRest') cellBg = 'background:#faf5ff;';
+      if (status === 'rest_scheduled' || status === 'rest_override') cellBg = 'background:#faf5ff;';
+      if (status === 'rest_parttime') cellBg = 'background:#fefce8;';
 
-      // Absent checkbox: only on working days (not on closures or scheduled rest)
-      const isWorking    = !closure && shift !== 'ScheduledRest';
-      const isAbsent     = shift === 'Absent';
-      const checkboxHtml = isWorking
-        ? '<br><input type="checkbox" title="' + (isAbsent ? 'Mark present' : 'Mark absent') + '"' +
-          (!isAbsent ? ' checked' : '') +
-          ' onchange="toggleAbsent(\'' + a.id + '\',\'' + ds + '\',!this.checked)"' +
-          ' style="margin-top:5px;cursor:pointer;">'
+      var badge = '';
+      if (closure === 'holiday')
+        badge = '<span class="shift-badge shift-holiday">\uD83C\uDFD6\uFE0F Holiday</span>';
+      else if (closure === 'weekend')
+        badge = '<span class="shift-badge shift-rest">\uD83C\uDF34 Weekend</span>';
+      else if (status === 'rest_parttime')
+        badge = '<span class="shift-parttime">\uD83D\uDD51 Part-time rest</span>';
+      else if (status === 'rest_scheduled' || status === 'rest_override')
+        badge = '<span class="shift-badge shift-scheduled" onclick="showRestOverridePicker(\''+a.id+'\',\''+ds+'\',event)">\uD83D\uDCC5 Sched. Rest</span>';
+      else if (status === 'absent')
+        badge = '<span class="shift-badge shift-absent">\uD83C\uDFE5 Absent</span>';
+      else {
+        // Working day — check if partial day for part-time agent
+        if (ptSchedule && ptSchedule.partialDay && ptSchedule.partialDay.ds === ds) {
+          var pd = ptSchedule.partialDay;
+          var hoursInfo = getDayHoursForDate(ds);
+          badge = '<span class="shift-partial" onclick="openIntradayForDay(\''+ds+'\')" style="cursor:pointer;">' +
+            String(hoursInfo.open).padStart(2,'0')+':00\u2013'+formatMinutes(pd.closeMin)+'</span>';
+        } else {
+          badge = '<span class="shift-badge shift-working" onclick="openIntradayForDay(\''+ds+'\')" style="cursor:pointer;">\uD83D\uDCC5 Working</span>';
+        }
+      }
+
+      var isWorking = !closure && status !== 'rest_scheduled' && status !== 'rest_override' && status !== 'rest_parttime';
+      var isAbsent  = status === 'absent';
+      var chk = isWorking
+        ? '<input type="checkbox"' + (!isAbsent?' checked':'') +
+          ' onchange="toggleAbsent(\''+a.id+'\',\''+ds+'\',!this.checked)" style="cursor:pointer;">'
         : '';
 
-      html += '<td style="' + cellBg + '">' + shiftBadge(shift, a.id, ds) + checkboxHtml + '</td>';
+      html += '<td style="' + cellBg + '"><div class="planning-cell">' + badge + chk + '</div></td>';
     });
     html += '</tr>';
   });
@@ -1497,11 +1526,11 @@ function renderWeeklyPlanning() {
       const label = s.closure === 'weekend' ? '\ud83c\udf34 Weekend' : '\ud83c\udfd6\ufe0f Holiday';
       html += '<td class="day-neutral" style="font-size:11px;">' + label + '</td>';
     } else {
-      const ok  = (s.morning + s.afternoon) >= s.need;
+      const ok  = s.working >= s.need || s.need === 0;
       const cls = (!ok && s.need > 0) ? 'understaffed' : '';
       html += '<td class="' + cls + '" style="font-size:11px;">' +
         'Need: <b>' + s.need + '</b><br>' +
-        '\ud83c\udf05 ' + s.morning + ' &nbsp;\ud83c\udf07 ' + s.afternoon +
+        '\uD83D\uDC65 ' + s.working + ' working' +
         '</td>';
     }
   });
@@ -1652,14 +1681,29 @@ function computeIntradaySchedule(ds) {
   var working = agents.filter(function(a){
     if (closure) return false;
     var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-    return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent';
+    return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent' && s !== 'rest_parttime';
+  });
+
+  // Compute personal closeMin for part-time agents on their partial day
+  var agentCloseMin = {};
+  working.forEach(function(a){
+    var pct = a.work_pct || 100;
+    if (pct < 100) {
+      var pt = computePartTimeForAgent(a, getWeekDays(currentWeekMonday)
+        .filter(function(d){return !getDayClosureType(toDateStr(d));}));
+      if (pt.partialDay && pt.partialDay.ds === ds) {
+        agentCloseMin[a.id] = pt.partialDay.closeMin;
+      }
+    }
   });
 
   if (closure || !working.length) {
     return agents.map(function(a){
       var s = (availability[a.id] && availability[a.id][ds]) || 'working';
       return { agent:a, blocks:[], isClosed:!!closure,
-               isRest:['rest_scheduled','rest_override'].includes(s), isAbsent:s==='absent' };
+               isRest:['rest_scheduled','rest_override','rest_parttime'].includes(s),
+               isPartTimeRest: s==='rest_parttime',
+               isAbsent:s==='absent' };
     });
   }
 
@@ -1699,7 +1743,11 @@ function computeIntradaySchedule(ds) {
   for (var h = hours.open; h < hours.close; h++) {
     var hS=h*60, hE=(h+1)*60;
 
-    var allSorted = working.slice().sort(function(a,b){
+    // ALL working agents — but exclude those past their personal closeMin
+    var allSorted = working.filter(function(a){
+      var personalClose = agentCloseMin[a.id] || (hours.close * 60);
+      return hS < personalClose; // agent still working this hour
+    }).sort(function(a,b){
       return (equity[a.id]||0)-(equity[b.id]||0);
     });
 
@@ -1725,8 +1773,12 @@ function computeIntradaySchedule(ds) {
 
   function buildBlocks(aid) {
     var brks=agBrk[aid]||[], evts=[];
+    var personalClose = agentCloseMin[aid] || (hours.close * 60);
     for (var h=hours.open; h<hours.close; h++) {
-      var hS=h*60, hE=(h+1)*60, task=agHour[aid]?agHour[aid][h]:null;
+      var hS=h*60, hE=(h+1)*60;
+      if (hS >= personalClose) break; // agent has finished for the day
+      hE = Math.min(hE, personalClose); // clip last hour to personal end time
+      var task=agHour[aid]?agHour[aid][h]:null;
 
       // Push break events that fall within this hour
       brks.forEach(function(br){
@@ -1768,9 +1820,11 @@ function computeIntradaySchedule(ds) {
 
   return agents.map(function(a){
     var s=(availability[a.id]&&availability[a.id][ds])||'working';
-    var isRest=['rest_scheduled','rest_override'].includes(s), isAbsent=s==='absent';
-    if(closure||isRest||isAbsent) return {agent:a,blocks:[],isClosed:!!closure,isRest:isRest,isAbsent:isAbsent};
-    return {agent:a,blocks:buildBlocks(a.id),isClosed:false,isRest:false,isAbsent:false};
+    var isRest=['rest_scheduled','rest_override','rest_parttime'].includes(s);
+    var isPartTimeRest = s === 'rest_parttime';
+    var isAbsent=s==='absent';
+    if(closure||isRest||isAbsent) return {agent:a,blocks:[],isClosed:!!closure,isRest:isRest,isPartTimeRest:isPartTimeRest,isAbsent:isAbsent};
+    return {agent:a,blocks:buildBlocks(a.id),isClosed:false,isRest:false,isPartTimeRest:false,isAbsent:false};
   });
 }
 
@@ -1831,6 +1885,7 @@ function renderIntraday(ds) {
     rows += '<div class="intraday-agent-cell">'+a.first_name+' '+a.last_name+'</div>';
     if (entry.isClosed||entry.isRest||entry.isAbsent) {
       var lbl = entry.isAbsent ? '\uD83C\uDFE5 Absent'
+              : entry.isPartTimeRest ? '\uD83D\uDD51 Part-time rest'
               : entry.isClosed ? '\uD83D\uDD12 Closed' : '\uD83D\uDCC5 Rest';
       for (var hh=hours.open; hh<hours.close; hh++)
         rows += '<div class="intraday-rest-cell">'+(hh===hours.open?lbl:'')+'</div>';
@@ -1856,20 +1911,20 @@ function renderIntraday(ds) {
     }
   });
 
-  // Staffing need summary row
+  // Staffing need summary row — shows how many agents the engine calculated per task per hour
+  var dayForecast = forecasts[target] || {};
   var needRow = '<div class="intraday-agent-cell" style="font-size:10px;color:#6b7280;background:#f1f5f9;">Need</div>';
-  for (var h=hours.open; h<hours.close; h++) {
-    var hS2=h*60, hE2=(h+1)*60;
-    var needHtml='<div style="padding:2px 1px;">';
-    primary.forEach(function(t){
-      var vol=(f&&f.hourly&&f.hourly[t.name.toLowerCase()])?((f.hourly[t.name.toLowerCase()]||{})[h]||0):0;
-      if(!vol) return;
-      var needed=Math.ceil(vol*t.aht_minutes/60);
-      needHtml+='<div style="font-size:8px;color:'+t.color_text+';font-weight:600;">'+
+  for (var hn=hours.open; hn<hours.close; hn++) {
+    var needHtml = '<div style="padding:2px 1px;">';
+    tasksSortedByPriority().filter(function(t){return !t.is_filler;}).forEach(function(t){
+      var vol = ((dayForecast.hourly||{})[t.name.toLowerCase()]||{})[hn]||0;
+      if (!vol) return;
+      var needed = Math.ceil(vol * t.aht_minutes / 60);
+      needHtml += '<div style="font-size:8px;color:'+t.color_text+';font-weight:600;">'+
         t.name.substring(0,3)+': '+needed+'</div>';
     });
-    needHtml+='</div>';
-    needRow+='<div style="border:1px solid #e5e7eb;background:#f8fafc;min-height:40px;">'+needHtml+'</div>';
+    needHtml += '</div>';
+    needRow += '<div style="border:1px solid #e5e7eb;background:#f8fafc;min-height:40px;">'+needHtml+'</div>';
   }
 
   container.innerHTML =
@@ -1886,9 +1941,37 @@ function renderAgents() {
     return;
   }
   container.innerHTML = agents.map(function(a) {
-    return '<div class="agent-row"><span>' + a.first_name + ' ' + a.last_name + '</span>' +
-      '<button class="btn btn-danger" onclick="deleteAgent(\'' + a.id + '\')">Delete</button></div>';
+    var pct = a.work_pct || 100;
+    var pctBadge = pct < 100
+      ? '<span class="pct-badge">' + pct + '%</span>'
+      : '<span class="pct-badge" style="color:#9ca3af;">100%</span>';
+    return '<div class="agent-row">' +
+      '<span>' + a.first_name + ' ' + a.last_name + pctBadge + '</span>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<label style="font-size:12px;color:#6b7280;">Work %</label>' +
+        '<input type="number" id="pct-' + a.id + '" value="' + pct + '" min="10" max="100" step="5"' +
+          ' style="width:60px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;">' +
+        '<button class="btn btn-save" style="font-size:12px;padding:4px 10px;" onclick="saveAgentWorkPct(\'' + a.id + '\')">Save</button>' +
+        '<button class="btn btn-danger" onclick="deleteAgent(\'' + a.id + '\')">Delete</button>' +
+      '</div>' +
+    '</div>';
   }).join('');
+}
+
+async function saveAgentWorkPct(agentId) {
+  var el = document.getElementById('pct-' + agentId);
+  if (!el) return;
+  var pct = Math.max(10, Math.min(100, parseInt(el.value) || 100));
+  el.value = pct;
+  showLoader();
+  var { error } = await sb.from('agents').update({ work_pct: pct }).eq('id', agentId);
+  hideLoader();
+  if (error) { showToast('Failed to save', 'error'); return; }
+  // Update local agent record
+  var a = agents.find(function(x){ return x.id === agentId; });
+  if (a) a.work_pct = pct;
+  showToast('Work % updated \u2713');
+  await loadWeekData();
 }
 
 async function addAgent() {
@@ -1919,41 +2002,34 @@ async function deleteAgent(id) {
 }
 
 // ── RENDER FORECAST ───────────────────────────────────────────────────────
-var TASK_META = {
-  'call':        { label: 'CALL',        color: '#ef4444', priority: 1 },
-  'chat':        { label: 'CHAT',        color: '#f97316', priority: 2 },
-  'mail':        { label: 'MAIL',        color: '#6366f1', priority: 3 },
-  'clienteling': { label: 'CLIENTELING', color: '#10b981', priority: 4 },
-  'back-office': { label: 'BACK-OFFICE', color: '#0891b2', priority: 5 },
-};
-
 function renderForecastHeader() {
   var band = document.getElementById('forecast-header-band');
   if (!band || !currentRegionId) return;
   var aht   = regulations.aht_tasks || {};
   var trend = regulations.trend_pct || 0;
 
-  var ahtRows = Object.entries(TASK_META).map(function(entry) {
-    var key   = entry[0];
-    var meta  = entry[1];
-    var task  = meta.label;
-    var val   = aht[task] || 0;
-    return '<tr class="aht-task-row" data-task="' + task + '">' +
-      '<td><span class="task-dot" style="background:' + meta.color + '"></span>' + task + '</td>' +
+  // Use live tasks from DB (correct colors + priority)
+  var ahtRows = tasksSortedByPriority().map(function(t) {
+    var val = aht[t.name] || t.aht_minutes || 0;
+    return '<tr class="aht-task-row" data-task="' + t.name + '">' +
+      '<td><span class="task-dot" style="background:' + t.color_bg + ';border:1px solid ' + t.color_text + '40;"></span>' + t.name + '</td>' +
       '<td><input class="aht-val" type="number" value="' + val + '" min="0" step="0.5"> min</td>' +
+      '<td><select class="task-pri-sel" style="padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;">' +
+        [1,2,3,4,5].map(function(p){ return '<option value="'+p+'"'+(t.priority===p?' selected':'')+'>P'+p+'</option>'; }).join('') +
+      '</select></td>' +
       '</tr>';
   }).join('');
 
   var trendSign = trend > 0 ? '+' : '';
-  var trendDesc = trend === 0 ? 'flat — using history as-is'
+  var trendDesc = trend === 0 ? 'flat \u2014 using history as-is'
                 : trend > 0  ? 'volume growing vs last year'
                 : 'volume declining vs last year';
 
   band.innerHTML =
     '<div class="forecast-header">' +
       '<div>' +
-        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">AHT per task</div>' +
-        '<table class="aht-task-table"><tr><th>Task</th><th>AHT</th></tr>' + ahtRows + '</table>' +
+        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">AHT &amp; Priority per task</div>' +
+        '<table class="aht-task-table"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table>' +
       '</div>' +
       '<div style="border-left:1px solid #e5e7eb;padding-left:24px;">' +
         '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Forecast trend</div>' +
@@ -1962,7 +2038,7 @@ function renderForecastHeader() {
           '<span style="font-size:18px;font-weight:bold;color:#374151;">%</span>' +
         '</div>' +
         '<div class="trend-note" style="margin-top:6px;">' + trendSign + trend + '% &mdash; ' + trendDesc + '</div>' +
-        '<button class="btn btn-save" style="margin-top:12px;font-size:12px;" onclick="saveForecastSettings()">💾 Save AHT &amp; Trend</button>' +
+        '<button class="btn btn-save" style="margin-top:12px;font-size:12px;" onclick="saveForecastSettings()">\uD83D\uDCBE Save AHT, Priority &amp; Trend</button>' +
       '</div>' +
     '</div>';
 }
@@ -1974,27 +2050,39 @@ async function saveForecastSettings() {
   var trendEl = document.getElementById('fc-trend-pct');
   if (trendEl) regulations.trend_pct = parseFloat(trendEl.value) || 0;
 
-  // Read AHT per task from forecast header
-  var newAht = {};
+  // Read AHT and priority per task from forecast header
+  var newAht = {}, priorityUpserts = [];
   document.querySelectorAll('.aht-task-row').forEach(function(row) {
     var task = row.dataset.task;
     var val  = parseFloat(row.querySelector('.aht-val').value) || 0;
-    if (task) newAht[task] = val;
+    var pri  = parseInt(row.querySelector('.task-pri-sel') ? row.querySelector('.task-pri-sel').value : 99);
+    if (task) {
+      newAht[task] = val;
+      priorityUpserts.push({ region_id: currentRegionId, name: task, priority: pri,
+        aht_minutes: val,
+        // preserve existing colors
+        color_bg:   (getTask(task).color_bg   || '#f3f4f6'),
+        color_text: (getTask(task).color_text || '#374151'),
+        is_filler:  (getTask(task).is_filler  || false),
+      });
+    }
   });
   if (Object.keys(newAht).length > 0) regulations.aht_tasks = newAht;
 
-  // Save only these two keys — do NOT touch breaks or other regulation fields
   showLoader();
-  var { error } = await sb.from('regulations').upsert([
+  // Save AHT+trend to regulations
+  var { error: e1 } = await sb.from('regulations').upsert([
     { region_id: currentRegionId, rule_key: 'trend_pct',  rule_value: String(regulations.trend_pct) },
     { region_id: currentRegionId, rule_key: 'aht_tasks',  rule_value: JSON.stringify(regulations.aht_tasks) },
   ], { onConflict: 'region_id,rule_key' });
+  // Save priority+aht to tasks table
+  var { error: e2 } = await sb.from('tasks').upsert(priorityUpserts, { onConflict: 'region_id,name' });
   hideLoader();
 
-  if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
-  showToast('AHT & Trend saved \u2713');
-
-  // Reload week to recompute auto-forecast with new settings
+  if (e1 || e2) { showToast('Save failed', 'error'); return; }
+  showToast('Saved \u2713');
+  await loadTasks();
+  await loadWeekData();
   await loadWeekData();
 }
 
