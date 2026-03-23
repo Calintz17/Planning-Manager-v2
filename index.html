@@ -439,47 +439,11 @@ function buildAutoForecast(days) {
   var aht      = regulations.aht_tasks || {};
   var ALL_TASKS     = ['CALL','CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
   var NON_CALL      = ['CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
+  // openDays = days within the window that are not closed (used for FTE calc)
   var openDays      = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
 
-  // ── Step 1: compute carry-over coming IN from previous week ──────────────
-  // Walk backwards from days[0] up to 3 days; accumulate non-CALL volume
-  // from closed days AND after-hours volume from the first open day we hit.
-  var prevCarryIn = 0;
-  var firstOpenDayDate = days[0]; // fallback
-  for (var k = 0; k < openDays.length; k++) { firstOpenDayDate = openDays[k]; break; }
-
-  for (var pi = 1; pi <= 3; pi++) {
-    var prevDate   = new Date(days[0]);
-    prevDate.setDate(days[0].getDate() - pi);
-    var prevDs     = toDateStr(prevDate);
-    var prevHistDs = getEquivalentLastYearDate(prevDs);
-    var prevHist   = historicalVolume[prevHistDs] || {};
-    var prevClosed = !!getDayClosureType(prevDs);
-
-    if (prevClosed) {
-      // Fully closed day — ALL non-CALL volume carries forward
-      NON_CALL.forEach(function(task) {
-        var d = prevHist[task] || {};
-        Object.values(d).forEach(function(v) { prevCarryIn += Math.round(v * trend); });
-      });
-      // Keep going backwards (might be multiple closed days)
-    } else {
-      // Open day — only AFTER-hours non-CALL carries forward
-      var prevHours = getDayHoursForDate(prevDs);
-      NON_CALL.forEach(function(task) {
-        var d = prevHist[task] || {};
-        Object.keys(d).forEach(function(h) {
-          if (parseInt(h) >= prevHours.close) {
-            prevCarryIn += Math.round(d[h] * trend);
-          }
-        });
-      });
-      break; // stop at the first open day we reach going backwards
-    }
-  }
-
-  // ── Step 2: process each day in order ────────────────────────────────────
-  var carryOver = prevCarryIn; // rolls forward through the week
+  // ── Step 2: process each day in order (carry flows naturally) ────────────
+  var carryOver = 0; // starts at 0 for day -3; by day 0 it holds the real carry-in
   var result    = {};
 
   days.forEach(function(day) {
@@ -582,120 +546,7 @@ function buildAutoForecast(days) {
   return result;
 }
 
-// Build auto-forecast for all 7 days from history × trend.
-// contact_volume = weighted workload in minutes: sum(volume_task × AHT_task).
-// EMAIL BACKLOG RULE:
-//   Emails received on closed days (weekend/holiday/closed) are added to the
-//   opening hour of the next open day. If no open day remains in the week,
-//   they carry to Monday of next week (noted but not displayed in this week).
-function buildAutoForecast(days) {
-  var trend  = 1 + (regulations.trend_pct || 0) / 100;
-  var aht    = regulations.aht_tasks || {};
-  var TASKS  = ['CALL','CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
-  var openDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
-
-  // Step 1: compute raw hourly volumes for every day (including closed days for mail)
-  var rawHourly = {}; // rawHourly[ds][taskKey][hour] = volume
-  days.forEach(function(day) {
-    var ds     = toDateStr(day);
-    var histDs = getEquivalentLastYearDate(ds);
-    var hist   = historicalVolume[histDs] || {};
-    var hours  = getDayHoursForDate(ds);
-    rawHourly[ds] = {};
-
-    TASKS.forEach(function(task) {
-      var taskData = hist[task] || {};
-      var key      = task.toLowerCase();
-      rawHourly[ds][key] = {};
-      var isMail   = (task === 'MAIL');
-      // For mail: collect ALL 24 hours. For others: operating hours only.
-      var hStart   = isMail ? 0  : hours.open;
-      var hEnd     = isMail ? 24 : hours.close;
-      for (var h = hStart; h < hEnd; h++) {
-        var vol = Math.round((taskData[h] || 0) * trend);
-        if (vol > 0) rawHourly[ds][key][h] = vol;
-      }
-    });
-  });
-
-  // Step 2: redistribute mail from closed days to next open day's opening hour
-  var mailCarryToNextWeek = 0;
-  days.forEach(function(day, idx) {
-    var ds      = toDateStr(day);
-    var closure = getDayClosureType(ds);
-    if (!closure) return; // open day — nothing to redistribute
-
-    // Collect all mail volume from this closed day
-    var closedMail = rawHourly[ds]['mail'] || {};
-    var totalMail  = Object.values(closedMail).reduce(function(s, v) { return s + v; }, 0);
-    if (totalMail === 0) return;
-
-    // Find next open day
-    var nextOpenDay = null;
-    for (var j = idx + 1; j < days.length; j++) {
-      if (!getDayClosureType(toDateStr(days[j]))) { nextOpenDay = days[j]; break; }
-    }
-
-    if (nextOpenDay) {
-      var nextDs   = toDateStr(nextOpenDay);
-      var nextOpen = getDayHoursForDate(nextDs).open;
-      if (!rawHourly[nextDs]['mail']) rawHourly[nextDs]['mail'] = {};
-      rawHourly[nextDs]['mail'][nextOpen] = (rawHourly[nextDs]['mail'][nextOpen] || 0) + totalMail;
-      // Mark the backlog so the UI can highlight it
-      if (!rawHourly[nextDs]._backlog) rawHourly[nextDs]._backlog = 0;
-      rawHourly[nextDs]._backlog += totalMail;
-    } else {
-      // No open day left this week — carries to Monday next week
-      mailCarryToNextWeek += totalMail;
-    }
-
-    // Clear mail from closed day (it's been moved)
-    rawHourly[ds]['mail'] = {};
-  });
-
-  // Step 3: build result — only for open days, skip closed
-  var result = {};
-  days.forEach(function(day) {
-    var ds      = toDateStr(day);
-    var closure = getDayClosureType(ds);
-    var hours   = getDayHoursForDate(ds);
-    var hourly  = rawHourly[ds] || {};
-    var totalWorkloadMin = 0;
-
-    if (!closure) {
-      TASKS.forEach(function(task) {
-        var key     = task.toLowerCase();
-        var taskAht = aht[task] || 0;
-        Object.values(hourly[key] || {}).forEach(function(vol) {
-          totalWorkloadMin += vol * taskAht;
-        });
-      });
-    }
-
-    var fte = 0;
-    if (totalWorkloadMin > 0) {
-      var netMin = getNetProductiveMinPerDay(openDays.length);
-      fte = Math.ceil(totalWorkloadMin / netMin);
-    }
-
-    result[ds] = {
-      contact_volume: Math.round(totalWorkloadMin),
-      aht_minutes:    0,
-      auto:           true,
-      hourly:         hourly,
-      fte:            fte,
-      backlog:        hourly._backlog || 0,
-    };
-  });
-
-  // Attach carry-over note to last open day if needed
-  if (mailCarryToNextWeek > 0 && openDays.length > 0) {
-    var lastOpenDs = toDateStr(openDays[openDays.length - 1]);
-    if (result[lastOpenDs]) result[lastOpenDs].carryToNextWeek = mailCarryToNextWeek;
-  }
-
-  return result;
-}
+// Build auto-forecast comment block replaced — see function above.
 
 function changeWeek(dir) {
   currentWeekMonday.setDate(currentWeekMonday.getDate() + dir * 7);
@@ -1136,19 +987,26 @@ async function loadWeekData() {
 
   hideLoader();
 
-  // Load historical volume for the equivalent week last year.
-  // Also load equiv of prev 3 days (Fri/Sat/Sun) so we can compute
-  // carry-over INTO this week's first open day.
-  var histDates = days.map(function(day) { return getEquivalentLastYearDate(toDateStr(day)); });
-  for (var pi = 1; pi <= 3; pi++) {
-    var prevDay = new Date(days[0]);
-    prevDay.setDate(days[0].getDate() - pi);
-    histDates.push(getEquivalentLastYearDate(toDateStr(prevDay)));
+  // Load historical volume.
+  // Run on a 10-day window: 3 days before Monday + 7 current days.
+  // This lets carry-over propagate naturally without separate prevCarryIn logic.
+  var allDays = [];
+  for (var bi = 3; bi >= 1; bi--) {
+    var bDay = new Date(days[0]);
+    bDay.setDate(days[0].getDate() - bi);
+    allDays.push(bDay);
   }
+  allDays = allDays.concat(days);
+
+  var histDates = allDays.map(function(day) { return getEquivalentLastYearDate(toDateStr(day)); });
   await loadHistoricalVolume(histDates);
 
+  // Build auto-forecast on full 10-day window, take last 7 for this week
+  const autoFcAll = buildAutoForecast(allDays);
+  const autoFc    = {};
+  days.forEach(function(day) { autoFc[toDateStr(day)] = autoFcAll[toDateStr(day)]; });
+
   // Auto-fill forecast for days with no saved data
-  const autoFc = buildAutoForecast(days);
   days.forEach(function(day) {
     var ds = toDateStr(day);
     if (!forecasts[ds] || forecasts[ds].contact_volume === 0) {
