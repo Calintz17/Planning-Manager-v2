@@ -564,7 +564,7 @@ async function toggleAgentTag(agentId, tag) {
     res = await sb.from('agent_tags').delete().eq('agent_id', agentId).eq('tag', tag);
     if (!res.error) agentTags[agentId] = cur.filter(function(t){return t!==tag;});
   } else {
-    res = await sb.from('agent_tags').insert({agent_id:agentId, tag:tag});
+    res = await sb.from('agent_tags').upsert({agent_id:agentId, tag:tag}, {onConflict:'agent_id,tag'});
     if (!res.error) { if (!agentTags[agentId]) agentTags[agentId]=[]; agentTags[agentId].push(tag); }
   }
   if (res.error) { showToast('Failed to update tag', 'error'); return; }
