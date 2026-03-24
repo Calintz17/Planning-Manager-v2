@@ -80,7 +80,7 @@
     .forecast-day-card.today-card  { border-color: #1a1a2e; background: #f0f9ff; }
     .forecast-day-card.closed-card { background: #f8fafc; opacity: 0.6; }
     .forecast-day-card.auto-filled { border-color: #a5b4fc; background: #fafbff; }
-    .hourly-bar-wrap { flex: 1; height: 14px; background: #e2e8f0; border-radius: 3px; overflow: hidden; display: flex; }
+    .hourly-bar-wrap { flex: 1; height: 14px; background: #ffffff; border-radius: 3px; overflow: hidden; display: flex; border: 1px solid #e5e7eb; }
     .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
     .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
     .auto-badge { display:inline-block; font-size:9px; background:#ede9fe; color:#5b21b6; border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
@@ -478,6 +478,16 @@ function tasksSortedByPriority() {
   var src = tasks.length ? tasks : TASK_DEFAULTS;
   return src.slice().sort(function(a,b){return a.priority-b.priority;});
 }
+// Display order: matches TASK_DEFAULTS order (stable, no tie-breaking ambiguity)
+// CALL, FRAUD, CHAT, MAIL, BACK-OFFICE, CLIENTELING
+function tasksInDisplayOrder() {
+  var order = TASK_DEFAULTS.map(function(d){return d.name;});
+  var src   = tasks.length ? tasks : TASK_DEFAULTS;
+  return order.map(function(name){
+    return src.find(function(t){return t.name===name;}) ||
+      TASK_DEFAULTS.find(function(t){return t.name===name;});
+  }).filter(Boolean);
+}
 
 // Columns that exist in the `tasks` DB table
 var TASK_DB_COLS = ['region_id','name','priority','is_filler','color_bg','color_text','aht_minutes'];
@@ -540,6 +550,10 @@ async function loadAgentTags() {
     if (!agentTags[row.agent_id]) agentTags[row.agent_id] = [];
     agentTags[row.agent_id].push(row.tag);
   });
+}
+
+function handleTagClick(btn) {
+  toggleAgentTag(btn.dataset.agent, btn.dataset.tag);
 }
 
 async function toggleAgentTag(agentId, tag) {
@@ -1769,15 +1783,14 @@ function renderWeeklyPlanning() {
       else if (status === 'absent')
         badge = '<span class="shift-badge shift-absent">\uD83C\uDFE5 Absent</span>';
       else {
-        // Working day — check if partial day for part-time agent
+        // Working day — show actual shift hours (HH:MM–HH:MM)
+        var hoursInfo = getDayHoursForDate(ds);
+        var shiftLabel = String(hoursInfo.open).padStart(2,'0')+':00\u2013'+String(hoursInfo.close).padStart(2,'0')+':00';
         if (ptSchedule && ptSchedule.partialDay && ptSchedule.partialDay.ds === ds) {
           var pd = ptSchedule.partialDay;
-          var hoursInfo = getDayHoursForDate(ds);
-          badge = '<span class="shift-partial" onclick="openIntradayForDay(\''+ds+'\')" style="cursor:pointer;">' +
-            String(hoursInfo.open).padStart(2,'0')+':00\u2013'+formatMinutes(pd.closeMin)+'</span>';
-        } else {
-          badge = '<span class="shift-badge shift-working">\uD83D\uDCC5 Working</span>';
+          shiftLabel = String(hoursInfo.open).padStart(2,'0')+':00\u2013'+formatMinutes(pd.closeMin);
         }
+        badge = '<span class="shift-partial">'+shiftLabel+'</span>';
       }
 
       var isWorking = !closure && status !== 'rest_scheduled' && status !== 'rest_override' && status !== 'rest_parttime';
@@ -2168,7 +2181,7 @@ function renderIntraday(ds) {
 
   // Legend
   var legend = '<div class="intraday-legend">';
-  tasksSortedByPriority().forEach(function(t){
+  tasksInDisplayOrder().forEach(function(t){
     var fTag = t.is_filler ? ' <em style="font-weight:normal;font-size:9px;">(filler)</em>' : '';
     legend += '<span style="background:'+t.color_bg+';color:'+t.color_text+
       ';border-radius:4px;padding:2px 9px;border:1px solid '+t.color_text+
@@ -2259,7 +2272,7 @@ function renderIntraday(ds) {
   var needRow = '<div class="intraday-agent-cell" style="font-size:10px;color:#6b7280;background:#f1f5f9;font-weight:700;">Need</div>';
   for (var hn=hours.open; hn<hours.close; hn++) {
     var needHtml = '<div style="padding:3px 2px;">';
-    tasksSortedByPriority().filter(function(t){return !t.is_filler;}).forEach(function(t){
+    tasksInDisplayOrder().filter(function(t){return !t.is_filler;}).forEach(function(t){
       var vol = ((dayForecast.hourly||{})[t.name.toLowerCase()]||{})[hn]||0;
       if (!vol) return;
       var fte = Math.ceil(vol * t.aht_minutes / Math.max(1, netMinDay));
@@ -2299,12 +2312,12 @@ function renderAgents() {
       var active = tags.includes(tag);
       var label  = tag === 'can_fraud' ? '\uD83D\uDD10 Fraud' : '\uD83D\uDCCB Back-office';
       var style  = active
-        ? 'background:#fef2f2;color:#be123c;border:1px solid #fda4af;font-weight:600;'
+        ? 'background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd;font-weight:600;'
         : 'background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;';
-      if (tag === 'can_backoffice' && active)
-        style = 'background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd;font-weight:600;';
-      return '<button onclick="toggleAgentTag(\''+a.id+'\',\''+tag+'\')" '+
-        'style="'+style+'padding:2px 10px;border-radius:10px;font-size:11px;cursor:pointer;">'+label+'</button>';
+      if (tag === 'can_fraud' && active)
+        style = 'background:#eef2ff;color:#4338ca;border:1px solid #a5b4fc;font-weight:600;';
+      return '<button data-agent="'+a.id+'" data-tag="'+tag+'" onclick="handleTagClick(this)" '+
+        'style="'+style+'padding:2px 10px;border-radius:10px;font-size:11px;cursor:pointer;border-width:1px;border-style:solid;">'+label+'</button>';
     }).join('');
     return '<div class="agent-row">' +
       '<span>' + a.first_name + ' ' + a.last_name + pctBadge + '</span>' +
@@ -2376,7 +2389,7 @@ function renderForecastHeader() {
   var trend = regulations.trend_pct || 0;
 
   // Use live tasks from DB (correct colors + priority)
-  var ahtRows = tasksSortedByPriority().map(function(t) {
+  var ahtRows = tasksInDisplayOrder().map(function(t) {
     var val = aht[t.name] || t.aht_minutes || 0;
     return '<tr class="aht-task-row" data-task="' + t.name + '">' +
       '<td><span class="task-dot" style="background:' + t.color_bg + ';border:1px solid ' + t.color_text + '40;"></span>' + t.name + '</td>' +
@@ -2482,21 +2495,6 @@ function renderForecast() {
   const days = getWeekDays(currentWeekMonday);
   const forecastOpenDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
 
-  // Max per-hour total volume for bar scaling
-  var maxHourlyVol = 1;
-  days.forEach(function(day) {
-    var f = forecasts[toDateStr(day)];
-    if (!f || !f.hourly) return;
-    var hoursD = getDayHoursForDate(toDateStr(day));
-    for (var h = hoursD.open; h < hoursD.close; h++) {
-      var rowTotal = 0;
-      tasksSortedByPriority().forEach(function(t){
-        rowTotal += ((f.hourly[t.name.toLowerCase()]||{})[h]||0);
-      });
-      if (rowTotal > maxHourlyVol) maxHourlyVol = rowTotal;
-    }
-  });
-
   let html = '<div class="forecast-grid">';
   days.forEach(function(day, i) {
     const ds        = toDateStr(day);
@@ -2505,6 +2503,16 @@ function renderForecast() {
     const isBlocked = !!closure;
     const isAuto    = !!f.auto;
     const hours     = getDayHoursForDate(ds);
+
+    // Scale bars to THIS day's max hour total (not week max)
+    var dayMaxVol = 1;
+    if (!isBlocked && f.hourly) {
+      for (var hh = hours.open; hh < hours.close; hh++) {
+        var rt = 0;
+        tasksInDisplayOrder().forEach(function(t){ rt += ((f.hourly[t.name.toLowerCase()]||{})[hh]||0); });
+        if (rt > dayMaxVol) dayMaxVol = rt;
+      }
+    }
 
     let cls = 'forecast-day-card';
     if (isToday(day)) cls += ' today-card';
@@ -2522,18 +2530,18 @@ function renderForecast() {
     var summaryHtml = '';
     if (!isBlocked) {
       var summaryLines = '';
-      tasksSortedByPriority().filter(function(t){return !t.is_filler;}).forEach(function(t){
+      tasksInDisplayOrder().filter(function(t){return !t.is_filler;}).forEach(function(t){
         var key = t.name.toLowerCase();
         var vol = Object.values((f.hourly||{})[key]||{}).reduce(function(s,v){return s+v;},0);
         if (!vol) return;
         var extra = '';
         if (t.name === 'MAIL' && f.carryIn > 0)
-          extra = ' <span style="color:#9ca3af;font-size:9px;">incl. '+f.carryIn+' carried over</span>';
-        summaryLines += '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #f3f4f6;">' +
-          '<span style="display:flex;align-items:center;gap:5px;">' +
+          extra = ' <span style="color:#9ca3af;font-size:9px;white-space:nowrap;">incl. '+f.carryIn+' c/o</span>';
+        summaryLines += '<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #f3f4f6;white-space:nowrap;">' +
+          '<span style="display:flex;align-items:center;gap:5px;min-width:0;">' +
             '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+t.color_bg+';border:1px solid '+t.color_text+'50;flex-shrink:0;"></span>' +
             '<span style="font-weight:600;color:'+t.color_text+';">'+t.name+'</span>'+extra+'</span>' +
-          '<span style="font-weight:600;color:#374151;">'+vol+'</span>' +
+          '<span style="font-weight:600;color:#374151;margin-left:8px;flex-shrink:0;">'+vol+'</span>' +
           '</div>';
       });
       if (summaryLines) {
@@ -2557,12 +2565,12 @@ function renderForecast() {
       for (var h = hours.open; h < hours.close; h++) {
         var rowTotal = 0;
         var bars = '';
-        tasksSortedByPriority().forEach(function(t){
+        tasksInDisplayOrder().forEach(function(t){
           var vol = ((f.hourly[t.name.toLowerCase()]||{})[h]||0);
           rowTotal += vol;
           if (vol > 0) {
-            var pct = Math.max(3, Math.round((vol / maxHourlyVol) * 100));
-            bars += '<div style="background:'+t.color_bg+';height:100%;width:'+pct+'%;border-right:1px solid '+t.color_text+'30;min-width:3px;"></div>';
+            var pct = Math.max(2, Math.round((vol / dayMaxVol) * 100));
+            bars += '<div style="background:'+t.color_bg+';height:100%;width:'+pct+'%;border-right:1px solid '+t.color_text+'40;min-width:2px;"></div>';
           }
         });
         if (!rowTotal) continue;
