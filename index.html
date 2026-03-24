@@ -479,22 +479,33 @@ function tasksSortedByPriority() {
   return src.slice().sort(function(a,b){return a.priority-b.priority;});
 }
 
+// Columns that exist in the `tasks` DB table
+var TASK_DB_COLS = ['region_id','name','priority','is_filler','color_bg','color_text','aht_minutes'];
+
+function taskToDbRow(t, regionId) {
+  var row = {};
+  TASK_DB_COLS.forEach(function(col){ if (col in t) row[col] = t[col]; });
+  row.region_id = regionId;
+  return row;
+}
+
 async function loadTasks() {
-  var {data,error} = await sb.from('tasks').select('*')
+  var {data, error} = await sb.from('tasks').select('*')
     .eq('region_id', currentRegionId).order('priority');
   if (error) { showToast('Error loading tasks','error'); return; }
   if (!data || data.length === 0) { await seedTasks(); return; }
 
-  // Check for any missing tasks (e.g. FRAUD added in P2) and seed them
+  // Seed any missing tasks (e.g. FRAUD added in P2)
   var existingNames = data.map(function(t){return t.name;});
   var missing = TASK_DEFAULTS.filter(function(d){return !existingNames.includes(d.name);});
   if (missing.length > 0) {
-    var newRows = missing.map(function(t){return Object.assign({},t,{region_id:currentRegionId});});
-    var {data:newData} = await sb.from('tasks').upsert(newRows,{onConflict:'region_id,name'}).select();
-    if (newData) data = data.concat(newData);
+    var newRows = missing.map(function(t){ return taskToDbRow(t, currentRegionId); });
+    var res = await sb.from('tasks').upsert(newRows, {onConflict:'region_id,name'}).select();
+    if (res.data) data = data.concat(res.data);
   }
 
-  // Merge DB data with TASK_DEFAULTS to fill in morning_only/required_tag
+  // Merge DB rows with TASK_DEFAULTS to restore in-memory-only fields
+  // (required_tag, morning_only) — DB wins for everything else
   tasks = data.map(function(t){
     var def = TASK_DEFAULTS.find(function(d){return d.name===t.name;}) || {};
     return Object.assign({}, def, t);
@@ -505,13 +516,15 @@ async function loadTasks() {
 }
 
 async function seedTasks() {
-  var rows = TASK_DEFAULTS.map(function(t){
-    return Object.assign({}, t, {region_id: currentRegionId});
-  });
+  var rows = TASK_DEFAULTS.map(function(t){ return taskToDbRow(t, currentRegionId); });
   var {data, error} = await sb.from('tasks')
     .upsert(rows, {onConflict:'region_id,name'}).select();
-  if (!error && data) {
-    tasks = data;
+  if (error) { showToast('Error seeding tasks: '+error.message,'error'); return; }
+  if (data) {
+    tasks = data.map(function(t){
+      var def = TASK_DEFAULTS.find(function(d){return d.name===t.name;}) || {};
+      return Object.assign({}, def, t);
+    });
     var aht = {}; tasks.forEach(function(t){aht[t.name]=t.aht_minutes;});
     regulations.aht_tasks = aht;
   }
@@ -2016,15 +2029,16 @@ function computeIntradaySchedule(ds) {
     var pool = allSorted.slice();
     primary.forEach(function(t){
       var vol=(demand[h]||{})[t.name]||0;
-      // Enforce morning_only: no volume after noon for fraud
       if (t.morning_only && h >= 12) vol = 0;
       if(!vol||!pool.length) return;
 
-      // Filter pool to agents eligible for this task
-      var eligible = pool.filter(function(ag){
-        if (!t.required_tag) return true; // no restriction
-        return (agentTags[ag.id]||[]).includes(t.required_tag);
-      });
+      // Filter to eligible agents (tag-restricted tasks)
+      var eligible = t.required_tag
+        ? pool.filter(function(ag){ return (agentTags[ag.id]||[]).includes(t.required_tag); })
+        : pool.slice();
+
+      // If tagged task but no tagged agents available, skip (don't fall back — 
+      // unqualified agents should not handle fraud/BO they're not certified for)
       if (!eligible.length) return;
 
       var workMinNeeded = vol * t.aht_minutes;
@@ -2432,13 +2446,12 @@ async function saveForecastSettings() {
     var pri  = parseInt(row.querySelector('.task-pri-sel') ? row.querySelector('.task-pri-sel').value : 99);
     if (task) {
       newAht[task] = val;
-      priorityUpserts.push({ region_id: currentRegionId, name: task, priority: pri,
-        aht_minutes: val,
-        // preserve existing colors
+      priorityUpserts.push(taskToDbRow({
+        name: task, priority: pri, aht_minutes: val,
         color_bg:   (getTask(task).color_bg   || '#f3f4f6'),
         color_text: (getTask(task).color_text || '#374151'),
         is_filler:  (getTask(task).is_filler  || false),
-      });
+      }, currentRegionId));
     }
   });
   if (Object.keys(newAht).length > 0) regulations.aht_tasks = newAht;
