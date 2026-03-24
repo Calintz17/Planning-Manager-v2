@@ -180,10 +180,6 @@
     .intraday-reset-btn:hover { background:#fee2e2;color:#b91c1c;border-color:#fca5a5; }
     .intraday-rest-cell{background:#f9fafb;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af;min-height:56px;}
     .intraday-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;}
-    /* ── TASKS CONFIG ── */
-    .tasks-config-table{width:100%;border-collapse:collapse;font-size:12px;}
-    .tasks-config-table th{background:#f9fafb;color:#6b7280;padding:7px 10px;text-align:left;border:1px solid #e5e7eb;font-size:11px;text-transform:uppercase;}
-    .tasks-config-table td{padding:7px 10px;border:1px solid #e5e7eb;vertical-align:middle;}
     .filler-tag{font-size:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:10px;padding:1px 7px;margin-left:4px;}
 
     .shift-parttime { background:#fef9c3; color:#854d0e; border-radius:4px; padding:3px 8px; display:inline-block; font-size:11px; font-weight:600; }
@@ -392,16 +388,22 @@ var scheduleOverrides = {}; // [date][agentId][start_min] = {end_min, task}
 
 // Default task config (pastel colors, used for seeding and fallback)
 var TASK_DEFAULTS = [
-  { name:'CALL',        priority:1, is_filler:false, color_bg:'#fef2f2', color_text:'#dc2626', aht_minutes:10 },
-  { name:'CHAT',        priority:2, is_filler:false, color_bg:'#fff7ed', color_text:'#ea580c', aht_minutes:8  },
-  { name:'MAIL',        priority:3, is_filler:false, color_bg:'#eff6ff', color_text:'#2563eb', aht_minutes:5  },
-  { name:'BACK-OFFICE', priority:4, is_filler:false, color_bg:'#f5f3ff', color_text:'#7c3aed', aht_minutes:10 },
-  { name:'CLIENTELING', priority:5, is_filler:true,  color_bg:'#f0fdf4', color_text:'#16a34a', aht_minutes:15 },
+  { name:'FRAUD',       priority:1, is_filler:false, color_bg:'#ecfeff', color_text:'#0e7490', aht_minutes:15, required_tag:'can_fraud',       morning_only:true  },
+  { name:'CALL',        priority:1, is_filler:false, color_bg:'#fef2f2', color_text:'#dc2626', aht_minutes:10, required_tag:null,               morning_only:false },
+  { name:'CHAT',        priority:2, is_filler:false, color_bg:'#fff7ed', color_text:'#ea580c', aht_minutes:8,  required_tag:null,               morning_only:false },
+  { name:'MAIL',        priority:3, is_filler:false, color_bg:'#eff6ff', color_text:'#2563eb', aht_minutes:5,  required_tag:null,               morning_only:false },
+  { name:'BACK-OFFICE', priority:4, is_filler:false, color_bg:'#f5f3ff', color_text:'#7c3aed', aht_minutes:10, required_tag:'can_backoffice',   morning_only:false },
+  { name:'CLIENTELING', priority:5, is_filler:true,  color_bg:'#f0fdf4', color_text:'#16a34a', aht_minutes:15, required_tag:null,               morning_only:false },
 ];
 var BREAK_COLORS = {
-  lunch: { bg:'#fef9c3', text:'#a16207' },   // yellow-100 — soft, clearly lunch
-  short: { bg:'#fefce8', text:'#ca8a04' },   // yellow-50  — very subtle, short break
+  lunch: { bg:'#fef9c3', text:'#a16207' },
+  short: { bg:'#fefce8', text:'#ca8a04' },
 };
+
+// Agent eligibility tags: { agentId: Set(['can_fraud','can_backoffice']) }
+var agentTags = {};
+// Monthly BO targets: { year_month: { task: volume } }
+var monthlyBoTargets = {};
 
 // ── DATE HELPERS ──────────────────────────────────────────────────────────
 function getMondayOfCurrentWeek() {
@@ -480,7 +482,21 @@ async function loadTasks() {
     .eq('region_id', currentRegionId).order('priority');
   if (error) { showToast('Error loading tasks','error'); return; }
   if (!data || data.length === 0) { await seedTasks(); return; }
-  tasks = data;
+
+  // Check for any missing tasks (e.g. FRAUD added in P2) and seed them
+  var existingNames = data.map(function(t){return t.name;});
+  var missing = TASK_DEFAULTS.filter(function(d){return !existingNames.includes(d.name);});
+  if (missing.length > 0) {
+    var newRows = missing.map(function(t){return Object.assign({},t,{region_id:currentRegionId});});
+    var {data:newData} = await sb.from('tasks').upsert(newRows,{onConflict:'region_id,name'}).select();
+    if (newData) data = data.concat(newData);
+  }
+
+  // Merge DB data with TASK_DEFAULTS to fill in morning_only/required_tag
+  tasks = data.map(function(t){
+    var def = TASK_DEFAULTS.find(function(d){return d.name===t.name;}) || {};
+    return Object.assign({}, def, t);
+  });
   var aht = {};
   tasks.forEach(function(t){ aht[t.name] = t.aht_minutes; });
   regulations.aht_tasks = aht;
@@ -499,26 +515,66 @@ async function seedTasks() {
   }
 }
 
-async function saveTasks() {
+async function loadAgentTags() {
+  agentTags = {};
+  if (!agents.length) return;
+  var ids = agents.map(function(a){return a.id;});
+  var {data, error} = await sb.from('agent_tags').select('*').in('agent_id', ids);
+  if (error || !data) return;
+  data.forEach(function(row){
+    if (!agentTags[row.agent_id]) agentTags[row.agent_id] = [];
+    agentTags[row.agent_id].push(row.tag);
+  });
+}
+
+async function toggleAgentTag(agentId, tag) {
+  var cur = agentTags[agentId] || [];
+  var has = cur.includes(tag);
+  if (has) {
+    var {error} = await sb.from('agent_tags').delete()
+      .eq('agent_id', agentId).eq('tag', tag);
+    if (!error) agentTags[agentId] = cur.filter(function(t){return t!==tag;});
+  } else {
+    var {error} = await sb.from('agent_tags').insert({agent_id:agentId, tag:tag});
+    if (!error) { if (!agentTags[agentId]) agentTags[agentId]=[]; agentTags[agentId].push(tag); }
+  }
+  renderAgents();
+}
+
+async function loadMonthlyBoTargets() {
+  monthlyBoTargets = {};
+  if (!currentRegionId) return;
+  var {data, error} = await sb.from('monthly_bo_targets').select('*')
+    .eq('region_id', currentRegionId).order('year').order('month');
+  if (error || !data) return;
+  data.forEach(function(row){
+    var key = row.year + '-' + String(row.month).padStart(2,'0');
+    if (!monthlyBoTargets[key]) monthlyBoTargets[key] = {};
+    monthlyBoTargets[key][row.task] = row.volume;
+  });
+}
+
+async function saveMonthlyBoTargets() {
   if (!currentRegionId) return;
   var upserts = [];
-  document.querySelectorAll('.task-cfg-row').forEach(function(row){
-    upserts.push({
-      region_id:   currentRegionId,
-      name:        row.dataset.name,
-      priority:    parseInt(row.querySelector('.task-pri').value) || 99,
-      aht_minutes: parseFloat(row.querySelector('.task-aht').value) || 0,
-      color_bg:    row.dataset.cbg   || '#f3f4f6',
-      color_text:  row.dataset.ctxt  || '#374151',
-      is_filler:   row.dataset.filler === 'true',
+  document.querySelectorAll('.bo-target-row').forEach(function(row){
+    var year  = parseInt(row.dataset.year);
+    var month = parseInt(row.dataset.month);
+    ['BACK-OFFICE','FRAUD'].forEach(function(task){
+      var el = row.querySelector('.bo-vol-'+task.toLowerCase().replace('-',''));
+      if (!el) return;
+      var vol = parseInt(el.value) || 0;
+      upserts.push({region_id:currentRegionId, year:year, month:month, task:task, volume:vol});
     });
   });
   showLoader();
-  var {error} = await sb.from('tasks').upsert(upserts, {onConflict:'region_id,name'});
+  var {error} = await sb.from('monthly_bo_targets')
+    .upsert(upserts, {onConflict:'region_id,year,month,task'});
   hideLoader();
   if (error) { showToast('Save failed','error'); return; }
-  showToast('Tasks saved \u2713');
-  await loadTasks(); renderPlanning(); renderForecast();
+  showToast('Monthly targets saved \u2713');
+  await loadMonthlyBoTargets();
+  await loadWeekData();
 }
 
 // ── PLANNING VIEW SWITCH ──────────────────────────────────────────────────
@@ -596,8 +652,9 @@ function getNetProductiveMinPerDay(openDaysCount) {
 function buildAutoForecast(days) {
   var trend    = 1 + (regulations.trend_pct || 0) / 100;
   var aht      = regulations.aht_tasks || {};
-  var ALL_TASKS     = ['CALL','CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
-  var NON_CALL      = ['CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
+  var ALL_TASKS = ['CALL','CHAT','MAIL','CLIENTELING','BACK-OFFICE','FRAUD'];
+  var NON_CALL  = ['CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
+  // FRAUD has no historical volume — it's populated via monthly BO injection below
   // openDays = days within the window that are not closed (used for FTE calc)
   var openDays      = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
 
@@ -696,6 +753,30 @@ function buildAutoForecast(days) {
     };
   });
 
+  // Inject monthly BO+FRAUD distribution on top of historical hourly data
+  var boHourly = buildBoHourlyFromMonthly(days, trend);
+  days.forEach(function(day){
+    var ds = toDateStr(day);
+    if (!result[ds] || result[ds].closed) return;
+    ['BACK-OFFICE','FRAUD'].forEach(function(task){
+      var taskHourly = boHourly[ds] && boHourly[ds][task];
+      if (!taskHourly || !Object.keys(taskHourly).length) return;
+      var key = task.toLowerCase().replace('-','');
+      // Use 'backoffice' and 'fraud' as keys
+      var storeKey = task === 'BACK-OFFICE' ? 'back-office' : 'fraud';
+      result[ds].hourly[storeKey] = result[ds].hourly[storeKey] || {};
+      Object.keys(taskHourly).forEach(function(h){
+        var hi = parseInt(h);
+        result[ds].hourly[storeKey][hi] = (result[ds].hourly[storeKey][hi]||0) + taskHourly[h];
+      });
+      // Add to contact_volume workload
+      var taskAht = aht[task] || 0;
+      Object.values(taskHourly).forEach(function(v){
+        result[ds].contact_volume += Math.round(v * taskAht);
+      });
+    });
+  });
+
   // Note any remaining carry (last open day's after-hours → next week Monday)
   if (carryOver > 0 && openDays.length > 0) {
     var lastDs = toDateStr(openDays[openDays.length - 1]);
@@ -705,7 +786,70 @@ function buildAutoForecast(days) {
   return result;
 }
 
-// Build auto-forecast comment block replaced — see function above.
+// ── MONTHLY BO → HOURLY DISTRIBUTION ─────────────────────────────────────
+// Spreads a monthly volume target into daily+hourly buckets using the CALL
+// curve as a proxy (BO traffic follows contact patterns).
+// Returns: { 'YYYY-MM-DD': { task: { hour: volume } } }
+function buildBoHourlyFromMonthly(days, trend) {
+  var result = {};
+  days.forEach(function(day){
+    var ds = toDateStr(day);
+    result[ds] = {};
+    if (getDayClosureType(ds)) return;
+
+    var d = new Date(ds + 'T12:00:00');
+    var year = d.getFullYear(), month = d.getMonth() + 1;
+    var key  = year + '-' + String(month).padStart(2,'0');
+    var targets = monthlyBoTargets[key] || {};
+
+    // Count open working days in this month for daily allocation
+    var openDaysInMonth = 0;
+    var daysInMonth = new Date(year, month, 0).getDate();
+    for (var dd = 1; dd <= daysInMonth; dd++) {
+      var testDs = year+'-'+String(month).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+      if (!getDayClosureType(testDs)) openDaysInMonth++;
+    }
+    if (!openDaysInMonth) openDaysInMonth = 22; // fallback
+
+    var hours = getDayHoursForDate(ds);
+    ['BACK-OFFICE','FRAUD'].forEach(function(task){
+      var monthly = targets[task] || 0;
+      if (!monthly) return;
+      var daily = monthly / openDaysInMonth;
+
+      // Build CALL curve for this day from historicalVolume
+      var histDs   = getEquivalentLastYearDate(ds);
+      var callData = (historicalVolume[histDs] && historicalVolume[histDs]['CALL']) || {};
+      var callTotal = Object.values(callData).reduce(function(s,v){return s+v;},0);
+
+      var hourly = {};
+      var hClose = task === 'FRAUD' ? Math.min(12, hours.close) : hours.close;
+
+      if (callTotal > 0) {
+        // Pattern-based: weight each hour by CALL proportion
+        var callWindowTotal = 0;
+        for (var h = hours.open; h < hClose; h++) callWindowTotal += (callData[h]||0);
+        if (callWindowTotal > 0) {
+          for (var h = hours.open; h < hClose; h++) {
+            var w = (callData[h]||0) / callWindowTotal;
+            if (w > 0) hourly[h] = Math.round(daily * w);
+          }
+        }
+      }
+      // Fallback: flat distribution
+      if (!Object.keys(hourly).length) {
+        var nHours = hClose - hours.open;
+        if (nHours > 0) {
+          for (var h = hours.open; h < hClose; h++) {
+            hourly[h] = Math.round(daily / nHours);
+          }
+        }
+      }
+      result[ds][task] = hourly;
+    });
+  });
+  return result;
+}
 
 function changeWeek(dir) {
   currentWeekMonday.setDate(currentWeekMonday.getDate() + dir * 7);
@@ -776,6 +920,8 @@ async function onRegionChange() {
   if (!currentRegionId) return;
   await loadRegulations();
   await loadTasks();
+  await loadAgentTags();
+  await loadMonthlyBoTargets();
   await loadWeekData();
 }
 
@@ -1011,23 +1157,6 @@ function renderRegulations() {
       '<button class="btn btn-save" onclick="saveRegulations()">\ud83d\udcbe Save Regulations</button>' +
     '</div>' +
     rotationNote +
-
-    '<div class="reg-section"><h3>Tasks &amp; Priorities</h3>' +
-    '<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Priority 1 = highest urgency. Filler tasks are assigned when no primary work remains.</p>' +
-    '<table class="tasks-config-table"><tr><th>Task</th><th>Priority</th><th>AHT (min)</th></tr>' +
-    tasksSortedByPriority().map(function(t) {
-      var ft = t.is_filler ? '<span class="filler-tag">filler</span>' : '';
-      var cbg = t.color_bg || '#f3f4f6', ctxt = t.color_text || '#374151';
-      return '<tr class="task-cfg-row" data-name="'+t.name+'" data-filler="'+t.is_filler+
-        '" data-cbg="'+cbg+'" data-ctxt="'+ctxt+'">' +
-        '<td><span class="task-dot" style="background:'+cbg+';border:1px solid '+ctxt+'30;"></span><strong>'+t.name+'</strong>'+ft+'</td>' +
-        '<td><input type="number" class="task-pri" value="'+t.priority+'" min="1" max="10" style="width:48px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"></td>' +
-        '<td><input type="number" class="task-aht" value="'+t.aht_minutes+'" min="0" step="0.5" style="width:55px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"> min</td>' +
-        '</tr>';
-    }).join('') +
-    '</table>' +
-    '<button class="btn btn-save" style="margin-top:10px;font-size:12px;" onclick="saveTasks()">\ud83d\udcbe Save Tasks</button>' +
-    '</div>' +
 
     '<div class="reg-section"><h3>Fixed Rules (all regions)</h3>' +
     '<div class="info-grid">' +
@@ -1426,8 +1555,13 @@ async function loadScheduleOverrides() {
       scheduleOverrides[row.date][row.agent_id] = { tasks:{}, breaks:{} };
     if (row.override_type === 'task')
       scheduleOverrides[row.date][row.agent_id].tasks[parseInt(row.slot_key)] = row.value;
-    else if (row.override_type === 'break')
-      scheduleOverrides[row.date][row.agent_id].breaks[row.slot_key] = parseInt(row.value);
+    else if (row.override_type === 'break') {
+      // slot_key format: "BreakName_startMin"
+      var parts = row.slot_key.split('_');
+      var origStart = parseInt(parts[parts.length - 1]);
+      var bName = parts.slice(0, parts.length - 1).join('_');
+      scheduleOverrides[row.date][row.agent_id].breaks[bName + '_' + origStart] = parseInt(row.value);
+    }
   });
 }
 
@@ -1510,16 +1644,17 @@ async function swapTaskHours(agA, dsA, hA, taskA, agB, dsB, hB, taskB) {
 }
 
 async function swapBreakSlots(agA, dsA, bName, startA, agB, dsB, startB) {
+  // slot_key includes startMin so same-name breaks at same time don't collide
   var upserts = [
-    { region_id:currentRegionId, agent_id:agA, date:dsA, override_type:'break', slot_key:bName, value:String(startB) },
-    { region_id:currentRegionId, agent_id:agB, date:dsB, override_type:'break', slot_key:bName, value:String(startA) },
+    { region_id:currentRegionId, agent_id:agA, date:dsA, override_type:'break', slot_key:bName+'_'+startA, value:String(startB) },
+    { region_id:currentRegionId, agent_id:agB, date:dsB, override_type:'break', slot_key:bName+'_'+startB, value:String(startA) },
   ];
   var { error } = await sb.from('schedule_overrides').upsert(upserts, {onConflict:'agent_id,date,override_type,slot_key'});
   if (error) { showToast('Swap failed: '+error.message,'error'); return; }
-  [{ ag:agA,ds:dsA,start:startB }, { ag:agB,ds:dsB,start:startA }].forEach(function(u){
+  [{ ag:agA,ds:dsA,start:startB,origStart:startA }, { ag:agB,ds:dsB,start:startA,origStart:startB }].forEach(function(u){
     if (!scheduleOverrides[u.ds]) scheduleOverrides[u.ds]={};
     if (!scheduleOverrides[u.ds][u.ag]) scheduleOverrides[u.ds][u.ag]={tasks:{},breaks:{}};
-    scheduleOverrides[u.ds][u.ag].breaks[bName] = u.start;
+    scheduleOverrides[u.ds][u.ag].breaks[bName+'_'+u.origStart] = u.start;
   });
   renderIntraday(currentIntradayDate);
   showToast('\u21C4 Break swapped');
@@ -1884,22 +2019,30 @@ function computeIntradaySchedule(ds) {
 
     var pool = allSorted.slice();
     primary.forEach(function(t){
-      var vol=(demand[h]||{})[t.name]||0; if(!vol||!pool.length) return;
-      // Total work minutes needed this hour for this task
+      var vol=(demand[h]||{})[t.name]||0;
+      // Enforce morning_only: no volume after noon for fraud
+      if (t.morning_only && h >= 12) vol = 0;
+      if(!vol||!pool.length) return;
+
+      // Filter pool to agents eligible for this task
+      var eligible = pool.filter(function(ag){
+        if (!t.required_tag) return true; // no restriction
+        return (agentTags[ag.id]||[]).includes(t.required_tag);
+      });
+      if (!eligible.length) return;
+
       var workMinNeeded = vol * t.aht_minutes;
-      // Sum of effective minutes across all remaining pool agents
-      var totalEff = pool.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
-      // Agents needed = ceil(work / capacity_per_agent)
-      // capacity_per_agent = totalEff / pool.length
-      var avgEff = totalEff / pool.length;
-      var need = Math.min(Math.ceil(workMinNeeded / Math.max(1, avgEff)), pool.length);
+      var totalEff = eligible.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
+      var avgEff = totalEff / eligible.length;
+      var need = Math.min(Math.ceil(workMinNeeded / Math.max(1, avgEff)), eligible.length);
       for(var i=0;i<need;i++){
-        var ag=pool.shift();
+        var ag=eligible[i];
+        pool.splice(pool.indexOf(ag), 1);
         agHour[ag.id][h]=t.name;
         if(t.priority<=2) equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
       }
     });
-    pool.forEach(function(ag){agHour[ag.id][h]=filler?filler.name:'CLIENTELING';});
+    pool.forEach(function(ag){agHour[ag.id][h]=filler?filler.name:'CLIENTELING'});
   }
 
   // ── Apply stored overrides on top of computed schedule ───────────────────
@@ -1913,10 +2056,16 @@ function computeIntradaySchedule(ds) {
         agHour[a.id][hh] = agOv.tasks[hStr];
       }
     });
-    // Break overrides: shift break start/end times
-    if (agOv.breaks) Object.keys(agOv.breaks).forEach(function(bName) {
-      var newStart = agOv.breaks[bName];
-      var brk = agBrk[a.id] && agBrk[a.id].find(function(b){ return b.name === bName; });
+    // Break overrides: shift break start/end times using "bName_origStart" keys
+    if (agOv.breaks) Object.keys(agOv.breaks).forEach(function(slotKey) {
+      var newStart = agOv.breaks[slotKey];
+      // slot_key = "BreakName_origStart" — extract name
+      var parts = slotKey.split('_');
+      var origStart = parseInt(parts[parts.length - 1]);
+      var bName = parts.slice(0, parts.length - 1).join('_');
+      var brk = agBrk[a.id] && agBrk[a.id].find(function(b){
+        return b.name === bName && b.startMin === origStart;
+      });
       if (brk) { var dur = brk.endMin - brk.startMin; brk.startMin = newStart; brk.endMin = newStart + dur; }
     });
   });
@@ -2132,10 +2281,23 @@ function renderAgents() {
     var pctBadge = pct < 100
       ? '<span class="pct-badge">' + pct + '%</span>'
       : '<span class="pct-badge" style="color:#9ca3af;">100%</span>';
+    var tags = agentTags[a.id] || [];
+    var tagChips = ['can_fraud','can_backoffice'].map(function(tag){
+      var active = tags.includes(tag);
+      var label  = tag === 'can_fraud' ? '\uD83D\uDD10 Fraud' : '\uD83D\uDCCB Back-office';
+      var style  = active
+        ? 'background:#fef2f2;color:#be123c;border:1px solid #fda4af;font-weight:600;'
+        : 'background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;';
+      if (tag === 'can_backoffice' && active)
+        style = 'background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd;font-weight:600;';
+      return '<button onclick="toggleAgentTag(\''+a.id+'\',\''+tag+'\')" '+
+        'style="'+style+'padding:2px 10px;border-radius:10px;font-size:11px;cursor:pointer;">'+label+'</button>';
+    }).join('');
     return '<div class="agent-row">' +
       '<span>' + a.first_name + ' ' + a.last_name + pctBadge + '</span>' +
-      '<div style="display:flex;align-items:center;gap:8px;">' +
-        '<label style="font-size:12px;color:#6b7280;">Work %</label>' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+        tagChips +
+        '<label style="font-size:12px;color:#6b7280;margin-left:8px;">Work %</label>' +
         '<input type="number" id="pct-' + a.id + '" value="' + pct + '" min="10" max="100" step="5"' +
           ' style="width:60px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;">' +
         '<button class="btn btn-save" style="font-size:12px;padding:4px 10px;" onclick="saveAgentWorkPct(\'' + a.id + '\')">Save</button>' +
@@ -2188,7 +2350,12 @@ async function deleteAgent(id) {
   await loadWeekData();
 }
 
-// ── RENDER FORECAST ───────────────────────────────────────────────────────
+// saveForecast — forecast is auto-computed, direct manual save not needed.
+// This stub exists because the "Save Forecast" button in the UI calls it.
+// Saving AHT/Trend is done via saveForecastSettings() in the header.
+async function saveForecast() {
+  showToast('Forecast is auto-computed \u2014 use \u201cSave AHT & Trend\u201d above to adjust settings \u2713');
+}
 function renderForecastHeader() {
   var band = document.getElementById('forecast-header-band');
   if (!band || !currentRegionId) return;
@@ -2212,6 +2379,20 @@ function renderForecastHeader() {
                 : trend > 0  ? 'volume growing vs last year'
                 : 'volume declining vs last year';
 
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var curYear = currentWeekMonday.getFullYear();
+  var boRows = '';
+  for (var m = 1; m <= 12; m++) {
+    var mk = curYear + '-' + String(m).padStart(2,'0');
+    var boVol  = (monthlyBoTargets[mk] && monthlyBoTargets[mk]['BACK-OFFICE']) || 0;
+    var frVol  = (monthlyBoTargets[mk] && monthlyBoTargets[mk]['FRAUD']) || 0;
+    boRows += '<tr class="bo-target-row" data-year="'+curYear+'" data-month="'+m+'">' +
+      '<td style="font-size:12px;color:#374151;">'+monthNames[m-1]+'</td>' +
+      '<td><input type="number" class="bo-vol-backoffice" value="'+boVol+'" min="0" style="width:70px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"></td>' +
+      '<td><input type="number" class="bo-vol-fraud" value="'+frVol+'" min="0" style="width:70px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"></td>' +
+      '</tr>';
+  }
+
   band.innerHTML =
     '<div class="forecast-header">' +
       '<div>' +
@@ -2226,6 +2407,13 @@ function renderForecastHeader() {
         '</div>' +
         '<div class="trend-note" style="margin-top:6px;">' + trendSign + trend + '% &mdash; ' + trendDesc + '</div>' +
         '<button class="btn btn-save" style="margin-top:12px;font-size:12px;" onclick="saveForecastSettings()">\uD83D\uDCBE Save AHT, Priority &amp; Trend</button>' +
+      '</div>' +
+      '<div style="border-left:1px solid #e5e7eb;padding-left:24px;">' +
+        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Monthly targets \u2014 '+curYear+'</div>' +
+        '<p style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Contacts per month \u2192 auto-spread hourly by CALL curve</p>' +
+        '<table class="aht-task-table"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
+        boRows + '</table>' +
+        '<button class="btn btn-save" style="margin-top:10px;font-size:12px;" onclick="saveMonthlyBoTargets()">\uD83D\uDCBE Save Monthly Targets</button>' +
       '</div>' +
     '</div>';
 }
@@ -2269,7 +2457,6 @@ async function saveForecastSettings() {
   if (e1 || e2) { showToast('Save failed', 'error'); return; }
   showToast('Saved \u2713');
   await loadTasks();
-  await loadWeekData();
   await loadWeekData();
 }
 
