@@ -80,7 +80,7 @@
     .forecast-day-card.today-card  { border-color: #1a1a2e; background: #f0f9ff; }
     .forecast-day-card.closed-card { background: #f8fafc; opacity: 0.6; }
     .forecast-day-card.auto-filled { border-color: #a5b4fc; background: #fafbff; }
-    .hourly-bar-wrap { flex: 1; height: 10px; background: #e2e8f0; border-radius: 3px; overflow: hidden; display: flex; }
+    .hourly-bar-wrap { flex: 1; height: 14px; background: #e2e8f0; border-radius: 3px; overflow: hidden; display: flex; }
     .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
     .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
     .auto-badge { display:inline-block; font-size:9px; background:#ede9fe; color:#5b21b6; border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
@@ -170,7 +170,7 @@
     .intraday-day-btn.closed-day{background:#f3f4f6;color:#bbb;cursor:not-allowed;}
     .intraday-grid{display:grid;}
     .intraday-agent-cell{padding:7px 10px;font-size:12px;font-weight:600;background:#f9fafb;border:1px solid #e5e7eb;white-space:nowrap;display:flex;align-items:center;min-height:56px;}
-    .intraday-hour-header{padding:5px 4px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;}
+    .intraday-hour-header{padding:5px 4px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;display:flex;align-items:center;justify-content:center;}
     .intraday-block{border:1px solid #e5e7eb;min-height:56px;position:relative;background:white;}
     .task-block { position:absolute;top:3px;bottom:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;padding:0 3px;cursor:grab; }
     .task-block[draggable="true"]:active { cursor:grabbing; }
@@ -300,12 +300,12 @@
 <!-- FORECAST TAB -->
 <div id="tab-forecast" class="tab-content">
   <div class="card">
-    <div id="forecast-header-band"></div>
     <h2 style="font-size:15px;margin-bottom:16px;">Weekly Forecast</h2>
     <div id="forecast-grid"><p style="color:#888">Select a region to input forecast.</p></div>
-    <div style="margin-top:16px;">
-      <button class="btn btn-primary" onclick="saveForecast()">💾 Save Forecast</button>
-    </div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:13px;font-weight:bold;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;">Settings — AHT, Priority &amp; Monthly Targets</h2>
+    <div id="forecast-header-band"></div>
   </div>
 </div>
 
@@ -362,6 +362,7 @@ let regulations = {
   max_daily_hours: 8,
   trend_pct:       0,
   aht_tasks: {
+    FRAUD:        10,
     CALL:         10,
     CHAT:         8,
     MAIL:         5,
@@ -369,8 +370,9 @@ let regulations = {
     'BACK-OFFICE': 10,
   },
   breaks: [
-    { name: 'Lunch',  duration: 45, window_start: 12, window_end: 14 },
-    { name: 'Break',  duration: 15, window_start: 10, window_end: 11 },
+    { name: 'Lunch', duration: 60, window_start: 12, window_end: 14 },
+    { name: 'Break', duration: 15, window_start: 11, window_end: 12 },
+    { name: 'Break', duration: 15, window_start: 14, window_end: 17 },
   ],
   closed_dates:    [],
   public_holidays: [],
@@ -388,7 +390,7 @@ var scheduleOverrides = {}; // [date][agentId][start_min] = {end_min, task}
 
 // Default task config (pastel colors, used for seeding and fallback)
 var TASK_DEFAULTS = [
-  { name:'FRAUD',       priority:1, is_filler:false, color_bg:'#ecfeff', color_text:'#0e7490', aht_minutes:15, required_tag:'can_fraud',       morning_only:true  },
+  { name:'FRAUD',       priority:1, is_filler:false, color_bg:'#eef2ff', color_text:'#4338ca', aht_minutes:10, required_tag:'can_fraud',     morning_only:true  },
   { name:'CALL',        priority:1, is_filler:false, color_bg:'#fef2f2', color_text:'#dc2626', aht_minutes:10, required_tag:null,               morning_only:false },
   { name:'CHAT',        priority:2, is_filler:false, color_bg:'#fff7ed', color_text:'#ea580c', aht_minutes:8,  required_tag:null,               morning_only:false },
   { name:'MAIL',        priority:3, is_filler:false, color_bg:'#eff6ff', color_text:'#2563eb', aht_minutes:5,  required_tag:null,               morning_only:false },
@@ -530,14 +532,15 @@ async function loadAgentTags() {
 async function toggleAgentTag(agentId, tag) {
   var cur = agentTags[agentId] || [];
   var has = cur.includes(tag);
+  var res;
   if (has) {
-    var {error} = await sb.from('agent_tags').delete()
-      .eq('agent_id', agentId).eq('tag', tag);
-    if (!error) agentTags[agentId] = cur.filter(function(t){return t!==tag;});
+    res = await sb.from('agent_tags').delete().eq('agent_id', agentId).eq('tag', tag);
+    if (!res.error) agentTags[agentId] = cur.filter(function(t){return t!==tag;});
   } else {
-    var {error} = await sb.from('agent_tags').insert({agent_id:agentId, tag:tag});
-    if (!error) { if (!agentTags[agentId]) agentTags[agentId]=[]; agentTags[agentId].push(tag); }
+    res = await sb.from('agent_tags').insert({agent_id:agentId, tag:tag});
+    if (!res.error) { if (!agentTags[agentId]) agentTags[agentId]=[]; agentTags[agentId].push(tag); }
   }
+  if (res.error) { showToast('Failed to update tag', 'error'); return; }
   renderAgents();
 }
 
@@ -1356,45 +1359,42 @@ function getDayClosureType(dayStr) {
 }
 
 // ── PART-TIME ENGINE ──────────────────────────────────────────────────────
-// For an agent with work_pct < 100, computes:
-//   forcedRestDays: [dateStr] — full days removed (lowest volume first)
-//   partialDay:     { ds, closeMin, workMin } | null — shortened day
-//
-// Algorithm: greedy removal from lowest-volume days until target is met.
-//   to_remove_min = total_net_min - target_min
-//   Remove full days while to_remove >= net_per_day; remainder = partial day.
+// All calculations use GROSS shift minutes (contract hours = weekly_hours/nDays×60).
+// Breaks are included inside the gross time — not subtracted.
+// This matches the spec example: 35h/week at 70% → 24.5h target.
 function computePartTimeForAgent(agent, openDays) {
   var pct = agent.work_pct || 100;
   if (pct >= 100) return { forcedRestDays: [], partialDay: null };
 
-  var nDays       = Math.min(openDays.length, 5);
-  if (nDays === 0)  return { forcedRestDays: [], partialDay: null };
+  var nDays = Math.min(openDays.length, 5);
+  if (nDays === 0) return { forcedRestDays: [], partialDay: null };
 
-  var totalBreakMin = (regulations.breaks || []).reduce(function(s,b){return s+(b.duration||0);},0);
-  var netPerDay   = (regulations.weekly_hours / nDays) * 60 - totalBreakMin;
-  var totalNet    = nDays * netPerDay;
-  var targetMin   = regulations.weekly_hours * pct / 100 * 60;
-  var toRemoveMin = Math.max(0, totalNet - targetMin);
+  var grossPerDay = (regulations.weekly_hours / nDays) * 60; // e.g. 37.5/5*60 = 450 min
+  var totalGross  = nDays * grossPerDay;                     // = weekly_hours*60
+  var targetGross = regulations.weekly_hours * pct / 100 * 60;
+  var toRemove    = Math.max(0, totalGross - targetGross);
 
-  // Sort open days by volume ascending (least busy = first to remove)
+  // Sort open days by volume ascending (least busy = first candidate to remove)
   var sorted = openDays.slice().sort(function(a, b) {
     var vA = (forecasts[toDateStr(a)] || {}).contact_volume || 0;
     var vB = (forecasts[toDateStr(b)] || {}).contact_volume || 0;
     return vA - vB;
   });
 
-  var forcedRestDays = [], partialDay = null, remaining = toRemoveMin;
+  var forcedRestDays = [], partialDay = null, remaining = toRemove;
 
   for (var i = 0; i < sorted.length; i++) {
     if (remaining <= 0) break;
     var ds = toDateStr(sorted[i]);
-    if (remaining >= netPerDay) {
+    if (remaining >= grossPerDay) {
+      // Remove entire day
       forcedRestDays.push(ds);
-      remaining -= netPerDay;
-    } else if (remaining > 0) {
-      var workMin   = netPerDay - remaining;
-      var closeMin  = computeCloseMinFromWork(ds, workMin);
-      partialDay    = { ds: ds, closeMin: closeMin, workMin: Math.round(workMin) };
+      remaining -= grossPerDay;
+    } else {
+      // Partial day: work (grossPerDay - remaining) gross minutes from opening
+      var workGross = grossPerDay - remaining;
+      var closeMin  = computeCloseMinFromWork(ds, workGross);
+      partialDay    = { ds: ds, closeMin: closeMin, workMin: Math.round(workGross) };
       remaining     = 0;
     }
   }
@@ -1402,28 +1402,13 @@ function computePartTimeForAgent(agent, openDays) {
   return { forcedRestDays: forcedRestDays, partialDay: partialDay };
 }
 
-// Walk forward from opening hour, skip break windows, accumulate worked minutes.
-// Returns the minute (from midnight) when workMin productive minutes are reached.
-function computeCloseMinFromWork(ds, workMin) {
-  var hours  = getDayHoursForDate(ds);
-  var breaks = regulations.breaks || [];
-  var cursor = hours.open * 60;
-  var worked = 0;
-  var closeMin = hours.close * 60; // fallback
-
-  while (cursor < hours.close * 60) {
-    var inBreak = breaks.some(function(br) {
-      return cursor >= br.window_start * 60 && cursor < (br.window_start * 60 + br.duration);
-    });
-    if (!inBreak) {
-      worked++;
-      if (worked >= workMin) { closeMin = cursor + 1; break; }
-    }
-    cursor++;
-  }
-  // Round to nearest 5 minutes for cleanliness
-  closeMin = Math.round(closeMin / 5) * 5;
-  return closeMin;
+// Compute end-of-shift minute for a given gross work duration from opening.
+// grossMin includes break time (e.g. 225 gross min from 10:00 → closes 13:45).
+function computeCloseMinFromWork(ds, grossMin) {
+  var hours    = getDayHoursForDate(ds);
+  var openMin  = hours.open * 60;
+  var closeMin = Math.round((openMin + grossMin) / 5) * 5; // round to 5-min boundary
+  return Math.min(closeMin, hours.close * 60);
 }
 
 function formatMinutes(totalMin) {
@@ -1722,10 +1707,21 @@ function renderWeeklyPlanning() {
                : closure === 'weekend' ? ' \ud83c\udf34'
                : '';
 
+    // Daily contact volume for header
+    var dayVol = '';
+    if (!closure) {
+      var fDay = forecasts[ds];
+      if (fDay && fDay.contact_volume > 0) {
+        dayVol = '<br><small style="font-weight:normal;opacity:0.85;font-size:10px;color:#a5b4fc;">' +
+          Math.round(fDay.contact_volume/60*10)/10 + 'h workload</small>';
+      }
+    }
+
     html += '<th' + thClass + '>' +
       DAY_NAMES[i] + icon + '<br>' +
       '<small style="font-weight:normal">' + formatDate(day) + '</small><br>' +
       '<small style="font-weight:normal;opacity:0.75;font-size:10px">' + getDayHoursLabel(ds) + '</small>' +
+      dayVol +
       '</th>';
   });
   html += '</tr>';
@@ -2241,17 +2237,20 @@ function renderIntraday(ds) {
     }
   });
 
-  // Staffing need summary row — shows how many agents the engine calculated per task per hour
+  // Staffing need row — full task names with FTE count
   var dayForecast = forecasts[target] || {};
-  var needRow = '<div class="intraday-agent-cell" style="font-size:10px;color:#6b7280;background:#f1f5f9;">Need</div>';
+  var netMinDay   = dayForecast.netMin || getNetProductiveMinPerDay(
+    getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));}).length
+  );
+  var needRow = '<div class="intraday-agent-cell" style="font-size:10px;color:#6b7280;background:#f1f5f9;font-weight:700;">Need</div>';
   for (var hn=hours.open; hn<hours.close; hn++) {
-    var needHtml = '<div style="padding:2px 1px;">';
+    var needHtml = '<div style="padding:3px 2px;">';
     tasksSortedByPriority().filter(function(t){return !t.is_filler;}).forEach(function(t){
       var vol = ((dayForecast.hourly||{})[t.name.toLowerCase()]||{})[hn]||0;
       if (!vol) return;
-      var needed = Math.ceil(vol * t.aht_minutes / 60);
-      needHtml += '<div style="font-size:8px;color:'+t.color_text+';font-weight:600;">'+
-        t.name.substring(0,3)+': '+needed+'</div>';
+      var fte = Math.ceil(vol * t.aht_minutes / Math.max(1, netMinDay));
+      needHtml += '<div style="font-size:9px;color:'+t.color_text+';font-weight:600;white-space:nowrap;">'+
+        t.name+': '+vol+' <span style="color:#9ca3af;font-weight:400;">('+fte+' FTE)</span></div>';
     });
     needHtml += '</div>';
     needRow += '<div style="border:1px solid #e5e7eb;background:#f8fafc;min-height:40px;">'+needHtml+'</div>';
@@ -2467,27 +2466,28 @@ function renderForecast() {
     return;
   }
 
-  renderForecastHeader();
-
   const days = getWeekDays(currentWeekMonday);
   const forecastOpenDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
 
-  // Max hourly volume for proportional bars
+  // Max per-hour total volume for bar scaling
   var maxHourlyVol = 1;
   days.forEach(function(day) {
     var f = forecasts[toDateStr(day)];
     if (!f || !f.hourly) return;
-    Object.keys(f.hourly).forEach(function(tk) {
-      Object.values(f.hourly[tk] || {}).forEach(function(v) {
-        if (v > maxHourlyVol) maxHourlyVol = v;
+    var hoursD = getDayHoursForDate(toDateStr(day));
+    for (var h = hoursD.open; h < hoursD.close; h++) {
+      var rowTotal = 0;
+      tasksSortedByPriority().forEach(function(t){
+        rowTotal += ((f.hourly[t.name.toLowerCase()]||{})[h]||0);
       });
-    });
+      if (rowTotal > maxHourlyVol) maxHourlyVol = rowTotal;
+    }
   });
 
   let html = '<div class="forecast-grid">';
   days.forEach(function(day, i) {
     const ds        = toDateStr(day);
-    const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0 };
+    const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0, hourly: {} };
     const closure   = getDayClosureType(ds);
     const isBlocked = !!closure;
     const isAuto    = !!f.auto;
@@ -2498,88 +2498,80 @@ function renderForecast() {
     if (isBlocked)    cls += ' closed-card';
     if (isAuto && !isBlocked) cls += ' auto-filled';
 
+    const autoBadge = (isAuto && !isBlocked) ? '<span class="auto-badge">auto</span>' : '';
+
     const statusNote = isBlocked
       ? '<div style="font-size:10px;color:#9ca3af;margin-top:4px;">' +
-        (closure === 'weekend' ? '\ud83c\udf34 Weekend off' : '\ud83c\udfd6\ufe0f Holiday') + '</div>'
+        (closure === 'weekend' ? '\uD83C\uDF34 Weekend off' : '\uD83C\uDFD6\uFE0F Holiday') + '</div>'
       : '';
 
-    const autoBadge    = (isAuto && !isBlocked) ? '<span class="auto-badge">auto</span>' : '';
-
-    // Carry-in banner (top of card) — past-looking: shows what was received FROM previous period
-    var carryInBanner = '';
-    if (f.carryIn > 0 && !isBlocked) {
-      var prevDayClosed = (i === 0) ? true
-        : !!getDayClosureType(toDateStr(days[i - 1]));
-      var carryLabel = (day.getDay() === 1 || prevDayClosed)
-        ? 'from last open day / weekend'
-        : 'from yesterday (after-hours)';
-      carryInBanner =
-        '<div style="background:#ede9fe;color:#5b21b6;border-radius:4px;padding:4px 7px;font-size:10px;margin-bottom:6px;">' +
-        '\u27a1 <b>' + f.carryIn + '</b> contacts carried over ' + carryLabel + '</div>';
+    // ── Daily traffic summary ─────────────────────────────────────────────
+    var summaryHtml = '';
+    if (!isBlocked) {
+      var summaryLines = '';
+      tasksSortedByPriority().filter(function(t){return !t.is_filler;}).forEach(function(t){
+        var key = t.name.toLowerCase();
+        var vol = Object.values((f.hourly||{})[key]||{}).reduce(function(s,v){return s+v;},0);
+        if (!vol) return;
+        var extra = '';
+        if (t.name === 'MAIL' && f.carryIn > 0)
+          extra = ' <span style="color:#9ca3af;font-size:9px;">incl. '+f.carryIn+' carried over</span>';
+        summaryLines += '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid #f3f4f6;">' +
+          '<span style="display:flex;align-items:center;gap:5px;">' +
+            '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+t.color_bg+';border:1px solid '+t.color_text+'50;flex-shrink:0;"></span>' +
+            '<span style="font-weight:600;color:'+t.color_text+';">'+t.name+'</span>'+extra+'</span>' +
+          '<span style="font-weight:600;color:#374151;">'+vol+'</span>' +
+          '</div>';
+      });
+      if (summaryLines) {
+        var fteVal = f.fte || 0;
+        var workH  = f.contact_volume > 0 ? (f.contact_volume/60).toFixed(1) : '—';
+        summaryHtml =
+          '<div style="background:#fafafa;border:1px solid #e5e7eb;border-radius:5px;padding:7px 9px;margin-bottom:8px;font-size:10px;">' +
+          '<div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">Expected traffic</div>' +
+          summaryLines +
+          '<div style="display:flex;justify-content:space-between;margin-top:5px;padding-top:4px;border-top:2px solid #e5e7eb;">' +
+            '<span style="color:#6b7280;">\u23F1 '+workH+'h workload</span>' +
+            (fteVal>0?'<span style="color:#166534;font-weight:700;">\uD83D\uDC65 '+fteVal+' FTE</span>':'') +
+          '</div></div>';
+      }
     }
 
-    // Workload summary + FTE — no future carry note (irrelevant to manager)
-    var workloadH = f.contact_volume > 0 ? (f.contact_volume / 60).toFixed(1) : '\u2014';
-    var fteVal    = f.fte || 0;
-    var netMin    = f.netMin || getNetProductiveMinPerDay(forecastOpenDays.length);
-
-    var workloadLine = !isBlocked
-      ? '<div style="margin-top:8px;padding:6px 8px;background:#f0fdf4;border-radius:4px;font-size:10px;color:#374151;">' +
-        '<div>\u23f1 <b>' + workloadH + 'h</b> workload</div>' +
-        (fteVal > 0
-          ? '<div style="margin-top:2px;">\ud83d\udc65 <b>' + fteVal + ' FTE</b> needed' +
-            '<span style="color:#9ca3af;margin-left:4px;">(' + Math.round(netMin) + ' min/agent)</span></div>'
-          : '<div style="color:#9ca3af;">No forecast data</div>') +
-        '</div>'
-      : '';
-
-    // Hourly bar chart
+    // ── Hourly bar chart ──────────────────────────────────────────────────
     var hourlyHtml = '';
     if (!isBlocked && f.hourly) {
-      // Legend
-      var legendItems = tasksSortedByPriority().map(function(t) {
-        return '<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' +
-          t.color_bg + ';border:1px solid ' + t.color_text + '40;margin-right:2px;"></span>' + t.name + '</span>';
-      }).join('');
-
-      hourlyHtml = '<div class="hourly-chart">' +
-        '<div style="font-size:9px;color:#9ca3af;margin-bottom:4px;display:flex;gap:6px;flex-wrap:wrap;">' +
-        legendItems + '</div>';
-
+      hourlyHtml = '<div class="hourly-chart">';
       for (var h = hours.open; h < hours.close; h++) {
         var rowTotal = 0;
         var bars = '';
-        tasksSortedByPriority().forEach(function(t) {
-          var tk  = t.name.toLowerCase();
-          var col = t.color_bg;
-          var vol = (f.hourly[tk] || {})[h] || 0;
+        tasksSortedByPriority().forEach(function(t){
+          var vol = ((f.hourly[t.name.toLowerCase()]||{})[h]||0);
           rowTotal += vol;
           if (vol > 0) {
-            var pct = Math.round((vol / maxHourlyVol) * 100);
-            bars += '<div style="background:' + col + ';height:100%;width:' + pct + '%;border-right:1px solid ' + t.color_text + '20;"></div>';
+            var pct = Math.max(3, Math.round((vol / maxHourlyVol) * 100));
+            bars += '<div style="background:'+t.color_bg+';height:100%;width:'+pct+'%;border-right:1px solid '+t.color_text+'30;min-width:3px;"></div>';
           }
         });
-        if (rowTotal === 0) continue;
-        hourlyHtml += '<div class="hourly-row">' +
-          '<div class="hourly-label">' + String(h).padStart(2,'0') + 'h</div>' +
-          '<div class="hourly-bar-wrap">' + bars + '</div>' +
-          '<div class="hourly-vol">' + rowTotal + '</div>' +
+        if (!rowTotal) continue;
+        hourlyHtml +=
+          '<div class="hourly-row">' +
+          '<div class="hourly-label">'+String(h).padStart(2,'0')+'h</div>' +
+          '<div class="hourly-bar-wrap">'+bars+'</div>' +
+          '<div class="hourly-vol">'+rowTotal+'</div>' +
           '</div>';
       }
-    // Mail backlog already absorbed into opening hour — no separate note needed
-    hourlyHtml += '</div>';
+      hourlyHtml += '</div>';
     }
 
     html += '<div class="' + cls + '">' +
       '<h4>' + DAY_SHORT[i] + autoBadge + '<br><span style="font-weight:normal">' + formatDate(day) + '</span></h4>' +
-      statusNote +
-      carryInBanner +
-      workloadLine +
-      hourlyHtml +
+      statusNote + summaryHtml + hourlyHtml +
       '</div>';
   });
   html += '</div>';
   container.innerHTML = html;
+  // Render settings band after grid is populated
+  renderForecastHeader();
 }
 
 // ── WEEK PICKER ───────────────────────────────────────────────────────────
