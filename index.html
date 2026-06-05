@@ -176,6 +176,39 @@
     .rop-title { font-size: 13px; font-weight: bold; color: #1a1a2e; margin-bottom: 4px; }
     .btn-export { background:#1a1a2e; color:#fff; }
     .btn-export:hover { background:#0f3460; }
+    /* ── Calendar ── */
+    .cal-nav { display:flex; align-items:center; gap:10px; }
+    .cal-nav-btn { background:#16213e; color:#fff; border:none; border-radius:6px; width:30px; height:30px; cursor:pointer; font-size:12px; }
+    .cal-nav-btn:hover { background:#0f3460; }
+    .cal-month-label { font-size:14px; font-weight:bold; color:#1a1a2e; min-width:150px; text-align:center; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+    .cal-dow { text-align:center; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; padding-bottom:4px; }
+    .cal-cell { min-height:64px; border:1px solid #e5e7eb; border-radius:8px; padding:6px; background:#fff; position:relative; font-size:12px; }
+    .cal-cell.empty { background:transparent; border:none; }
+    .cal-cell.today { border-color:#1a1a2e; box-shadow:0 0 0 1px #1a1a2e; }
+    .cal-cell.holiday { background:#fef9c3; cursor:pointer; }
+    .cal-cell.holiday.forced-open { background:#dcfce7; }
+    .cal-cell.weekend { background:#f9fafb; }
+    .cal-daynum { font-weight:600; color:#374151; }
+    .cal-holiday-name { font-size:9px; color:#92400e; margin-top:2px; line-height:1.1; }
+    .cal-forced { font-size:9px; font-weight:700; margin-top:2px; }
+    .cal-forced.open { color:#166534; }
+    .cal-forced.closed { color:#b91c1c; }
+    .cal-monthly-wrap { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+    .cal-monthly-grid { flex:1; min-width:340px; }
+    .cal-agent-list { width:200px; flex-shrink:0; border:1px solid #e5e7eb; border-radius:8px; padding:10px; background:#f9fafb; }
+    .cal-agent-list h4 { font-size:11px; text-transform:uppercase; color:#6b7280; margin:0 0 8px; }
+    .cal-agent-item { padding:7px 10px; background:#fff; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:6px; font-size:12px; cursor:pointer; transition:border-color .15s; }
+    .cal-agent-item:hover { border-color:#1a1a2e; }
+    .cal-leave-bar { font-size:9px; border-radius:4px; padding:1px 4px; margin-top:2px; color:#fff; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .leave-field { margin-bottom:10px; }
+    .leave-label { display:block; font-size:11px; color:#6b7280; margin-bottom:3px; }
+    .leave-input { width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; box-sizing:border-box; }
+    #leave-popup, #dayopen-popup {
+      display:none; position:fixed; background:white; border:1px solid #e5e7eb;
+      border-radius:14px; padding:18px 20px; box-shadow:0 12px 32px rgba(0,0,0,0.16);
+      z-index:600; min-width:240px;
+    }
     /* ── Shift pill (Weekly cell) + switch popover ── */
     .shift-pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#374151;
       background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:3px 10px; cursor:pointer;
@@ -318,8 +351,9 @@
 
 <!-- TABS -->
 <div id="tabs">
-  <button class="tab-btn active" onclick="switchTab('planning', this)">📅 Planning</button>
+  <button class="tab-btn active" onclick="switchTab('planning', this)">📊 Planning</button>
   <button class="tab-btn" onclick="switchTab('agents', this)">👥 Agents</button>
+  <button class="tab-btn" onclick="switchTab('calendar', this)">📅 Calendar</button>
   <button class="tab-btn" onclick="switchTab('regulations', this)">⚙️ Settings</button>
 </div>
 
@@ -365,6 +399,63 @@
 <!-- FORECAST TAB -->
 <!-- (Forecast tab removed: Recap moved into Planning sub-tab; settings moved into Settings tab) -->
 
+<!-- CALENDAR TAB -->
+<div id="tab-calendar" class="tab-content">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div class="view-toggle">
+        <button id="btn-cal-annual" class="active" onclick="switchCalendarView('annual')">🗓️ Annual Calendar</button>
+        <button id="btn-cal-monthly" onclick="switchCalendarView('monthly')">📆 Monthly Calendar</button>
+      </div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calChangeMonth(-1)">&#9664;</button>
+        <span id="cal-month-label" class="cal-month-label"></span>
+        <button class="cal-nav-btn" onclick="calChangeMonth(1)">&#9654;</button>
+      </div>
+    </div>
+    <div id="calendar-annual"><p style="color:#888">Select a region to view the calendar.</p></div>
+    <div id="calendar-monthly" style="display:none;"><p style="color:#888">Select a region to view the calendar.</p></div>
+  </div>
+</div>
+
+<!-- CALENDAR: leave form popup -->
+<div id="leave-popup">
+  <div class="sft-title">Declare absence</div>
+  <div class="sft-subtitle" id="leave-subtitle"></div>
+  <div class="leave-field">
+    <label class="leave-label">Type</label>
+    <select id="leave-type" class="leave-input">
+      <option value="leave">🏝️ Leave</option>
+      <option value="sick">🚑 Sick</option>
+      <option value="absence">⛔ Absence</option>
+    </select>
+  </div>
+  <div class="leave-field">
+    <label class="leave-label">From</label>
+    <input type="date" id="leave-start" class="leave-input">
+  </div>
+  <div class="leave-field">
+    <label class="leave-label">To</label>
+    <input type="date" id="leave-end" class="leave-input">
+  </div>
+  <div style="display:flex;gap:8px;margin-top:14px;">
+    <button class="btn btn-primary" style="flex:1;" onclick="saveLeave()">Save</button>
+    <button class="btn" style="flex:1;background:#f3f4f6;color:#374151;" onclick="closeLeavePopup()">Cancel</button>
+  </div>
+</div>
+
+<!-- CALENDAR: day open/close popup (annual) -->
+<div id="dayopen-popup">
+  <div class="sft-title">CSC opening</div>
+  <div class="sft-subtitle" id="dayopen-subtitle"></div>
+  <div class="sft-row">
+    <span class="sft-side" id="dayopen-closed-label">Closed</span>
+    <label class="toggle"><input type="checkbox" id="dayopen-toggle">
+      <span class="toggle-slider"></span></label>
+    <span class="sft-side" id="dayopen-open-label">Open</span>
+  </div>
+</div>
+
 <!-- REGULATIONS TAB -->
 <div id="tab-regulations" class="tab-content">
   <div id="regulations-content">
@@ -405,6 +496,12 @@ let currentRegionId   = null;
 let currentRegionName = '';
 let currentRegionCity = '';
 let currentWeekMonday = getMondayOfCurrentWeek();
+let calHolidays       = {};   // { 'YYYY-MM-DD': 'Holiday name' } for current region/year
+let calOverrides      = {};   // { 'YYYY-MM-DD': true|false } forced open/closed
+let agentLeaves       = [];   // [{agent_id,start_date,end_date,type}]
+let calMonth          = new Date(); // month currently shown in Calendar tab
+let currentCalView    = 'annual';
+let calHolidaysYear   = null; // which year is currently loaded
 let agents            = [];
 let forecasts         = {};
 let historicalVolume  = {}; // historicalVolume[dateStr][task][hour] = volume
@@ -973,6 +1070,7 @@ function switchTab(name, btn) {
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
   if (name === 'regulations' && currentRegionId) renderRegulations();
+  if (name === 'calendar' && currentRegionId) renderCalendar();
 }
 
 function toggleAddAgentForm() {
@@ -1010,6 +1108,8 @@ async function onRegionChange() {
   await loadRegulations();
   await loadTasks();
   await loadMonthlyBoTargets();
+  await loadHolidays(calMonth.getFullYear()); // public holidays for this region's country
+  await loadCalendarData();                   // leaves + open/close overrides
   await loadWeekData();     
   await loadAgentTags();    
   renderAgents();           
@@ -1329,17 +1429,8 @@ function renderRegulations() {
       '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
     '</div>' +
 
-    // ── BUBBLE 4: Bank Holidays ──────────────────────────────────────────
-    '<div class="card">' +
-      '<div class="set-head"><h3 class="set-h3">Bank Holidays</h3>' +
-        '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
-      '<p class="set-note">All agents show \uD83C\uDFD6\uFE0F Holiday. Does not consume an agent\u2019s rest day.</p>' +
-      '<div class="date-tags" id="holiday-dates-tags">' + holidayTagsHtml + '</div>' +
-      '<div class="date-add-row"><input type="date" id="new-holiday-date">' +
-      '<button class="btn btn-primary" onclick="addHoliday()">+ Add date</button></div>' +
-    '</div>' +
-
-    // ── BUBBLE 5 + 6: AHT & Priority, Monthly Targets + Trend (migrated) ──
+    // ── BUBBLE 4 + 5: AHT & Priority, Monthly Targets + Trend (migrated) ──
+    // (Bank Holidays bubble removed - holidays now live in the Calendar tab)
     settingsExtra;
 
   // Toggle reactivity
@@ -1465,13 +1556,30 @@ async function loadWeekData() {
 
 // ── REGULATION HELPER ─────────────────────────────────────────────────────
 function getDayClosureType(dayStr) {
-  // Both public_holidays and closed_dates are treated identically as bank holidays.
-  // closed_dates is kept for backward compatibility with existing DB records.
-  if (regulations.public_holidays.includes(dayStr)) return 'holiday';
-  if (regulations.closed_dates.includes(dayStr))    return 'holiday';
+  // Manager override wins: forced open clears any closure; forced closed = holiday.
+  if (calOverrides[dayStr] === true)  { /* forced open: fall through to weekend check below but not holiday */ }
+  if (calOverrides[dayStr] === false) return 'holiday';
+
+  // Calendar API holidays (per-country, always current) — closed by default,
+  // unless the manager forced this specific day open.
+  if (calHolidays[dayStr] && calOverrides[dayStr] !== true) return 'holiday';
+
+  // Legacy manually-entered holidays (backward compatibility)
+  if (regulations.public_holidays.includes(dayStr) && calOverrides[dayStr] !== true) return 'holiday';
+  if (regulations.closed_dates.includes(dayStr)    && calOverrides[dayStr] !== true) return 'holiday';
+
   const dow = new Date(dayStr + 'T12:00:00').getDay();
   if (dow === 6 && regulations.saturday_rest) return 'weekend';
   if (dow === 0 && regulations.sunday_rest)   return 'weekend';
+  return null;
+}
+
+// Is an agent on declared leave (any motive) on this date?
+function agentOnLeave(agentId, dayStr) {
+  for (var i = 0; i < agentLeaves.length; i++) {
+    var lv = agentLeaves[i];
+    if (lv.agent_id === agentId && dayStr >= lv.start_date && dayStr <= lv.end_date) return lv.type;
+  }
   return null;
 }
 
@@ -1872,10 +1980,16 @@ function renderWeeklyPlanning() {
       if (status === 'rest_parttime') cellBg = 'background:#fefce8;';
 
       var badge = '';
+      var leaveType = closure ? null : agentOnLeave(a.id, ds);
       if (closure === 'holiday')
         badge = '<span class="shift-badge shift-holiday">\uD83C\uDFD6\uFE0F Holiday</span>';
       else if (closure === 'weekend')
         badge = '<span class="shift-badge shift-rest">\uD83C\uDF34 Weekend</span>';
+      else if (leaveType) {
+        var lmap = { leave:['\uD83C\uDFDD\uFE0F Leave','fef9c3','854d0e'], sick:['\uD83D\uDE91 Sick','fee2e2','b91c1c'], absence:['\u26D4 Absence','fce7f3','9d174d'] };
+        var li = lmap[leaveType] || lmap.absence;
+        badge = '<span class="shift-badge" style="background:#'+li[1]+';color:#'+li[2]+';">'+li[0]+'</span>';
+      }
       else if (status === 'rest_parttime')
         badge = '<span class="shift-parttime">\uD83D\uDD51 Part-time rest</span>';
       else if (status === 'rest_scheduled' || status === 'rest_override')
@@ -2167,6 +2281,7 @@ function computeAgentShifts(ds) {
 
   var working = agents.filter(function(a){
     if (getDayClosureType(ds)) return false;
+    if (agentOnLeave(a.id, ds)) return false;
     var s = (availability[a.id] && availability[a.id][ds]) || 'working';
     return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent' && s !== 'rest_parttime';
   });
@@ -2258,6 +2373,7 @@ function computeIntradaySchedule(ds) {
 
   var working = agents.filter(function(a){
     if (closure) return false;
+    if (agentOnLeave(a.id, ds)) return false;
     var s = (availability[a.id] && availability[a.id][ds]) || 'working';
     return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent' && s !== 'rest_parttime';
   });
@@ -3209,6 +3325,233 @@ function sameActivity(x, y) {
   if (!x && !y) return true;
   if (!x || !y) return false;
   return x.key === y.key && x.isBreak === y.isBreak;
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────────────
+var REGION_COUNTRY = { 'Paris':'FR','New York':'US','Shanghai':'CN','Seoul':'KR','Tokyo':'JP','Singapore':'SG' };
+var CAL_DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function switchCalendarView(v) {
+  currentCalView = v;
+  document.getElementById('btn-cal-annual').classList.toggle('active', v==='annual');
+  document.getElementById('btn-cal-monthly').classList.toggle('active', v==='monthly');
+  document.getElementById('calendar-annual').style.display  = v==='annual'  ? 'block' : 'none';
+  document.getElementById('calendar-monthly').style.display = v==='monthly' ? 'block' : 'none';
+  renderCalendar();
+}
+
+function calChangeMonth(delta) {
+  calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + delta, 1);
+  renderCalendar();
+}
+
+// Fetch public holidays for the region's country & year from Nager.Date
+async function loadHolidays(year) {
+  var country = REGION_COUNTRY[currentRegionCity] || 'FR';
+  try {
+    var res = await fetch('https://date.nager.at/api/v3/PublicHolidays/' + year + '/' + country);
+    if (!res.ok) throw new Error('holiday API ' + res.status);
+    var data = await res.json();
+    calHolidays = {};
+    data.forEach(function(h){ calHolidays[h.date] = h.localName || h.name; });
+    calHolidaysYear = year;
+  } catch (e) {
+    showToast('Could not load public holidays', 'error');
+    calHolidays = {};
+  }
+}
+
+async function loadCalendarData() {
+  if (!currentRegionId) return;
+  // Leaves
+  var lv = await sb.from('agent_leave').select('*').eq('region_id', currentRegionId);
+  agentLeaves = (lv.data || []);
+  // Overrides
+  var ov = await sb.from('calendar_overrides').select('*').eq('region_id', currentRegionId);
+  calOverrides = {};
+  (ov.data || []).forEach(function(r){ calOverrides[r.date] = r.is_open; });
+}
+
+async function renderCalendar() {
+  if (!currentRegionId) return;
+  var year = calMonth.getFullYear();
+  if (calHolidaysYear !== year) await loadHolidays(year);
+  document.getElementById('cal-month-label').textContent =
+    calMonth.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  if (currentCalView === 'annual') renderAnnualCalendar();
+  else renderMonthlyCalendar();
+}
+
+// Build the day cells for the current month (shared by both views)
+function calMonthDays() {
+  var y = calMonth.getFullYear(), m = calMonth.getMonth();
+  var first = new Date(y, m, 1);
+  var startDow = (first.getDay() + 6) % 7; // Monday=0
+  var daysInMonth = new Date(y, m+1, 0).getDate();
+  var cells = [];
+  for (var i = 0; i < startDow; i++) cells.push(null);
+  for (var d = 1; d <= daysInMonth; d++) cells.push(new Date(y, m, d));
+  return cells;
+}
+
+function renderAnnualCalendar() {
+  var container = document.getElementById('calendar-annual');
+  var cells = calMonthDays();
+  var html = '<div class="cal-grid">';
+  CAL_DOW.forEach(function(d){ html += '<div class="cal-dow">'+d+'</div>'; });
+  cells.forEach(function(day){
+    if (!day) { html += '<div class="cal-cell empty"></div>'; return; }
+    var ds = toDateStr(day);
+    var closure = getDayClosureType(ds);
+    var isHol = !!calHolidays[ds] || regulations.public_holidays.includes(ds);
+    var forced = calOverrides[ds]; // true=open, false=closed, undefined=default
+    var cls = 'cal-cell';
+    if (isToday(day)) cls += ' today';
+    if (isHol) cls += ' holiday';
+    if (isHol && forced === true) cls += ' forced-open';
+    else if (closure === 'weekend') cls += ' weekend';
+    var inner = '<div class="cal-daynum">'+day.getDate()+'</div>';
+    if (isHol) {
+      inner += '<div class="cal-holiday-name">'+(calHolidays[ds]||'Holiday')+'</div>';
+      if (forced === true)  inner += '<div class="cal-forced open">\u2713 Open</div>';
+      if (forced === false) inner += '<div class="cal-forced closed">\u2715 Closed</div>';
+      html += '<div class="'+cls+'" onclick="showDayOpenPicker(\''+ds+'\',event)">'+inner+'</div>';
+    } else {
+      html += '<div class="'+cls+'">'+inner+'</div>';
+    }
+  });
+  html += '</div>';
+  html += '<p style="font-size:11px;color:#9ca3af;margin-top:10px;">Public holidays for '+
+    (REGION_COUNTRY[currentRegionCity]||'FR')+' are pre-filled. Click a holiday to force the CSC open or closed.</p>';
+  container.innerHTML = html;
+}
+
+function renderMonthlyCalendar() {
+  var container = document.getElementById('calendar-monthly');
+  var cells = calMonthDays();
+  var y = calMonth.getFullYear(), m = calMonth.getMonth();
+
+  // Grid with leave bars
+  var grid = '<div class="cal-grid">';
+  CAL_DOW.forEach(function(d){ grid += '<div class="cal-dow">'+d+'</div>'; });
+  var leaveColors = { leave:'#ca8a04', sick:'#dc2626', absence:'#9d174d' };
+  cells.forEach(function(day){
+    if (!day) { grid += '<div class="cal-cell empty"></div>'; return; }
+    var ds = toDateStr(day);
+    var closure = getDayClosureType(ds);
+    var cls = 'cal-cell';
+    if (isToday(day)) cls += ' today';
+    if (closure === 'holiday') cls += ' holiday';
+    else if (closure === 'weekend') cls += ' weekend';
+    var inner = '<div class="cal-daynum">'+day.getDate()+'</div>';
+    // Leave bars for this day
+    agentLeaves.forEach(function(lv){
+      if (ds >= lv.start_date && ds <= lv.end_date) {
+        var ag = agents.find(function(a){return a.id===lv.agent_id;});
+        if (!ag) return;
+        var nm = ag.first_name + ' ' + (ag.last_name||'').charAt(0) + '.';
+        inner += '<div class="cal-leave-bar" style="background:'+(leaveColors[lv.type]||'#9d174d')+';" '+
+          'onclick="deleteLeavePrompt(\''+lv.id+'\',event)" title="Click to remove">'+nm+'</div>';
+      }
+    });
+    grid += '<div class="'+cls+'">'+inner+'</div>';
+  });
+  grid += '</div>';
+
+  // Agent list (right)
+  var list = '<div class="cal-agent-list"><h4>Declare absence</h4>';
+  if (!agents.length) list += '<p style="font-size:12px;color:#9ca3af;">No agents.</p>';
+  agents.forEach(function(a){
+    list += '<div class="cal-agent-item" onclick="showLeavePicker(\''+a.id+'\',event)">'+
+      a.first_name+' '+a.last_name+'</div>';
+  });
+  list += '</div>';
+
+  container.innerHTML = '<div class="cal-monthly-wrap"><div class="cal-monthly-grid">'+grid+'</div>'+list+'</div>';
+}
+
+// ── Leave popup ──
+var leavePickerAgent = null;
+function showLeavePicker(agentId, event) {
+  event.stopPropagation();
+  leavePickerAgent = agentId;
+  var ag = agents.find(function(a){return a.id===agentId;});
+  document.getElementById('leave-subtitle').textContent = ag ? (ag.first_name+' '+ag.last_name) : '';
+  var firstOfMonth = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth(), 1));
+  document.getElementById('leave-start').value = firstOfMonth;
+  document.getElementById('leave-end').value = firstOfMonth;
+  document.getElementById('leave-type').value = 'leave';
+  var p = document.getElementById('leave-popup');
+  p.style.display = 'block';
+  p.style.left = Math.min(event.clientX+10, window.innerWidth-280) + 'px';
+  p.style.top  = Math.min(event.clientY+10, window.innerHeight-320) + 'px';
+}
+function closeLeavePopup(){ document.getElementById('leave-popup').style.display='none'; }
+
+async function saveLeave() {
+  var start = document.getElementById('leave-start').value;
+  var end   = document.getElementById('leave-end').value;
+  var type  = document.getElementById('leave-type').value;
+  if (!start || !end) { showToast('Pick both dates', 'error'); return; }
+  if (end < start) { showToast('End date is before start date', 'error'); return; }
+  var row = { region_id: currentRegionId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: type };
+  var { data, error } = await sb.from('agent_leave').insert([row]).select();
+  if (error) { showToast('Failed to save: '+error.message, 'error'); return; }
+  if (data && data[0]) agentLeaves.push(data[0]);
+  closeLeavePopup();
+  showToast('Absence saved \u2713');
+  renderCalendar();
+  if (currentRegionId) renderPlanning(); // recompute planning with the new leave
+}
+
+async function deleteLeavePrompt(leaveId, event) {
+  event.stopPropagation();
+  if (!confirm('Remove this absence?')) return;
+  var { error } = await sb.from('agent_leave').delete().eq('id', leaveId);
+  if (error) { showToast('Failed to remove: '+error.message, 'error'); return; }
+  agentLeaves = agentLeaves.filter(function(l){return l.id !== leaveId;});
+  showToast('Absence removed \u2713');
+  renderCalendar();
+  renderPlanning();
+}
+
+// ── Day open/close popup (annual) ──
+var dayOpenPickerDate = null;
+function showDayOpenPicker(ds, event) {
+  event.stopPropagation();
+  dayOpenPickerDate = ds;
+  document.getElementById('dayopen-subtitle').textContent = (calHolidays[ds]||'Holiday') + ' \u00b7 ' + ds;
+  var toggle = document.getElementById('dayopen-toggle');
+  toggle.checked = (calOverrides[ds] === true); // checked = forced open
+  document.getElementById('dayopen-closed-label').classList.toggle('active', !toggle.checked);
+  document.getElementById('dayopen-open-label').classList.toggle('active', toggle.checked);
+  toggle.onchange = function(){
+    document.getElementById('dayopen-closed-label').classList.toggle('active', !toggle.checked);
+    document.getElementById('dayopen-open-label').classList.toggle('active', toggle.checked);
+    applyDayOpen(dayOpenPickerDate, toggle.checked);
+  };
+  var p = document.getElementById('dayopen-popup');
+  p.style.display = 'block';
+  p.style.left = Math.min(event.clientX+10, window.innerWidth-280) + 'px';
+  p.style.top  = Math.min(event.clientY+10, window.innerHeight-200) + 'px';
+  setTimeout(function(){ document.addEventListener('click', closeDayOpenOnOutside); }, 0);
+}
+function closeDayOpenOnOutside(e){
+  var p = document.getElementById('dayopen-popup');
+  if (p && !p.contains(e.target)) closeDayOpenPopup();
+}
+function closeDayOpenPopup(){
+  document.getElementById('dayopen-popup').style.display='none';
+  document.removeEventListener('click', closeDayOpenOnOutside);
+}
+async function applyDayOpen(ds, isOpen) {
+  var row = { region_id: currentRegionId, date: ds, is_open: isOpen };
+  var { error } = await sb.from('calendar_overrides').upsert([row], { onConflict: 'region_id,date' });
+  if (error) { showToast('Failed: '+error.message, 'error'); return; }
+  calOverrides[ds] = isOpen;
+  showToast(isOpen ? 'Marked open \u2713' : 'Marked closed \u2713');
+  renderCalendar();
+  renderPlanning();
 }
 
 // ── WEEKLY FORECAST / RECAP RENDER ────────────────────────────────────────
