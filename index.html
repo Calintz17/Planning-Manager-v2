@@ -98,7 +98,7 @@
     .recap-metric-val { font-weight:700; color:#374151; }
     .recap-status { margin-top:8px; border-radius:5px; padding:5px 8px; font-size:11px; font-weight:700; text-align:center; }
     .recap-status.ok    { background:#f0fdf4; color:#166534; }
-    .recap-status.short { background:#fff1f2; color:#b91c1c; }
+    .recap-status.short { background:#fff7ed; color:#9a3412; border:1px solid #fdba74; }
     .hourly-chart { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
     .hourly-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
     .hourly-label { font-size: 9px; color: #9ca3af; width: 28px; flex-shrink: 0; text-align: right; }
@@ -1569,6 +1569,8 @@ async function loadWeekData() {
   renderPlanning();
   renderAgents();
   renderForecast();
+  // Volume anomaly check (async, refreshes the recap banner when ready)
+  computeWeekAnomaly().then(function(){ if (currentPlanningView === 'recap') renderForecast(); });
 }
 
 // ── REGULATION HELPER ─────────────────────────────────────────────────────
@@ -2824,7 +2826,7 @@ function renderIntraday(ds) {
     : '';
 
   container.innerHTML =
-    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' + alertBanner +
+    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' +
     '<div id="intraday-container"><div class="intraday-grid" style="grid-template-columns:'+cols+
     ';grid-auto-rows:auto;">'+header+rows+'</div></div>';
 }
@@ -3623,6 +3625,126 @@ async function applyDayOpen(ds, isOpen) {
   renderPlanning();
 }
 
+// ── WEEKLY VOLUME ANOMALY DETECTION ───────────────────────────────────────
+// Compares this week's forecast workload to the average of 8 weeks of history
+// (4 before + 4 after the equivalent week last year). Flags >+30% / <-30%.
+var anomalyState = null; // { pct, direction, current, baseline } | null
+
+function weekWorkloadFromForecast() {
+  // Sum of this week's forecast contact_volume (workload minutes)
+  var total = 0;
+  getWeekDays(currentWeekMonday).forEach(function(day){
+    var f = forecasts[toDateStr(day)];
+    if (f && f.contact_volume) total += f.contact_volume;
+  });
+  return total;
+}
+
+function rawToWorkloadMin(dayMap) {
+  // dayMap: { TASK: { hour: vol } } → workload minutes using current AHT
+  var aht = regulations.aht_tasks || {};
+  var total = 0;
+  Object.keys(dayMap).forEach(function(task){
+    var a = aht[task] || aht[task.toUpperCase()] || 5;
+    Object.values(dayMap[task]).forEach(function(v){ total += (v||0) * a; });
+  });
+  return total;
+}
+
+async function computeWeekAnomaly() {
+  anomalyState = null;
+  if (!currentRegionId) return;
+
+  // Equivalent Monday last year
+  var eqMondayStr = getEquivalentLastYearDate(toDateStr(currentWeekMonday));
+  var eqMonday = new Date(eqMondayStr + 'T12:00:00');
+
+  // Build the 8 surrounding weeks (-4..+4 excluding 0 → but include all 8 around)
+  var weekOffsets = [-4,-3,-2,-1,1,2,3,4];
+  var allDates = [];
+  var weekDateGroups = [];
+  weekOffsets.forEach(function(off){
+    var mon = new Date(eqMonday); mon.setDate(eqMonday.getDate() + off*7);
+    var grp = [];
+    for (var i=0;i<7;i++){ var d=new Date(mon); d.setDate(mon.getDate()+i);
+      var dsv = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      grp.push(dsv); allDates.push(dsv); }
+    weekDateGroups.push(grp);
+  });
+
+  // Fetch all needed historical rows in one query
+  var { data, error } = await sb.from('historical_volume')
+    .select('date,hour,task,volume').eq('region_id', currentRegionId).in('date', allDates);
+  if (error || !data) return;
+
+  var byDate = {};
+  data.forEach(function(r){
+    if (!byDate[r.date]) byDate[r.date] = {};
+    if (!byDate[r.date][r.task]) byDate[r.date][r.task] = {};
+    byDate[r.date][r.task][r.hour] = r.volume;
+  });
+
+  // Weekly workload for each of the 8 reference weeks
+  var weekTotals = [];
+  weekDateGroups.forEach(function(grp){
+    var wt = 0, hasData = false;
+    grp.forEach(function(dsv){ if (byDate[dsv]) { wt += rawToWorkloadMin(byDate[dsv]); hasData = true; } });
+    if (hasData) weekTotals.push(wt);
+  });
+  if (weekTotals.length < 3) return; // not enough history to be meaningful
+
+  var baseline = weekTotals.reduce(function(s,v){return s+v;},0) / weekTotals.length;
+  if (baseline <= 0) return;
+
+  var current = weekWorkloadFromForecast();
+  var pct = Math.round(((current - baseline) / baseline) * 100);
+  if (pct >= 30)      anomalyState = { pct: pct, direction: 'high', current: current, baseline: baseline };
+  else if (pct <= -30) anomalyState = { pct: pct, direction: 'low',  current: current, baseline: baseline };
+}
+
+function anomalyBannerHtml() {
+  if (!anomalyState) return '';
+  var a = anomalyState;
+  var isHigh = a.direction === 'high';
+  var bg = isHigh ? '#fff7ed' : '#eff6ff';
+  var bd = isHigh ? '#fdba74' : '#93c5fd';
+  var tx = isHigh ? '#9a3412' : '#1e40af';
+  var icon = isHigh ? '\uD83D\uDCC8' : '\uD83D\uDCC9';
+  var word = isHigh ? 'above' : 'below';
+  var sign = a.pct > 0 ? '+' : '';
+  return '<div style="background:'+bg+';border:1px solid '+bd+';color:'+tx+';'+
+    'border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;">'+
+    icon + ' Volume anomaly: this week is ' + sign + a.pct + '% ' + word +
+    ' the seasonal average (8-week history baseline).</div>';
+}
+
+// ── WEEKLY PRODUCTION ALERT (aggregated across the 7 days) ─────────────────
+function computeWeekCoverageGaps() {
+  var gapSet = {};
+  getWeekDays(currentWeekMonday).forEach(function(day){
+    var ds = toDateStr(day);
+    if (getDayClosureType(ds)) return;
+    var sched = computeIntradaySchedule(ds);
+    (sched.coverageGaps || []).forEach(function(g){ gapSet[g] = true; });
+  });
+  return Object.keys(gapSet);
+}
+
+function productionAlertBannerHtml() {
+  var gaps = computeWeekCoverageGaps();
+  if (!gaps.length) return '';
+  var lines = gaps.map(function(n){
+    var friendly = n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
+    return '<div style="font-size:12px;color:#9a3412;margin-top:3px;">\u2022 Unmet work on <b>'+friendly+'</b></div>';
+  }).join('');
+  return '<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;'+
+    'padding:12px 14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">'+
+    '<div style="font-size:13px;font-weight:700;color:#9a3412;">\u26A0\uFE0F Production alert</div>'+
+    lines +
+    '<div style="font-size:11px;color:#c2855a;margin-top:6px;">Unmet work carries over to the next day.</div>'+
+    '</div>';
+}
+
 // ── WEEKLY FORECAST / RECAP RENDER ────────────────────────────────────────
 function renderForecast() {
   const container = document.getElementById('forecast-grid');
@@ -3634,7 +3756,7 @@ function renderForecast() {
   const days = getWeekDays(currentWeekMonday);
   const forecastOpenDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
 
-  let html = '<div class="forecast-grid">';
+  let html = anomalyBannerHtml() + productionAlertBannerHtml() + '<div class="forecast-grid">';
   days.forEach(function(day, i) {
     const ds        = toDateStr(day);
     const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0, hourly: {} };
@@ -3705,10 +3827,10 @@ function renderForecast() {
           '<span class="recap-metric-val">'+working+'</span></div>' +
       '</div>';
 
-    // ── Status pill ─────────────────────────────────────────────────────────
+    // ── Status pill: only shown when understaffed (orange). No green when OK. ──
     var ok = working >= need || need === 0;
-    var statusHtml = '<div class="recap-status '+(ok?'ok':'short')+'">' +
-      (ok ? '\u2705 Staffed' : '\u26A0\uFE0F Understaffed') + '</div>';
+    var statusHtml = ok ? '' :
+      '<div class="recap-status short">\u26A0\uFE0F Production alert</div>';
 
     html += '<div class="' + cls + '">' +
       titleHtml +
