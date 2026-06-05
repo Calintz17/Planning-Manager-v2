@@ -3718,6 +3718,83 @@ function anomalyBannerHtml() {
     ' the seasonal average (8-week history baseline).</div>';
 }
 
+// ── RECAP DASHBOARD SUMMARY (coverage, busiest day, absences) ─────────────
+function buildRecapSummary() {
+  var days = getWeekDays(currentWeekMonday);
+  var DAY_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  var totalNeed = 0, totalWorking = 0;
+  var busiest = null, busiestWl = -1;
+
+  days.forEach(function(day, i){
+    var ds = toDateStr(day);
+    if (getDayClosureType(ds)) return;
+    var f = forecasts[ds];
+    var wl = (f && f.contact_volume) ? f.contact_volume : 0;
+    var need = wl > 0 ? Math.ceil((wl/60)/regulations.max_daily_hours) : 0;
+    var working = 0;
+    agents.forEach(function(a){
+      if (agentOnLeave(a.id, ds)) return;
+      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
+      if (s === 'working') working++;
+    });
+    totalNeed += need;
+    totalWorking += working;
+    if (wl > busiestWl) { busiestWl = wl; busiest = { name: DAY_FULL[i], wl: wl, need: need, working: working }; }
+  });
+
+  // Coverage = capacity vs need across the week (capped display at 999%)
+  var coverage = totalNeed > 0 ? Math.round((totalWorking / totalNeed) * 100) : 100;
+
+  // Absent agents this week (any leave overlapping the week)
+  var weekStart = toDateStr(days[0]), weekEnd = toDateStr(days[6]);
+  var absentMap = {};
+  agentLeaves.forEach(function(lv){
+    if (lv.end_date >= weekStart && lv.start_date <= weekEnd) {
+      if (!absentMap[lv.agent_id]) absentMap[lv.agent_id] = lv.type;
+    }
+  });
+  var absentList = Object.keys(absentMap).map(function(aid){
+    var a = agents.find(function(x){return x.id===aid;});
+    if (!a) return null;
+    var icon = absentMap[aid]==='leave'?'\uD83C\uDFDD\uFE0F':absentMap[aid]==='sick'?'\uD83D\uDE91':'\u26D4';
+    return icon + ' ' + a.first_name + ' ' + (a.last_name||'').charAt(0) + '.';
+  }).filter(Boolean);
+
+  return { coverage: coverage, busiest: busiest, absentList: absentList };
+}
+
+function recapSummaryHtml() {
+  var s = buildRecapSummary();
+  var covColor = s.coverage >= 100 ? '#166534' : s.coverage >= 85 ? '#9a3412' : '#b91c1c';
+  var covBg    = s.coverage >= 100 ? '#f0fdf4' : s.coverage >= 85 ? '#fff7ed' : '#fff1f2';
+
+  var card = function(label, valueHtml, sub){
+    return '<div style="flex:1;min-width:150px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;'+
+      'padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'+
+      '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">'+label+'</div>'+
+      valueHtml + (sub?'<div style="font-size:11px;color:#9ca3af;margin-top:3px;">'+sub+'</div>':'') + '</div>';
+  };
+
+  var covCard = card('Week coverage',
+    '<div style="font-size:22px;font-weight:700;color:'+covColor+';">'+s.coverage+'%</div>',
+    'capacity vs need');
+
+  var busyCard = s.busiest
+    ? card('Busiest day',
+        '<div style="font-size:17px;font-weight:700;color:#1a1a2e;">'+s.busiest.name+'</div>',
+        Math.round(s.busiest.wl/60) + 'h workload \u00b7 need ' + s.busiest.need)
+    : card('Busiest day', '<div style="font-size:15px;color:#9ca3af;">\u2014</div>', '');
+
+  var absCard = s.absentList.length
+    ? card('Absences this week',
+        '<div style="font-size:13px;font-weight:600;color:#374151;line-height:1.5;">'+s.absentList.join('<br>')+'</div>', '')
+    : card('Absences this week',
+        '<div style="font-size:15px;font-weight:600;color:#166534;">None</div>', 'full team available');
+
+  return '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">'+
+    covCard + busyCard + absCard + '</div>';
+}
+
 // ── WEEKLY PRODUCTION ALERT (aggregated across the 7 days) ─────────────────
 function computeWeekCoverageGaps() {
   var gapSet = {};
@@ -3756,7 +3833,7 @@ function renderForecast() {
   const days = getWeekDays(currentWeekMonday);
   const forecastOpenDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
 
-  let html = anomalyBannerHtml() + productionAlertBannerHtml() + '<div class="forecast-grid">';
+  let html = anomalyBannerHtml() + productionAlertBannerHtml() + recapSummaryHtml() + '<div class="forecast-grid">';
   days.forEach(function(day, i) {
     const ds        = toDateStr(day);
     const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0, hourly: {} };
