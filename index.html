@@ -201,6 +201,23 @@
     .cal-agent-item { padding:7px 10px; background:#fff; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:6px; font-size:12px; cursor:pointer; transition:border-color .15s; }
     .cal-agent-item:hover { border-color:#1a1a2e; }
     .cal-leave-bar { font-size:9px; border-radius:4px; padding:1px 4px; margin-top:2px; color:#fff; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    /* 12-month annual overview */
+    .cal-year-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .cal-mini { border:1px solid #e5e7eb; border-radius:8px; padding:8px; background:#fff; }
+    .cal-mini-title { text-align:center; font-size:12px; font-weight:700; color:#1a1a2e; background:#f9fafb; border-radius:5px; padding:3px 0; margin-bottom:6px; }
+    .cal-mini-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+    .cal-mini-dow { text-align:center; font-size:8px; font-weight:600; color:#9ca3af; }
+    .cal-mini-cell { text-align:center; font-size:10px; color:#374151; padding:3px 0; border-radius:3px; }
+    .cal-mini-cell.empty { background:transparent; }
+    .cal-mini-cell.today { outline:2px solid #1a1a2e; font-weight:700; }
+    .cal-mini-cell.holiday { background:#fef9c3; color:#92400e; font-weight:700; cursor:pointer; }
+    .cal-mini-cell.holiday.forced-open { background:#dcfce7; color:#166534; }
+    .cal-mini-cell.holiday:hover { background:#fde68a; }
+    /* Monthly view cells with leave lanes */
+    .cal-cell-month { min-height:78px; }
+    .cal-lanes { position:relative; margin-top:2px; }
+    .cal-bar { position:absolute; left:0; right:0; height:14px; line-height:14px; font-size:9px;
+      font-weight:600; padding:0 4px; overflow:hidden; white-space:nowrap; cursor:pointer; box-sizing:border-box; }
     .leave-field { margin-bottom:10px; }
     .leave-label { display:block; font-size:11px; color:#6b7280; margin-bottom:3px; }
     .leave-input { width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; box-sizing:border-box; }
@@ -3341,7 +3358,11 @@ function switchCalendarView(v) {
 }
 
 function calChangeMonth(delta) {
-  calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + delta, 1);
+  if (currentCalView === 'annual') {
+    calMonth = new Date(calMonth.getFullYear() + delta, calMonth.getMonth(), 1);
+  } else {
+    calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + delta, 1);
+  }
   renderCalendar();
 }
 
@@ -3377,7 +3398,9 @@ async function renderCalendar() {
   var year = calMonth.getFullYear();
   if (calHolidaysYear !== year) await loadHolidays(year);
   document.getElementById('cal-month-label').textContent =
-    calMonth.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+    (currentCalView === 'annual')
+      ? String(year)
+      : calMonth.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
   if (currentCalView === 'annual') renderAnnualCalendar();
   else renderMonthlyCalendar();
 }
@@ -3396,64 +3419,110 @@ function calMonthDays() {
 
 function renderAnnualCalendar() {
   var container = document.getElementById('calendar-annual');
-  var cells = calMonthDays();
-  var html = '<div class="cal-grid">';
-  CAL_DOW.forEach(function(d){ html += '<div class="cal-dow">'+d+'</div>'; });
-  cells.forEach(function(day){
-    if (!day) { html += '<div class="cal-cell empty"></div>'; return; }
-    var ds = toDateStr(day);
-    var closure = getDayClosureType(ds);
-    var isHol = !!calHolidays[ds] || regulations.public_holidays.includes(ds);
-    var forced = calOverrides[ds]; // true=open, false=closed, undefined=default
-    var cls = 'cal-cell';
-    if (isToday(day)) cls += ' today';
-    if (isHol) cls += ' holiday';
-    if (isHol && forced === true) cls += ' forced-open';
-    else if (closure === 'weekend') cls += ' weekend';
-    var inner = '<div class="cal-daynum">'+day.getDate()+'</div>';
-    if (isHol) {
-      inner += '<div class="cal-holiday-name">'+(calHolidays[ds]||'Holiday')+'</div>';
-      if (forced === true)  inner += '<div class="cal-forced open">\u2713 Open</div>';
-      if (forced === false) inner += '<div class="cal-forced closed">\u2715 Closed</div>';
-      html += '<div class="'+cls+'" onclick="showDayOpenPicker(\''+ds+'\',event)">'+inner+'</div>';
-    } else {
-      html += '<div class="'+cls+'">'+inner+'</div>';
+  var year = calMonth.getFullYear();
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  var html = '<div class="cal-year-grid">';
+  for (var mo = 0; mo < 12; mo++) {
+    html += '<div class="cal-mini">';
+    html += '<div class="cal-mini-title">' + MONTHS[mo] + '</div>';
+    html += '<div class="cal-mini-grid">';
+    ['M','T','W','T','F','S','S'].forEach(function(d){ html += '<div class="cal-mini-dow">'+d+'</div>'; });
+
+    var first = new Date(year, mo, 1);
+    var startDow = (first.getDay() + 6) % 7;
+    var daysInMonth = new Date(year, mo+1, 0).getDate();
+    for (var i = 0; i < startDow; i++) html += '<div class="cal-mini-cell empty"></div>';
+    for (var d = 1; d <= daysInMonth; d++) {
+      var day = new Date(year, mo, d);
+      var ds = toDateStr(day);
+      var isHol = !!calHolidays[ds] || regulations.public_holidays.includes(ds);
+      var forced = calOverrides[ds];
+      var cls = 'cal-mini-cell';
+      if (isToday(day)) cls += ' today';
+      if (isHol) {
+        cls += ' holiday';
+        if (forced === true) cls += ' forced-open';
+      }
+      if (isHol) {
+        var title = (calHolidays[ds]||'Holiday') + (forced===true?' (forced open)':forced===false?' (forced closed)':'');
+        html += '<div class="'+cls+'" title="'+title.replace(/"/g,'')+'" onclick="showDayOpenPicker(\''+ds+'\',event)">'+d+'</div>';
+      } else {
+        html += '<div class="'+cls+'">'+d+'</div>';
+      }
     }
-  });
+    html += '</div></div>';
+  }
   html += '</div>';
-  html += '<p style="font-size:11px;color:#9ca3af;margin-top:10px;">Public holidays for '+
-    (REGION_COUNTRY[currentRegionCity]||'FR')+' are pre-filled. Click a holiday to force the CSC open or closed.</p>';
+  html += '<p style="font-size:11px;color:#9ca3af;margin-top:12px;">Public holidays for '+
+    (REGION_COUNTRY[currentRegionCity]||'FR')+' are highlighted. Click any holiday to force the CSC open (green) or closed.</p>';
   container.innerHTML = html;
 }
 
 function renderMonthlyCalendar() {
   var container = document.getElementById('calendar-monthly');
   var cells = calMonthDays();
-  var y = calMonth.getFullYear(), m = calMonth.getMonth();
 
-  // Grid with leave bars
+  // Leave styling per type (pale fills, charte-consistent)
+  var LEAVE_STYLE = {
+    leave:   { bg:'#fef9c3', text:'#854d0e', icon:'\uD83C\uDFDD\uFE0F', label:'Leave' },
+    sick:    { bg:'#ffedd5', text:'#9a3412', icon:'\uD83D\uDE91', label:'Sick' },
+    absence: { bg:'#fee2e2', text:'#b91c1c', icon:'\u26D4', label:'Absence' }
+  };
+
+  // Assign each leave a lane (track) so overlapping leaves stack without colliding.
+  var monthStart = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth(), 1));
+  var monthEnd   = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 0));
+  var visible = agentLeaves.filter(function(lv){ return lv.end_date >= monthStart && lv.start_date <= monthEnd; });
+  visible.sort(function(a,b){ return a.start_date < b.start_date ? -1 : 1; });
+  var lanes = []; // lanes[i] = end_date currently occupying lane i
+  var laneOf = {};
+  visible.forEach(function(lv){
+    var placed = false;
+    for (var i = 0; i < lanes.length; i++) {
+      if (lv.start_date > lanes[i]) { lanes[i] = lv.end_date; laneOf[lv.id] = i; placed = true; break; }
+    }
+    if (!placed) { laneOf[lv.id] = lanes.length; lanes.push(lv.end_date); }
+  });
+  var laneCount = Math.max(1, lanes.length);
+
   var grid = '<div class="cal-grid">';
   CAL_DOW.forEach(function(d){ grid += '<div class="cal-dow">'+d+'</div>'; });
-  var leaveColors = { leave:'#ca8a04', sick:'#dc2626', absence:'#9d174d' };
+
   cells.forEach(function(day){
     if (!day) { grid += '<div class="cal-cell empty"></div>'; return; }
     var ds = toDateStr(day);
     var closure = getDayClosureType(ds);
-    var cls = 'cal-cell';
+    var dow = (day.getDay() + 6) % 7; // Mon=0
+    var cls = 'cal-cell cal-cell-month';
     if (isToday(day)) cls += ' today';
     if (closure === 'holiday') cls += ' holiday';
     else if (closure === 'weekend') cls += ' weekend';
+
     var inner = '<div class="cal-daynum">'+day.getDate()+'</div>';
-    // Leave bars for this day
-    agentLeaves.forEach(function(lv){
-      if (ds >= lv.start_date && ds <= lv.end_date) {
-        var ag = agents.find(function(a){return a.id===lv.agent_id;});
-        if (!ag) return;
-        var nm = ag.first_name + ' ' + (ag.last_name||'').charAt(0) + '.';
-        inner += '<div class="cal-leave-bar" style="background:'+(leaveColors[lv.type]||'#9d174d')+';" '+
-          'onclick="deleteLeavePrompt(\''+lv.id+'\',event)" title="Click to remove">'+nm+'</div>';
+    // Lane container
+    inner += '<div class="cal-lanes" style="height:'+(laneCount*16)+'px;">';
+    visible.forEach(function(lv){
+      if (ds < lv.start_date || ds > lv.end_date) return;
+      var st = LEAVE_STYLE[lv.type] || LEAVE_STYLE.absence;
+      var ag = agents.find(function(a){return a.id===lv.agent_id;});
+      if (!ag) return;
+      var isStart = (ds === lv.start_date) || (dow === 0);   // start of leave or start of week
+      var isEnd   = (ds === lv.end_date)   || (dow === 6);   // end of leave or end of week
+      var radius = (isStart?'4px':'0') + ' ' + (isEnd?'4px':'0') + ' ' + (isEnd?'4px':'0') + ' ' + (isStart?'4px':'0');
+      var ml = isStart ? '2px' : '-1px', mr = isEnd ? '2px' : '-1px';
+      // Label only on the start segment (or Monday continuation)
+      var labelTxt = '';
+      if (ds === lv.start_date || dow === 0) {
+        labelTxt = st.icon + ' ' + ag.first_name + ' ' + (ag.last_name||'').charAt(0) + '.';
       }
+      inner += '<div class="cal-bar" style="top:'+(laneOf[lv.id]*16)+'px;'+
+        'background:'+st.bg+';color:'+st.text+';border-radius:'+radius+';'+
+        'margin-left:'+ml+';margin-right:'+mr+';" '+
+        'onclick="deleteLeavePrompt(\''+lv.id+'\',event)" title="'+st.label+' \u00b7 '+ag.first_name+' '+ag.last_name+' (click to remove)">'+
+        labelTxt + '</div>';
     });
+    inner += '</div>';
     grid += '<div class="'+cls+'">'+inner+'</div>';
   });
   grid += '</div>';
