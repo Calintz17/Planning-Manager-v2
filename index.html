@@ -2044,6 +2044,95 @@ function computeIntradaySchedule(ds) {
     }
   });
 
+  // ── SHIFTS: extended presence grid (1h before opening, 1h after closing) ──
+  // Agent presence is decoupled from CSC opening hours. The grid spans
+  // (open-1) .. (close+1). The extra hours host COLD tasks only (CSC is closed,
+  // no Call/Chat). Each agent works either a Morning shift (starts at extended
+  // opening) or an Afternoon shift (ends at extended closing), never a mid-day gap.
+  var presenceOpen  = hours.open - 1;            // extended grid start (hour)
+  var presenceClose = hours.close + 1;           // extended grid end (hour)
+
+  // Per-agent presence DURATION in minutes = contractual work + breaks.
+  // Work portion = weekly_hours / workingDays, capped at max_daily_hours.
+  var breakMinTotal = (breaks || []).reduce(function(s,b){return s+(b.duration||0);}, 0);
+  function presenceMinForAgent(a){
+    var pct = a.work_pct || 100;
+    var workH = (regulations.weekly_hours / Math.max(1, workingDays)) * (pct/100);
+    var capH  = regulations.max_daily_hours || 8;
+    workH = Math.min(workH, capH);
+    return Math.round(workH * 60) + breakMinTotal; // presence = work + breaks
+  }
+
+  // Hot-flow tasks (Call/Chat) drive the morning/afternoon split.
+  function isHotTask(name){ return name === 'CALL' || name === 'CHAT'; }
+  function agentIsHot(a){
+    var tags = agentTags[a.id] || [];
+    return tags.includes('can_call') || tags.includes('can_chat');
+  }
+
+  // Split the day at its midpoint (in open hours) to weigh morning vs afternoon hot volume.
+  var midHour = Math.floor((hours.open + hours.close) / 2);
+  var hotMorning = 0, hotAfternoon = 0;
+  for (var hh2 = hours.open; hh2 < hours.close; hh2++) {
+    var hotVol = ((demand[hh2]||{})['CALL']||0) + ((demand[hh2]||{})['CHAT']||0);
+    if (hh2 < midHour) hotMorning += hotVol; else hotAfternoon += hotVol;
+  }
+
+  // Decide how many agents go Afternoon (the rest go Morning), proportional to
+  // afternoon hot share, but always leave the majority where the load is.
+  var nWork = working.length;
+  var totalHot = hotMorning + hotAfternoon;
+  var afternoonShare = totalHot > 0 ? (hotAfternoon / totalHot) : 0.4;
+  var nAfternoon = Math.round(nWork * afternoonShare);
+  // Guarantee at least 1 morning and at least 1 afternoon when we have >=2 agents
+  if (nWork >= 2) { nAfternoon = Math.max(1, Math.min(nAfternoon, nWork - 1)); }
+  else            { nAfternoon = 0; } // single agent: Morning only
+
+  // Sort agents so HOT agents are spread to both shifts (guarantee hot coverage).
+  // We assign Afternoon to: first the required hot agents, then fill by equity order.
+  var hotAgents  = working.filter(agentIsHot);
+  var coldAgents = working.filter(function(a){return !agentIsHot(a);});
+
+  var shiftOf = {}; // agent.id -> 'morning' | 'afternoon'
+  working.forEach(function(a){ shiftOf[a.id] = 'morning'; }); // default morning
+
+  // Assign afternoon slots: prioritise putting at least 1 HOT agent on afternoon
+  var afternoonPicks = [];
+  if (nAfternoon > 0 && hotAgents.length) {
+    afternoonPicks.push(hotAgents[hotAgents.length - 1]); // one hot agent to close
+  }
+  // Fill remaining afternoon slots from the rest (hot first to keep coverage robust)
+  var pickOrder = hotAgents.slice(0, Math.max(0, hotAgents.length - 1)).concat(coldAgents);
+  for (var pi = 0; pi < pickOrder.length && afternoonPicks.length < nAfternoon; pi++) {
+    if (afternoonPicks.indexOf(pickOrder[pi]) === -1) afternoonPicks.push(pickOrder[pi]);
+  }
+  afternoonPicks.forEach(function(a){ shiftOf[a.id] = 'afternoon'; });
+
+  // Per-agent presence window [startMin, endMin] from shift + duration.
+  var agentStartMin = {}, agentEndMin = {};
+  working.forEach(function(a){
+    var dur = presenceMinForAgent(a);
+    if (shiftOf[a.id] === 'afternoon') {
+      agentEndMin[a.id]   = presenceClose * 60;
+      agentStartMin[a.id] = agentEndMin[a.id] - dur;
+    } else {
+      agentStartMin[a.id] = presenceOpen * 60;
+      agentEndMin[a.id]   = agentStartMin[a.id] + dur;
+    }
+    // Respect part-time early close if it applies and is more restrictive
+    if (agentCloseMin[a.id] && agentCloseMin[a.id] < agentEndMin[a.id]) {
+      agentEndMin[a.id] = agentCloseMin[a.id];
+    }
+  });
+
+  // Helper: is agent present during hour h?
+  function agentPresent(a, h){
+    var hS = h*60, hE = (h+1)*60;
+    return agentStartMin[a.id] < hE && agentEndMin[a.id] > hS;
+  }
+  // Helper: is hour h within CSC opening hours (hot flows allowed)?
+  function isOpenHour(h){ return h >= hours.open && h < hours.close; }
+
   if (closure || !working.length) {
     return agents.map(function(a){
       var s = (availability[a.id] && availability[a.id][ds]) || 'working';
@@ -2111,13 +2200,13 @@ function computeIntradaySchedule(ds) {
   // Track unmet workload for the production alert (per task, whole day)
   var coverageGaps = {}; // taskName -> true if any unmet work remained
 
-  for (var h = hours.open; h < hours.close; h++) {
+  for (var h = presenceOpen; h < presenceClose; h++) {
     var hS=h*60, hE=(h+1)*60;
+    var openHour = isOpenHour(h);
 
-    // ALL working agents this hour — but exclude those past their personal closeMin
+    // Agents present this hour (shift-aware), sorted by equity (fairness)
     var allSorted = working.filter(function(a){
-      var personalClose = agentCloseMin[a.id] || (hours.close * 60);
-      return hS < personalClose; // agent still working this hour
+      return agentPresent(a, h);
     }).sort(function(a,b){
       return (equity[a.id]||0)-(equity[b.id]||0);
     });
@@ -2130,41 +2219,62 @@ function computeIntradaySchedule(ds) {
       return (agentTags[ag.id]||[]).includes(t.required_tag);
     }
 
-    // ── PASS 1: REALTIME tasks first (this hour's volume must be covered now) ─
-    primary.forEach(function(t){
-      if (!isRealtime(t) || !pool.length) return;
-      var vol=(demand[h]||{})[t.name]||0;
-      if (!vol) return;
-      var eligible = pool.filter(function(ag){ return canDo(ag,t); });
-      if (!eligible.length) { coverageGaps[t.name] = true; return; }
-      var workMinNeeded = vol * t.aht_minutes;
-      var totalEff = eligible.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
-      var avgEff = totalEff / eligible.length;
-      var need = Math.ceil(workMinNeeded / Math.max(1, avgEff));
-      if (need > eligible.length) coverageGaps[t.name] = true; // not enough qualified agents
-      need = Math.min(need, eligible.length);
-      for(var i=0;i<need;i++){
-        var ag=eligible[i];
-        pool.splice(pool.indexOf(ag), 1);
-        agHour[ag.id][h]=t.name;
-        equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
-      }
-    });
+    // ── PASS 1: REALTIME (hot) tasks — ONLY during CSC opening hours ────────
+    if (openHour) {
+      primary.forEach(function(t){
+        if (!isRealtime(t) || !pool.length) return;
+        var vol=(demand[h]||{})[t.name]||0;
+        if (!vol) return;
+        var eligible = pool.filter(function(ag){ return canDo(ag,t); });
+        if (!eligible.length) { coverageGaps[t.name] = true; return; }
+        var workMinNeeded = vol * t.aht_minutes;
+        var totalEff = eligible.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
+        var avgEff = totalEff / eligible.length;
+        var need = Math.ceil(workMinNeeded / Math.max(1, avgEff));
+        if (need > eligible.length) coverageGaps[t.name] = true;
+        need = Math.min(need, eligible.length);
+        for(var i=0;i<need;i++){
+          var ag=eligible[i];
+          pool.splice(pool.indexOf(ag), 1);
+          agHour[ag.id][h]=t.name;
+          equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
+        }
+      });
 
-    // ── PASS 2: STOCK tasks by priority, draining the daily pool ────────────
-    // Each free agent who can do the highest-priority stock task with work left
-    // gets assigned to it; we subtract their hour of capacity from the stock.
+      // Guarantee at least 1 hot-flow agent on this open hour (if any hot volume
+      // or simply to keep the floor covered). If none got assigned a hot task but
+      // hot agents are free, park one on the highest hot demand (or CALL).
+      var anyHotAssigned = working.some(function(a){ return isHotTask(agHour[a.id][h]); });
+      if (!anyHotAssigned) {
+        var freeHot = pool.filter(function(ag){
+          return (agentTags[ag.id]||[]).includes('can_call') || (agentTags[ag.id]||[]).includes('can_chat');
+        });
+        if (freeHot.length) {
+          var ag = freeHot[0];
+          var hotTask = (agentTags[ag.id]||[]).includes('can_call') ? 'CALL' : 'CHAT';
+          pool.splice(pool.indexOf(ag), 1);
+          agHour[ag.id][h] = hotTask;
+          equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
+        } else {
+          // No hot agent available to cover this open hour → flag the gap
+          coverageGaps['CALL'] = true;
+        }
+      }
+    }
+
+    // ── PASS 2: STOCK (cold) tasks by priority, draining the daily pool ─────
+    // Cold tasks run on ANY hour (open or extended). Hot tasks never run on
+    // extended hours (CSC closed), so PASS 1 is skipped there.
     primary.forEach(function(t){
       if (isRealtime(t) || !pool.length) return;
       if (t.morning_only && h >= 12) return;        // fraud only in the morning
       if ((stockRemaining[t.name]||0) <= 0) return;  // nothing left for this task
       var eligible = pool.filter(function(ag){ return canDo(ag,t); });
-      if (!eligible.length) return;                  // gap recorded at end of day
-      // Assign as many eligible agents as the remaining stock needs this hour
+      if (!eligible.length) return;
       for (var i=0; i<eligible.length; i++) {
         if ((stockRemaining[t.name]||0) <= 0) break;
         var ag = eligible[i];
-        if (pool.indexOf(ag) === -1) continue;       // already taken this hour
+        if (pool.indexOf(ag) === -1) continue;
         pool.splice(pool.indexOf(ag), 1);
         agHour[ag.id][h]=t.name;
         var eff = effectiveMinForHour(ag,hS,hE);
@@ -2176,7 +2286,7 @@ function computeIntradaySchedule(ds) {
     // ── PASS 3: anyone still free → filler if they have the pill, else empty ─
     pool.forEach(function(ag){
       if (filler && canDo(ag, filler)) agHour[ag.id][h]=filler.name;
-      else agHour[ag.id][h]='';  // nothing compatible left to do
+      else agHour[ag.id][h]='';
     });
   }
 
@@ -2194,7 +2304,7 @@ function computeIntradaySchedule(ds) {
     // Task overrides: replace computed task for specific hours
     if (agOv.tasks) Object.keys(agOv.tasks).forEach(function(hStr) {
       var hh = parseInt(hStr);
-      if (agHour[a.id] && hh >= hours.open && hh < hours.close) {
+      if (agHour[a.id] && hh >= presenceOpen && hh < presenceClose) {
         agHour[a.id][hh] = agOv.tasks[hStr];
       }
     });
@@ -2214,37 +2324,37 @@ function computeIntradaySchedule(ds) {
 
   function buildBlocks(aid) {
     var brks=agBrk[aid]||[], evts=[];
-    var personalClose = agentCloseMin[aid] || (hours.close * 60);
-    for (var h=hours.open; h<hours.close; h++) {
+    var startMin = (agentStartMin[aid] != null) ? agentStartMin[aid] : (hours.open*60);
+    var endMin   = (agentEndMin[aid]   != null) ? agentEndMin[aid]   : (hours.close*60);
+    for (var h=presenceOpen; h<presenceClose; h++) {
       var hS=h*60, hE=(h+1)*60;
-      if (hS >= personalClose) break; // agent has finished for the day
-      hE = Math.min(hE, personalClose); // clip last hour to personal end time
+      // Clip this hour to the agent's presence window
+      var cS = Math.max(hS, startMin), cE = Math.min(hE, endMin);
+      if (cS >= cE) continue; // agent not present this hour
       var task=agHour[aid]?agHour[aid][h]:null;
 
-      // Push break events that fall within this hour
+      // Push break events that fall within the present part of this hour
       brks.forEach(function(br){
-        var s=Math.max(br.startMin,hS), e=Math.min(br.endMin,hE);
+        var s=Math.max(br.startMin,cS), e=Math.min(br.endMin,cE);
         if(s<e) evts.push({start:s,end:e,task:'__break__',label:br.name,isLunch:br.isLunch});
       });
 
       if (task) {
-        // Find all breaks overlapping this hour, sorted by startMin
         var brsInHour = brks.filter(function(br){
-          return br.startMin<hE && br.endMin>hS;
+          return br.startMin<cE && br.endMin>cS;
         }).sort(function(a,b){return a.startMin-b.startMin;});
 
         if (!brsInHour.length) {
-          evts.push({start:hS, end:hE, task:task, label:task});
+          evts.push({start:cS, end:cE, task:task, label:task});
         } else {
-          // Fill task into the gaps between breaks within this hour
-          var cursor = hS;
+          var cursor = cS;
           brsInHour.forEach(function(br){
-            var bS = Math.max(br.startMin, hS);
-            var bE = Math.min(br.endMin, hE);
+            var bS = Math.max(br.startMin, cS);
+            var bE = Math.min(br.endMin, cE);
             if (cursor < bS) evts.push({start:cursor, end:bS, task:task, label:task});
             cursor = bE;
           });
-          if (cursor < hE) evts.push({start:cursor, end:hE, task:task, label:task});
+          if (cursor < cE) evts.push({start:cursor, end:cE, task:task, label:task});
         }
       }
     }
@@ -2297,8 +2407,10 @@ function renderIntraday(ds) {
 
   var hours    = getDayHoursForDate(target);
   var schedule = computeIntradaySchedule(target);
-  var nH = hours.close - hours.open;
-  var AGENT_W = 150, HOUR_W = Math.max(68, Math.floor(1100/nH));
+  var gridOpen  = hours.open - 1;          // extended grid: 1h before opening
+  var gridClose = hours.close + 1;         // extended grid: 1h after closing
+  var nH = gridClose - gridOpen;
+  var AGENT_W = 150, HOUR_W = Math.max(60, Math.floor(1100/nH));
   var cols = AGENT_W+'px ' + Array(nH).fill(HOUR_W+'px').join(' ');
 
   // Production alert banner — only shown when workload > workforce on some task.
@@ -2327,9 +2439,11 @@ function renderIntraday(ds) {
 
   // Header
   var header = '<div class="intraday-agent-cell" style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Agent</div>';
-  for (var h=hours.open; h<hours.close; h++) {
+  for (var h=gridOpen; h<gridClose; h++) {
     var nextH = h + 1;
-    header += '<div class="intraday-hour-header">' +
+    var outOpen = (h < hours.open || h >= hours.close);
+    var hdrStyle = outOpen ? ' style="background:#f1f5f9;color:#94a3b8;"' : '';
+    header += '<div class="intraday-hour-header"'+hdrStyle+'>' +
       String(h).padStart(2,'0') + '\u2013' + String(nextH).padStart(2,'0') + 'h</div>';
   }
 
@@ -2342,11 +2456,11 @@ function renderIntraday(ds) {
       var lbl = entry.isAbsent ? '\uD83C\uDFE5 Absent'
               : entry.isPartTimeRest ? '\uD83D\uDD51 Part-time rest'
               : entry.isClosed ? '\uD83D\uDD12 Closed' : '\uD83D\uDCC5 Rest';
-      for (var hh=hours.open; hh<hours.close; hh++)
-        rows += '<div class="intraday-rest-cell">'+(hh===hours.open?lbl:'')+'</div>';
+      for (var hh=gridOpen; hh<gridClose; hh++)
+        rows += '<div class="intraday-rest-cell">'+(hh===gridOpen?lbl:'')+'</div>';
       return;
     }
-    for (var h=hours.open; h<hours.close; h++) {
+    for (var h=gridOpen; h<gridClose; h++) {
       var hS=h*60, hE=(h+1)*60;
       var ov = entry.blocks.filter(function(b){return b.start<hE&&b.end>hS;});
 
