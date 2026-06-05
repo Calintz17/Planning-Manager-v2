@@ -173,6 +173,23 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 600; min-width: 280px; max-width: 340px;
     }
     .rop-title { font-size: 13px; font-weight: bold; color: #1a1a2e; margin-bottom: 4px; }
+    /* ── Shift pill (Weekly cell) + switch popover ── */
+    .shift-pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#374151;
+      background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:3px 10px; cursor:pointer;
+      transition: border-color .15s, box-shadow .15s; white-space:nowrap; }
+    .shift-pill:hover { border-color:#1a1a2e; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+    .shift-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    #shift-popup {
+      display:none; position:fixed; background:white;
+      border:1px solid #e5e7eb; border-radius:14px; padding:18px 20px;
+      box-shadow:0 12px 32px rgba(0,0,0,0.16); z-index:600; min-width:240px;
+    }
+    .sft-title { font-size:14px; font-weight:700; color:#1a1a2e; margin-bottom:2px; }
+    .sft-subtitle { font-size:11px; color:#9ca3af; margin-bottom:16px; }
+    .sft-row { display:flex; align-items:center; justify-content:center; gap:14px; }
+    .sft-side { font-size:12px; font-weight:600; color:#9ca3af; transition:color .15s; }
+    .sft-side.active { color:#1a1a2e; }
+    .sft-hours { text-align:center; font-size:12px; color:#6b7280; margin-top:14px; font-weight:600; }
     .rop-subtitle { font-size: 11px; color: #6b7280; margin-bottom: 14px; }
     .rop-day { display: flex; align-items: center; justify-content: space-between;
       padding: 7px 10px; border-radius: 6px; margin-bottom: 5px;
@@ -267,6 +284,19 @@
   <div class="rop-subtitle" id="rop-subtitle"></div>
   <div id="rop-days"></div>
   <button class="rop-cancel" onclick="closeRestOverride()">Cancel</button>
+</div>
+
+<!-- SHIFT SWITCH POPUP -->
+<div id="shift-popup">
+  <div class="sft-title">Switch shift</div>
+  <div class="sft-subtitle" id="sft-subtitle"></div>
+  <div class="sft-row">
+    <span class="sft-side" id="sft-morning-label">Morning</span>
+    <label class="toggle"><input type="checkbox" id="sft-toggle">
+      <span class="toggle-slider"></span></label>
+    <span class="sft-side" id="sft-afternoon-label">Afternoon</span>
+  </div>
+  <div class="sft-hours" id="sft-hours"></div>
 </div>
 
 <!-- HEADER -->
@@ -1623,6 +1653,8 @@ async function loadScheduleOverrides() {
       scheduleOverrides[row.date][row.agent_id] = { tasks:{}, breaks:{} };
     if (row.override_type === 'task')
       scheduleOverrides[row.date][row.agent_id].tasks[parseInt(row.slot_key)] = row.value;
+    else if (row.override_type === 'shift')
+      scheduleOverrides[row.date][row.agent_id].shift = row.value; // 'morning' | 'afternoon'
     else if (row.override_type === 'break') {
       // slot_key format: "BreakName_startMin"
       var parts = row.slot_key.split('_');
@@ -1777,6 +1809,13 @@ function renderWeeklyPlanning() {
     summary[ds] = { working: working, need: need, closure: closure };
   });
 
+  // Precompute each day's shift assignment (shared source of truth)
+  var weekShifts = {};
+  days.forEach(function(day) {
+    var ds = toDateStr(day);
+    if (!getDayClosureType(ds)) weekShifts[ds] = computeAgentShifts(ds);
+  });
+
   // Table headers
   let html = '<table><tr><th style="text-align:left">Agent</th>';
   days.forEach(function(day, i) {
@@ -1840,24 +1879,28 @@ function renderWeeklyPlanning() {
       else if (status === 'absent')
         badge = '<span class="shift-badge shift-absent">\uD83C\uDFE5 Absent</span>';
       else {
-        // Working day — show actual shift hours (HH:MM–HH:MM)
+        // Working day — show the agent's ACTUAL shift hours (Morning/Afternoon)
         var hoursInfo = getDayHoursForDate(ds);
-        var shiftLabel = String(hoursInfo.open).padStart(2,'0')+':00\u2013'+String(hoursInfo.close).padStart(2,'0')+':00';
+        var si = (weekShifts[ds] || {})[a.id];
+        var shiftLabel, shiftName;
+        if (si) {
+          shiftLabel = formatMinutes(si.startMin) + '-' + formatMinutes(si.endMin);
+          shiftName  = si.shift;
+        } else {
+          shiftLabel = String(hoursInfo.open).padStart(2,'0')+':00-'+String(hoursInfo.close).padStart(2,'0')+':00';
+          shiftName  = 'morning';
+        }
         if (ptSchedule && ptSchedule.partialDay && ptSchedule.partialDay.ds === ds) {
           var pd = ptSchedule.partialDay;
-          shiftLabel = String(hoursInfo.open).padStart(2,'0')+':00\u2013'+formatMinutes(pd.closeMin);
+          shiftLabel = formatMinutes(si ? si.startMin : hoursInfo.open*60) + '-' + formatMinutes(pd.closeMin);
         }
-        badge = '<span class="shift-partial">'+shiftLabel+'</span>';
+        var dot = shiftName === 'afternoon' ? '#ea580c' : '#2563eb';
+        badge = '<span class="shift-pill" onclick="showShiftPicker(\''+a.id+'\',\''+ds+'\',\''+shiftName+'\',event)" title="Click to switch shift">' +
+          '<span class="shift-dot" style="background:'+dot+';"></span>' + shiftLabel + '</span>';
       }
 
-      var isWorking = !closure && status !== 'rest_scheduled' && status !== 'rest_override' && status !== 'rest_parttime';
-      var isAbsent  = status === 'absent';
-      var chk = isWorking
-        ? '<input type="checkbox"' + (!isAbsent?' checked':'') +
-          ' onchange="toggleAbsent(\''+a.id+'\',\''+ds+'\',!this.checked)" style="cursor:pointer;">'
-        : '';
-
-      html += '<td style="' + cellBg + '"><div class="planning-cell">' + badge + chk + '</div></td>';
+      var html_cell = '<td style="' + cellBg + '"><div class="planning-cell">' + badge + '</div></td>';
+      html += html_cell;
     });
     html += '</tr>';
   });
@@ -1965,6 +2008,88 @@ function closeRestOverride() {
   document.removeEventListener('click', closeRestOverrideOnOutside);
 }
 
+// ── SHIFT SWITCH POPOVER ──────────────────────────────────────────────────
+var shiftPickerState = { agentId: null, ds: null };
+
+function showShiftPicker(agentId, ds, currentShift, event) {
+  event.stopPropagation();
+  shiftPickerState = { agentId: agentId, ds: ds };
+
+  var agent = agents.find(function(a){return a.id===agentId;});
+  var dateLabel = formatDateDisplay(ds);
+  document.getElementById('sft-subtitle').textContent =
+    (agent ? agent.first_name + ' ' + agent.last_name : '') + ' \u00b7 ' + dateLabel;
+
+  var toggle = document.getElementById('sft-toggle');
+  toggle.checked = (currentShift === 'afternoon'); // checked = afternoon
+
+  updateShiftPickerLabels();
+
+  // Wire the toggle (replace handler each open to avoid stacking)
+  toggle.onchange = function() {
+    updateShiftPickerLabels();
+    applyShiftOverride(shiftPickerState.agentId, shiftPickerState.ds,
+      toggle.checked ? 'afternoon' : 'morning');
+  };
+
+  var popup = document.getElementById('shift-popup');
+  popup.style.display = 'block';
+  var x = Math.min(event.clientX + 10, window.innerWidth  - 280);
+  var y = Math.min(event.clientY + 10, window.innerHeight - 200);
+  popup.style.left = Math.max(8, x) + 'px';
+  popup.style.top  = Math.max(8, y) + 'px';
+
+  setTimeout(function(){ document.addEventListener('click', closeShiftOnOutside); }, 0);
+}
+
+function updateShiftPickerLabels() {
+  var toggle = document.getElementById('sft-toggle');
+  var isAfternoon = toggle.checked;
+  document.getElementById('sft-morning-label').classList.toggle('active', !isAfternoon);
+  document.getElementById('sft-afternoon-label').classList.toggle('active', isAfternoon);
+  // Preview hours for the chosen shift
+  var ds = shiftPickerState.ds;
+  if (ds) {
+    var hrs = getDayHoursForDate(ds);
+    var breaks = regulations.breaks || [];
+    var breakMin = breaks.reduce(function(s,b){return s+(b.duration||0);},0);
+    var openDays = getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));});
+    var wd = Math.min(openDays.length, 5);
+    var workH = Math.min(regulations.weekly_hours/Math.max(1,wd), regulations.max_daily_hours||8);
+    var dur = Math.round(workH*60) + breakMin;
+    var startMin, endMin;
+    if (isAfternoon) { endMin = (hrs.close+1)*60; startMin = endMin - dur; }
+    else             { startMin = (hrs.open-1)*60; endMin = startMin + dur; }
+    document.getElementById('sft-hours').textContent = formatMinutes(startMin) + ' - ' + formatMinutes(endMin);
+  }
+}
+
+async function applyShiftOverride(agentId, ds, shift) {
+  // Persist to schedule_overrides (type 'shift'), then recompute everything.
+  var row = { region_id: currentRegionId, agent_id: agentId, date: ds,
+    override_type: 'shift', slot_key: 'shift', value: shift };
+  var { error } = await sb.from('schedule_overrides')
+    .upsert([row], { onConflict: 'agent_id,date,override_type,slot_key' });
+  if (error) { showToast('Failed to switch shift: ' + error.message, 'error'); return; }
+
+  // Update local cache so the UI refreshes immediately
+  if (!scheduleOverrides[ds]) scheduleOverrides[ds] = {};
+  if (!scheduleOverrides[ds][agentId]) scheduleOverrides[ds][agentId] = { tasks:{}, breaks:{} };
+  scheduleOverrides[ds][agentId].shift = shift;
+
+  showToast('Shift updated \u2713');
+  renderPlanning(); // recompute weekly + intraday with the new shift
+}
+
+function closeShiftOnOutside(e) {
+  var popup = document.getElementById('shift-popup');
+  if (popup && !popup.contains(e.target)) closeShiftPopup();
+}
+function closeShiftPopup() {
+  document.getElementById('shift-popup').style.display = 'none';
+  document.removeEventListener('click', closeShiftOnOutside);
+}
+
 function addBreakRow() {
   var tbody = document.querySelector('.breaks-table');
   if (!tbody) return;
@@ -2002,6 +2127,89 @@ async function applyRestOverride(agentId, oldRestDay, newRestDay) {
   availability[agentId][newRestDay] = 'rest_scheduled';
   showToast('Rest day updated \u2713');
   renderPlanning();
+}
+
+// ── SHARED SHIFT ASSIGNMENT ───────────────────────────────────────────────
+// Single source of truth for Morning/Afternoon assignment, used by both the
+// intraday engine and the Weekly view. Returns { agentId: {shift, startMin, endMin} }.
+// Honors manual overrides stored in scheduleOverrides[ds][agentId].shift.
+function computeAgentShifts(ds) {
+  var hours    = getDayHoursForDate(ds);
+  var openDays = getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));});
+  var workingDays = Math.min(openDays.length, 5);
+  var breaks   = regulations.breaks || [];
+  var breakMinTotal = breaks.reduce(function(s,b){return s+(b.duration||0);}, 0);
+  var presenceOpen  = hours.open - 1;
+  var presenceClose = hours.close + 1;
+
+  var working = agents.filter(function(a){
+    if (getDayClosureType(ds)) return false;
+    var s = (availability[a.id] && availability[a.id][ds]) || 'working';
+    return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent' && s !== 'rest_parttime';
+  });
+
+  function presenceMinForAgent(a){
+    var pct = a.work_pct || 100;
+    var workH = (regulations.weekly_hours / Math.max(1, workingDays)) * (pct/100);
+    var capH  = regulations.max_daily_hours || 8;
+    workH = Math.min(workH, capH);
+    return Math.round(workH * 60) + breakMinTotal;
+  }
+  function agentIsHot(a){
+    var tags = agentTags[a.id] || [];
+    return tags.includes('can_call') || tags.includes('can_chat');
+  }
+
+  // Forecast hot volume split (morning vs afternoon) for the auto decision
+  var f = forecasts[ds] || {}; var hourly = f.hourly || {};
+  var midHour = Math.floor((hours.open + hours.close) / 2);
+  var hotMorning = 0, hotAfternoon = 0;
+  for (var h = hours.open; h < hours.close; h++) {
+    var hv = ((hourly['call']||{})[h]||0) + ((hourly['chat']||{})[h]||0);
+    if (h < midHour) hotMorning += hv; else hotAfternoon += hv;
+  }
+  var nWork = working.length;
+  var totalHot = hotMorning + hotAfternoon;
+  var afternoonShare = totalHot > 0 ? (hotAfternoon/totalHot) : 0.4;
+  var nAfternoon = Math.round(nWork * afternoonShare);
+  if (nWork >= 2) nAfternoon = Math.max(1, Math.min(nAfternoon, nWork - 1));
+  else nAfternoon = 0;
+
+  var hotAgents  = working.filter(agentIsHot);
+  var coldAgents = working.filter(function(a){return !agentIsHot(a);});
+
+  var shiftOf = {};
+  working.forEach(function(a){ shiftOf[a.id] = 'morning'; });
+
+  var afternoonPicks = [];
+  if (nAfternoon > 0 && hotAgents.length) afternoonPicks.push(hotAgents[hotAgents.length-1]);
+  var pickOrder = hotAgents.slice(0, Math.max(0, hotAgents.length-1)).concat(coldAgents);
+  for (var pi = 0; pi < pickOrder.length && afternoonPicks.length < nAfternoon; pi++) {
+    if (afternoonPicks.indexOf(pickOrder[pi]) === -1) afternoonPicks.push(pickOrder[pi]);
+  }
+  afternoonPicks.forEach(function(a){ shiftOf[a.id] = 'afternoon'; });
+
+  // Apply manual overrides (manager forced a shift for this agent/day)
+  working.forEach(function(a){
+    var ov = scheduleOverrides[ds] && scheduleOverrides[ds][a.id] && scheduleOverrides[ds][a.id].shift;
+    if (ov === 'morning' || ov === 'afternoon') shiftOf[a.id] = ov;
+  });
+
+  // Build windows
+  var result = {};
+  working.forEach(function(a){
+    var dur = presenceMinForAgent(a);
+    var startMin, endMin;
+    if (shiftOf[a.id] === 'afternoon') {
+      endMin   = presenceClose * 60;
+      startMin = endMin - dur;
+    } else {
+      startMin = presenceOpen * 60;
+      endMin   = startMin + dur;
+    }
+    result[a.id] = { shift: shiftOf[a.id], startMin: startMin, endMin: endMin };
+  });
+  return result;
 }
 
 // ── INTRADAY ENGINE ───────────────────────────────────────────────────────
@@ -2045,81 +2253,19 @@ function computeIntradaySchedule(ds) {
   });
 
   // ── SHIFTS: extended presence grid (1h before opening, 1h after closing) ──
-  // Agent presence is decoupled from CSC opening hours. The grid spans
-  // (open-1) .. (close+1). The extra hours host COLD tasks only (CSC is closed,
-  // no Call/Chat). Each agent works either a Morning shift (starts at extended
-  // opening) or an Afternoon shift (ends at extended closing), never a mid-day gap.
-  var presenceOpen  = hours.open - 1;            // extended grid start (hour)
-  var presenceClose = hours.close + 1;           // extended grid end (hour)
-
-  // Per-agent presence DURATION in minutes = contractual work + breaks.
-  // Work portion = weekly_hours / workingDays, capped at max_daily_hours.
-  var breakMinTotal = (breaks || []).reduce(function(s,b){return s+(b.duration||0);}, 0);
-  function presenceMinForAgent(a){
-    var pct = a.work_pct || 100;
-    var workH = (regulations.weekly_hours / Math.max(1, workingDays)) * (pct/100);
-    var capH  = regulations.max_daily_hours || 8;
-    workH = Math.min(workH, capH);
-    return Math.round(workH * 60) + breakMinTotal; // presence = work + breaks
-  }
-
-  // Hot-flow tasks (Call/Chat) drive the morning/afternoon split.
+  // Uses the shared shift assignment (honors manual overrides). The extra hours
+  // host COLD tasks only (CSC closed, no Call/Chat).
+  var presenceOpen  = hours.open - 1;
+  var presenceClose = hours.close + 1;
   function isHotTask(name){ return name === 'CALL' || name === 'CHAT'; }
-  function agentIsHot(a){
-    var tags = agentTags[a.id] || [];
-    return tags.includes('can_call') || tags.includes('can_chat');
-  }
 
-  // Split the day at its midpoint (in open hours) to weigh morning vs afternoon hot volume.
-  var midHour = Math.floor((hours.open + hours.close) / 2);
-  var hotMorning = 0, hotAfternoon = 0;
-  for (var hh2 = hours.open; hh2 < hours.close; hh2++) {
-    var hotVol = ((demand[hh2]||{})['CALL']||0) + ((demand[hh2]||{})['CHAT']||0);
-    if (hh2 < midHour) hotMorning += hotVol; else hotAfternoon += hotVol;
-  }
-
-  // Decide how many agents go Afternoon (the rest go Morning), proportional to
-  // afternoon hot share, but always leave the majority where the load is.
-  var nWork = working.length;
-  var totalHot = hotMorning + hotAfternoon;
-  var afternoonShare = totalHot > 0 ? (hotAfternoon / totalHot) : 0.4;
-  var nAfternoon = Math.round(nWork * afternoonShare);
-  // Guarantee at least 1 morning and at least 1 afternoon when we have >=2 agents
-  if (nWork >= 2) { nAfternoon = Math.max(1, Math.min(nAfternoon, nWork - 1)); }
-  else            { nAfternoon = 0; } // single agent: Morning only
-
-  // Sort agents so HOT agents are spread to both shifts (guarantee hot coverage).
-  // We assign Afternoon to: first the required hot agents, then fill by equity order.
-  var hotAgents  = working.filter(agentIsHot);
-  var coldAgents = working.filter(function(a){return !agentIsHot(a);});
-
-  var shiftOf = {}; // agent.id -> 'morning' | 'afternoon'
-  working.forEach(function(a){ shiftOf[a.id] = 'morning'; }); // default morning
-
-  // Assign afternoon slots: prioritise putting at least 1 HOT agent on afternoon
-  var afternoonPicks = [];
-  if (nAfternoon > 0 && hotAgents.length) {
-    afternoonPicks.push(hotAgents[hotAgents.length - 1]); // one hot agent to close
-  }
-  // Fill remaining afternoon slots from the rest (hot first to keep coverage robust)
-  var pickOrder = hotAgents.slice(0, Math.max(0, hotAgents.length - 1)).concat(coldAgents);
-  for (var pi = 0; pi < pickOrder.length && afternoonPicks.length < nAfternoon; pi++) {
-    if (afternoonPicks.indexOf(pickOrder[pi]) === -1) afternoonPicks.push(pickOrder[pi]);
-  }
-  afternoonPicks.forEach(function(a){ shiftOf[a.id] = 'afternoon'; });
-
-  // Per-agent presence window [startMin, endMin] from shift + duration.
+  var shiftInfo = computeAgentShifts(ds); // {agentId: {shift,startMin,endMin}}
   var agentStartMin = {}, agentEndMin = {};
   working.forEach(function(a){
-    var dur = presenceMinForAgent(a);
-    if (shiftOf[a.id] === 'afternoon') {
-      agentEndMin[a.id]   = presenceClose * 60;
-      agentStartMin[a.id] = agentEndMin[a.id] - dur;
-    } else {
-      agentStartMin[a.id] = presenceOpen * 60;
-      agentEndMin[a.id]   = agentStartMin[a.id] + dur;
-    }
-    // Respect part-time early close if it applies and is more restrictive
+    var si = shiftInfo[a.id];
+    if (si) { agentStartMin[a.id] = si.startMin; agentEndMin[a.id] = si.endMin; }
+    else    { agentStartMin[a.id] = hours.open*60; agentEndMin[a.id] = hours.close*60; }
+    // Respect part-time early close if more restrictive
     if (agentCloseMin[a.id] && agentCloseMin[a.id] < agentEndMin[a.id]) {
       agentEndMin[a.id] = agentCloseMin[a.id];
     }
