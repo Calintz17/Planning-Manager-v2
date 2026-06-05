@@ -2029,6 +2029,9 @@ function computeIntradaySchedule(ds) {
     }, 60);
   }
 
+// Track unmet workload per task across the whole day (for the coverage alert)
+  var coverageGaps = [];
+
   for (var h = hours.open; h < hours.close; h++) {
     var hS=h*60, hE=(h+1)*60;
 
@@ -2041,21 +2044,23 @@ function computeIntradaySchedule(ds) {
     });
 
     var pool = allSorted.slice();
+
+    // ── PASS 1: assign each task by priority, respecting pills ──────────────
+    // remaining[taskName] = work minutes still unmet after this pass
+    var remaining = {};
     primary.forEach(function(t){
       var vol=(demand[h]||{})[t.name]||0;
       if (t.morning_only && h >= 12) vol = 0;
+      remaining[t.name] = vol * t.aht_minutes; // total work minutes needed this hour
       if(!vol||!pool.length) return;
 
-      // Filter to eligible agents (tag-restricted tasks)
+      // Eligible = agents who CAN do this task (pill required for all tasks now)
       var eligible = t.required_tag
         ? pool.filter(function(ag){ return (agentTags[ag.id]||[]).includes(t.required_tag); })
         : pool.slice();
+      if (!eligible.length) return; // nobody qualified — leave gap, never force
 
-      // If tagged task but no tagged agents available, skip (don't fall back — 
-      // unqualified agents should not handle fraud/BO they're not certified for)
-      if (!eligible.length) return;
-
-      var workMinNeeded = vol * t.aht_minutes;
+      var workMinNeeded = remaining[t.name];
       var totalEff = eligible.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
       var avgEff = totalEff / eligible.length;
       var need = Math.min(Math.ceil(workMinNeeded / Math.max(1, avgEff)), eligible.length);
@@ -2063,10 +2068,47 @@ function computeIntradaySchedule(ds) {
         var ag=eligible[i];
         pool.splice(pool.indexOf(ag), 1);
         agHour[ag.id][h]=t.name;
+        remaining[t.name] -= effectiveMinForHour(ag,hS,hE); // subtract what this agent covers
         if(t.priority<=2) equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
       }
     });
-    pool.forEach(function(ag){agHour[ag.id][h]=filler?filler.name:'CLIENTELING'});
+
+    // ── PASS 2: catch-up — put still-free agents back on the highest-priority
+    // task that (a) still has unmet workload and (b) they are allowed to do.
+    // This keeps BO agents on BO when BO is behind, instead of going to filler.
+    pool.slice().forEach(function(ag){
+      var pick = null;
+      for (var p=0; p<primary.length; p++) {
+        var t = primary[p];
+        if ((remaining[t.name]||0) <= 0) continue;            // task already covered
+        if (t.morning_only && h >= 12) continue;              // morning-only past noon
+        if (t.required_tag && !(agentTags[ag.id]||[]).includes(t.required_tag)) continue; // not allowed
+        pick = t; break;                                      // first = highest priority
+      }
+      if (pick) {
+        pool.splice(pool.indexOf(ag), 1);
+        agHour[ag.id][h]=pick.name;
+        remaining[pick.name] -= effectiveMinForHour(ag,hS,hE);
+        if(pick.priority<=2) equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
+      }
+    });
+
+    // ── PASS 3: anyone still free → filler if they have the pill, else empty
+    pool.forEach(function(ag){
+      if (filler && (agentTags[ag.id]||[]).includes(filler.required_tag)) {
+        agHour[ag.id][h]=filler.name;
+      } else {
+        agHour[ag.id][h]=''; // truly nothing to do and no filler skill → empty cell
+      }
+    });
+
+    // ── Record any task left with unmet workload this hour (coverage alert) ─
+    primary.forEach(function(t){
+      if ((remaining[t.name]||0) > 0) {
+        var volLeft = (demand[h]||{})[t.name]||0;
+        if (volLeft > 0) coverageGaps.push({ hour:h, task:t.name });
+      }
+    });
   }
 
   // ── Apply stored overrides on top of computed schedule ───────────────────
