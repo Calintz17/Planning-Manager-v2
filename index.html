@@ -1569,8 +1569,10 @@ async function loadWeekData() {
   renderPlanning();
   renderAgents();
   renderForecast();
-  // Volume anomaly check (async, refreshes the recap banner when ready)
-  computeWeekAnomaly().then(function(){ if (currentPlanningView === 'recap') renderForecast(); });
+  // Volume anomaly + last-week coverage (async, refresh recap when ready)
+  Promise.all([computeWeekAnomaly(), computeLastWeekCoverage()]).then(function(){
+    if (currentPlanningView === 'recap') renderForecast();
+  });
 }
 
 // ── REGULATION HELPER ─────────────────────────────────────────────────────
@@ -3651,6 +3653,8 @@ function rawToWorkloadMin(dayMap) {
   return total;
 }
 
+var lastWeekCoverage = null; // coverage % of previous week, for "vs LW"
+
 async function computeWeekAnomaly() {
   anomalyState = null;
   if (!currentRegionId) return;
@@ -3691,20 +3695,55 @@ async function computeWeekAnomaly() {
     grp.forEach(function(dsv){ if (byDate[dsv]) { wt += rawToWorkloadMin(byDate[dsv]); hasData = true; } });
     if (hasData) weekTotals.push(wt);
   });
-  if (weekTotals.length < 3) return; // not enough history to be meaningful
+  if (weekTotals.length < 3) { anomalyState = null; return; }
 
   var baseline = weekTotals.reduce(function(s,v){return s+v;},0) / weekTotals.length;
-  if (baseline <= 0) return;
+  if (baseline <= 0) { anomalyState = null; return; }
 
   var current = weekWorkloadFromForecast();
   var pct = Math.round(((current - baseline) / baseline) * 100);
-  if (pct >= 30)      anomalyState = { pct: pct, direction: 'high', current: current, baseline: baseline };
-  else if (pct <= -30) anomalyState = { pct: pct, direction: 'low',  current: current, baseline: baseline };
+  // Always store the trend; the card decides how to display severity.
+  var direction = pct >= 30 ? 'high' : pct <= -30 ? 'low' : 'normal';
+  anomalyState = { pct: pct, direction: direction, current: current, baseline: baseline };
+}
+
+// Compute previous week's coverage % (capacity vs need) for the "vs LW" delta.
+async function computeLastWeekCoverage() {
+  lastWeekCoverage = null;
+  if (!currentRegionId) return;
+  var lwMonday = new Date(currentWeekMonday); lwMonday.setDate(lwMonday.getDate() - 7);
+  var lwDays = getWeekDays(lwMonday);
+
+  // Load last week's equivalent-year history
+  var histDates = lwDays.map(function(d){ return getEquivalentLastYearDate(toDateStr(d)); });
+  var saved = historicalVolume;            // preserve current week's history
+  historicalVolume = {};
+  await loadHistoricalVolume(histDates);
+  var lwForecast = buildAutoForecast(lwDays);
+  historicalVolume = saved;                // restore
+
+  var totalNeed = 0, totalWorking = 0;
+  lwDays.forEach(function(day){
+    var ds = toDateStr(day);
+    if (getDayClosureType(ds)) return;
+    var f = lwForecast[ds];
+    var wl = (f && f.contact_volume) ? f.contact_volume : 0;
+    var need = wl > 0 ? Math.ceil((wl/60)/regulations.max_daily_hours) : 0;
+    var working = 0;
+    agents.forEach(function(a){
+      if (agentOnLeave(a.id, ds)) return;
+      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
+      if (s === 'working') working++;
+    });
+    totalNeed += need; totalWorking += working;
+  });
+  lastWeekCoverage = totalNeed > 0 ? Math.round((totalWorking/totalNeed)*100) : 100;
 }
 
 function anomalyBannerHtml() {
   if (!anomalyState) return '';
   var a = anomalyState;
+  if (a.direction === 'normal') return '';
   var isHigh = a.direction === 'high';
   var bg = isHigh ? '#fff7ed' : '#eff6ff';
   var bd = isHigh ? '#fdba74' : '#93c5fd';
@@ -3721,11 +3760,9 @@ function anomalyBannerHtml() {
 // ── RECAP DASHBOARD SUMMARY (coverage, busiest day, absences) ─────────────
 function buildRecapSummary() {
   var days = getWeekDays(currentWeekMonday);
-  var DAY_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   var totalNeed = 0, totalWorking = 0;
-  var busiest = null, busiestWl = -1;
 
-  days.forEach(function(day, i){
+  days.forEach(function(day){
     var ds = toDateStr(day);
     if (getDayClosureType(ds)) return;
     var f = forecasts[ds];
@@ -3737,62 +3774,91 @@ function buildRecapSummary() {
       var s = (availability[a.id] && availability[a.id][ds]) || 'working';
       if (s === 'working') working++;
     });
-    totalNeed += need;
-    totalWorking += working;
-    if (wl > busiestWl) { busiestWl = wl; busiest = { name: DAY_FULL[i], wl: wl, need: need, working: working }; }
+    totalNeed += need; totalWorking += working;
   });
-
-  // Coverage = capacity vs need across the week (capped display at 999%)
   var coverage = totalNeed > 0 ? Math.round((totalWorking / totalNeed) * 100) : 100;
 
-  // Absent agents this week (any leave overlapping the week)
+  // Absences this week, with dates + motive
   var weekStart = toDateStr(days[0]), weekEnd = toDateStr(days[6]);
-  var absentMap = {};
+  var MOTIVE = { leave:['\uD83C\uDFDD\uFE0F','Leave'], sick:['\uD83D\uDE91','Sick'], absence:['\u26D4','Absence'] };
+  var absences = [];
   agentLeaves.forEach(function(lv){
     if (lv.end_date >= weekStart && lv.start_date <= weekEnd) {
-      if (!absentMap[lv.agent_id]) absentMap[lv.agent_id] = lv.type;
+      var a = agents.find(function(x){return x.id===lv.agent_id;});
+      if (!a) return;
+      var mo = MOTIVE[lv.type] || MOTIVE.absence;
+      // Show the overlap with this week, in European format
+      var s = lv.start_date < weekStart ? weekStart : lv.start_date;
+      var e = lv.end_date   > weekEnd   ? weekEnd   : lv.end_date;
+      absences.push({
+        name: a.first_name + ' ' + (a.last_name||'').charAt(0) + '.',
+        icon: mo[0], motive: mo[1],
+        range: shortDate(s) + (s!==e ? '\u2013' + shortDate(e) : '')
+      });
     }
   });
-  var absentList = Object.keys(absentMap).map(function(aid){
-    var a = agents.find(function(x){return x.id===aid;});
-    if (!a) return null;
-    var icon = absentMap[aid]==='leave'?'\uD83C\uDFDD\uFE0F':absentMap[aid]==='sick'?'\uD83D\uDE91':'\u26D4';
-    return icon + ' ' + a.first_name + ' ' + (a.last_name||'').charAt(0) + '.';
-  }).filter(Boolean);
 
-  return { coverage: coverage, busiest: busiest, absentList: absentList };
+  return { coverage: coverage, absences: absences };
+}
+
+function shortDate(ds){
+  var d = new Date(ds + 'T12:00:00');
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
 }
 
 function recapSummaryHtml() {
   var s = buildRecapSummary();
   var covColor = s.coverage >= 100 ? '#166534' : s.coverage >= 85 ? '#9a3412' : '#b91c1c';
-  var covBg    = s.coverage >= 100 ? '#f0fdf4' : s.coverage >= 85 ? '#fff7ed' : '#fff1f2';
 
   var card = function(label, valueHtml, sub){
-    return '<div style="flex:1;min-width:150px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;'+
+    return '<div style="flex:1;min-width:160px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;'+
       'padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'+
       '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">'+label+'</div>'+
       valueHtml + (sub?'<div style="font-size:11px;color:#9ca3af;margin-top:3px;">'+sub+'</div>':'') + '</div>';
   };
 
+  // Coverage card with "vs LW"
+  var vsLw = '';
+  if (lastWeekCoverage != null) {
+    var delta = s.coverage - lastWeekCoverage;
+    var dColor = delta > 0 ? '#166534' : delta < 0 ? '#b91c1c' : '#9ca3af';
+    var dSign = delta > 0 ? '+' : '';
+    vsLw = '<span style="font-size:12px;font-weight:600;color:'+dColor+';margin-left:8px;">'+dSign+delta+' pts vs LW</span>';
+  }
   var covCard = card('Week coverage',
-    '<div style="font-size:22px;font-weight:700;color:'+covColor+';">'+s.coverage+'%</div>',
+    '<div style="display:flex;align-items:baseline;"><span style="font-size:22px;font-weight:700;color:'+covColor+';">'+s.coverage+'%</span>'+vsLw+'</div>',
     'capacity vs need');
 
-  var busyCard = s.busiest
-    ? card('Busiest day',
-        '<div style="font-size:17px;font-weight:700;color:#1a1a2e;">'+s.busiest.name+'</div>',
-        Math.round(s.busiest.wl/60) + 'h workload \u00b7 need ' + s.busiest.need)
-    : card('Busiest day', '<div style="font-size:15px;color:#9ca3af;">\u2014</div>', '');
+  // Trend card (replaces Busiest day) — always shows the week vs 8-week trend
+  var trendCard;
+  if (anomalyState) {
+    var p = anomalyState.pct;
+    var sign = p > 0 ? '+' : '';
+    var tColor = p >= 30 ? '#9a3412' : p <= -30 ? '#1e40af' : '#374151';
+    var icon = p >= 30 ? '\uD83D\uDCC8' : p <= -30 ? '\uD83D\uDCC9' : '\u2796';
+    var note = (p >= 30) ? 'Heavier week - watch staffing'
+             : (p <= -30) ? 'Lighter week than usual'
+             : 'In line with the seasonal norm';
+    trendCard = card('Week vs trend',
+      '<div style="font-size:22px;font-weight:700;color:'+tColor+';">'+icon+' '+sign+p+'%</div>', note);
+  } else {
+    trendCard = card('Week vs trend', '<div style="font-size:15px;color:#9ca3af;">\u2014</div>', 'not enough history');
+  }
 
-  var absCard = s.absentList.length
-    ? card('Absences this week',
-        '<div style="font-size:13px;font-weight:600;color:#374151;line-height:1.5;">'+s.absentList.join('<br>')+'</div>', '')
-    : card('Absences this week',
-        '<div style="font-size:15px;font-weight:600;color:#166534;">None</div>', 'full team available');
+  // Absences card with dates + motive
+  var absCard;
+  if (s.absences.length) {
+    var lines = s.absences.map(function(x){
+      return '<div style="font-size:12px;color:#374151;margin-top:2px;">'+x.icon+' '+x.name+
+        ' <span style="color:#9ca3af;">'+x.motive+' \u00b7 '+x.range+'</span></div>';
+    }).join('');
+    absCard = card('Absences this week', '<div>'+lines+'</div>', '');
+  } else {
+    absCard = card('Absences this week', '<div style="font-size:15px;font-weight:600;color:#166534;">None</div>', 'full team available');
+  }
 
   return '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">'+
-    covCard + busyCard + absCard + '</div>';
+    covCard + trendCard + absCard + '</div>';
 }
 
 // ── WEEKLY PRODUCTION ALERT (aggregated across the 7 days) ─────────────────
@@ -3833,7 +3899,7 @@ function renderForecast() {
   const days = getWeekDays(currentWeekMonday);
   const forecastOpenDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
 
-  let html = anomalyBannerHtml() + productionAlertBannerHtml() + recapSummaryHtml() + '<div class="forecast-grid">';
+  let html = recapSummaryHtml() + '<div class="forecast-grid">';
   days.forEach(function(day, i) {
     const ds        = toDateStr(day);
     const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0, hourly: {} };
@@ -3904,10 +3970,20 @@ function renderForecast() {
           '<span class="recap-metric-val">'+working+'</span></div>' +
       '</div>';
 
-    // ── Status pill: only shown when understaffed (orange). No green when OK. ──
-    var ok = working >= need || need === 0;
-    var statusHtml = ok ? '' :
-      '<div class="recap-status short">\u26A0\uFE0F Production alert</div>';
+    // ── Status: per-day production alert (orange) with that day's unmet tasks ──
+    var dayGaps = [];
+    if (!getDayClosureType(ds)) {
+      var sched = computeIntradaySchedule(ds);
+      dayGaps = sched.coverageGaps || [];
+    }
+    var statusHtml = '';
+    if (dayGaps.length) {
+      var gapLines = dayGaps.map(function(n){
+        var friendly = n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
+        return '<div style="font-size:10px;color:#9a3412;">\u2022 '+friendly+'</div>';
+      }).join('');
+      statusHtml = '<div class="recap-status short">\u26A0\uFE0F Production alert'+gapLines+'</div>';
+    }
 
     html += '<div class="' + cls + '">' +
       titleHtml +
