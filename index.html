@@ -2934,7 +2934,7 @@ function exportCurrentView() {
 }
 
 function downloadSheet(opts) {
-  // opts: { rows, colWidths, sheetName, fileName, title, nCols, headerRowIdx }
+  // opts: { rows, colWidths, sheetName, fileName, title, nCols, extraMerges }
   var rows = opts.rows;
   var nCols = opts.nCols;
 
@@ -2942,22 +2942,31 @@ function downloadSheet(opts) {
   var titleRow = [ xc(opts.title, { bg: '1a1a2e', color: 'FFFFFF', bold: true, sz: 13, align: 'left' }) ];
   for (var c = 1; c < nCols; c++) titleRow.push(xc('', { bg: '1a1a2e' }));
   var allRows = [ titleRow, [] ].concat(rows); // title, spacer, then content
+  var ROW_OFFSET = 2; // title + spacer rows added before content
 
   var ws = XLSX.utils.aoa_to_sheet(allRows);
   if (opts.colWidths) ws['!cols'] = opts.colWidths.map(function(w){ return { wch: w }; });
 
-  // Merge the title across all columns
-  ws['!merges'] = [ { s: { r: 0, c: 0 }, e: { r: 0, c: nCols - 1 } } ];
+  // Merges: the title bar + any extra merges from the caller (offset by 2 rows)
+  var merges = [ { s: { r: 0, c: 0 }, e: { r: 0, c: nCols - 1 } } ];
+  (opts.extraMerges || []).forEach(function(m){
+    merges.push({ s: { r: m.r + ROW_OFFSET, c: m.c0 }, e: { r: m.r + ROW_OFFSET, c: m.c1 } });
+  });
+  ws['!merges'] = merges;
 
-  // Row heights: title tall, spacer thin, header tall, data rows comfortable
+  // Row heights
   var rowHeights = [ { hpt: 26 }, { hpt: 6 } ]; // title, spacer
-  rowHeights.push({ hpt: 30 }); // header row (first content row)
+  rowHeights.push({ hpt: 30 }); // header row
   for (var r = 1; r < rows.length; r++) rowHeights.push({ hpt: 22 });
   ws['!rows'] = rowHeights;
 
-  // Freeze: top rows (title+spacer+header = 3) and first column
+  // Freeze first column + top 3 rows (title, spacer, header)
   ws['!freeze'] = { xSplit: 1, ySplit: 3, topLeftCell: 'B4', activePane: 'bottomRight', state: 'frozen' };
   ws['!panes'] = [{ xSplit: 1, ySplit: 3, topLeftCell: 'B4', activePane: 'bottomRight', state: 'frozen' }];
+
+  // A4 landscape, fit to one page wide, ready to print
+  ws['!pageSetup'] = { orientation: 'landscape', paperSize: 9, fitToWidth: 1, fitToHeight: 0, scale: 100 };
+  ws['!margins'] = { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
 
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, opts.sheetName);
@@ -3096,54 +3105,110 @@ function exportIntraday() {
   var gridClose = (schedule.gridClose != null) ? schedule.gridClose : (hours.close + 1);
   var NAVY = '1a1a2e';
 
+  // 15-minute slots across the grid
+  var slotMin = 15;
+  var startM = gridOpen * 60, endM = gridClose * 60;
+  var nSlots = (endM - startM) / slotMin;
+
   var rows = [];
+  var extraMerges = [];
+
+  // Header: show the hour label at each :00 slot, blank otherwise (merged per hour)
   var header = [ xc('Agent', { bg: NAVY, color: 'FFFFFF', bold: true, align: 'left' }) ];
-  for (var h = gridOpen; h < gridClose; h++) {
-    header.push(xc(String(h).padStart(2,'0')+'-'+String(h+1).padStart(2,'0')+'h',
-      { bg: NAVY, color: 'FFFFFF', bold: true, sz: 9 }));
+  for (var s = 0; s < nSlots; s++) {
+    var mins = startM + s * slotMin;
+    var isHourStart = (mins % 60 === 0);
+    var label = isHourStart ? (String(mins/60).padStart(2,'0') + 'h') : '';
+    header.push(xc(label, { bg: NAVY, color: 'FFFFFF', bold: true, sz: 9 }));
   }
   rows.push(header);
+  // Merge each hour's 4 header slots (row index 0 in content = header)
+  for (var hh = 0; hh < (endM-startM)/60; hh++) {
+    var c0 = 1 + hh*4;
+    extraMerges.push({ r: 0, c0: c0, c1: c0 + 3 });
+  }
 
+  // Helper: what is the agent doing in [mS, mE)? returns {task, isBreak} or null
+  function activityAt(blocks, mS, mE) {
+    var task = null, isBreak = false;
+    blocks.forEach(function(b){
+      if (b.start < mE && b.end > mS) {
+        if (b.task === '__break__') isBreak = true;
+        else task = b.task;
+      }
+    });
+    if (task) return { key: task, isBreak: false };
+    if (isBreak) return { key: '__break__', isBreak: true };
+    return null;
+  }
+
+  var rowIdx = 1; // content row 0 is the header; agents start at 1
   schedule.forEach(function(entry){
     var a = entry.agent;
     var row = [ xc(a.first_name + ' ' + a.last_name, { align: 'left', bold: true }) ];
+
     if (entry.isClosed || entry.isRest || entry.isAbsent) {
       var lbl = entry.isAbsent ? 'Absent' : entry.isPartTimeRest ? 'Part-time rest'
               : entry.isClosed ? 'Closed' : 'Rest';
-      for (var hh = gridOpen; hh < gridClose; hh++)
-        row.push(xc(hh === gridOpen ? lbl : '', { bg: 'f9fafb', color: '9ca3af' }));
-      rows.push(row);
+      for (var k = 0; k < nSlots; k++) row.push(xc(k === 0 ? lbl : '', { bg: 'f9fafb', color: '9ca3af' }));
+      extraMerges.push({ r: rowIdx, c0: 1, c1: nSlots }); // merge the whole strip
+      rows.push(row); rowIdx++;
       return;
     }
-    for (var h2 = gridOpen; h2 < gridClose; h2++) {
-      var hS = h2*60, hE = (h2+1)*60;
-      var ov = entry.blocks.filter(function(b){ return b.start<hE && b.end>hS; });
-      var taskName = '', hasBreak = false;
-      ov.forEach(function(b){
-        if (b.task === '__break__') hasBreak = true;
-        else taskName = b.task;
-      });
-      if (taskName) {
-        var t = getTask(taskName);
-        var label = taskName + (hasBreak ? ' / break' : '');
-        row.push(xc(label, { bg: (t.color_bg||'FFFFFF'), color: (t.color_text||'222222'), sz: 9, borderColor: (t.color_text||'E0E0E0') }));
-      } else if (hasBreak) {
-        row.push(xc('Break', { bg: 'fef9c3', color: '854d0e', sz: 9, borderColor: '854d0e' }));
-      } else {
-        row.push(xc('', {}));
-      }
+
+    // Build slot activities, then merge consecutive identical ones
+    var slotKeys = [];
+    for (var sl = 0; sl < nSlots; sl++) {
+      var mS = startM + sl*slotMin, mE = mS + slotMin;
+      slotKeys.push(activityAt(entry.blocks, mS, mE));
     }
-    rows.push(row);
+
+    var sl2 = 0;
+    while (sl2 < nSlots) {
+      var act = slotKeys[sl2];
+      var runEnd = sl2 + 1;
+      while (runEnd < nSlots && sameActivity(slotKeys[runEnd], act)) runEnd++;
+      var span = runEnd - sl2;
+
+      // Cell styling for this activity
+      var cellOpts, text;
+      if (!act) { cellOpts = {}; text = ''; }
+      else if (act.isBreak) { cellOpts = { bg: 'fef9c3', color: '854d0e', sz: 9, borderColor: '854d0e' }; text = 'Break'; }
+      else {
+        var t = getTask(act.key);
+        cellOpts = { bg: (t.color_bg||'FFFFFF'), color: (t.color_text||'222222'), sz: 9, borderColor: (t.color_text||'E0E0E0') };
+        text = act.key;
+      }
+      row.push(xc(text, cellOpts));
+      for (var f = 1; f < span; f++) row.push(xc('', cellOpts)); // filler cells to be merged
+
+      if (span > 1) {
+        var col0 = 1 + sl2;            // +1 for agent column
+        extraMerges.push({ r: rowIdx, c0: col0, c1: col0 + span - 1 });
+      }
+      sl2 = runEnd;
+    }
+    rows.push(row); rowIdx++;
   });
 
+  // Column widths: agent wide, each 15-min slot narrow
   var widths = [22];
-  for (var w = gridOpen; w < gridClose; w++) widths.push(11);
+  for (var w = 0; w < nSlots; w++) widths.push(4);
+
   var dLabel = formatDate(new Date(ds + 'T00:00:00'));
   downloadSheet({
-    rows: rows, colWidths: widths, sheetName: 'Intraday', nCols: (gridClose - gridOpen) + 1,
+    rows: rows, colWidths: widths, sheetName: 'Intraday', nCols: nSlots + 1,
     title: 'Planning Manager  \u00b7  Intraday  \u00b7  ' + dLabel + '  \u00b7  ' + (currentRegionName || ''),
-    fileName: 'Planning_Manager_Intraday_' + excelWeekTag()
+    fileName: 'Planning_Manager_Intraday_' + excelWeekTag(),
+    extraMerges: extraMerges
   });
+}
+
+// Compare two slot activities for the merge logic
+function sameActivity(x, y) {
+  if (!x && !y) return true;
+  if (!x || !y) return false;
+  return x.key === y.key && x.isBreak === y.isBreak;
 }
 
 // ── WEEKLY FORECAST / RECAP RENDER ────────────────────────────────────────
