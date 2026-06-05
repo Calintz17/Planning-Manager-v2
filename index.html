@@ -2047,7 +2047,8 @@ function updateShiftPickerLabels() {
   var isAfternoon = toggle.checked;
   document.getElementById('sft-morning-label').classList.toggle('active', !isAfternoon);
   document.getElementById('sft-afternoon-label').classList.toggle('active', isAfternoon);
-  // Preview hours for the chosen shift
+  // Preview hours for the chosen shift — use the SAME conditional-extension logic
+  // as computeAgentShifts (single source of truth) so Weekly and popover agree.
   var ds = shiftPickerState.ds;
   if (ds) {
     var hrs = getDayHoursForDate(ds);
@@ -2057,9 +2058,16 @@ function updateShiftPickerLabels() {
     var wd = Math.min(openDays.length, 5);
     var workH = Math.min(regulations.weekly_hours/Math.max(1,wd), regulations.max_daily_hours||8);
     var dur = Math.round(workH*60) + breakMin;
+    // Conditional walls: extend only if presence > opening amplitude
+    var openAmpMin = (hrs.close - hrs.open) * 60;
+    var extMin = Math.max(0, dur - openAmpMin);
+    var extBeforeH = Math.ceil((extMin/60)/2);
+    var extAfterH  = Math.ceil((extMin/60)/2);
+    var gridOpen  = hrs.open  - extBeforeH;
+    var gridClose = hrs.close + extAfterH;
     var startMin, endMin;
-    if (isAfternoon) { endMin = (hrs.close+1)*60; startMin = endMin - dur; }
-    else             { startMin = (hrs.open-1)*60; endMin = startMin + dur; }
+    if (isAfternoon) { endMin = gridClose*60; startMin = endMin - dur; }
+    else             { startMin = gridOpen*60; endMin = startMin + dur; }
     document.getElementById('sft-hours').textContent = formatMinutes(startMin) + ' - ' + formatMinutes(endMin);
   }
 }
