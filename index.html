@@ -1817,8 +1817,10 @@ function renderWeeklyPlanning() {
     } else {
       const ok  = s.working >= s.need || s.need === 0;
       const cls = (!ok && s.need > 0) ? 'understaffed' : '';
-      html += '<td class="' + cls + '" style="font-size:11px;">' +
-        'Need: <b>' + s.need + '</b><br>' +
+      const warn = cls ? '\u26A0\uFE0F ' : '';
+      const needStyle = cls ? 'font-weight:bold;color:#b91c1c;' : '';
+      html += '<td class="' + cls + '" style="font-size:11px;' + needStyle + '">' +
+        warn + 'Need: <b>' + s.need + '</b><br>' +
         '\uD83D\uDC65 ' + s.working + ' working' +
         '</td>';
     }
@@ -2029,13 +2031,34 @@ function computeIntradaySchedule(ds) {
     }, 60);
   }
 
-// Track unmet workload per task across the whole day (for the coverage alert)
-  var coverageGaps = [];
+  // ── REALTIME vs STOCK model ───────────────────────────────────────────────
+  // Realtime tasks (CALL, CHAT) must be handled in their own hour — a call at
+  // 10h can't be answered at 15h. Stock tasks (MAIL, BACK-OFFICE, FRAUD,
+  // CLIENTELING) are a pool of work to drain across the day whenever there is
+  // free capacity. FRAUD is stock but pushed to the morning (it has
+  // morning_only + priority 1, so it naturally goes first while mornings last).
+  var REALTIME = { 'CALL':true, 'CHAT':true };
+  function isRealtime(t){ return !!REALTIME[t.name]; }
+
+  // Daily remaining work (in minutes) for each STOCK task = sum of the day's
+  // hourly volume × AHT. Realtime tasks are NOT pre-summed (handled per hour).
+  var stockRemaining = {}; // taskName -> minutes of work still to do today
+  primary.forEach(function(t){
+    if (isRealtime(t)) return;
+    var totalVol = 0;
+    for (var hh = hours.open; hh < hours.close; hh++) {
+      totalVol += (demand[hh]||{})[t.name]||0;
+    }
+    stockRemaining[t.name] = totalVol * t.aht_minutes;
+  });
+
+  // Track unmet workload for the production alert (per task, whole day)
+  var coverageGaps = {}; // taskName -> true if any unmet work remained
 
   for (var h = hours.open; h < hours.close; h++) {
     var hS=h*60, hE=(h+1)*60;
 
-    // ALL working agents — but exclude those past their personal closeMin
+    // ALL working agents this hour — but exclude those past their personal closeMin
     var allSorted = working.filter(function(a){
       var personalClose = agentCloseMin[a.id] || (hours.close * 60);
       return hS < personalClose; // agent still working this hour
@@ -2045,71 +2068,68 @@ function computeIntradaySchedule(ds) {
 
     var pool = allSorted.slice();
 
-    // ── PASS 1: assign each task by priority, respecting pills ──────────────
-    // remaining[taskName] = work minutes still unmet after this pass
-    var remaining = {};
+    // Helper: agent allowed to do a task? (strict pills — never auto-cross)
+    function canDo(ag, t){
+      if (!t.required_tag) return true;
+      return (agentTags[ag.id]||[]).includes(t.required_tag);
+    }
+
+    // ── PASS 1: REALTIME tasks first (this hour's volume must be covered now) ─
     primary.forEach(function(t){
+      if (!isRealtime(t) || !pool.length) return;
       var vol=(demand[h]||{})[t.name]||0;
-      if (t.morning_only && h >= 12) vol = 0;
-      remaining[t.name] = vol * t.aht_minutes; // total work minutes needed this hour
-      if(!vol||!pool.length) return;
-
-      // Eligible = agents who CAN do this task (pill required for all tasks now)
-      var eligible = t.required_tag
-        ? pool.filter(function(ag){ return (agentTags[ag.id]||[]).includes(t.required_tag); })
-        : pool.slice();
-      if (!eligible.length) return; // nobody qualified — leave gap, never force
-
-      var workMinNeeded = remaining[t.name];
+      if (!vol) return;
+      var eligible = pool.filter(function(ag){ return canDo(ag,t); });
+      if (!eligible.length) { coverageGaps[t.name] = true; return; }
+      var workMinNeeded = vol * t.aht_minutes;
       var totalEff = eligible.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
       var avgEff = totalEff / eligible.length;
-      var need = Math.min(Math.ceil(workMinNeeded / Math.max(1, avgEff)), eligible.length);
+      var need = Math.ceil(workMinNeeded / Math.max(1, avgEff));
+      if (need > eligible.length) coverageGaps[t.name] = true; // not enough qualified agents
+      need = Math.min(need, eligible.length);
       for(var i=0;i<need;i++){
         var ag=eligible[i];
         pool.splice(pool.indexOf(ag), 1);
         agHour[ag.id][h]=t.name;
-        remaining[t.name] -= effectiveMinForHour(ag,hS,hE); // subtract what this agent covers
-        if(t.priority<=2) equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
+        equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
       }
     });
 
-    // ── PASS 2: catch-up — put still-free agents back on the highest-priority
-    // task that (a) still has unmet workload and (b) they are allowed to do.
-    // This keeps BO agents on BO when BO is behind, instead of going to filler.
-    pool.slice().forEach(function(ag){
-      var pick = null;
-      for (var p=0; p<primary.length; p++) {
-        var t = primary[p];
-        if ((remaining[t.name]||0) <= 0) continue;            // task already covered
-        if (t.morning_only && h >= 12) continue;              // morning-only past noon
-        if (t.required_tag && !(agentTags[ag.id]||[]).includes(t.required_tag)) continue; // not allowed
-        pick = t; break;                                      // first = highest priority
-      }
-      if (pick) {
-        pool.splice(pool.indexOf(ag), 1);
-        agHour[ag.id][h]=pick.name;
-        remaining[pick.name] -= effectiveMinForHour(ag,hS,hE);
-        if(pick.priority<=2) equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
-      }
-    });
-
-    // ── PASS 3: anyone still free → filler if they have the pill, else empty
-    pool.forEach(function(ag){
-      if (filler && (agentTags[ag.id]||[]).includes(filler.required_tag)) {
-        agHour[ag.id][h]=filler.name;
-      } else {
-        agHour[ag.id][h]=''; // truly nothing to do and no filler skill → empty cell
-      }
-    });
-
-    // ── Record any task left with unmet workload this hour (coverage alert) ─
+    // ── PASS 2: STOCK tasks by priority, draining the daily pool ────────────
+    // Each free agent who can do the highest-priority stock task with work left
+    // gets assigned to it; we subtract their hour of capacity from the stock.
     primary.forEach(function(t){
-      if ((remaining[t.name]||0) > 0) {
-        var volLeft = (demand[h]||{})[t.name]||0;
-        if (volLeft > 0) coverageGaps.push({ hour:h, task:t.name });
+      if (isRealtime(t) || !pool.length) return;
+      if (t.morning_only && h >= 12) return;        // fraud only in the morning
+      if ((stockRemaining[t.name]||0) <= 0) return;  // nothing left for this task
+      var eligible = pool.filter(function(ag){ return canDo(ag,t); });
+      if (!eligible.length) return;                  // gap recorded at end of day
+      // Assign as many eligible agents as the remaining stock needs this hour
+      for (var i=0; i<eligible.length; i++) {
+        if ((stockRemaining[t.name]||0) <= 0) break;
+        var ag = eligible[i];
+        if (pool.indexOf(ag) === -1) continue;       // already taken this hour
+        pool.splice(pool.indexOf(ag), 1);
+        agHour[ag.id][h]=t.name;
+        var eff = effectiveMinForHour(ag,hS,hE);
+        stockRemaining[t.name] -= eff;
+        if (t.priority<=2) equity[ag.id]=(equity[ag.id]||0)+eff;
       }
+    });
+
+    // ── PASS 3: anyone still free → filler if they have the pill, else empty ─
+    pool.forEach(function(ag){
+      if (filler && canDo(ag, filler)) agHour[ag.id][h]=filler.name;
+      else agHour[ag.id][h]='';  // nothing compatible left to do
     });
   }
+
+  // After the day: any stock task with work still remaining = understaffed.
+  // (It carries over to the next day via the forecast; here we just flag it.)
+  primary.forEach(function(t){
+    if (isRealtime(t)) return;
+    if ((stockRemaining[t.name]||0) > 0) coverageGaps[t.name] = true;
+  });
 
   // ── Apply stored overrides on top of computed schedule ───────────────────
   working.forEach(function(a) {
@@ -2183,7 +2203,7 @@ function computeIntradaySchedule(ds) {
     return merged;
   }
 
-  return agents.map(function(a){
+  var result = agents.map(function(a){
     var s=(availability[a.id]&&availability[a.id][ds])||'working';
     var isRest=['rest_scheduled','rest_override','rest_parttime'].includes(s);
     var isPartTimeRest = s === 'rest_parttime';
@@ -2191,6 +2211,9 @@ function computeIntradaySchedule(ds) {
     if(closure||isRest||isAbsent) return {agent:a,blocks:[],isClosed:!!closure,isRest:isRest,isPartTimeRest:isPartTimeRest,isAbsent:isAbsent};
     return {agent:a,blocks:buildBlocks(a.id),isClosed:false,isRest:false,isPartTimeRest:false,isAbsent:false};
   });
+  // Expose the production alert (tasks where workload > workforce today)
+  result.coverageGaps = Object.keys(coverageGaps);
+  return result;
 }
 
 function renderIntraday(ds) {
@@ -2222,18 +2245,26 @@ function renderIntraday(ds) {
   var AGENT_W = 150, HOUR_W = Math.max(68, Math.floor(1100/nH));
   var cols = AGENT_W+'px ' + Array(nH).fill(HOUR_W+'px').join(' ');
 
-  // Legend
-  var legend = '<div class="intraday-legend">';
-  tasksInDisplayOrder().forEach(function(t){
-    var fTag = t.is_filler ? ' <em style="font-weight:normal;font-size:9px;">(filler)</em>' : '';
-    legend += '<span style="background:'+t.color_bg+';color:'+t.color_text+
-      ';border-radius:4px;padding:2px 9px;border:1px solid '+t.color_text+
-      '30;font-weight:600;">'+t.name+fTag+'</span>';
-  });
-  legend += '<span style="background:'+BREAK_COLORS.lunch.bg+';color:'+BREAK_COLORS.lunch.text+
-    ';border-radius:4px;padding:2px 9px;border:1px solid '+BREAK_COLORS.lunch.text+'40;">LUNCH</span> ';
-  legend += '<span style="background:'+BREAK_COLORS.short.bg+';color:'+BREAK_COLORS.short.text+
-    ';border-radius:4px;padding:2px 9px;border:1px solid '+BREAK_COLORS.short.text+'40;">BREAK</span></div>';
+  // Production alert banner — only shown when workload > workforce on some task.
+  // Replaces the old task legend (tasks are named in the grid cells already).
+  var gaps = schedule.coverageGaps || [];
+  var alertBanner = '';
+  if (gaps.length) {
+    var gapNames = gaps.map(function(n){
+      // Display friendly task names (e.g. BACK-OFFICE -> Back Office)
+      return n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
+    }).join(', ');
+    alertBanner =
+      '<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;' +
+      'padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;' +
+      'box-shadow:0 1px 3px rgba(0,0,0,0.1);">' +
+        '<span style="font-size:16px;">\u26A0\uFE0F</span>' +
+        '<span style="font-size:13px;color:#9a3412;font-weight:600;">' +
+          'Production alert: workload &gt; workforce on ' + gapNames + '. ' +
+          'Unmet work carries over to the next day.' +
+        '</span>' +
+      '</div>';
+  }
 
   // Header
   var header = '<div class="intraday-agent-cell" style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Agent</div>';
@@ -2307,24 +2338,7 @@ function renderIntraday(ds) {
     }
   });
 
-  // Staffing need row — full task names with FTE count
-  var dayForecast = forecasts[target] || {};
-  var netMinDay   = dayForecast.netMin || getNetProductiveMinPerDay(
-    getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));}).length
-  );
-  var needRow = '<div class="intraday-agent-cell" style="font-size:10px;color:#6b7280;background:#f1f5f9;font-weight:700;">Need</div>';
-  for (var hn=hours.open; hn<hours.close; hn++) {
-    var needHtml = '<div style="padding:3px 2px;">';
-    tasksInDisplayOrder().filter(function(t){return !t.is_filler;}).forEach(function(t){
-      var vol = ((dayForecast.hourly||{})[t.name.toLowerCase()]||{})[hn]||0;
-      if (!vol) return;
-      var fte = Math.ceil(vol * t.aht_minutes / Math.max(1, netMinDay));
-      needHtml += '<div style="font-size:9px;color:'+t.color_text+';font-weight:600;white-space:nowrap;">'+
-        t.name+': '+vol+' <span style="color:#9ca3af;font-weight:400;">('+fte+' FTE)</span></div>';
-    });
-    needHtml += '</div>';
-    needRow += '<div style="border:1px solid #e5e7eb;background:#f8fafc;min-height:40px;">'+needHtml+'</div>';
-  }
+  // (Need row removed — Intraday is agent-facing; FTE need lives in Forecast/Weekly.)
 
   // Check if this day has any overrides
   var hasOverrides = !!(scheduleOverrides[target] && Object.keys(scheduleOverrides[target]).length);
@@ -2333,9 +2347,9 @@ function renderIntraday(ds) {
     : '';
 
   container.innerHTML =
-    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' + legend +
+    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' + alertBanner +
     '<div id="intraday-container"><div class="intraday-grid" style="grid-template-columns:'+cols+
-    ';grid-auto-rows:auto;">'+header+rows+needRow+'</div></div>';
+    ';grid-auto-rows:auto;">'+header+rows+'</div></div>';
 }
 
 // ── RENDER AGENTS ─────────────────────────────────────────────────────────
