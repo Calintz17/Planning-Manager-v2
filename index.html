@@ -41,7 +41,7 @@
     .planning-cell { display:flex; align-items:center; justify-content:center; gap:6px; }
 
     /* ── SHIFT BADGES ── */
-    .shift-badge     { border-radius: 4px; padding: 3px 8px; display: inline-block; font-size: 12px; font-weight: 600; }
+    .shift-badge     { border-radius: 14px; padding: 3px 10px; display: inline-block; font-size: 12px; font-weight: 600; }
     .shift-rest      { background: #e5e7eb; color: #6b7280; }
     .shift-absent    { background: #fce7f3; color: #9d174d; }
     .shift-holiday   { background: #fef9c3; color: #92400e; }
@@ -227,8 +227,8 @@
     .intraday-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;}
     .filler-tag{font-size:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:10px;padding:1px 7px;margin-left:4px;}
 
-    .shift-parttime { background:#fef9c3; color:#854d0e; border-radius:4px; padding:3px 8px; display:inline-block; font-size:11px; font-weight:600; }
-    .shift-partial  { background:#dbeafe; color:#1e40af; border-radius:4px; padding:3px 8px; display:inline-block; font-size:11px; font-weight:600; }
+    .shift-parttime { background:#fef9c3; color:#854d0e; border-radius:14px; padding:3px 10px; display:inline-block; font-size:11px; font-weight:600; }
+    .shift-partial  { background:#dbeafe; color:#1e40af; border-radius:14px; padding:3px 10px; display:inline-block; font-size:11px; font-weight:600; }
     .pct-badge      { font-size:10px; background:#f3f4f6; color:#6b7280; border-radius:10px; padding:1px 7px; margin-left:6px; }
 
     /* ── SYSTEM ── */
@@ -1894,7 +1894,7 @@ function renderWeeklyPlanning() {
           var pd = ptSchedule.partialDay;
           shiftLabel = formatMinutes(si ? si.startMin : hoursInfo.open*60) + '-' + formatMinutes(pd.closeMin);
         }
-        var dot = shiftName === 'afternoon' ? '#ea580c' : '#2563eb';
+        var dot = shiftName === 'afternoon' ? '#166534' : '#4ade80';
         badge = '<span class="shift-pill" onclick="showShiftPicker(\''+a.id+'\',\''+ds+'\',\''+shiftName+'\',event)" title="Click to switch shift">' +
           '<span class="shift-dot" style="background:'+dot+';"></span>' + shiftLabel + '</span>';
       }
@@ -2139,8 +2139,19 @@ function computeAgentShifts(ds) {
   var workingDays = Math.min(openDays.length, 5);
   var breaks   = regulations.breaks || [];
   var breakMinTotal = breaks.reduce(function(s,b){return s+(b.duration||0);}, 0);
-  var presenceOpen  = hours.open - 1;
-  var presenceClose = hours.close + 1;
+
+  // Full-time presence (work + breaks), capped at max_daily_hours.
+  var ftWorkH = Math.min(regulations.weekly_hours / Math.max(1, workingDays), regulations.max_daily_hours || 8);
+  var ftPresenceMin = Math.round(ftWorkH * 60) + breakMinTotal;
+  var openAmplitudeMin = (hours.close - hours.open) * 60;
+
+  // Extension: only push the walls if presence needed > opening amplitude.
+  // The extra time is split — morning extends before, afternoon extends after.
+  var extMin = Math.max(0, ftPresenceMin - openAmplitudeMin); // total extra to add
+  var extBeforeH = Math.ceil((extMin / 60) / 2);              // hours added before opening
+  var extAfterH  = Math.ceil((extMin / 60) / 2);              // hours added after closing
+  var presenceOpen  = hours.open  - extBeforeH;
+  var presenceClose = hours.close + extAfterH;
 
   var working = agents.filter(function(a){
     if (getDayClosureType(ds)) return false;
@@ -2196,7 +2207,7 @@ function computeAgentShifts(ds) {
   });
 
   // Build windows
-  var result = {};
+  var result = { _gridOpen: presenceOpen, _gridClose: presenceClose };
   working.forEach(function(a){
     var dur = presenceMinForAgent(a);
     var startMin, endMin;
@@ -2255,11 +2266,11 @@ function computeIntradaySchedule(ds) {
   // ── SHIFTS: extended presence grid (1h before opening, 1h after closing) ──
   // Uses the shared shift assignment (honors manual overrides). The extra hours
   // host COLD tasks only (CSC closed, no Call/Chat).
-  var presenceOpen  = hours.open - 1;
-  var presenceClose = hours.close + 1;
+  var shiftInfo = computeAgentShifts(ds); // {agentId:{shift,startMin,endMin}, _gridOpen, _gridClose}
+  var presenceOpen  = shiftInfo._gridOpen;
+  var presenceClose = shiftInfo._gridClose;
   function isHotTask(name){ return name === 'CALL' || name === 'CHAT'; }
 
-  var shiftInfo = computeAgentShifts(ds); // {agentId: {shift,startMin,endMin}}
   var agentStartMin = {}, agentEndMin = {};
   working.forEach(function(a){
     var si = shiftInfo[a.id];
@@ -2525,6 +2536,8 @@ function computeIntradaySchedule(ds) {
   });
   // Expose the production alert (tasks where workload > workforce today)
   result.coverageGaps = Object.keys(coverageGaps);
+  result.gridOpen  = presenceOpen;
+  result.gridClose = presenceClose;
   return result;
 }
 
@@ -2553,8 +2566,8 @@ function renderIntraday(ds) {
 
   var hours    = getDayHoursForDate(target);
   var schedule = computeIntradaySchedule(target);
-  var gridOpen  = hours.open - 1;          // extended grid: 1h before opening
-  var gridClose = hours.close + 1;         // extended grid: 1h after closing
+  var gridOpen  = (schedule.gridOpen  != null) ? schedule.gridOpen  : (hours.open - 1);
+  var gridClose = (schedule.gridClose != null) ? schedule.gridClose : (hours.close + 1);
   var nH = gridClose - gridOpen;
   var AGENT_W = 150, HOUR_W = Math.max(60, Math.floor(1100/nH));
   var cols = AGENT_W+'px ' + Array(nH).fill(HOUR_W+'px').join(' ');
