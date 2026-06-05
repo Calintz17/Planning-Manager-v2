@@ -84,6 +84,20 @@
     .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
     .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
     .auto-badge { display:inline-block; font-size:9px; background:#ede9fe; color:#5b21b6; border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
+    /* ── RECAP OF THE WEEK card internals ── */
+    .recap-card { display:flex; flex-direction:column; height:100%; }
+    .recap-tasks { display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
+    .recap-task-row { display:flex; justify-content:space-between; align-items:center; font-size:11px; }
+    .recap-task-name { display:flex; align-items:center; gap:5px; min-width:0; font-weight:600; }
+    .recap-dot { display:inline-block; width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .recap-task-vol { font-weight:600; color:#374151; margin-left:8px; flex-shrink:0; }
+    .recap-metrics { border-top:1px solid #e5e7eb; padding-top:7px; display:flex; flex-direction:column; gap:4px; font-size:11px; }
+    .recap-metric { display:flex; justify-content:space-between; align-items:center; }
+    .recap-metric-label { color:#6b7280; }
+    .recap-metric-val { font-weight:700; color:#374151; }
+    .recap-status { margin-top:8px; border-radius:5px; padding:5px 8px; font-size:11px; font-weight:700; text-align:center; }
+    .recap-status.ok    { background:#f0fdf4; color:#166534; }
+    .recap-status.short { background:#fff1f2; color:#b91c1c; }
     .hourly-chart { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
     .hourly-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
     .hourly-label { font-size: 9px; color: #9ca3af; width: 28px; flex-shrink: 0; text-align: right; }
@@ -300,7 +314,7 @@
 <!-- FORECAST TAB -->
 <div id="tab-forecast" class="tab-content">
   <div class="card">
-    <h2 style="font-size:15px;margin-bottom:16px;">Weekly Forecast</h2>
+    <h2 style="font-size:15px;margin-bottom:16px;">Recap of the Week</h2>
     <div id="forecast-grid"><p style="color:#888">Select a region to input forecast.</p></div>
   </div>
   <div class="card">
@@ -2245,22 +2259,6 @@ function renderIntraday(ds) {
   var AGENT_W = 150, HOUR_W = Math.max(68, Math.floor(1100/nH));
   var cols = AGENT_W+'px ' + Array(nH).fill(HOUR_W+'px').join(' ');
 
-  // ── TEMP DEBUG (remove after diagnosis) ──────────────────────────────────
-  var dbgF = forecasts[target] || {};
-  var dbgBoHourly = (dbgF.hourly || {})['back-office'] || {};
-  var dbgBoVol = Object.values(dbgBoHourly).reduce(function(s,v){return s+v;},0);
-  var dbgBoTask = tasksSortedByPriority().find(function(t){return t.name==='BACK-OFFICE';});
-  var dbgBoAht = dbgBoTask ? dbgBoTask.aht_minutes : 'NO TASK';
-  var dbgBoTag = dbgBoTask ? dbgBoTask.required_tag : 'NO TASK';
-  var dbgBoEligible = agents.filter(function(a){return (agentTags[a.id]||[]).includes('can_backoffice');}).length;
-  var debugStrip =
-    '<div style="background:#1a1a2e;color:#fff;font-size:11px;font-family:monospace;' +
-    'padding:6px 10px;border-radius:6px;margin-bottom:10px;">' +
-    'DEBUG BO — vol(day)=' + dbgBoVol + ' | aht=' + dbgBoAht +
-    ' | stock(min)=' + (dbgBoVol * (typeof dbgBoAht==='number'?dbgBoAht:0)) +
-    ' | required_tag=' + dbgBoTag + ' | agents with can_backoffice=' + dbgBoEligible +
-    '</div>';
-
   // Production alert banner — only shown when workload > workforce on some task.
   // Replaces the old task legend (tasks are named in the grid cells already).
   var gridTotalW = AGENT_W + nH * HOUR_W; // match the intraday table width
@@ -2366,7 +2364,7 @@ function renderIntraday(ds) {
     : '';
 
   container.innerHTML =
-    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' + debugStrip + alertBanner +
+    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' + alertBanner +
     '<div id="intraday-container"><div class="intraday-grid" style="grid-template-columns:'+cols+
     ';grid-auto-rows:auto;">'+header+rows+'</div></div>';
 }
@@ -2583,92 +2581,81 @@ function renderForecast() {
     const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0, hourly: {} };
     const closure   = getDayClosureType(ds);
     const isBlocked = !!closure;
-    const isAuto    = !!f.auto;
-    const hours     = getDayHoursForDate(ds);
 
-    // Scale bars to THIS day's max hour total (not week max)
-    var dayMaxVol = 1;
-    if (!isBlocked && f.hourly) {
-      for (var hh = hours.open; hh < hours.close; hh++) {
-        var rt = 0;
-        tasksInDisplayOrder().forEach(function(t){ rt += ((f.hourly[t.name.toLowerCase()]||{})[hh]||0); });
-        if (rt > dayMaxVol) dayMaxVol = rt;
-      }
-    }
-
-    let cls = 'forecast-day-card';
+    let cls = 'forecast-day-card recap-card';
     if (isToday(day)) cls += ' today-card';
     if (isBlocked)    cls += ' closed-card';
-    if (isAuto && !isBlocked) cls += ' auto-filled';
 
-    const autoBadge = (isAuto && !isBlocked) ? '<span class="auto-badge">auto</span>' : '';
+    const titleHtml = '<h4>' + DAY_SHORT[i] +
+      '<br><span style="font-weight:normal">' + formatDate(day) + '</span></h4>';
 
-    const statusNote = isBlocked
-      ? '<div style="font-size:10px;color:#9ca3af;margin-top:4px;">' +
-        (closure === 'weekend' ? '\uD83C\uDF34 Weekend off' : '\uD83C\uDFD6\uFE0F Holiday') + '</div>'
-      : '';
-
-    // ── Daily traffic summary ─────────────────────────────────────────────
-    var summaryHtml = '';
-    if (!isBlocked) {
-      var summaryLines = '';
-      tasksInDisplayOrder().filter(function(t){return !t.is_filler;}).forEach(function(t){
-        var key = t.name.toLowerCase();
-        var vol = Object.values((f.hourly||{})[key]||{}).reduce(function(s,v){return s+v;},0);
-        if (!vol) return;
-        var extra = '';
-        if (t.name === 'MAIL' && f.carryIn > 0)
-          extra = ' <span style="color:#9ca3af;font-size:9px;white-space:nowrap;">incl. '+f.carryIn+' c/o</span>';
-        summaryLines += '<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #f3f4f6;white-space:nowrap;">' +
-          '<span style="display:flex;align-items:center;gap:5px;min-width:0;">' +
-            '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+t.color_bg+';border:1px solid '+t.color_text+'50;flex-shrink:0;"></span>' +
-            '<span style="font-weight:600;color:'+t.color_text+';">'+t.name+'</span>'+extra+'</span>' +
-          '<span style="font-weight:600;color:#374151;margin-left:8px;flex-shrink:0;">'+vol+'</span>' +
-          '</div>';
-      });
-      if (summaryLines) {
-        var fteVal = f.fte || 0;
-        var workH  = f.contact_volume > 0 ? (f.contact_volume/60).toFixed(1) : '—';
-        summaryHtml =
-          '<div style="background:#fafafa;border:1px solid #e5e7eb;border-radius:5px;padding:7px 9px;margin-bottom:8px;font-size:10px;">' +
-          '<div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">Expected traffic</div>' +
-          summaryLines +
-          '<div style="display:flex;justify-content:space-between;margin-top:5px;padding-top:4px;border-top:2px solid #e5e7eb;">' +
-            '<span style="color:#6b7280;">\u23F1 '+workH+'h workload</span>' +
-            (fteVal>0?'<span style="color:#166534;font-weight:700;">\uD83D\uDC65 '+fteVal+' FTE</span>':'') +
-          '</div></div>';
-      }
+    // Closed day: just the title + a closed note, nothing else.
+    if (isBlocked) {
+      const closedNote = '<div style="font-size:10px;color:#9ca3af;margin-top:4px;text-align:center;">' +
+        (closure === 'weekend' ? '\uD83C\uDF34 Weekend off' : '\uD83C\uDFD6\uFE0F Holiday') + '</div>';
+      html += '<div class="' + cls + '">' + titleHtml + closedNote + '</div>';
+      return;
     }
 
-    // ── Hourly bar chart ──────────────────────────────────────────────────
-    var hourlyHtml = '';
-    if (!isBlocked && f.hourly) {
-      hourlyHtml = '<div class="hourly-chart">';
-      for (var h = hours.open; h < hours.close; h++) {
-        var rowTotal = 0;
-        var bars = '';
-        tasksInDisplayOrder().forEach(function(t){
-          var vol = ((f.hourly[t.name.toLowerCase()]||{})[h]||0);
-          rowTotal += vol;
-          if (vol > 0) {
-            var pct = Math.max(2, Math.round((vol / dayMaxVol) * 100));
-            bars += '<div style="background:'+t.color_bg+';height:100%;width:'+pct+'%;border-right:1px solid '+t.color_text+'40;min-width:2px;"></div>';
-          }
-        });
-        if (!rowTotal) continue;
-        hourlyHtml +=
-          '<div class="hourly-row">' +
-          '<div class="hourly-label">'+String(h).padStart(2,'0')+'h</div>' +
-          '<div class="hourly-bar-wrap">'+bars+'</div>' +
-          '<div class="hourly-vol">'+rowTotal+'</div>' +
-          '</div>';
-      }
-      hourlyHtml += '</div>';
-    }
+    // ── Task visibility per region (by city) ────────────────────────────────
+    // Europe (Paris): no Chat.  Greater China (Shanghai): no Mail.  Others: all.
+    var hiddenTasks = {};
+    if (currentRegionCity === 'Paris')        hiddenTasks = { 'CHAT': true };
+    else if (currentRegionCity === 'Shanghai') hiddenTasks = { 'MAIL': true };
+
+    // Task order for the recap: Call, Mail, Chat, Back Office, Fraud
+    var RECAP_ORDER = ['CALL','MAIL','CHAT','BACK-OFFICE','FRAUD'];
+
+    // ── Per-task rows (volume; 0 shown, not hidden) ─────────────────────────
+    var taskRows = '';
+    RECAP_ORDER.forEach(function(name){
+      if (hiddenTasks[name]) return;
+      var t   = getTask(name);
+      var key = name.toLowerCase();
+      var vol = Object.values((f.hourly||{})[key]||{}).reduce(function(s,v){return s+v;},0);
+      var extra = '';
+      if (name === 'MAIL' && f.carryIn > 0)
+        extra = ' <span style="color:#9ca3af;font-size:9px;">incl. '+f.carryIn+' c/o</span>';
+      taskRows +=
+        '<div class="recap-task-row">' +
+          '<span class="recap-task-name" style="color:'+t.color_text+';">' +
+            '<span class="recap-dot" style="background:'+t.color_bg+';border:1px solid '+t.color_text+'50;"></span>' +
+            name + extra +
+          '</span>' +
+          '<span class="recap-task-vol">'+vol+'</span>' +
+        '</div>';
+    });
+
+    // ── Metrics: Workload (h), Need, Working — identical to Weekly logic ─────
+    var workH = f.contact_volume > 0 ? (f.contact_volume/60).toFixed(1) : '0.0';
+    var need = 0;
+    if (f.contact_volume > 0) need = Math.ceil((f.contact_volume / 60) / regulations.max_daily_hours);
+    var working = 0;
+    agents.forEach(function(a){
+      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
+      if (s === 'working') working++;
+    });
+
+    var metricsHtml =
+      '<div class="recap-metrics">' +
+        '<div class="recap-metric"><span class="recap-metric-label">\u23F1 Workload</span>' +
+          '<span class="recap-metric-val">'+workH+'h</span></div>' +
+        '<div class="recap-metric"><span class="recap-metric-label">\uD83D\uDC65 Need</span>' +
+          '<span class="recap-metric-val">'+need+'</span></div>' +
+        '<div class="recap-metric"><span class="recap-metric-label">\uD83D\uDC65 Working</span>' +
+          '<span class="recap-metric-val">'+working+'</span></div>' +
+      '</div>';
+
+    // ── Status pill ─────────────────────────────────────────────────────────
+    var ok = working >= need || need === 0;
+    var statusHtml = '<div class="recap-status '+(ok?'ok':'short')+'">' +
+      (ok ? '\u2705 Staffed' : '\u26A0\uFE0F Understaffed') + '</div>';
 
     html += '<div class="' + cls + '">' +
-      '<h4>' + DAY_SHORT[i] + autoBadge + '<br><span style="font-weight:normal">' + formatDate(day) + '</span></h4>' +
-      statusNote + summaryHtml + hourlyHtml +
+      titleHtml +
+      '<div class="recap-tasks">' + taskRows + '</div>' +
+      metricsHtml +
+      statusHtml +
       '</div>';
   });
   html += '</div>';
