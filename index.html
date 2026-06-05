@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Planning Manager</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; font-size: 14px; background: #f5f5f5; color: #222; }
@@ -173,6 +174,8 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 600; min-width: 280px; max-width: 340px;
     }
     .rop-title { font-size: 13px; font-weight: bold; color: #1a1a2e; margin-bottom: 4px; }
+    .btn-export { background:#1a1a2e; color:#fff; }
+    .btn-export:hover { background:#0f3460; }
     /* ── Shift pill (Weekly cell) + switch popover ── */
     .shift-pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#374151;
       background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:3px 10px; cursor:pointer;
@@ -332,6 +335,7 @@
       <div id="planning-legend" style="font-size:11px;color:#6b7280;display:none;">
         💡 Click <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">📅 Sched. Rest</span> to reassign rest day
       </div>
+      <button id="btn-export" class="btn btn-export" style="margin-left:auto;" onclick="exportCurrentView()" title="Export to Excel">📥 Export</button>
     </div>
     <div id="planning-recap">
       <div id="forecast-grid"><p style="color:#888">Select a region to view the recap.</p></div>
@@ -2888,6 +2892,222 @@ async function saveForecastSettings() {
   await loadWeekData();
 }
 
+// ── EXCEL EXPORT ──────────────────────────────────────────────────────────
+// Faithful "instant T" reproduction of Recap / Weekly / Intraday into a styled
+// .xlsx using SheetJS. Colours mirror the on-screen cells.
+function excelWeekTag() {
+  return 'w' + getWeekNumber(currentWeekMonday);
+}
+
+// Build a styled cell object for SheetJS.
+function xc(value, opts) {
+  opts = opts || {};
+  var cell = { v: (value == null ? '' : value), t: (typeof value === 'number' ? 'n' : 's') };
+  var s = {
+    alignment: { horizontal: opts.align || 'center', vertical: 'center', wrapText: true },
+    font: { name: 'Arial', sz: opts.sz || 10, bold: !!opts.bold,
+            color: { rgb: (opts.color || '222222').replace('#','') } }
+  };
+  if (opts.bg) s.fill = { patternType: 'solid', fgColor: { rgb: opts.bg.replace('#','') } };
+  s.border = {
+    top:    { style: 'thin', color: { rgb: 'E0E0E0' } },
+    bottom: { style: 'thin', color: { rgb: 'E0E0E0' } },
+    left:   { style: 'thin', color: { rgb: 'E0E0E0' } },
+    right:  { style: 'thin', color: { rgb: 'E0E0E0' } }
+  };
+  cell.s = s;
+  return cell;
+}
+
+function exportCurrentView() {
+  if (typeof XLSX === 'undefined') {
+    showToast('Excel library not loaded - check your connection', 'error');
+    return;
+  }
+  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  if (currentPlanningView === 'recap')        exportRecap();
+  else if (currentPlanningView === 'intraday') exportIntraday();
+  else                                         exportWeekly();
+}
+
+function downloadSheet(rows, colWidths, sheetName, fileName) {
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  if (colWidths) ws['!cols'] = colWidths.map(function(w){ return { wch: w }; });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, fileName + '.xlsx');
+  showToast('Exported ' + fileName + ' \u2713');
+}
+
+// ── WEEKLY EXPORT ─────────────────────────────────────────────────────────
+function exportWeekly() {
+  var days = getWeekDays(currentWeekMonday);
+  var weekShifts = {};
+  days.forEach(function(day){
+    var ds = toDateStr(day);
+    if (!getDayClosureType(ds)) weekShifts[ds] = computeAgentShifts(ds);
+  });
+
+  var NAVY = '1a1a2e';
+  var rows = [];
+
+  var header = [ xc('Agent', { bg: NAVY, color: 'FFFFFF', bold: true, align: 'left' }) ];
+  days.forEach(function(day, i){
+    header.push(xc(DAY_NAMES[i] + ' ' + formatDate(day), { bg: NAVY, color: 'FFFFFF', bold: true }));
+  });
+  rows.push(header);
+
+  agents.forEach(function(a){
+    var pct = a.work_pct || 100;
+    var openDays = days.filter(function(d){return !getDayClosureType(toDateStr(d));});
+    var ptSchedule = pct < 100 ? computePartTimeForAgent(a, openDays) : null;
+    var name = a.first_name + ' ' + a.last_name + (pct < 100 ? ' (' + pct + '%)' : '');
+    var row = [ xc(name, { align: 'left', bold: true }) ];
+
+    days.forEach(function(day){
+      var ds = toDateStr(day);
+      var status = (availability[a.id] && availability[a.id][ds]) || 'working';
+      var closure = getDayClosureType(ds);
+      if (closure === 'holiday')      row.push(xc('Holiday', { bg: 'fef9c3', color: '92400e' }));
+      else if (closure === 'weekend') row.push(xc('Weekend', { bg: 'e5e7eb', color: '6b7280' }));
+      else if (status === 'rest_parttime') row.push(xc('Part-time rest', { bg: 'fef9c3', color: '854d0e' }));
+      else if (status === 'rest_scheduled' || status === 'rest_override')
+        row.push(xc('Sched. Rest', { bg: 'f3e8ff', color: '7c3aed' }));
+      else if (status === 'absent')   row.push(xc('Absent', { bg: 'fce7f3', color: '9d174d' }));
+      else {
+        var si = (weekShifts[ds] || {})[a.id];
+        var label, bg, color;
+        if (si) {
+          label = formatMinutes(si.startMin) + '-' + formatMinutes(si.endMin);
+          if (si.shift === 'afternoon') { bg = 'dcfce7'; color = '166534'; }
+          else                          { bg = 'f0fdf4'; color = '16a34a'; }
+        } else {
+          var h = getDayHoursForDate(ds);
+          label = String(h.open).padStart(2,'0')+':00-'+String(h.close).padStart(2,'0')+':00';
+          bg = 'dbeafe'; color = '1e40af';
+        }
+        if (ptSchedule && ptSchedule.partialDay && ptSchedule.partialDay.ds === ds) {
+          label = formatMinutes(si ? si.startMin : getDayHoursForDate(ds).open*60) + '-' + formatMinutes(ptSchedule.partialDay.closeMin);
+        }
+        row.push(xc(label, { bg: bg, color: color, bold: true }));
+      }
+    });
+    rows.push(row);
+  });
+
+  var widths = [22].concat(days.map(function(){ return 16; }));
+  downloadSheet(rows, widths, 'Weekly', 'Planning_Manager_Weekly_' + excelWeekTag());
+}
+
+// ── RECAP EXPORT ──────────────────────────────────────────────────────────
+function exportRecap() {
+  var days = getWeekDays(currentWeekMonday);
+  var NAVY = '1a1a2e';
+  var hiddenTasks = {};
+  if (currentRegionCity === 'Paris')         hiddenTasks = { 'CHAT': true };
+  else if (currentRegionCity === 'Shanghai') hiddenTasks = { 'MAIL': true };
+  var RECAP_ORDER = ['CALL','MAIL','CHAT','BACK-OFFICE','FRAUD'].filter(function(n){return !hiddenTasks[n];});
+
+  var rows = [];
+  var header = [ xc('', { bg: NAVY, color: 'FFFFFF', bold: true }) ];
+  days.forEach(function(day, i){
+    header.push(xc(DAY_NAMES[i] + ' ' + formatDate(day), { bg: NAVY, color: 'FFFFFF', bold: true }));
+  });
+  rows.push(header);
+
+  RECAP_ORDER.forEach(function(name){
+    var t = getTask(name);
+    var row = [ xc(name, { align: 'left', bold: true, color: (t.color_text||'222222') }) ];
+    days.forEach(function(day){
+      var ds = toDateStr(day);
+      if (getDayClosureType(ds)) { row.push(xc('-', { bg: 'f9fafb', color: '9ca3af' })); return; }
+      var f = forecasts[ds] || { hourly:{} };
+      var vol = Object.values((f.hourly||{})[name.toLowerCase()]||{}).reduce(function(s,v){return s+v;},0);
+      row.push(xc(vol, { bg: (t.color_bg||'FFFFFF'), color: (t.color_text||'222222') }));
+    });
+    rows.push(row);
+  });
+
+  function dayNeed(ds){ var f=forecasts[ds]||{}; return f.contact_volume>0 ? Math.ceil((f.contact_volume/60)/regulations.max_daily_hours) : 0; }
+  function dayWorking(ds){ var w=0; agents.forEach(function(a){var s=(availability[a.id]&&availability[a.id][ds])||'working'; if(s==='working')w++;}); return w; }
+  function metricRow(label, fn) {
+    var row = [ xc(label, { align: 'left', bold: true, bg: 'f9fafb', color: '6b7280' }) ];
+    days.forEach(function(day){
+      var ds = toDateStr(day);
+      if (getDayClosureType(ds)) { row.push(xc('-', { bg: 'f9fafb', color: '9ca3af' })); return; }
+      row.push(fn(ds));
+    });
+    rows.push(row);
+  }
+
+  metricRow('Workload (h)', function(ds){ var f=forecasts[ds]||{}; return xc(f.contact_volume>0?+(f.contact_volume/60).toFixed(1):0, {}); });
+  metricRow('Need',    function(ds){ return xc(dayNeed(ds), {}); });
+  metricRow('Working', function(ds){ return xc(dayWorking(ds), {}); });
+  metricRow('Status',  function(ds){
+    var ok = dayWorking(ds) >= dayNeed(ds) || dayNeed(ds) === 0;
+    return ok ? xc('Staffed', { bg: 'f0fdf4', color: '166534' })
+              : xc('Understaffed', { bg: 'fff1f2', color: 'b91c1c', bold: true });
+  });
+
+  var widths = [16].concat(days.map(function(){ return 16; }));
+  downloadSheet(rows, widths, 'Recap', 'Planning_Manager_Recap_' + excelWeekTag());
+}
+
+// ── INTRADAY EXPORT ───────────────────────────────────────────────────────
+function exportIntraday() {
+  var ds = currentIntradayDate || toDateStr(getWeekDays(currentWeekMonday)[0]);
+  var hours = getDayHoursForDate(ds);
+  var schedule = computeIntradaySchedule(ds);
+  var gridOpen  = (schedule.gridOpen  != null) ? schedule.gridOpen  : (hours.open - 1);
+  var gridClose = (schedule.gridClose != null) ? schedule.gridClose : (hours.close + 1);
+  var NAVY = '1a1a2e';
+
+  var rows = [];
+  var header = [ xc('Agent', { bg: NAVY, color: 'FFFFFF', bold: true, align: 'left' }) ];
+  for (var h = gridOpen; h < gridClose; h++) {
+    header.push(xc(String(h).padStart(2,'0')+'-'+String(h+1).padStart(2,'0')+'h',
+      { bg: NAVY, color: 'FFFFFF', bold: true, sz: 9 }));
+  }
+  rows.push(header);
+
+  schedule.forEach(function(entry){
+    var a = entry.agent;
+    var row = [ xc(a.first_name + ' ' + a.last_name, { align: 'left', bold: true }) ];
+    if (entry.isClosed || entry.isRest || entry.isAbsent) {
+      var lbl = entry.isAbsent ? 'Absent' : entry.isPartTimeRest ? 'Part-time rest'
+              : entry.isClosed ? 'Closed' : 'Rest';
+      for (var hh = gridOpen; hh < gridClose; hh++)
+        row.push(xc(hh === gridOpen ? lbl : '', { bg: 'f9fafb', color: '9ca3af' }));
+      rows.push(row);
+      return;
+    }
+    for (var h2 = gridOpen; h2 < gridClose; h2++) {
+      var hS = h2*60, hE = (h2+1)*60;
+      var ov = entry.blocks.filter(function(b){ return b.start<hE && b.end>hS; });
+      var taskName = '', hasBreak = false;
+      ov.forEach(function(b){
+        if (b.task === '__break__') hasBreak = true;
+        else taskName = b.task;
+      });
+      if (taskName) {
+        var t = getTask(taskName);
+        var label = taskName + (hasBreak ? ' / break' : '');
+        row.push(xc(label, { bg: (t.color_bg||'FFFFFF'), color: (t.color_text||'222222'), sz: 9 }));
+      } else if (hasBreak) {
+        row.push(xc('Break', { bg: 'fef9c3', color: '854d0e', sz: 9 }));
+      } else {
+        row.push(xc('', {}));
+      }
+    }
+    rows.push(row);
+  });
+
+  var widths = [22];
+  for (var w = gridOpen; w < gridClose; w++) widths.push(11);
+  downloadSheet(rows, widths, 'Intraday', 'Planning_Manager_Intraday_' + excelWeekTag());
+}
+
+// ── WEEKLY FORECAST / RECAP RENDER ────────────────────────────────────────
 function renderForecast() {
   const container = document.getElementById('forecast-grid');
   if (!currentRegionId) {
