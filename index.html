@@ -98,7 +98,7 @@
     .recap-metric-val { font-weight:700; color:#374151; }
     .recap-status { margin-top:8px; border-radius:5px; padding:5px 8px; font-size:11px; font-weight:700; text-align:center; }
     .recap-status.ok    { background:#f0fdf4; color:#166534; }
-    .recap-status.short { background:#fff7ed; color:#9a3412; border:1px solid #fdba74; }
+    .recap-status.short { background:#fff7ed; color:#9a3412; border:1px solid #fdba74; text-align:left; }
     .hourly-chart { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
     .hourly-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
     .hourly-label { font-size: 9px; color: #9ca3af; width: 28px; flex-shrink: 0; text-align: right; }
@@ -3834,11 +3834,13 @@ function recapSummaryHtml() {
   if (anomalyState) {
     var p = anomalyState.pct;
     var sign = p > 0 ? '+' : '';
-    var tColor = p >= 30 ? '#9a3412' : p <= -30 ? '#1e40af' : '#374151';
-    var icon = p >= 30 ? '\uD83D\uDCC8' : p <= -30 ? '\uD83D\uDCC9' : '\u2796';
-    var note = (p >= 30) ? 'Heavier week - watch staffing'
-             : (p <= -30) ? 'Lighter week than usual'
-             : 'In line with the seasonal norm';
+    var icon, note, tColor;
+    if (p > 20)        { icon='\uD83D\uDCC8'; note='Critical rise in traffic - needs your attention'; tColor='#b91c1c'; }
+    else if (p >= 15)  { icon='\uD83D\uDCC8'; note='Alert - busier week than usual'; tColor='#9a3412'; }
+    else if (p >= 10)  { icon='\uD83D\uDCC8'; note='Light alert - slightly busier than usual'; tColor='#9a3412'; }
+    else if (p > -10)  { icon='\u2796'; note='In line with the seasonal norm'; tColor='#374151'; }
+    else if (p > -15)  { icon='\uD83D\uDCC9'; note='Slow week vs norm'; tColor='#1e40af'; }
+    else               { icon='\uD83D\uDCC9'; note='Very slow week vs norm'; tColor='#1e40af'; }
     trendCard = card('Week vs trend',
       '<div style="font-size:22px;font-weight:700;color:'+tColor+';">'+icon+' '+sign+p+'%</div>', note);
   } else {
@@ -3970,19 +3972,33 @@ function renderForecast() {
           '<span class="recap-metric-val">'+working+'</span></div>' +
       '</div>';
 
-    // ── Status: per-day production alert (orange) with that day's unmet tasks ──
-    var dayGaps = [];
+    // ── Status: per-day production alert with need vs positioned per task ──
+    var statusHtml = '';
     if (!getDayClosureType(ds)) {
       var sched = computeIntradaySchedule(ds);
-      dayGaps = sched.coverageGaps || [];
-    }
-    var statusHtml = '';
-    if (dayGaps.length) {
-      var gapLines = dayGaps.map(function(n){
-        var friendly = n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
-        return '<div style="font-size:10px;color:#9a3412;">\u2022 '+friendly+'</div>';
-      }).join('');
-      statusHtml = '<div class="recap-status short">\u26A0\uFE0F Production alert'+gapLines+'</div>';
+      var dayGaps = sched.coverageGaps || [];
+      if (dayGaps.length) {
+        // Positioned hours per task = agent-block minutes assigned to that task
+        var positioned = {};
+        sched.forEach(function(entry){
+          if (!entry.blocks) return;
+          entry.blocks.forEach(function(b){
+            if (b.task === '__break__' || !b.task) return;
+            positioned[b.task] = (positioned[b.task]||0) + (b.end - b.start);
+          });
+        });
+        var aht = regulations.aht_tasks || {};
+        var gapLines = dayGaps.map(function(n){
+          var friendly = n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
+          var key = n.toLowerCase();
+          var vol = Object.values((f.hourly||{})[key]||{}).reduce(function(s,v){return s+v;},0);
+          var needH = ((vol * (aht[n] || aht[n.toUpperCase()] || 5)) / 60);
+          var posH  = (positioned[n] || 0) / 60;
+          return '<div style="font-size:10px;color:#9a3412;margin-top:1px;">'+friendly+
+            ' <span style="color:#c2855a;">('+needH.toFixed(1)+'h need vs '+posH.toFixed(1)+'h positioned)</span></div>';
+        }).join('');
+        statusHtml = '<div class="recap-status short">\u26A0\uFE0F Production alert'+gapLines+'</div>';
+      }
     }
 
     html += '<div class="' + cls + '">' +
