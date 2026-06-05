@@ -125,6 +125,17 @@
     /* ── REGULATIONS ── */
     .reg-section { margin-bottom: 24px; }
     .reg-section h3 { font-size: 13px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+    /* ── Settings tab ── */
+    .set-h3 { font-size: 13px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 14px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+    .set-note { font-size: 12px; color: #6b7280; margin: 0 0 12px; }
+    .set-rules { display: flex; flex-direction: column; gap: 12px; }
+    .set-rule { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; color: #374151; }
+    .set-rule-lbl { min-width: 200px; flex: 0 0 auto; }
+    .set-rule-input { width: 80px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; text-align: center; }
+    .set-rule-unit { color: #6b7280; font-size: 13px; }
+    .set-rule-ro { font-weight: 600; color: #374151; }
+    .set-rule-hint { font-size: 11px; color: #9ca3af; }
+    @media (max-width: 640px) { .set-rule-lbl { min-width: 140px; } }
     .toggle-wrap { display: flex; align-items: center; gap: 10px; }
     .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
     .toggle input { opacity: 0; width: 0; height: 0; }
@@ -260,11 +271,11 @@
   <h1>📋 Planning Manager</h1>
   <div>
     <label>Region</label>
-    <select id="region-select"><option value="">— Select region —</option></select>
+    <select id="region-select"><option value="">- Select region -</option></select>
   </div>
   <div class="week-nav">
     <button onclick="changeWeek(-1)">◀</button>
-    <div id="week-label" onclick="toggleWeekPicker(event)" title="Click to jump to any week">Week —</div>
+    <div id="week-label" onclick="toggleWeekPicker(event)" title="Click to jump to any week">Week -</div>
     <button onclick="changeWeek(+1)">▶</button>
   </div>
 </div>
@@ -273,8 +284,7 @@
 <div id="tabs">
   <button class="tab-btn active" onclick="switchTab('planning', this)">📅 Planning</button>
   <button class="tab-btn" onclick="switchTab('agents', this)">👥 Agents</button>
-  <button class="tab-btn" onclick="switchTab('forecast', this)">📊 Forecast</button>
-  <button class="tab-btn" onclick="switchTab('regulations', this)">📜 Regulations</button>
+  <button class="tab-btn" onclick="switchTab('regulations', this)">⚙️ Settings</button>
 </div>
 
 <!-- PLANNING TAB -->
@@ -282,12 +292,16 @@
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
       <div class="view-toggle">
+        <button id="btn-view-recap" onclick="switchPlanningView('recap')">💡 Recap</button>
         <button id="btn-view-weekly" class="active" onclick="switchPlanningView('weekly')">📅 Weekly</button>
         <button id="btn-view-intraday" onclick="switchPlanningView('intraday')">⏱ Intraday</button>
       </div>
       <div id="planning-legend" style="font-size:11px;color:#6b7280;display:none;">
         💡 Click <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">📅 Sched. Rest</span> to reassign rest day
       </div>
+    </div>
+    <div id="planning-recap" style="display:none;">
+      <div id="forecast-grid"><p style="color:#888">Select a region to view the recap.</p></div>
     </div>
     <div id="planning-weekly"><p style="color:#888">Select a region to view the planning.</p></div>
     <div id="planning-intraday" style="display:none;"><p style="color:#888">Select a region.</p></div>
@@ -312,25 +326,16 @@
 </div>
 
 <!-- FORECAST TAB -->
-<div id="tab-forecast" class="tab-content">
-  <div class="card">
-    <h2 style="font-size:15px;margin-bottom:16px;">Recap of the Week</h2>
-    <div id="forecast-grid"><p style="color:#888">Select a region to input forecast.</p></div>
-  </div>
-  <div class="card">
-    <h2 style="font-size:13px;font-weight:bold;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;">Settings — AHT, Priority &amp; Monthly Targets</h2>
-    <div id="forecast-header-band"></div>
-  </div>
-</div>
+<!-- (Forecast tab removed: Recap moved into Planning sub-tab; settings moved into Settings tab) -->
 
 <!-- REGULATIONS TAB -->
 <div id="tab-regulations" class="tab-content">
-  <div class="card" id="regulations-content">
-    <p style="color:#888">Select a region to view regulations.</p>
+  <div id="regulations-content">
+    <div class="card"><p style="color:#888">Select a region to view settings.</p></div>
   </div>
 </div>
 
-<div id="status-bar">Planning Manager — Ready</div>
+<div id="status-bar">Planning Manager - Ready</div>
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────────────────────
@@ -624,10 +629,13 @@ async function saveMonthlyBoTargets() {
 // ── PLANNING VIEW SWITCH ──────────────────────────────────────────────────
 function switchPlanningView(v) {
   currentPlanningView = v;
+  document.getElementById('btn-view-recap').classList.toggle('active', v==='recap');
   document.getElementById('btn-view-weekly').classList.toggle('active', v==='weekly');
   document.getElementById('btn-view-intraday').classList.toggle('active', v==='intraday');
+  document.getElementById('planning-recap').style.display    = v==='recap'    ? '' : 'none';
   document.getElementById('planning-weekly').style.display   = v==='weekly'   ? '' : 'none';
   document.getElementById('planning-intraday').style.display = v==='intraday' ? '' : 'none';
+  if (v==='recap')    renderForecast();
   if (v==='intraday') renderIntraday(currentIntradayDate);
 }
 
@@ -944,7 +952,7 @@ async function init() {
   if (error) { showToast('Failed to load regions', 'error'); return; }
 
   const sel = document.getElementById('region-select');
-  sel.innerHTML = '<option value="">— Select region —</option>';
+  sel.innerHTML = '<option value="">- Select region -</option>';
   data.forEach(function(r) {
     const opt = document.createElement('option');
     opt.value        = r.id;
@@ -953,7 +961,7 @@ async function init() {
     sel.appendChild(opt);
   });
   sel.addEventListener('change', onRegionChange);
-  setStatus('Ready — select a region to begin');
+  setStatus('Ready - select a region to begin');
 }
 
 async function onRegionChange() {
@@ -993,6 +1001,7 @@ async function loadRegulations() {
       case 'saturday_rest':   regulations.saturday_rest = row.rule_value === 'true'; break;
       case 'sunday_rest':     regulations.sunday_rest   = row.rule_value === 'true'; break;
       case 'weekly_hours':    regulations.weekly_hours  = parseFloat(row.rule_value); break;
+      case 'max_daily_hours': regulations.max_daily_hours = parseFloat(row.rule_value) || 8; break;
       case 'trend_pct':       regulations.trend_pct     = parseFloat(row.rule_value) || 0; break;
       case 'aht_tasks':
         try { regulations.aht_tasks = JSON.parse(row.rule_value); } catch(e) {}
@@ -1037,6 +1046,18 @@ async function saveRegulations() {
   regulations.saturday_rest = document.getElementById('reg-saturday').checked;
   regulations.sunday_rest   = document.getElementById('reg-sunday').checked;
 
+  // Editable labor rules
+  const maxDailyEl = document.getElementById('reg-max-daily');
+  if (maxDailyEl) {
+    var md = parseFloat(maxDailyEl.value);
+    if (md > 0) regulations.max_daily_hours = md;
+  }
+  const weeklyEl = document.getElementById('reg-weekly-hours');
+  if (weeklyEl) {
+    var wh = parseFloat(weeklyEl.value);
+    if (wh > 0) regulations.weekly_hours = wh;
+  }
+
   let valid = true;
   DAY_KEYS.forEach(function(k) {
     const openEl  = document.getElementById('reg-open-' + k);
@@ -1078,6 +1099,7 @@ async function saveRegulations() {
     { region_id: currentRegionId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
     { region_id: currentRegionId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
     { region_id: currentRegionId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
+    { region_id: currentRegionId, rule_key: 'max_daily_hours', rule_value: String(regulations.max_daily_hours) },
     { region_id: currentRegionId, rule_key: 'trend_pct',       rule_value: String(regulations.trend_pct) },
     { region_id: currentRegionId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
     { region_id: currentRegionId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
@@ -1196,76 +1218,90 @@ function renderRegulations() {
       'Engine assigns 2 rest days per agent automatically.</div>'
     : '';
 
+  // Dynamic break/day total = sum of all break durations (read-only, reflects Break Structure)
+  var breakDayMin = (regulations.breaks || []).reduce(function(s,b){ return s + (b.duration||0); }, 0);
+  var breakDayLabel = breakDayMin >= 60
+    ? Math.floor(breakDayMin/60) + 'h' + (breakDayMin%60 ? String(breakDayMin%60).padStart(2,'0') : '')
+    : breakDayMin + 'min';
+
+  // Build the migrated AHT / Priority / Monthly Targets + Trend content
+  var settingsExtra = buildForecastSettingsHtml();
+
   document.getElementById('regulations-content').innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-      '<h2 style="font-size:15px;">\ud83d\udcdc Regulations \u2014 ' + currentRegionName + '</h2>' +
-      '<button class="btn btn-save" onclick="saveRegulations()">\ud83d\udcbe Save Regulations</button>' +
-    '</div>' +
     rotationNote +
 
-    '<div class="reg-section"><h3>Fixed Rules (all regions)</h3>' +
-    '<div class="info-grid">' +
-      '<div class="info-box"><div class="info-lbl">Max working days / week</div><div class="info-val">5 days</div></div>' +
-      '<div class="info-box"><div class="info-lbl">Max hours / day</div><div class="info-val">8h</div></div>' +
-      '<div class="info-box"><div class="info-lbl">Max hours / week</div><div class="info-val">' + regulations.weekly_hours + 'h</div></div>' +
-      '<div class="info-box"><div class="info-lbl">Break / day</div><div class="info-val">1h30</div></div>' +
-      '<div class="info-box"><div class="info-lbl">Min rest between shifts</div><div class="info-val">11h</div></div>' +
-    '</div></div>' +
-
-    '<div class="reg-section"><h3>Weekend Rules</h3>' +
-    '<div style="display:flex;flex-direction:column;gap:14px;">' +
-      '<div style="display:flex;align-items:center;gap:16px;">' +
-        '<div style="min-width:220px;font-size:13px;color:#374151;">Saturday is a rest day</div>' +
-        '<div class="toggle-wrap">' +
+    // ── BUBBLE 1: Labor Rules ────────────────────────────────────────────
+    '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+        '<h2 style="font-size:15px;">\u2699\uFE0F Settings - ' + currentRegionName + '</h2>' +
+        '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button>' +
+      '</div>' +
+      '<h3 class="set-h3">Labor Rules</h3>' +
+      '<div class="set-rules">' +
+        '<div class="set-rule"><span class="set-rule-lbl">Max working days / week</span>' +
+          '<span class="set-rule-ro">5 days</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Max hours / day</span>' +
+          '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8) + '" min="1" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Max hours / week</span>' +
+          '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5"><span class="set-rule-unit">h</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Break / day</span>' +
+          '<span class="set-rule-ro" id="reg-break-day">' + breakDayLabel + '</span>' +
+          '<span class="set-rule-hint">defined in Break Structure below</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Saturday is a rest day</span>' +
           '<label class="toggle"><input type="checkbox" id="reg-saturday"' + (regulations.saturday_rest ? ' checked' : '') + '>' +
           '<span class="toggle-slider"></span></label>' +
-          '<span class="toggle-label" id="sat-label">' + (regulations.saturday_rest ? 'Yes \u2014 Saturday is a rest day' : 'No \u2014 Saturday is a working day') + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<div style="display:flex;align-items:center;gap:16px;">' +
-        '<div style="min-width:220px;font-size:13px;color:#374151;">Sunday is a rest day</div>' +
-        '<div class="toggle-wrap">' +
+          '<span class="toggle-label" id="sat-label">' + (regulations.saturday_rest ? 'Yes - rest day' : 'No - working day') + '</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Sunday is a rest day</span>' +
           '<label class="toggle"><input type="checkbox" id="reg-sunday"' + (regulations.sunday_rest ? ' checked' : '') + '>' +
           '<span class="toggle-slider"></span></label>' +
-          '<span class="toggle-label" id="sun-label">' + (regulations.sunday_rest ? 'Yes \u2014 Sunday is a rest day' : 'No \u2014 Sunday is a working day') + '</span>' +
-        '</div>' +
+          '<span class="toggle-label" id="sun-label">' + (regulations.sunday_rest ? 'Yes - rest day' : 'No - working day') + '</span></div>' +
       '</div>' +
-    '</div></div>' +
-
-    '<div class="reg-section"><h3>Operating Hours (per day)</h3>' +
-    '<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Dimmed rows are current rest days. Hours are saved and apply if the rule is toggled off.</p>' +
-    '<table class="hours-table"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
-    hoursRows + '</table></div>' +
-
-    '<div class="reg-section"><h3>Break Structure</h3>' +
-    '<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Define breaks per shift. The engine places each break in the lowest-volume slot within its window.</p>' +
-    '<table class="breaks-table">' +
-      '<tr><th>Name</th><th>Duration (min)</th><th>Window start</th><th>Window end</th><th></th></tr>' +
-      (regulations.breaks || []).map(function(b, bi) {
-        var wsOpts = '', weOpts = '';
-        for (var h = 0; h <= 23; h++) {
-          wsOpts += '<option value="' + h + '"' + (h === b.window_start ? ' selected' : '') + '>' + String(h).padStart(2,'0') + ':00</option>';
-          weOpts += '<option value="' + h + '"' + (h === b.window_end   ? ' selected' : '') + '>' + String(h).padStart(2,'0') + ':00</option>';
-        }
-        return '<tr class="break-row">' +
-          '<td><input type="text" class="break-name" value="' + b.name + '"></td>' +
-          '<td><input type="number" class="break-dur" value="' + b.duration + '" min="5" max="120"></td>' +
-          '<td><select class="break-ws">' + wsOpts + '</select></td>' +
-          '<td><select class="break-we">' + weOpts + '</select></td>' +
-          '<td><button class="btn-xs btn-xs-danger" onclick="removeBreakRow(this)">✕</button></td>' +
-          '</tr>';
-      }).join('') +
-    '</table>' +
-    '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
     '</div>' +
 
-    '<div class="reg-section"><h3>Bank Holidays</h3>' +
-    '<p style="font-size:12px;color:#6b7280;margin-bottom:10px;">All agents show \ud83c\udfd6\ufe0f Holiday. Does not consume an agent\u2019s rest day.</p>' +
-    '<div class="date-tags" id="holiday-dates-tags">' + holidayTagsHtml + '</div>' +
-    '<div class="date-add-row"><input type="date" id="new-holiday-date">' +
-    '<button class="btn btn-primary" onclick="addHoliday()">+ Add date</button></div></div>' +
+    // ── BUBBLE 2: Operating Hours ────────────────────────────────────────
+    '<div class="card">' +
+      '<h3 class="set-h3">Operating Hours (per day)</h3>' +
+      '<p class="set-note">Dimmed rows are current rest days. Hours are saved and apply if the rule is toggled off.</p>' +
+      '<table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
+      hoursRows + '</table>' +
+    '</div>' +
 
-    '<div style="margin-top:8px;"><button class="btn btn-save" onclick="saveRegulations()">\ud83d\udcbe Save Regulations</button></div>';
+    // ── BUBBLE 3: Break Structure ────────────────────────────────────────
+    '<div class="card">' +
+      '<h3 class="set-h3">Break Structure</h3>' +
+      '<p class="set-note">Define breaks per shift. The engine places each break in the lowest-volume slot within its window.</p>' +
+      '<table class="breaks-table">' +
+        '<tr><th>Name</th><th>Duration (min)</th><th>Window start</th><th>Window end</th><th></th></tr>' +
+        (regulations.breaks || []).map(function(b, bi) {
+          var wsOpts = '', weOpts = '';
+          for (var h = 0; h <= 23; h++) {
+            wsOpts += '<option value="' + h + '"' + (h === b.window_start ? ' selected' : '') + '>' + String(h).padStart(2,'0') + ':00</option>';
+            weOpts += '<option value="' + h + '"' + (h === b.window_end   ? ' selected' : '') + '>' + String(h).padStart(2,'0') + ':00</option>';
+          }
+          return '<tr class="break-row">' +
+            '<td><input type="text" class="break-name" value="' + b.name + '"></td>' +
+            '<td><input type="number" class="break-dur" value="' + b.duration + '" min="5" max="120"></td>' +
+            '<td><select class="break-ws">' + wsOpts + '</select></td>' +
+            '<td><select class="break-we">' + weOpts + '</select></td>' +
+            '<td><button class="btn-xs btn-xs-danger" onclick="removeBreakRow(this)">\u2715</button></td>' +
+            '</tr>';
+        }).join('') +
+      '</table>' +
+      '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
+    '</div>' +
+
+    // ── BUBBLE 4: Bank Holidays ──────────────────────────────────────────
+    '<div class="card">' +
+      '<h3 class="set-h3">Bank Holidays</h3>' +
+      '<p class="set-note">All agents show \uD83C\uDFD6\uFE0F Holiday. Does not consume an agent\u2019s rest day.</p>' +
+      '<div class="date-tags" id="holiday-dates-tags">' + holidayTagsHtml + '</div>' +
+      '<div class="date-add-row"><input type="date" id="new-holiday-date">' +
+      '<button class="btn btn-primary" onclick="addHoliday()">+ Add date</button></div>' +
+      '<div style="margin-top:16px;"><button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
+    '</div>' +
+
+    // ── BUBBLE 5 + 6: AHT & Priority, Monthly Targets + Trend (migrated) ──
+    settingsExtra;
 
   // Toggle reactivity
   function updateHoursTableReactivity() {
@@ -1287,12 +1323,12 @@ function renderRegulations() {
 
   document.getElementById('reg-saturday').addEventListener('change', function() {
     document.getElementById('sat-label').textContent = this.checked
-      ? 'Yes \u2014 Saturday is a rest day' : 'No \u2014 Saturday is a working day';
+      ? 'Yes - rest day' : 'No - working day';
     updateHoursTableReactivity();
   });
   document.getElementById('reg-sunday').addEventListener('change', function() {
     document.getElementById('sun-label').textContent = this.checked
-      ? 'Yes \u2014 Sunday is a rest day' : 'No \u2014 Sunday is a working day';
+      ? 'Yes - rest day' : 'No - working day';
     updateHoursTableReactivity();
   });
 }
@@ -2246,8 +2282,8 @@ function renderIntraday(ds) {
 
   var closure = getDayClosureType(target);
   if (closure) {
-    var msg = closure==='holiday' ? '\uD83C\uDFD6\uFE0F Bank holiday \u2014 center closed'
-                                  : '\uD83C\uDF34 Weekend \u2014 center closed';
+    var msg = closure==='holiday' ? '\uD83C\uDFD6\uFE0F Bank holiday - center closed'
+                                  : '\uD83C\uDF34 Weekend - center closed';
     container.innerHTML = '<div class="intraday-day-btns">'+dayBtns+'</div>' +
       '<p style="color:#9ca3af;padding:32px 0;text-align:center;">'+msg+'</p>';
     return;
@@ -2460,11 +2496,10 @@ async function deleteAgent(id) {
 // This stub exists because the "Save Forecast" button in the UI calls it.
 // Saving AHT/Trend is done via saveForecastSettings() in the header.
 async function saveForecast() {
-  showToast('Forecast is auto-computed \u2014 use \u201cSave AHT & Trend\u201d above to adjust settings \u2713');
+  showToast('Forecast is auto-computed - use \u201cSave AHT & Trend\u201d above to adjust settings \u2713');
 }
-function renderForecastHeader() {
-  var band = document.getElementById('forecast-header-band');
-  if (!band || !currentRegionId) return;
+function buildForecastSettingsHtml() {
+  if (!currentRegionId) return '';
   var aht   = regulations.aht_tasks || {};
   var trend = regulations.trend_pct || 0;
 
@@ -2481,7 +2516,7 @@ function renderForecastHeader() {
   }).join('');
 
   var trendSign = trend > 0 ? '+' : '';
-  var trendDesc = trend === 0 ? 'flat \u2014 using history as-is'
+  var trendDesc = trend === 0 ? 'flat - using history as-is'
                 : trend > 0  ? 'volume growing vs last year'
                 : 'volume declining vs last year';
 
@@ -2499,29 +2534,30 @@ function renderForecastHeader() {
       '</tr>';
   }
 
-  band.innerHTML =
-    '<div class="forecast-header">' +
-      '<div>' +
-        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">AHT &amp; Priority per task</div>' +
-        '<table class="aht-task-table"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table>' +
+  return (
+    // ── BUBBLE 5: AHT & Priority per task ────────────────────────────────
+    '<div class="card">' +
+      '<h3 class="set-h3">AHT & Priority per task</h3>' +
+      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table>' +
+      '<button class="btn btn-save" style="margin-top:12px;font-size:12px;" onclick="saveForecastSettings()">\uD83D\uDCBE Save AHT, Priority & Trend</button>' +
+    '</div>' +
+
+    // ── BUBBLE 6: Monthly Targets (with Trend integrated on top) ─────────
+    '<div class="card">' +
+      '<h3 class="set-h3">Monthly Targets - ' + curYear + '</h3>' +
+      // Trend row, inline at the top
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #e5e7eb;">' +
+        '<span style="font-size:12px;font-weight:600;color:#374151;">Forecast trend</span>' +
+        '<input type="number" id="fc-trend-pct" value="' + trend + '" step="0.1" placeholder="0" style="width:70px;padding:5px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;text-align:center;">' +
+        '<span style="font-size:14px;font-weight:bold;color:#374151;">%</span>' +
+        '<span class="trend-note" style="font-size:11px;color:#9ca3af;">' + trendSign + trend + '% - ' + trendDesc + '</span>' +
       '</div>' +
-      '<div style="border-left:1px solid #e5e7eb;padding-left:24px;">' +
-        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Forecast trend</div>' +
-        '<div class="trend-wrap">' +
-          '<input type="number" id="fc-trend-pct" value="' + trend + '" step="0.1" placeholder="0">' +
-          '<span style="font-size:18px;font-weight:bold;color:#374151;">%</span>' +
-        '</div>' +
-        '<div class="trend-note" style="margin-top:6px;">' + trendSign + trend + '% &mdash; ' + trendDesc + '</div>' +
-        '<button class="btn btn-save" style="margin-top:12px;font-size:12px;" onclick="saveForecastSettings()">\uD83D\uDCBE Save AHT, Priority &amp; Trend</button>' +
-      '</div>' +
-      '<div style="border-left:1px solid #e5e7eb;padding-left:24px;">' +
-        '<div style="font-size:11px;font-weight:bold;color:#6b7280;text-transform:uppercase;margin-bottom:8px;">Monthly targets \u2014 '+curYear+'</div>' +
-        '<p style="font-size:11px;color:#9ca3af;margin-bottom:8px;">Contacts per month \u2192 auto-spread hourly by CALL curve</p>' +
-        '<table class="aht-task-table"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
-        boRows + '</table>' +
-        '<button class="btn btn-save" style="margin-top:10px;font-size:12px;" onclick="saveMonthlyBoTargets()">\uD83D\uDCBE Save Monthly Targets</button>' +
-      '</div>' +
-    '</div>';
+      '<p class="set-note">Contacts per month \u2192 auto-spread hourly by CALL curve</p>' +
+      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
+      boRows + '</table>' +
+      '<button class="btn btn-save" style="margin-top:10px;font-size:12px;" onclick="saveMonthlyBoTargets()">\uD83D\uDCBE Save Monthly Targets</button>' +
+    '</div>'
+  );
 }
 
 async function saveForecastSettings() {
@@ -2660,8 +2696,6 @@ function renderForecast() {
   });
   html += '</div>';
   container.innerHTML = html;
-  // Render settings band after grid is populated
-  renderForecastHeader();
 }
 
 // ── WEEK PICKER ───────────────────────────────────────────────────────────
