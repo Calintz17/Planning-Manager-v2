@@ -127,6 +127,9 @@
     .reg-section h3 { font-size: 13px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
     /* ── Settings tab ── */
     .set-h3 { font-size: 13px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 14px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+    .set-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .set-head .set-h3 { margin: 0; padding: 0; border-bottom: none; flex: 1; min-width: 0; }
+    .set-head .btn { flex-shrink: 0; }
     .set-note { font-size: 12px; color: #6b7280; margin: 0 0 12px; }
     .set-rules { display: flex; flex-direction: column; gap: 12px; }
     .set-rule { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; color: #374151; }
@@ -1232,8 +1235,8 @@ function renderRegulations() {
 
     // ── BUBBLE 1: Labor Rules ────────────────────────────────────────────
     '<div class="card">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
-        '<h2 style="font-size:15px;">\u2699\uFE0F Settings - ' + currentRegionName + '</h2>' +
+      '<div class="set-head" style="margin-bottom:6px;">' +
+        '<h2 style="font-size:15px;margin:0;">\u2699\uFE0F Settings - ' + currentRegionName + '</h2>' +
         '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button>' +
       '</div>' +
       '<h3 class="set-h3">Labor Rules</h3>' +
@@ -1260,16 +1263,17 @@ function renderRegulations() {
 
     // ── BUBBLE 2: Operating Hours ────────────────────────────────────────
     '<div class="card">' +
-      '<h3 class="set-h3">Operating Hours (per day)</h3>' +
+      '<div class="set-head"><h3 class="set-h3">Operating Hours (per day)</h3>' +
+        '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
       '<p class="set-note">Dimmed rows are current rest days. Hours are saved and apply if the rule is toggled off.</p>' +
       '<table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
       hoursRows + '</table>' +
-      '<div style="margin-top:14px;"><button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
     '</div>' +
 
     // ── BUBBLE 3: Break Structure ────────────────────────────────────────
     '<div class="card">' +
-      '<h3 class="set-h3">Break Structure</h3>' +
+      '<div class="set-head"><h3 class="set-h3">Break Structure</h3>' +
+        '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
       '<p class="set-note">Define breaks per shift. The engine places each break in the lowest-volume slot within its window.</p>' +
       '<table class="breaks-table">' +
         '<tr><th>Name</th><th>Duration (min)</th><th>Window start</th><th>Window end</th><th></th></tr>' +
@@ -1289,17 +1293,16 @@ function renderRegulations() {
         }).join('') +
       '</table>' +
       '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
-      '<div style="margin-top:14px;"><button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
     '</div>' +
 
     // ── BUBBLE 4: Bank Holidays ──────────────────────────────────────────
     '<div class="card">' +
-      '<h3 class="set-h3">Bank Holidays</h3>' +
+      '<div class="set-head"><h3 class="set-h3">Bank Holidays</h3>' +
+        '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
       '<p class="set-note">All agents show \uD83C\uDFD6\uFE0F Holiday. Does not consume an agent\u2019s rest day.</p>' +
       '<div class="date-tags" id="holiday-dates-tags">' + holidayTagsHtml + '</div>' +
       '<div class="date-add-row"><input type="date" id="new-holiday-date">' +
       '<button class="btn btn-primary" onclick="addHoliday()">+ Add date</button></div>' +
-      '<div style="margin-top:16px;"><button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
     '</div>' +
 
     // ── BUBBLE 5 + 6: AHT & Priority, Monthly Targets + Trend (migrated) ──
@@ -2540,14 +2543,15 @@ function buildForecastSettingsHtml() {
   return (
     // ── BUBBLE 5: AHT & Priority per task ────────────────────────────────
     '<div class="card">' +
-      '<h3 class="set-h3">AHT & Priority per task</h3>' +
+      '<div class="set-head"><h3 class="set-h3">AHT & Priority per task</h3>' +
+        '<button class="btn btn-save" onclick="saveForecastSettings()">\uD83D\uDCBE Save</button></div>' +
       '<table class="aht-task-table" style="max-width:420px;"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table>' +
-      '<button class="btn btn-save" style="margin-top:12px;font-size:12px;" onclick="saveForecastSettings()">\uD83D\uDCBE Save AHT, Priority & Trend</button>' +
     '</div>' +
 
     // ── BUBBLE 6: Monthly Targets (with Trend integrated on top) ─────────
     '<div class="card">' +
-      '<h3 class="set-h3">Monthly Targets - ' + curYear + '</h3>' +
+      '<div class="set-head"><h3 class="set-h3">Monthly Targets - ' + curYear + '</h3>' +
+        '<button class="btn btn-save" onclick="saveMonthlyBoTargets()">\uD83D\uDCBE Save</button></div>' +
       // Trend row, inline at the top
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #e5e7eb;">' +
         '<span style="font-size:12px;font-weight:600;color:#374151;">Forecast trend</span>' +
@@ -2558,7 +2562,6 @@ function buildForecastSettingsHtml() {
       '<p class="set-note">Contacts per month \u2192 auto-spread hourly by CALL curve</p>' +
       '<table class="aht-task-table" style="max-width:420px;"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
       boRows + '</table>' +
-      '<button class="btn btn-save" style="margin-top:10px;font-size:12px;" onclick="saveMonthlyBoTargets()">\uD83D\uDCBE Save Monthly Targets</button>' +
     '</div>'
   );
 }
