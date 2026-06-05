@@ -2302,22 +2302,28 @@ function renderAgents() {
     container.innerHTML = '<p style="color:#888">No agents yet. Click Add Agent above.</p>';
     return;
   }
+  // The 6 skill pills, in display order. Each maps to a tag stored in agent_tags.
+  var SKILL_PILLS = [
+    { tag:'can_call',        label:'Call',        bg:'#fef2f2', text:'#dc2626', border:'#fecaca' },
+    { tag:'can_mail',        label:'Mail',        bg:'#eff6ff', text:'#2563eb', border:'#bfdbfe' },
+    { tag:'can_chat',        label:'Chat',        bg:'#fff7ed', text:'#ea580c', border:'#fed7aa' },
+    { tag:'can_fraud',       label:'Fraud',       bg:'#eef2ff', text:'#4338ca', border:'#a5b4fc' },
+    { tag:'can_backoffice',  label:'Back Office', bg:'#f5f3ff', text:'#7c3aed', border:'#c4b5fd' },
+    { tag:'can_clienteling', label:'Clienteling', bg:'#f0fdf4', text:'#16a34a', border:'#bbf7d0' },
+  ];
   container.innerHTML = agents.map(function(a) {
     var pct = a.work_pct || 100;
     var pctBadge = pct < 100
       ? '<span class="pct-badge">' + pct + '%</span>'
       : '<span class="pct-badge" style="color:#9ca3af;">100%</span>';
     var tags = agentTags[a.id] || [];
-    var tagChips = ['can_fraud','can_backoffice'].map(function(tag){
-      var active = tags.includes(tag);
-      var label  = tag === 'can_fraud' ? '\uD83D\uDD10 Fraud' : '\uD83D\uDCCB Back-office';
+    var tagChips = SKILL_PILLS.map(function(p){
+      var active = tags.includes(p.tag);
       var style  = active
-        ? 'background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd;font-weight:600;'
+        ? 'background:'+p.bg+';color:'+p.text+';border:1px solid '+p.border+';font-weight:600;'
         : 'background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;';
-      if (tag === 'can_fraud' && active)
-        style = 'background:#eef2ff;color:#4338ca;border:1px solid #a5b4fc;font-weight:600;';
-      return '<button data-agent="'+a.id+'" data-tag="'+tag+'" onclick="handleTagClick(this)" '+
-        'style="'+style+'padding:2px 10px;border-radius:10px;font-size:11px;cursor:pointer;border-width:1px;border-style:solid;">'+label+'</button>';
+      return '<button data-agent="'+a.id+'" data-tag="'+p.tag+'" onclick="handleTagClick(this)" '+
+        'style="'+style+'padding:2px 10px;border-radius:10px;font-size:11px;cursor:pointer;border-width:1px;border-style:solid;">'+p.label+'</button>';
     }).join('');
     return '<div class="agent-row">' +
       '<span>' + a.first_name + ' ' + a.last_name + pctBadge + '</span>' +
