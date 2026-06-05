@@ -390,12 +390,12 @@ var scheduleOverrides = {}; // [date][agentId][start_min] = {end_min, task}
 
 // Default task config (pastel colors, used for seeding and fallback)
 var TASK_DEFAULTS = [
-  { name:'FRAUD',       priority:1, is_filler:false, color_bg:'#eef2ff', color_text:'#4338ca', aht_minutes:10, required_tag:'can_fraud',     morning_only:true  },
-  { name:'CALL',        priority:1, is_filler:false, color_bg:'#fef2f2', color_text:'#dc2626', aht_minutes:10, required_tag:null,               morning_only:false },
-  { name:'CHAT',        priority:2, is_filler:false, color_bg:'#fff7ed', color_text:'#ea580c', aht_minutes:8,  required_tag:null,               morning_only:false },
-  { name:'MAIL',        priority:3, is_filler:false, color_bg:'#eff6ff', color_text:'#2563eb', aht_minutes:5,  required_tag:null,               morning_only:false },
-  { name:'BACK-OFFICE', priority:4, is_filler:false, color_bg:'#f5f3ff', color_text:'#7c3aed', aht_minutes:10, required_tag:'can_backoffice',   morning_only:false },
-  { name:'CLIENTELING', priority:5, is_filler:true,  color_bg:'#f0fdf4', color_text:'#16a34a', aht_minutes:15, required_tag:null,               morning_only:false },
+  { name:'FRAUD',       priority:1, is_filler:false, color_bg:'#eef2ff', color_text:'#4338ca', aht_minutes:10, required_tag:'can_fraud',       morning_only:true  },
+  { name:'CALL',        priority:1, is_filler:false, color_bg:'#fef2f2', color_text:'#dc2626', aht_minutes:10, required_tag:'can_call',        morning_only:false },
+  { name:'CHAT',        priority:2, is_filler:false, color_bg:'#fff7ed', color_text:'#ea580c', aht_minutes:8,  required_tag:'can_chat',        morning_only:false },
+  { name:'MAIL',        priority:3, is_filler:false, color_bg:'#eff6ff', color_text:'#2563eb', aht_minutes:5,  required_tag:'can_mail',        morning_only:false },
+  { name:'BACK-OFFICE', priority:4, is_filler:false, color_bg:'#f5f3ff', color_text:'#7c3aed', aht_minutes:10, required_tag:'can_backoffice',  morning_only:false },
+  { name:'CLIENTELING', priority:5, is_filler:true,  color_bg:'#f0fdf4', color_text:'#16a34a', aht_minutes:15, required_tag:'can_clienteling', morning_only:false },
 ];
 var BREAK_COLORS = {
   lunch: { bg:'#fef9c3', text:'#a16207' },
