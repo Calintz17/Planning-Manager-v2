@@ -950,9 +950,10 @@ async function onRegionChange() {
   if (!currentRegionId) return;
   await loadRegulations();
   await loadTasks();
-  await loadAgentTags();
   await loadMonthlyBoTargets();
-  await loadWeekData();
+  await loadWeekData();     
+  await loadAgentTags();    
+  renderAgents();           
 }
 
 // ── LOAD REGULATIONS ──────────────────────────────────────────────────────
