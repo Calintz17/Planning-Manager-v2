@@ -292,18 +292,18 @@
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
       <div class="view-toggle">
-        <button id="btn-view-recap" onclick="switchPlanningView('recap')">💡 Recap</button>
-        <button id="btn-view-weekly" class="active" onclick="switchPlanningView('weekly')">📅 Weekly</button>
+        <button id="btn-view-recap" class="active" onclick="switchPlanningView('recap')">💡 Recap</button>
+        <button id="btn-view-weekly" onclick="switchPlanningView('weekly')">📅 Weekly</button>
         <button id="btn-view-intraday" onclick="switchPlanningView('intraday')">⏱ Intraday</button>
       </div>
       <div id="planning-legend" style="font-size:11px;color:#6b7280;display:none;">
         💡 Click <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">📅 Sched. Rest</span> to reassign rest day
       </div>
     </div>
-    <div id="planning-recap" style="display:none;">
+    <div id="planning-recap">
       <div id="forecast-grid"><p style="color:#888">Select a region to view the recap.</p></div>
     </div>
-    <div id="planning-weekly"><p style="color:#888">Select a region to view the planning.</p></div>
+    <div id="planning-weekly" style="display:none;"><p style="color:#888">Select a region to view the planning.</p></div>
     <div id="planning-intraday" style="display:none;"><p style="color:#888">Select a region.</p></div>
   </div>
 </div>
@@ -402,7 +402,7 @@ let regulations = {
 let ropState = { agentId: null, currentRestDay: null };
 
 // Planning view state
-var currentPlanningView = 'weekly';
+var currentPlanningView = 'recap';
 var currentIntradayDate = null;
 var tasks = [];  // loaded from tasks table
 var scheduleOverrides = {}; // [date][agentId][start_min] = {end_min, task}
@@ -1264,6 +1264,7 @@ function renderRegulations() {
       '<p class="set-note">Dimmed rows are current rest days. Hours are saved and apply if the rule is toggled off.</p>' +
       '<table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
       hoursRows + '</table>' +
+      '<div style="margin-top:14px;"><button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
     '</div>' +
 
     // ── BUBBLE 3: Break Structure ────────────────────────────────────────
@@ -1288,6 +1289,7 @@ function renderRegulations() {
         }).join('') +
       '</table>' +
       '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
+      '<div style="margin-top:14px;"><button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
     '</div>' +
 
     // ── BUBBLE 4: Bank Holidays ──────────────────────────────────────────
@@ -1736,6 +1738,7 @@ async function resetDayOverrides(ds) {
 // ── RENDER PLANNING ───────────────────────────────────────────────────────
 function renderPlanning() {
   renderWeeklyPlanning();
+  if (currentPlanningView === 'recap')    renderForecast();
   if (currentPlanningView === 'intraday') renderIntraday(currentIntradayDate);
 }
 
