@@ -290,7 +290,7 @@
     #toast { position: fixed; bottom: 24px; right: 24px; color: white; padding: 12px 20px; border-radius: 6px; font-size: 13px; display: none; z-index: 1000; }
     #toast.success { background: #166534; }
     #toast.error   { background: #b91c1c; }
-    #status-bar { background: white; border-top: 1px solid #eee; padding: 8px 24px; font-size: 12px; color: #888; }
+    #status-bar { background: white; border-top: 1px solid #eee; padding: 8px 24px; font-size: 12px; color: #888; display: flex; justify-content: space-between; align-items: center; }
 
     /* ── WEEK PICKER ── */
     #week-picker-popup {
@@ -490,7 +490,7 @@
   </div>
 </div>
 
-<div id="status-bar">Planning Manager - Ready</div>
+<div id="status-bar"><span id="status-text">Ready - select a region to begin</span><span id="status-sign">© Roman Inc.</span></div>
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────────────────────
@@ -1080,7 +1080,7 @@ function updateWeekLabel() {
 // ── UI HELPERS ────────────────────────────────────────────────────────────
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
-function setStatus(msg) { document.getElementById('status-bar').textContent = msg; }
+function setStatus(msg) { document.getElementById('status-text').textContent = msg; }
 
 function showToast(msg, type) {
   type = type || 'success';
