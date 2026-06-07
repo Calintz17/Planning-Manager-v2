@@ -1,6 +1,6 @@
 # Planning Manager V1.21
 
-# CORA — Client Operations Rostering Assistant
+# CORA - Client Operations Rostering Assistant
 
 yo
 CORA is a browser-based workforce planning tool for a customer service operation spread across six global hubs. 
@@ -31,9 +31,9 @@ The whole app is intentionally simple. There is no build step, no framework, no 
 - **Backend / database**: Supabase (Postgres + auto-generated API).
 - **Hosting**: GitHub Pages, served directly from the repo.
 - **External libraries** (loaded from a CDN, nothing installed):
-  - `@supabase/supabase-js` — to talk to the database
-  - `xlsx-js-style` — to generate the Excel exports
-  - Nager.Date public API — to fetch public holidays per country
+  - `@supabase/supabase-js` - to talk to the database
+  - `xlsx-js-style` - to generate the Excel exports
+  - Nager.Date public API - to fetch public holidays per country
 
 Everything is edited through the GitHub web interface. There is no local development setup, no terminal, no npm.
 
@@ -92,7 +92,7 @@ This is the brain of the app. The main groups of functions are:
 
 - **Setup**: Supabase client, constants (`DAY_KEYS`, `REGION_DEFAULTS`), and the in-memory state variables (`agents`, `forecasts`, `availability`, `regulations`, `tasks`, etc.).
 - **Init & region**: `init()` loads regions and boots the app; `onRegionChange()` reloads everything when you switch hub.
-- **Loaders**: `loadTasks()`, `loadAgentTags()`, `loadRegulations()`, `loadCalendarData()`, `loadHistoricalVolume()`, `loadMonthlyBoTargets()` — each pulls its data from Supabase.
+- **Loaders**: `loadTasks()`, `loadAgentTags()`, `loadRegulations()`, `loadCalendarData()`, `loadHistoricalVolume()`, `loadMonthlyBoTargets()` - each pulls its data from Supabase.
 - **Forecast engine**: `buildAutoForecast()` generates the weekly forecast; `buildBoHourlyFromMonthly()` spreads monthly Back-Office/Fraud targets across the hours using the call curve as a shape.
 - **Planning render**: `renderForecast()` and the Recap helpers (`buildRecapSummary()`, `recapSummaryHtml()`, anomaly and production-alert banners) build the weekly view and dashboard.
 - **Intraday**: the timeline view, including drag-and-drop block swapping saved to `schedule_overrides`.
@@ -147,8 +147,34 @@ Six task types, in priority order (lower number = handled first when assigning a
 
 ---
 
-## Version history (recent)
+## Version history 
 
-- **v1.22** — performance pass: dead code removed, Recap roughly twice as fast, new helpers `getWorkingAgents` / `breakTotalMin`.
-- **v1.21.1** — CORA branding (logo, persistent footer credit).
-- **v1.21** — current documented production version. Includes the full engine, Shifts, three Excel export views, Calendar with public holidays and leave, and the Recap dashboard.
+
+|---|---|
+| Build_V1 | First commit: initial HTML structure, color palette, and Supabase integration with an auth modal, across separate index.html / app.js / styles.css / config.js files. |
+| Build_V1.1 | Added the Tasks module (CRUD and filters) and the Forecast module with data fetching. |
+| Build_V1.2 | Added the Weekly planning module and a PTO drawer. |
+| Build_V1.3 | Added the Regulations module with CRUD and validation, plus an attendance/calendar section. |
+| Build_V1.4 | Reworked the header, footer, background and button colors, and added a task management UI. |
+| Build_V1.5 | Iterated on the forecast (added a forecast test page) and refined the layout across several passes. |
+| MVP_v1 | Switched to a single index.html file, deleting the separate app.js, styles.css and config.js. |
+| MVP_v1.1 | Added the rotation engine, forecast blocking logic, and reactive opening-hours handling. |
+| MVP_v1.2 | Added the auto-forecast and carry-over logic, with a carry-in banner. |
+| MVP_v1.3 | Added the intraday view with drag-and-drop schedule overrides. |
+| MVP_v1.4 | Refactored task configuration and defaults, and fixed agent tags saving by switching insert to upsert. |
+| CORA_V1.5 | Added required tags to task defaults and converted agent tag chips to skill pills. |
+| CORA_V1.6 | Added the Recap card and renamed the weekly forecast title. |
+| CORA_V1.7 | Removed the Forecast tab and reorganized everything into the Settings tab. |
+| CORA_V1.8 | Set the default planning view and reworked the view buttons. |
+| CORA_V1.9 | Added the Shifts engine: agent presence handling and Morning / Afternoon scheduling logic. |
+| CORA_V1.10 | Added the iOS-style shift switch popover and its styles. |
+| CORA_V1.11 | Refined shift badge styling, presence logic, and shift hour calculations. |
+| CORA_V1.12 | Added the Excel export button and its core functionality. |
+| CORA_V1.13 | Refined the Excel export with extra cell merges and border styles. |
+| CORA_V1.14 | Added the calendar navigation and leave declaration forms. |
+| CORA_V1.15 | Added the annual calendar view and updated styles. |
+| CORA_V1.16 | Added volume anomaly detection and updated styling. |
+| CORA_V1.17 | Refactored the anomaly checks, coverage calculations, and production alert logic. |
+| CORA_V1.20 | Bumped the in-app version to V1.20 and updated the setup steps. |
+| CORA_V1.21 | Rebranded the header to CORA with the logo, and renamed the title. |
+| CORA_V1.21.1 | Added the status bar with status text and the copyright credit; current version. |
