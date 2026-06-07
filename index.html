@@ -314,6 +314,42 @@
     .wkp-day.week-end { border-radius:0 4px 4px 0; }
     #week-label { cursor:pointer; border-radius:4px; padding:4px 8px; }
     #week-label:hover { background:rgba(255,255,255,.15); }
+
+    .table-scroll { max-width: 100%; }
+    @media (max-width: 768px) {
+      .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
+    /* ============================================================
+       MOBILE RESPONSIVE (<=768px). Desktop is untouched.
+       Strategy: wide tables/grids scroll horizontally INSIDE their
+       card (no compression); agent pills wrap into a clean block;
+       Recap day cards stack full-width.
+       ============================================================ */
+    @media (max-width: 768px) {
+      /* Wide tables & grids: horizontal touch-scroll, bounded to the card */
+      #planning-weekly,
+      #calendar-annual,
+      #calendar-monthly,
+      .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+      }
+      /* Settings tables: wrapped in .table-scroll (see render) which scrolls */
+      /* Weekly table keeps its natural width and scrolls inside the card */
+      #planning-weekly > table { min-width: 640px; }
+      /* Calendar grids keep their natural size and scroll inside the card */
+      .cal-grid { min-width: 560px; }
+      .cal-year-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); min-width: 540px; }
+
+      /* Recap: dashboard cards + day cards stack full-width, scroll vertical */
+      .forecast-grid { grid-template-columns: 1fr; }
+
+      /* Agent pills: clean wrapping block instead of a messy single row */
+      .agent-row { flex-direction: column; align-items: stretch; gap: 8px; }
+      .agent-row > span { flex: none; font-weight: bold; }
+      .agent-row > div { flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body>
@@ -1427,8 +1463,8 @@ function renderRegulations() {
       '<div class="set-head"><h3 class="set-h3">Operating Hours (per day)</h3>' +
         '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
       '<p class="set-note">Dimmed rows are current rest days. Hours are saved and apply if the rule is toggled off.</p>' +
-      '<table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
-      hoursRows + '</table>' +
+      '<div class="table-scroll"><table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
+      hoursRows + '</table></div>' +
     '</div>' +
 
     // ── BUBBLE 3: Break Structure ────────────────────────────────────────
@@ -1436,7 +1472,7 @@ function renderRegulations() {
       '<div class="set-head"><h3 class="set-h3">Break Structure</h3>' +
         '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
       '<p class="set-note">Define breaks per shift. The engine places each break in the lowest-volume slot within its window.</p>' +
-      '<table class="breaks-table">' +
+      '<div class="table-scroll"><table class="breaks-table">' +
         '<tr><th>Name</th><th>Duration (min)</th><th>Window start</th><th>Window end</th><th></th></tr>' +
         (regulations.breaks || []).map(function(b, bi) {
           var wsOpts = '', weOpts = '';
@@ -1452,7 +1488,7 @@ function renderRegulations() {
             '<td><button class="btn-xs btn-xs-danger" onclick="removeBreakRow(this)">\u2715</button></td>' +
             '</tr>';
         }).join('') +
-      '</table>' +
+      '</table></div>' +
       '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
     '</div>' +
 
@@ -2977,7 +3013,7 @@ function buildForecastSettingsHtml() {
     '<div class="card">' +
       '<div class="set-head"><h3 class="set-h3">AHT & Priority per task</h3>' +
         '<button class="btn btn-save" onclick="saveForecastSettings()">\uD83D\uDCBE Save</button></div>' +
-      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table>' +
+      '<div class="table-scroll"><table class="aht-task-table" style="max-width:420px;"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table></div>' +
     '</div>' +
 
     // ── BUBBLE 6: Monthly Targets (with Trend integrated on top) ─────────
@@ -2992,8 +3028,8 @@ function buildForecastSettingsHtml() {
         '<span class="trend-note" style="font-size:11px;color:#9ca3af;">' + trendSign + trend + '% - ' + trendDesc + '</span>' +
       '</div>' +
       '<p class="set-note">Contacts per month \u2192 auto-spread hourly by CALL curve</p>' +
-      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
-      boRows + '</table>' +
+      '<div class="table-scroll"><table class="aht-task-table" style="max-width:420px;"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
+      boRows + '</table></div>' +
     '</div>'
   );
 }
