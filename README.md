@@ -150,6 +150,7 @@ Six task types, in priority order (lower number = handled first when assigning a
 ## Version history 
 
 
+| Version | descriptiop |
 |---|---|
 | Build_V1 | First commit: initial HTML structure, color palette, and Supabase integration with an auth modal, across separate index.html / app.js / styles.css / config.js files. |
 | Build_V1.1 | Added the Tasks module (CRUD and filters) and the Forecast module with data fetching. |
