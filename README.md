@@ -152,30 +152,31 @@ Six task types, in priority order (lower number = handled first when assigning a
 
 | Version | descriptiop |
 |---|---|
-| Build_V1 | First commit: initial HTML structure, color palette, and Supabase integration with an auth modal, across separate index.html / app.js / styles.css / config.js files. |
-| Build_V1.1 | Added the Tasks module (CRUD and filters) and the Forecast module with data fetching. |
-| Build_V1.2 | Added the Weekly planning module and a PTO drawer. |
-| Build_V1.3 | Added the Regulations module with CRUD and validation, plus an attendance/calendar section. |
-| Build_V1.4 | Reworked the header, footer, background and button colors, and added a task management UI. |
-| Build_V1.5 | Iterated on the forecast (added a forecast test page) and refined the layout across several passes. |
-| MVP_v1 | Switched to a single index.html file, deleting the separate app.js, styles.css and config.js. |
-| MVP_v1.1 | Added the rotation engine, forecast blocking logic, and reactive opening-hours handling. |
-| MVP_v1.2 | Added the auto-forecast and carry-over logic, with a carry-in banner. |
-| MVP_v1.3 | Added the intraday view with drag-and-drop schedule overrides. |
-| MVP_v1.4 | Refactored task configuration and defaults, and fixed agent tags saving by switching insert to upsert. |
-| CORA_V1.5 | Added required tags to task defaults and converted agent tag chips to skill pills. |
-| CORA_V1.6 | Added the Recap card and renamed the weekly forecast title. |
-| CORA_V1.7 | Removed the Forecast tab and reorganized everything into the Settings tab. |
+| Build_V1 | First draft : HTML structure, color palette, and Supabase integration. Used to have index.html / app.js / styles.css / config.js files. |
+| Build_V1.1 | Added the Tasks and forecast module. Added Copyright at. Roman Inc. mthfckr|
+| Build_V1.2 | Added the Weekly planning module and a shitty PTO drawer. |
+| Build_V1.3 | Added the Regulations module with validation, (set in stone, see later to upgrade). |
+| Build_V1.4 | header, footer, background and button colors (remove golden layout), and added a task management UI with pills. |
+| Build_V1.5 | Added a forecast test page and refined the layout so it look good. It didn't. |
+| MVP_v1 | Switched to a single index.html file because too many sub-file and i can't bother to have a app.js. Removed styles.css and config.js. |
+| MVP_v1.1 | Added the rotation engine, forecast blocking logic, and reactive opening-hours handling. Didn't work |
+| MVP_v1.2 | Added the auto-forecast and carry-over logic -> Shit's great. To test if it work with OPS tho |
+| MVP_v1.3 | Broke everything, then Intraday view + drag-and-drop schedule overrides. |
+| MVP_v1.4 | Task configuration and defaults, and fixed agent tags. More upsert, less insert |
+| CORA_V1.5 | Added required tags to task defaults (will work with retail) and converted agent tag chips to skill pills. |
+| CORA_V1.6 | Recap card and renamed the weekly forecast title because too many "planning" |
+| CORA_V1.7 | Removed the Forecast tab. Remove "regulation", replaced with Settings tab -> 1 tab to make input only |
 | CORA_V1.8 | Set the default planning view and reworked the view buttons. |
-| CORA_V1.9 | Added the Shifts engine: agent presence handling and Morning / Afternoon scheduling logic. |
-| CORA_V1.10 | Added the iOS-style shift switch popover and its styles. |
-| CORA_V1.11 | Refined shift badge styling, presence logic, and shift hour calculations. |
-| CORA_V1.12 | Added the Excel export button and its core functionality. |
-| CORA_V1.13 | Refined the Excel export with extra cell merges and border styles. |
-| CORA_V1.14 | Added the calendar navigation and leave declaration forms. |
-| CORA_V1.15 | Added the annual calendar view and updated styles. |
-| CORA_V1.16 | Added volume anomaly detection and updated styling. |
-| CORA_V1.17 | Refactored the anomaly checks, coverage calculations, and production alert logic. |
-| CORA_V1.20 | Bumped the in-app version to V1.20 and updated the setup steps. |
-| CORA_V1.21 | Rebranded the header to CORA with the logo, and renamed the title. |
-| CORA_V1.21.1 | Added the status bar with status text and the copyright credit; current version. |
+| CORA_V1.9 | Added the Shifts engine : agent presence handling and Morning / Afternoon scheduling logic. Broke things with China|
+| CORA_V1.10 | Added the iOS-style shift switch popover and its styles. Fixed China. |
+| CORA_V1.11 | Shift badge styling yo, presence logic if FTE is here, and shift hour calculations. |
+| CORA_V1.12 | Added the Excel export button and its core functionality as per AST request. |
+| CORA_V1.13 | Refined the Excel export with extra cell merges and border styles. Still not perfect, but will do for now |
+| CORA_V1.14 | Added the calendar navigation and leave declaration forms. (Only 3 now) |
+| CORA_V1.15 | Perpetual calendar, thanks Rida, view and updated styles. |
+| CORA_V1.16 | Added volum eanomaly detection and updated styling > based on n-1 forecast. |
+| CORA_V1.17 | Refactored the anomaly checks (too heavy), coverage calculations, and production alert logic. |
+| CORA_V1.20 | updated the setup steps. |
+| CORA_V1.21 | My baby is born : Update header to CORA with the logo, and renamed the title. |
+| CORA_V1.21.1 | Added the status bar with status text |
+| CORA_V1.21.2 | Fixed shit with .table-scroll to wrap table so mobile is ok, cause everyone likes fucking mobile dunno why |
