@@ -340,35 +340,51 @@
       box-shadow: 0 1px 0 rgba(16,24,40,.04);
     }
 
-    /* Segmented control Apple-style CS / Retail */
-    .cs-retail-switch {
-      display: inline-flex;
-      background: rgba(255,255,255,.10);
-      border-radius: 10px;
-      padding: 3px;
-      gap: 2px;
-    }
-    .cs-retail-switch .crs-opt {
-      font-size: 13px;
-      font-weight: 600;
-      color: #d7d9e3;
-      text-decoration: none;
-      padding: 6px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all .18s ease;
-      white-space: nowrap;
-      line-height: 1;
+    /* Apple slider toggle CS <-> Retail (aligne verticalement dans le header) */
+    .mode-toggle {
       display: inline-flex;
       align-items: center;
+      gap: 10px;
+      align-self: center;
     }
-    .cs-retail-switch .crs-opt:hover { color: #ffffff; }
-    .cs-retail-switch .crs-active {
-      background: #ffffff;
-      color: #1a1a2e;
-      box-shadow: 0 1px 2px rgba(16,24,40,.18);
-      cursor: default;
+    .mode-lbl {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9aa0b5;
+      white-space: nowrap;
+      line-height: 1;
     }
+    .mode-lbl-active { color: #ffffff; }
+    .ios-switch {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      border-radius: 999px;
+      background: #ffffff;              /* fond blanc demande */
+      border: 1px solid #d7dae5;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      transition: background .2s ease;
+      box-shadow: inset 0 1px 2px rgba(16,24,40,.06);
+    }
+    .ios-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1a1a2e;             /* knob navy pour contraste sur fond blanc */
+      transition: transform .22s cubic-bezier(.4,.0,.2,1);
+      box-shadow: 0 1px 3px rgba(16,24,40,.3);
+    }
+    .ios-switch.on .ios-knob { transform: translateX(20px); }   /* ON = droite = Retail */
+
+    /* Alignement header : le bloc Region a un label au-dessus (~18px).
+       On aligne le toggle et le week-nav sur la ligne des champs. */
+    .mode-toggle { margin-top: 18px; }
+    #header .week-nav { margin-top: 18px; }
 
     /* Boutons primaires : navy garde, coins un peu plus ronds */
     .btn, button.btn-export { border-radius: 8px !important; }
@@ -403,6 +419,103 @@
     .rt-leave { background:#FAEEDA; color:#854F0B; }   /* Conge */
     .rt-leave .dot { background:#EF9F27; }
     .rt-train { background:#EEEDFE; color:#3C3489; }   /* Formation */
+
+    /* ════ DESIGN RETAIL RENFORCE (univers nettement distinct du CSC) ════ */
+
+    /* Page : fond plus doux, plus de respiration globale */
+    body { background: #f4f5f8; }
+    #app, .container, main { padding-top: 4px; }
+
+    /* Cartes : presence affirmee, ombre douce mais visible, grands arrondis */
+    .card {
+      background:#ffffff !important;
+      border:none !important;
+      border-radius:16px !important;
+      box-shadow:0 2px 4px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.07) !important;
+      padding:24px !important;
+      margin-bottom:18px !important;
+    }
+
+    /* Onglets : style "segmented" doux facon GetIn */
+    #tabs {
+      background:#ffffff;
+      border-bottom:none;
+      padding:8px 12px;
+      gap:4px;
+      box-shadow:0 1px 0 rgba(16,24,40,.04);
+    }
+    .tab-btn {
+      border-radius:10px !important;
+      padding:9px 18px !important;
+      color:#6b7280 !important;
+      transition:all .15s ease;
+    }
+    .tab-btn:hover { background:#f4f5f8 !important; color:#1a1a2e !important; }
+    .tab-btn.active {
+      background:#1a1a2e !important;
+      color:#ffffff !important;
+      border-bottom:none !important;
+      box-shadow:0 1px 3px rgba(16,24,40,.2);
+    }
+
+    /* Sous-boutons de vue (Recap/Monthly/Weekly/Intraday) : pills douces */
+    .view-toggle button {
+      border-radius:10px !important;
+      padding:8px 16px !important;
+      transition:all .15s ease;
+    }
+    .view-toggle button.active {
+      background:#1a1a2e !important; color:#fff !important;
+      box-shadow:0 1px 3px rgba(16,24,40,.2);
+    }
+
+    /* Boutons : plus arrondis, plus doux */
+    .btn, button.btn-export { border-radius:10px !important; }
+
+    /* Champs : grands arrondis, bordures tres douces */
+    select, input[type="text"], input[type="number"], input[type="date"] {
+      border-radius:10px !important;
+      border:1px solid #e6e8ee !important;
+      background:#fbfcfd !important;
+    }
+
+    /* Tableaux : en-tetes plus doux, coins arrondis */
+    table { border-radius:12px; overflow:hidden; }
+
+    /* ── Pills STATUT agent (exclusives) ── */
+    .rt-status {
+      display:inline-flex; align-items:center;
+      font-size:11px; font-weight:700; letter-spacing:.02em;
+      padding:3px 10px; border-radius:999px; line-height:1.5;
+    }
+    .st-sm       { background:#EEEDFE; color:#3C3489; }
+    .st-asm      { background:#E0E7FF; color:#3730A3; }
+    .st-manager  { background:#E6F1FB; color:#185FA5; }
+    .st-stock    { background:#FAEEDA; color:#854F0B; }
+    .st-senior   { background:#E1F5EE; color:#0F6E56; }
+    .st-sa       { background:#F1EFE8; color:#5F5E5A; }
+    .st-part_time{ background:#FBEAF0; color:#993556; }
+
+    /* ── Pastilles SHIFT dans la grille mensuelle ── */
+    .sh {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:26px; font-size:11px; font-weight:700;
+      padding:3px 7px; border-radius:8px; line-height:1.4;
+    }
+    /* Vente : O / M / C / D */
+    .sh-o  { background:#E1F5EE; color:#0F6E56; }   /* Ouverture 09h30-18h00 */
+    .sh-m  { background:#FAEEDA; color:#854F0B; }   /* Milieu 10h30-19h00 */
+    .sh-c  { background:#E6F1FB; color:#185FA5; }   /* Fermeture 11h15-19h45 */
+    .sh-d  { background:#EEEDFE; color:#3C3489; }   /* Tardif 10h45-19h15 */
+    /* Stock : OS / MS / CS */
+    .sh-os { background:#DCF2EC; color:#0F6E56; border:1px dashed #9FE1CB; }
+    .sh-ms { background:#FBF0DC; color:#854F0B; border:1px dashed #FAC775; }
+    .sh-cs { background:#E2EEFB; color:#185FA5; border:1px dashed #B5D4F4; }
+    /* Repos / absences */
+    .sh-off  { background:#F1F2F5; color:#9aa0b5; }
+    .sh-cp   { background:#FBEAF0; color:#993556; }
+    .sh-closed { color:#cdd2dc; }
+
 
   </style>
 </head>
@@ -452,12 +565,16 @@
                    font-size:36px;color:#ffffff;letter-spacing:0.5px;">CORA</span>
       <span style="font-family:'Century Schoolbook','Times New Roman',serif;
                    font-style:italic;font-size:12px;color:#AFABAB;margin-top:4px;">
-        Client Operations Rostering Assistant &middot; Retail</span>
+        Client Operations Rostering Assistant</span>
     </div>
   </div>
-  <div class="cs-retail-switch" role="tablist" aria-label="Mode">
-    <a href="index.html" class="crs-opt" role="tab">Client Service</a>
-    <span class="crs-opt crs-active" role="tab" aria-selected="true">Retail</span>
+  <div class="mode-toggle">
+    <span class="mode-lbl">Client Service</span>
+    <button class="ios-switch on" role="switch" aria-checked="true" aria-label="Basculer vers Client Service"
+            onclick="window.location.href='index.html'">
+      <span class="ios-knob"></span>
+    </button>
+    <span class="mode-lbl mode-lbl-active">Retail</span>
   </div>
   <div>
     <label>Region</label>
@@ -2019,18 +2136,52 @@ function renderPlanning() {
   if (currentPlanningView === 'recap')    renderForecast();
   if (currentPlanningView === 'intraday') renderIntraday(currentIntradayDate);
 }
+// ── RETAIL MONTHLY : CONSTANTES ───────────────────────────────────────────
+// Statuts (exclusifs) et ordre d'affichage des blocs facon Excel Duphot.
+var RETAIL_STATUS = {
+  SM:        { label: 'SM',         cls: 'st-sm',        block: 'SM_ASM',   grid: 'sales' },
+  ASM:       { label: 'ASM',        cls: 'st-asm',       block: 'SM_ASM',   grid: 'sales' },
+  MANAGER:   { label: 'Manager',    cls: 'st-manager',   block: 'MANAGER',  grid: 'sales' },
+  STOCK:     { label: 'Stock',      cls: 'st-stock',     block: 'STOCK',    grid: 'stock' },
+  SENIOR:    { label: 'Senior',     cls: 'st-senior',    block: 'SENIOR',   grid: 'sales' },
+  SA:        { label: 'SA',         cls: 'st-sa',        block: 'SA',       grid: 'sales' },
+  PART_TIME: { label: 'Part Time',  cls: 'st-part_time', block: 'PART_TIME',grid: 'sales' },
+};
+// Ordre des blocs dans la grille (comme l'Excel)
+var RETAIL_BLOCK_ORDER = [
+  { key: 'SM_ASM',    title: 'SM / ASM' },
+  { key: 'MANAGER',   title: 'Managers' },
+  { key: 'STOCK',     title: 'Stock' },
+  { key: 'SENIOR',    title: 'Senior' },
+  { key: 'SA',        title: 'SA' },
+  { key: 'PART_TIME', title: 'Part Time' },
+];
+// Shifts vente (O/M/C/D) et stock (OS/MS/CS) avec horaires en dur (Duphot).
+// startMin = debut en minutes depuis minuit (sert au tri matin/soir).
+var RETAIL_SHIFTS = {
+  sales: [
+    { code: 'O', cls: 'sh-o', label: '09H30 - 18H00', startMin: 570 },
+    { code: 'M', cls: 'sh-m', label: '10H30 - 19H00', startMin: 630 },
+    { code: 'D', cls: 'sh-d', label: '10H45 - 19H15', startMin: 645 },
+    { code: 'C', cls: 'sh-c', label: '11H15 - 19H45', startMin: 675 },
+  ],
+  stock: [
+    { code: 'OS', cls: 'sh-os', label: '08H00 - 16H30', startMin: 480 },
+    { code: 'MS', cls: 'sh-ms', label: '09H00 - 17H30', startMin: 540 },
+    { code: 'CS', cls: 'sh-cs', label: '10H00 - 18H30', startMin: 600 },
+  ],
+};
 
-// ── RENDER MONTHLY PLANNING (Retail) ──────────────────────────────────────
-// Vue mensuelle facon Excel boutique : agents en lignes, jours du mois en
-// colonnes, UNIQUEMENT des lettres (O / C / OFF / CP). Le moteur CORA
-// (computeAgentShifts) dispatche ouverture/fermeture ; les regles de
-// fermeture, week-end, conges et repos sont identiques au reste de l'app.
-//
-// O   = Ouverture (shift du matin)
-// C   = Fermeture (shift d'apres-midi)
-// OFF = Repos hebdo / week-end ferme
-// CP  = Conge declare (toute absence)
-// (cellule grisee) = magasin ferme (ferie / ferme manager)
+function retailStatusOf(agent) {
+  var st = (agent.status || 'SA').toUpperCase();
+  return RETAIL_STATUS[st] ? st : 'SA';
+}
+
+// ── RENDER MONTHLY PLANNING (Retail) — facon Excel Duphot ──────────────────
+// Agents groupes par statut (blocs + sous-totaux), jours du mois en colonnes,
+// lettres de shift attribuees selon le trafic (matin -> O/M/OS/MS,
+// soir -> C/D/CS), repos places les jours de plus faible trafic (max 5j/sem),
+// colonnes RH en bout de ligne (O, C, OFF, DIM, Feries, Conges).
 function renderMonthlyPlanning() {
   var container = document.getElementById('planning-monthly');
   if (!container) return;
@@ -2044,138 +2195,254 @@ function renderMonthlyPlanning() {
   }
 
   // Mois affiche = mois de la semaine courante (les fleches font defiler)
-  var ref       = new Date(currentWeekMonday);
-  var year      = ref.getFullYear();
-  var monthIdx  = ref.getMonth();
-  var firstDay  = new Date(year, monthIdx, 1);
-  var lastDay   = new Date(year, monthIdx + 1, 0);
-  var nDays     = lastDay.getDate();
+  var ref      = new Date(currentWeekMonday);
+  var year     = ref.getFullYear();
+  var monthIdx = ref.getMonth();
+  var lastDay  = new Date(year, monthIdx + 1, 0);
+  var nDays    = lastDay.getDate();
+  var monthName = new Date(year, monthIdx, 1)
+                    .toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
-  var monthName = firstDay.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-
-  // Shifts exacts pour la semaine actuellement chargee (identiques au Weekly)
-  var loadedWeek = {};
-  getWeekDays(currentWeekMonday).forEach(function(d) {
-    var ds = toDateStr(d);
-    if (!getDayClosureType(ds)) loadedWeek[ds] = computeAgentShifts(ds);
-  });
-
-  // Construit la liste des jours du mois
+  // Liste des jours du mois + trafic (forecast) par jour, pour decider repos
   var monthDays = [];
   for (var dnum = 1; dnum <= nDays; dnum++) {
-    var dateObj = new Date(year, monthIdx, dnum);
-    monthDays.push({ num: dnum, date: dateObj, ds: toDateStr(dateObj) });
-  }
-
-  // Pour chaque jour, calcule le statut de chaque agent (lettre)
-  // Renvoie 'O' | 'C' | 'OFF' | 'CP' | 'CLOSED'
-  function letterFor(agent, ds) {
+    var dObj = new Date(year, monthIdx, dnum);
+    var ds   = toDateStr(dObj);
     var closure = getDayClosureType(ds);
-    if (closure) return 'CLOSED';                 // magasin ferme
-    if (agentOnLeave(agent.id, ds)) return 'CP';  // conge
-
-    // Si on a le calcul exact du moteur pour ce jour, on l'utilise
-    if (loadedWeek[ds] && loadedWeek[ds][agent.id]) {
-      return loadedWeek[ds][agent.id].shift === 'afternoon' ? 'C' : 'O';
-    }
-
-    // Sinon, on applique les memes regles de presence que le moteur
-    var st = (availability[agent.id] && availability[agent.id][ds]) || 'working';
-    if (st === 'rest_scheduled' || st === 'rest_override' ||
-        st === 'absent' || st === 'rest_parttime') return 'OFF';
-
-    // Repartition O/C deterministe et stable (meme esprit que le moteur :
-    // une part en fermeture, le reste en ouverture). On alterne par index
-    // agent pour repartir, en restant constant d'un rendu a l'autre.
-    var idx = agents.indexOf(agent);
-    return (idx % 3 === 0) ? 'C' : 'O';
+    var f = forecasts[ds];
+    var vol = (f && f.contact_volume) ? f.contact_volume : 0;
+    monthDays.push({ num: dnum, date: dObj, ds: ds, dow: dObj.getDay(),
+                     closure: closure, vol: vol });
   }
 
-  // Pastilles (memes couleurs que le design Retail)
-  function pill(letter) {
-    if (letter === 'O')   return '<span class="rt-pill rt-open"><span class="dot"></span>O</span>';
-    if (letter === 'C')   return '<span class="rt-pill rt-close"><span class="dot"></span>C</span>';
-    if (letter === 'OFF') return '<span class="rt-pill rt-off">OFF</span>';
-    if (letter === 'CP')  return '<span class="rt-pill rt-leave"><span class="dot"></span>CP</span>';
-    return ''; // CLOSED -> cellule grisee, pas de pastille
+  // ── Repos : pour chaque agent, on force au plus 5 jours travailles / semaine.
+  // Les jours OFF tombent sur les jours OUVERTS de plus faible trafic de la
+  // semaine (c'est le trafic qui determine le repos).
+  // On groupe les jours du mois par semaine ISO (lundi -> dimanche).
+  function weekKey(d) {
+    var dd = new Date(d);
+    var day = dd.getDay();
+    var diff = day === 0 ? -6 : 1 - day;
+    dd.setDate(dd.getDate() + diff);
+    return toDateStr(dd);
   }
-
-  // Totaux par jour
-  var totO = {}, totC = {}, totPresent = {};
+  var weeks = {};
   monthDays.forEach(function(d) {
-    totO[d.ds] = 0; totC[d.ds] = 0; totPresent[d.ds] = 0;
+    var wk = weekKey(d.date);
+    if (!weeks[wk]) weeks[wk] = [];
+    weeks[wk].push(d);
+  });
+
+  // restMap[agentId][ds] = true si l'agent est en repos ce jour-la
+  var restMap = {};
+  agents.forEach(function(a) { restMap[a.id] = {}; });
+
+  Object.keys(weeks).forEach(function(wk) {
+    var wkDays = weeks[wk];
+    // jours ouverts de la semaine (candidats au travail / repos)
+    var openDays = wkDays.filter(function(d) { return !d.closure; });
+    // jours fermes = repos d'office, ne comptent pas dans les 5j
+    // nb de repos a poser parmi les jours ouverts pour ne pas depasser 5 jours
+    var restNeeded = Math.max(0, openDays.length - 5);
+    if (restNeeded === 0) return;
+    // trier les jours ouverts par trafic croissant : les plus faibles = repos
+    var sorted = openDays.slice().sort(function(x, y) { return x.vol - y.vol; });
+    var restDays = sorted.slice(0, restNeeded).map(function(d) { return d.ds; });
+    // appliquer a tous les agents (repos collectif sur jours faibles ;
+    // les overrides individuels via availability restent prioritaires plus bas)
     agents.forEach(function(a) {
-      var L = letterFor(a, d.ds);
-      if (L === 'O') { totO[d.ds]++; totPresent[d.ds]++; }
-      if (L === 'C') { totC[d.ds]++; totPresent[d.ds]++; }
+      restDays.forEach(function(ds) { restMap[a.id][ds] = true; });
     });
   });
 
-  // ── Construction du tableau ──
+  // ── Determination de la lettre de shift d'un agent un jour donne ──
+  // Renvoie {code, cls} ou un statut special.
+  function shiftFor(agent, day) {
+    if (day.closure) return { code: '', cls: 'sh-closed', special: 'closed' };
+    if (agentOnLeave(agent.id, day.ds)) return { code: 'CP', cls: 'sh-cp', special: 'leave' };
+
+    // Overrides individuels d'absence/repos (priorite sur le repos collectif)
+    var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
+    if (st === 'absent') return { code: 'CP', cls: 'sh-cp', special: 'leave' };
+    if (st === 'rest_scheduled' || st === 'rest_override' || st === 'rest_parttime')
+      return { code: 'OFF', cls: 'sh-off', special: 'off' };
+
+    // Repos collectif (jours faible trafic)
+    if (restMap[agent.id] && restMap[agent.id][day.ds])
+      return { code: 'OFF', cls: 'sh-off', special: 'off' };
+
+    // Sinon : l'agent travaille -> choix du shift selon le trafic et la grille
+    var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid];
+
+    // Part-de-trafic du soir vs matin pour ce jour (via la courbe historique
+    // si dispo, sinon split 50/50). On pousse vers fermeture si le soir charge.
+    var hv = (historicalVolume[day.ds]) || null;
+    var morning = 0, evening = 0;
+    if (hv) {
+      Object.keys(hv).forEach(function(task) {
+        Object.keys(hv[task]).forEach(function(h) {
+          var hour = parseInt(h);
+          var v = hv[task][h] || 0;
+          if (hour < 14) morning += v; else evening += v;
+        });
+      });
+    }
+    var total = morning + evening;
+    var eveningShare = total > 0 ? evening / total : 0.5;
+
+    // On repartit les agents presents : ceux d'index pair tirent vers le matin
+    // (O/M ou OS/MS), les autres vers le soir (C/D ou CS), pondere par le
+    // eveningShare. Stable d'un rendu a l'autre.
+    var idx = agents.indexOf(agent);
+    var dayNum = day.num;
+    // pseudo-position de l'agent dans la file (deterministe)
+    var slot = (idx + dayNum) % grid.length;
+    // si le soir est charge, on biaise vers les shifts tardifs (fin de tableau)
+    if (eveningShare >= 0.55) slot = grid.length - 1 - (idx % grid.length);
+    else if (eveningShare <= 0.45) slot = idx % grid.length;
+    var sh = grid[slot] || grid[0];
+    return { code: sh.code, cls: sh.cls };
+  }
+
+  // Pastille HTML pour une lettre de shift
+  function cell(res) {
+    if (res.special === 'closed') return '';
+    return '<span class="sh ' + res.cls + '">' + res.code + '</span>';
+  }
+
+  // ── Pre-calcul des lettres + compteurs RH par agent ──
+  var agentRows = {};   // agentId -> [ {ds, res} ... ]
+  var rh = {};          // agentId -> {O,C,off,dim,ferie,cp}
+  agents.forEach(function(a) {
+    agentRows[a.id] = [];
+    rh[a.id] = { O: 0, C: 0, off: 0, dim: 0, ferie: 0, cp: 0 };
+    monthDays.forEach(function(d) {
+      var res = shiftFor(a, d);
+      agentRows[a.id].push({ d: d, res: res });
+      // compteurs RH
+      var isOpening = (res.code === 'O' || res.code === 'OS');
+      var isClosing = (res.code === 'C' || res.code === 'CS' || res.code === 'D');
+      var worked    = !res.special;  // pas off/leave/closed
+      if (isOpening) rh[a.id].O++;
+      if (isClosing) rh[a.id].C++;
+      if (res.special === 'off')   rh[a.id].off++;
+      if (res.special === 'leave') rh[a.id].cp++;
+      if (worked && d.dow === 0)   rh[a.id].dim++;   // dimanche travaille
+      if (worked && d.closure === 'holiday') rh[a.id].ferie++; // (rare : ouvert un ferie)
+    });
+  });
+
+  // Totaux par jour (presents, ouvertures, fermetures)
+  var totPres = {}, totO = {}, totC = {};
+  monthDays.forEach(function(d) {
+    totPres[d.ds] = 0; totO[d.ds] = 0; totC[d.ds] = 0;
+    agents.forEach(function(a) {
+      var res = agentRows[a.id].find(function(r){return r.d.ds===d.ds;}).res;
+      if (!res.special) totPres[d.ds]++;
+      if (res.code === 'O' || res.code === 'OS') totO[d.ds]++;
+      if (res.code === 'C' || res.code === 'CS' || res.code === 'D') totC[d.ds]++;
+    });
+  });
+
+  // ── Construction du tableau HTML ──
   var todayStr = toDateStr(new Date());
   var html = '';
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">';
-  html += '<div style="font-size:17px;font-weight:700;color:#1a1a2e;">' + monthName + '</div>';
-  html += '<div style="font-size:12px;color:#8a90a0;">O = Ouverture &nbsp;·&nbsp; C = Fermeture &nbsp;·&nbsp; OFF = Repos &nbsp;·&nbsp; CP = Cong&eacute;</div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">';
+  html += '<div style="font-size:18px;font-weight:700;color:#1a1a2e;">' + monthName + '</div>';
+  html += '<div style="font-size:11px;color:#8a90a0;">'
+        + 'O 09h30 &middot; M 10h30 &middot; D 10h45 &middot; C 11h15 &nbsp;|&nbsp; Stock OS/MS/CS &nbsp;|&nbsp; OFF repos &middot; CP cong&eacute;</div>';
   html += '</div>';
 
   html += '<div style="overflow-x:auto;">';
-  html += '<table class="rt-monthly" style="border-collapse:separate;border-spacing:0;width:100%;font-size:12px;">';
+  html += '<table class="rt-monthly" style="border-collapse:separate;border-spacing:0;font-size:12px;">';
 
-  // En-tete : numeros de jour + lettre du jour de semaine
-  html += '<thead>';
-  html += '<tr>';
-  html += '<th style="position:sticky;left:0;background:#1a1a2e;color:#fff;text-align:left;padding:8px 12px;border-top-left-radius:10px;min-width:170px;z-index:2;">Agent</th>';
+  // En-tete jours
+  var stickyHead = 'position:sticky;left:0;z-index:3;background:#1a1a2e;color:#fff;';
+  html += '<thead><tr>';
+  html += '<th style="' + stickyHead + 'text-align:left;padding:9px 14px;border-top-left-radius:12px;min-width:190px;">Agent</th>';
   monthDays.forEach(function(d) {
-    var dow = d.date.getDay();
-    var isWknd = (dow === 0 || dow === 6);
+    var isWknd = (d.dow === 0 || d.dow === 6);
     var isTdy  = d.ds === todayStr;
     var bg = isTdy ? '#0f3460' : '#1a1a2e';
-    var dl = ['S','M','T','W','T','F','S'][dow];
+    var dl = ['S','M','T','W','T','F','S'][d.dow];
     html += '<th style="background:' + bg + ';color:' + (isWknd ? '#9aa0c0' : '#fff') +
-            ';padding:6px 0;text-align:center;min-width:34px;font-weight:600;">' +
-            '<div style="font-size:10px;opacity:.7;">' + dl + '</div>' +
-            '<div>' + d.num + '</div></th>';
+            ';padding:6px 0;text-align:center;min-width:32px;font-weight:600;">' +
+            '<div style="font-size:9px;opacity:.65;">' + dl + '</div><div>' + d.num + '</div></th>';
   });
-  html += '</tr>';
-  html += '</thead>';
+  // En-tetes colonnes RH
+  var rhCols = [['O','#0F6E56'],['C','#185FA5'],['OFF','#9aa0b5'],['DIM','#993556'],['FER','#854F0B'],['CP','#3C3489']];
+  rhCols.forEach(function(c, i) {
+    var radius = (i === rhCols.length - 1) ? 'border-top-right-radius:12px;' : '';
+    html += '<th style="background:#23233f;color:#fff;padding:6px 8px;text-align:center;min-width:34px;font-weight:700;border-left:1px solid #34345a;' + radius + '">' + c[0] + '</th>';
+  });
+  html += '</tr></thead><tbody>';
 
-  // Lignes de totaux (facon Excel : Total O / Total C / Total presents)
-  html += '<tbody>';
-  function totalRow(label, map, color) {
-    var r = '<tr style="background:#f7f8fa;">';
-    r += '<td style="position:sticky;left:0;background:#f7f8fa;font-weight:600;color:' + color +
-         ';padding:6px 12px;z-index:1;">' + label + '</td>';
+  // Ligne de totaux par jour
+  function dayTotalsRow(label, map, color) {
+    var r = '<tr style="background:#f4f5f8;">';
+    r += '<td style="position:sticky;left:0;z-index:2;background:#f4f5f8;font-weight:700;color:' + color + ';padding:6px 14px;">' + label + '</td>';
     monthDays.forEach(function(d) {
-      var closed = getDayClosureType(d.ds);
-      r += '<td style="text-align:center;padding:5px 0;color:' + (closed ? '#cdd2dc' : color) +
-           ';font-weight:600;">' + (closed ? '·' : (map[d.ds] || 0)) + '</td>';
+      r += '<td style="text-align:center;padding:5px 0;color:' + (d.closure ? '#cdd2dc' : color) + ';font-weight:700;">' + (d.closure ? '&middot;' : (map[d.ds] || 0)) + '</td>';
     });
+    rhCols.forEach(function(){ r += '<td style="background:#f4f5f8;border-left:1px solid #eef0f4;"></td>'; });
     r += '</tr>';
     return r;
   }
-  html += totalRow('Total Ouverture', totO, '#0F6E56');
-  html += totalRow('Total Fermeture', totC, '#185FA5');
-  html += totalRow('Total pr&eacute;sents', totPresent, '#1a1a2e');
+  html += dayTotalsRow('Total pr\u00e9sents', totPres, '#1a1a2e');
+  html += dayTotalsRow('Total ouvertures', totO, '#0F6E56');
+  html += dayTotalsRow('Total fermetures', totC, '#185FA5');
 
-  // Lignes agents
-  agents.forEach(function(a, i) {
-    var name = ((a.first_name || '') + ' ' + (a.last_name || '')).trim() || 'Agent';
-    var rowBg = (i % 2 === 0) ? '#ffffff' : '#fbfcfd';
-    html += '<tr style="background:' + rowBg + ';">';
-    html += '<td style="position:sticky;left:0;background:' + rowBg +
-            ';padding:7px 12px;color:#1a1d29;font-weight:500;border-bottom:1px solid #f0f2f6;z-index:1;">' +
-            name + '</td>';
-    monthDays.forEach(function(d) {
-      var L = letterFor(a, d.ds);
-      var cellBg = (L === 'CLOSED') ? '#f1f2f5' : 'transparent';
-      html += '<td style="text-align:center;padding:5px 2px;background:' + cellBg +
-              ';border-bottom:1px solid #f0f2f6;">' + pill(L) + '</td>';
+  // Blocs par statut
+  RETAIL_BLOCK_ORDER.forEach(function(block) {
+    var blockAgents = agents.filter(function(a) {
+      return RETAIL_STATUS[retailStatusOf(a)].block === block.key;
+    });
+    if (!blockAgents.length) return;
+
+    // En-tete de bloc
+    html += '<tr><td colspan="' + (1 + nDays + rhCols.length) + '" style="position:sticky;left:0;background:#eef0f6;color:#3c3f52;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:7px 14px;">' + block.title + '</td></tr>';
+
+    // Sous-totaux du bloc (cumul RH)
+    var subO = 0, subC = 0, subOff = 0, subDim = 0, subFer = 0, subCp = 0;
+
+    blockAgents.forEach(function(a, i) {
+      var name = ((a.first_name || '') + ' ' + (a.last_name || '')).trim() || 'Agent';
+      var stKey = retailStatusOf(a);
+      var stInfo = RETAIL_STATUS[stKey];
+      var rowBg = (i % 2 === 0) ? '#ffffff' : '#fbfcfd';
+      html += '<tr style="background:' + rowBg + ';">';
+      // Cellule agent : nom + pill statut
+      html += '<td style="position:sticky;left:0;z-index:1;background:' + rowBg +
+              ';padding:7px 14px;border-bottom:1px solid #f0f2f6;">' +
+              '<div style="display:flex;align-items:center;gap:8px;justify-content:space-between;">' +
+              '<span style="color:#1a1d29;font-weight:500;">' + name + '</span>' +
+              '<span class="rt-status ' + stInfo.cls + '">' + stInfo.label + '</span></div></td>';
+      // Cellules jours
+      agentRows[a.id].forEach(function(rc) {
+        var cellBg = (rc.res.special === 'closed') ? '#f1f2f5' : 'transparent';
+        html += '<td style="text-align:center;padding:4px 2px;background:' + cellBg +
+                ';border-bottom:1px solid #f0f2f6;">' + cell(rc.res) + '</td>';
+      });
+      // Colonnes RH de l'agent
+      var c = rh[a.id];
+      subO += c.O; subC += c.C; subOff += c.off; subDim += c.dim; subFer += c.ferie; subCp += c.cp;
+      [[c.O,'#0F6E56'],[c.C,'#185FA5'],[c.off,'#9aa0b5'],[c.dim,'#993556'],[c.ferie,'#854F0B'],[c.cp,'#3C3489']].forEach(function(v){
+        html += '<td style="text-align:center;padding:4px 8px;font-weight:700;color:' + v[1] + ';border-left:1px solid #f0f2f6;border-bottom:1px solid #f0f2f6;">' + v[0] + '</td>';
+      });
+      html += '</tr>';
+    });
+
+    // Ligne sous-total du bloc
+    html += '<tr style="background:#f7f8fb;">';
+    html += '<td style="position:sticky;left:0;z-index:1;background:#f7f8fb;padding:6px 14px;font-weight:700;color:#3c3f52;font-size:11px;">Sous-total ' + block.title + '</td>';
+    monthDays.forEach(function(){ html += '<td style="background:#f7f8fb;"></td>'; });
+    [[subO,'#0F6E56'],[subC,'#185FA5'],[subOff,'#9aa0b5'],[subDim,'#993556'],[subFer,'#854F0B'],[subCp,'#3C3489']].forEach(function(v){
+      html += '<td style="text-align:center;padding:6px 8px;font-weight:800;color:' + v[1] + ';border-left:1px solid #eef0f4;">' + v[0] + '</td>';
     });
     html += '</tr>';
   });
-  html += '</tbody></table></div>';
 
+  html += '</tbody></table></div>';
   container.innerHTML = html;
 }
 
@@ -3109,33 +3376,26 @@ function renderAgents() {
     container.innerHTML = '<p style="color:#888">No agents yet. Click Add Agent above.</p>';
     return;
   }
-  // The 6 skill pills, in display order. Each maps to a tag stored in agent_tags.
-  var SKILL_PILLS = [
-    { tag:'can_call',        label:'Call',        bg:'#fef2f2', text:'#dc2626', border:'#fecaca' },
-    { tag:'can_mail',        label:'Mail',        bg:'#eff6ff', text:'#2563eb', border:'#bfdbfe' },
-    { tag:'can_chat',        label:'Chat',        bg:'#fff7ed', text:'#ea580c', border:'#fed7aa' },
-    { tag:'can_fraud',       label:'Fraud',       bg:'#eef2ff', text:'#4338ca', border:'#a5b4fc' },
-    { tag:'can_backoffice',  label:'Back Office', bg:'#f5f3ff', text:'#7c3aed', border:'#c4b5fd' },
-    { tag:'can_clienteling', label:'Clienteling', bg:'#f0fdf4', text:'#16a34a', border:'#bbf7d0' },
-  ];
+  // Statut exclusif de l'agent (1 seul). Definit son bloc et sa grille de shifts.
+  var STATUS_OPTS = ['SM','ASM','MANAGER','STOCK','SENIOR','SA','PART_TIME'];
   container.innerHTML = agents.map(function(a) {
     var pct = a.work_pct || 100;
     var pctBadge = pct < 100
       ? '<span class="pct-badge">' + pct + '%</span>'
       : '<span class="pct-badge" style="color:#9ca3af;">100%</span>';
-    var tags = agentTags[a.id] || [];
-    var tagChips = SKILL_PILLS.map(function(p){
-      var active = tags.includes(p.tag);
-      var style  = active
-        ? 'background:'+p.bg+';color:'+p.text+';border:1px solid '+p.border+';font-weight:600;'
-        : 'background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;';
-      return '<button data-agent="'+a.id+'" data-tag="'+p.tag+'" onclick="handleTagClick(this)" '+
-        'style="'+style+'padding:2px 10px;border-radius:10px;font-size:11px;cursor:pointer;border-width:1px;border-style:solid;">'+p.label+'</button>';
+    var cur = (a.status || 'SA').toUpperCase();
+    var stInfo = RETAIL_STATUS[cur] || RETAIL_STATUS['SA'];
+    var opts = STATUS_OPTS.map(function(o){
+      var lbl = RETAIL_STATUS[o].label;
+      return '<option value="'+o+'"'+(o===cur?' selected':'')+'>'+lbl+'</option>';
     }).join('');
     return '<div class="agent-row">' +
-      '<span>' + a.first_name + ' ' + a.last_name + pctBadge + '</span>' +
+      '<span>' + a.first_name + ' ' + a.last_name + pctBadge +
+        ' <span class="rt-status ' + stInfo.cls + '" style="margin-left:6px;">' + stInfo.label + '</span></span>' +
       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-        tagChips +
+        '<label style="font-size:12px;color:#6b7280;">Status</label>' +
+        '<select id="status-' + a.id + '" onchange="saveAgentStatus(\'' + a.id + '\')" ' +
+          'style="padding:4px 8px;font-size:12px;">' + opts + '</select>' +
         '<label style="font-size:12px;color:#6b7280;margin-left:8px;">Work %</label>' +
         '<input type="number" id="pct-' + a.id + '" value="' + pct + '" min="10" max="100" step="5"' +
           ' style="width:60px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;">' +
@@ -3144,6 +3404,21 @@ function renderAgents() {
       '</div>' +
     '</div>';
   }).join('');
+}
+
+async function saveAgentStatus(agentId) {
+  var el = document.getElementById('status-' + agentId);
+  if (!el) return;
+  var status = el.value;
+  showLoader();
+  var { error } = await sb.from('retail_agents').update({ status: status }).eq('id', agentId);
+  hideLoader();
+  if (error) { showToast('Failed to save status', 'error'); return; }
+  var a = agents.find(function(x){ return x.id === agentId; });
+  if (a) a.status = status;
+  showToast('Status updated \u2713');
+  renderAgents();
+  if (currentPlanningView === 'monthly') renderMonthlyPlanning();
 }
 
 async function saveAgentWorkPct(agentId) {
