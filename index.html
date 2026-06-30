@@ -315,41 +315,16 @@
     #week-label { cursor:pointer; border-radius:4px; padding:4px 8px; }
     #week-label:hover { background:rgba(255,255,255,.15); }
 
-    .table-scroll { max-width: 100%; }
-    @media (max-width: 768px) {
-      .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    }
-    /* ============================================================
-       MOBILE RESPONSIVE (<=768px). Desktop is untouched.
-       Strategy: wide tables/grids scroll horizontally INSIDE their
-       card (no compression); agent pills wrap into a clean block;
-       Recap day cards stack full-width.
-       ============================================================ */
-    @media (max-width: 768px) {
-      /* Wide tables & grids: horizontal touch-scroll, bounded to the card */
-      #planning-weekly,
-      #calendar-annual,
-      #calendar-monthly,
-      .table-scroll {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        max-width: 100%;
-      }
-      /* Settings tables: wrapped in .table-scroll (see render) which scrolls */
-      /* Weekly table keeps its natural width and scrolls inside the card */
-      #planning-weekly > table { min-width: 640px; }
-      /* Calendar grids keep their natural size and scroll inside the card */
-      .cal-grid { min-width: 560px; }
-      .cal-year-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); min-width: 540px; }
-
-      /* Recap: dashboard cards + day cards stack full-width, scroll vertical */
-      .forecast-grid { grid-template-columns: 1fr; }
-
-      /* Agent pills: clean wrapping block instead of a messy single row */
-      .agent-row { flex-direction: column; align-items: stretch; gap: 8px; }
-      .agent-row > span { flex: none; font-weight: bold; }
-      .agent-row > div { flex-wrap: wrap; }
-    }
+    /* Apple slider toggle CS <-> Retail (aligne dans le header) */
+    .mode-toggle { display:inline-flex; align-items:center; gap:10px; margin-top:18px; }
+    .mode-lbl { font-size:12px; font-weight:600; color:#9aa0b5; white-space:nowrap; line-height:1; }
+    .mode-lbl-active { color:#ffffff; }
+    .ios-switch { position:relative; width:46px; height:26px; border-radius:999px; background:#ffffff;
+      border:1px solid #d7dae5; cursor:pointer; padding:0; flex-shrink:0; transition:background .2s ease;
+      box-shadow:inset 0 1px 2px rgba(16,24,40,.06); }
+    .ios-knob { position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+      background:#1a1a2e; transition:transform .22s cubic-bezier(.4,.0,.2,1); box-shadow:0 1px 3px rgba(16,24,40,.3); }
+    .ios-switch.on .ios-knob { transform:translateX(20px); }
   </style>
 </head>
 <body>
@@ -400,6 +375,14 @@
                    font-style:italic;font-size:12px;color:#AFABAB;margin-top:4px;">
         Client Operations Rostering Assistant</span>
     </div>
+  </div>
+  <div class="mode-toggle">
+    <span class="mode-lbl mode-lbl-active">Client Service</span>
+    <button class="ios-switch" role="switch" aria-checked="false" aria-label="Basculer vers Retail"
+            onclick="window.location.href='retail.html'">
+      <span class="ios-knob"></span>
+    </button>
+    <span class="mode-lbl">Retail</span>
   </div>
   <div>
     <label>Region</label>
@@ -1463,8 +1446,8 @@ function renderRegulations() {
       '<div class="set-head"><h3 class="set-h3">Operating Hours (per day)</h3>' +
         '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
       '<p class="set-note">Dimmed rows are current rest days. Hours are saved and apply if the rule is toggled off.</p>' +
-      '<div class="table-scroll"><table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
-      hoursRows + '</table></div>' +
+      '<table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
+      hoursRows + '</table>' +
     '</div>' +
 
     // ── BUBBLE 3: Break Structure ────────────────────────────────────────
@@ -1472,7 +1455,7 @@ function renderRegulations() {
       '<div class="set-head"><h3 class="set-h3">Break Structure</h3>' +
         '<button class="btn btn-save" onclick="saveRegulations()">\uD83D\uDCBE Save</button></div>' +
       '<p class="set-note">Define breaks per shift. The engine places each break in the lowest-volume slot within its window.</p>' +
-      '<div class="table-scroll"><table class="breaks-table">' +
+      '<table class="breaks-table">' +
         '<tr><th>Name</th><th>Duration (min)</th><th>Window start</th><th>Window end</th><th></th></tr>' +
         (regulations.breaks || []).map(function(b, bi) {
           var wsOpts = '', weOpts = '';
@@ -1488,7 +1471,7 @@ function renderRegulations() {
             '<td><button class="btn-xs btn-xs-danger" onclick="removeBreakRow(this)">\u2715</button></td>' +
             '</tr>';
         }).join('') +
-      '</table></div>' +
+      '</table>' +
       '<button class="btn btn-primary" style="margin-top:10px;font-size:12px;" onclick="addBreakRow()">+ Add break</button>' +
     '</div>' +
 
@@ -3013,7 +2996,7 @@ function buildForecastSettingsHtml() {
     '<div class="card">' +
       '<div class="set-head"><h3 class="set-h3">AHT & Priority per task</h3>' +
         '<button class="btn btn-save" onclick="saveForecastSettings()">\uD83D\uDCBE Save</button></div>' +
-      '<div class="table-scroll"><table class="aht-task-table" style="max-width:420px;"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table></div>' +
+      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table>' +
     '</div>' +
 
     // ── BUBBLE 6: Monthly Targets (with Trend integrated on top) ─────────
@@ -3028,8 +3011,8 @@ function buildForecastSettingsHtml() {
         '<span class="trend-note" style="font-size:11px;color:#9ca3af;">' + trendSign + trend + '% - ' + trendDesc + '</span>' +
       '</div>' +
       '<p class="set-note">Contacts per month \u2192 auto-spread hourly by CALL curve</p>' +
-      '<div class="table-scroll"><table class="aht-task-table" style="max-width:420px;"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
-      boRows + '</table></div>' +
+      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
+      boRows + '</table>' +
     '</div>'
   );
 }
