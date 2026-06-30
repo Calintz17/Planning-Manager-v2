@@ -420,67 +420,129 @@
     .rt-leave .dot { background:#EF9F27; }
     .rt-train { background:#EEEDFE; color:#3C3489; }   /* Formation */
 
-    /* ════ DESIGN RETAIL RENFORCE (univers nettement distinct du CSC) ════ */
+    /* ════════════════════════════════════════════════════════════
+       CORA RETAIL - MAKEOVER SaaS PRO (full)
+       Sharper, cleaner, plateforme pro. Navy CORA en accent.
+       ════════════════════════════════════════════════════════════ */
 
-    /* Page : fond plus doux, plus de respiration globale */
-    body { background: #f4f5f8; }
-    #app, .container, main { padding-top: 4px; }
+    /* Icones inline Lucide : 16px, alignees, heritent la couleur */
+    .ic { width:16px; height:16px; flex-shrink:0; vertical-align:middle; }
 
-    /* Cartes : presence affirmee, ombre douce mais visible, grands arrondis */
-    .card {
-      background:#ffffff !important;
-      border:none !important;
-      border-radius:16px !important;
-      box-shadow:0 2px 4px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.07) !important;
-      padding:24px !important;
-      margin-bottom:18px !important;
-    }
+    /* Page : gris perle, respiration */
+    body { background:#f6f7f9; color:#1a1d29; }
 
-    /* Onglets : style "segmented" doux facon GetIn */
+    /* Header : navy, un peu plus fin */
+    #header { background:#1a1a2e; padding:14px 28px; }
+
+    /* ── Onglets : segmented control pro (image 2) ── */
     #tabs {
       background:#ffffff;
-      border-bottom:none;
-      padding:8px 12px;
-      gap:4px;
-      box-shadow:0 1px 0 rgba(16,24,40,.04);
+      border-bottom:1px solid #edeff3;
+      padding:10px 28px;
+      gap:6px;
+      display:flex;
     }
     .tab-btn {
-      border-radius:10px !important;
-      padding:9px 18px !important;
-      color:#6b7280 !important;
-      transition:all .15s ease;
+      display:inline-flex; align-items:center; gap:7px;
+      border:none !important;
+      border-radius:9px !important;
+      padding:8px 16px !important;
+      font-size:13px !important;
+      font-weight:600 !important;
+      color:#7a8194 !important;
+      background:transparent !important;
+      cursor:pointer;
+      transition:all .14s ease;
     }
-    .tab-btn:hover { background:#f4f5f8 !important; color:#1a1a2e !important; }
+    .tab-btn .ic { color:#9aa0b0; transition:color .14s ease; }
+    .tab-btn:hover { background:#f3f4f7 !important; color:#1a1a2e !important; }
+    .tab-btn:hover .ic { color:#1a1a2e; }
     .tab-btn.active {
       background:#1a1a2e !important;
       color:#ffffff !important;
-      border-bottom:none !important;
-      box-shadow:0 1px 3px rgba(16,24,40,.2);
+      box-shadow:0 1px 2px rgba(16,24,40,.16);
+    }
+    .tab-btn.active .ic { color:#ffffff; }
+
+    /* ── Cartes : nettes, hairline + ombre tres subtile ── */
+    .card {
+      background:#ffffff !important;
+      border:1px solid #edeff3 !important;
+      border-radius:14px !important;
+      box-shadow:0 1px 2px rgba(16,24,40,.03) !important;
+      padding:22px 24px !important;
+      margin-bottom:18px !important;
     }
 
-    /* Sous-boutons de vue (Recap/Monthly/Weekly/Intraday) : pills douces */
+    /* ── Boutons de vue (Recap/Monthly/Weekly/Intraday) ── */
+    .view-toggle { display:inline-flex; gap:4px; background:#f3f4f7; padding:4px; border-radius:11px; }
     .view-toggle button {
-      border-radius:10px !important;
-      padding:8px 16px !important;
-      transition:all .15s ease;
+      display:inline-flex; align-items:center; gap:6px;
+      border:none !important; background:transparent !important;
+      border-radius:8px !important; padding:7px 14px !important;
+      font-size:13px !important; font-weight:600 !important;
+      color:#7a8194 !important; cursor:pointer; transition:all .14s ease;
     }
+    .view-toggle button .ic { color:#9aa0b0; }
+    .view-toggle button:hover { color:#1a1a2e !important; }
     .view-toggle button.active {
-      background:#1a1a2e !important; color:#fff !important;
-      box-shadow:0 1px 3px rgba(16,24,40,.2);
+      background:#ffffff !important; color:#1a1a2e !important;
+      box-shadow:0 1px 2px rgba(16,24,40,.1);
     }
+    .view-toggle button.active .ic { color:#1a1a2e; }
 
-    /* Boutons : plus arrondis, plus doux */
-    .btn, button.btn-export { border-radius:10px !important; }
+    /* ── Boutons generaux ── */
+    .btn {
+      display:inline-flex; align-items:center; gap:6px;
+      border-radius:9px !important; font-weight:600 !important;
+      font-size:13px !important; transition:all .14s ease;
+    }
+    .btn .ic { width:15px; height:15px; }
+    .btn-export {
+      background:#1a1a2e !important; color:#fff !important; border:none !important;
+      padding:8px 16px !important;
+    }
+    .btn-export:hover { background:#0f3460 !important; }
+    .btn-export .ic { color:#fff; }
 
-    /* Champs : grands arrondis, bordures tres douces */
+    /* ── Champs : nets, fond blanc, focus navy ── */
     select, input[type="text"], input[type="number"], input[type="date"] {
-      border-radius:10px !important;
-      border:1px solid #e6e8ee !important;
-      background:#fbfcfd !important;
+      border-radius:9px !important;
+      border:1px solid #e2e5ec !important;
+      background:#ffffff !important;
+      font-size:13px !important;
+      transition:border-color .14s ease, box-shadow .14s ease;
+    }
+    select:focus, input:focus {
+      outline:none !important;
+      border-color:#1a1a2e !important;
+      box-shadow:0 0 0 3px rgba(26,26,46,.08) !important;
     }
 
-    /* Tableaux : en-tetes plus doux, coins arrondis */
-    table { border-radius:12px; overflow:hidden; }
+    /* ── Tableaux pro (image 1 : en-tetes petites majuscules grises, lignes aerees) ── */
+    table { border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; }
+    .agent-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px;
+      border-bottom:1px solid #f1f2f5;
+      transition:background .12s ease;
+    }
+    .agent-row:hover { background:#fafbfc; }
+    .agent-row:last-child { border-bottom:none; }
+
+    /* Avatar initiales rond (facon image 1) */
+    .avatar {
+      width:34px; height:34px; border-radius:50%;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700; color:#fff;
+      flex-shrink:0; letter-spacing:.02em;
+    }
+
+    /* ── Status bar : clair et discret ── */
+    #status-bar {
+      background:#ffffff; border-top:1px solid #edeff3;
+      color:#7a8194; font-size:12px;
+    }
 
     /* ── Pills STATUT agent (exclusives) ── */
     .rt-status {
@@ -500,28 +562,26 @@
     .sh {
       display:inline-flex; align-items:center; justify-content:center;
       min-width:26px; font-size:11px; font-weight:700;
-      padding:3px 7px; border-radius:8px; line-height:1.4;
+      padding:3px 7px; border-radius:7px; line-height:1.4;
     }
-    /* Vente : O / M / C / D */
-    .sh-o  { background:#E1F5EE; color:#0F6E56; }   /* Ouverture 09h30-18h00 */
-    .sh-m  { background:#FAEEDA; color:#854F0B; }   /* Milieu 10h30-19h00 */
-    .sh-c  { background:#E6F1FB; color:#185FA5; }   /* Fermeture 11h15-19h45 */
-    .sh-d  { background:#EEEDFE; color:#3C3489; }   /* Tardif 10h45-19h15 */
-    /* Stock : OS / MS / CS */
+    .sh-o  { background:#E1F5EE; color:#0F6E56; }
+    .sh-m  { background:#FAEEDA; color:#854F0B; }
+    .sh-c  { background:#E6F1FB; color:#185FA5; }
+    .sh-d  { background:#EEEDFE; color:#3C3489; }
     .sh-os { background:#DCF2EC; color:#0F6E56; border:1px dashed #9FE1CB; }
     .sh-ms { background:#FBF0DC; color:#854F0B; border:1px dashed #FAC775; }
     .sh-cs { background:#E2EEFB; color:#185FA5; border:1px dashed #B5D4F4; }
-    /* Repos / absences */
     .sh-off  { background:#F1F2F5; color:#9aa0b5; }
     .sh-cp   { background:#FBEAF0; color:#993556; }
     .sh-closed { color:#cdd2dc; }
+
 
 
   </style>
 </head>
 <body>
 
-<div id="loader">⏳ Loading…</div>
+<div id="loader">Loading…</div>
 <div id="toast"></div>
 
 <!-- WEEK PICKER POPUP -->
@@ -589,10 +649,10 @@
 
 <!-- TABS -->
 <div id="tabs">
-  <button class="tab-btn active" onclick="switchTab('planning', this)">📊 Planning</button>
-  <button class="tab-btn" onclick="switchTab('agents', this)">👥 Agents</button>
-  <button class="tab-btn" onclick="switchTab('calendar', this)">📅 Calendar</button>
-  <button class="tab-btn" onclick="switchTab('regulations', this)">⚙️ Settings</button>
+  <button class="tab-btn active" onclick="switchTab('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span>Planning</span></button>
+  <button class="tab-btn" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Agents</span></button>
+  <button class="tab-btn" onclick="switchTab('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button>
+  <button class="tab-btn" onclick="switchTab('regulations', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
 </div>
 
 <!-- PLANNING TAB -->
@@ -600,15 +660,15 @@
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
       <div class="view-toggle">
-        <button id="btn-view-recap" class="active" onclick="switchPlanningView('recap')">💡 Recap</button>
-        <button id="btn-view-monthly" onclick="switchPlanningView('monthly')">🗓 Monthly</button>
-        <button id="btn-view-weekly" onclick="switchPlanningView('weekly')">📅 Weekly</button>
-        <button id="btn-view-intraday" onclick="switchPlanningView('intraday')">⏱ Intraday</button>
+        <button id="btn-view-recap" class="active" onclick="switchPlanningView('recap')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Recap</span></button>
+        <button id="btn-view-monthly" onclick="switchPlanningView('monthly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/></svg><span>Monthly</span></button>
+        <button id="btn-view-weekly" onclick="switchPlanningView('weekly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="15" x2="17" y2="15"/></svg><span>Weekly</span></button>
+        <button id="btn-view-intraday" onclick="switchPlanningView('intraday')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Intraday</span></button>
       </div>
       <div id="planning-legend" style="font-size:11px;color:#6b7280;display:none;">
-        💡 Click <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">📅 Sched. Rest</span> to reassign rest day
+        Click <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">Sched. Rest</span> to reassign rest day
       </div>
-      <button id="btn-export" class="btn btn-export" style="margin-left:auto;" onclick="exportCurrentView()" title="Export to Excel">📥 Export</button>
+      <button id="btn-export" class="btn btn-export" style="margin-left:auto;" onclick="exportCurrentView()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
     </div>
     <div id="planning-recap">
       <div id="forecast-grid"><p style="color:#888">Select a region to view the recap.</p></div>
@@ -644,8 +704,8 @@
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
       <div class="view-toggle">
-        <button id="btn-cal-annual" class="active" onclick="switchCalendarView('annual')">🗓️ Annual Calendar</button>
-        <button id="btn-cal-monthly" onclick="switchCalendarView('monthly')">📆 Monthly Calendar</button>
+        <button id="btn-cal-annual" class="active" onclick="switchCalendarView('annual')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Annual</span></button>
+        <button id="btn-cal-monthly" onclick="switchCalendarView('monthly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Monthly</span></button>
       </div>
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="calChangeMonth(-1)">&#9664;</button>
@@ -3370,6 +3430,15 @@ function renderIntraday(ds) {
 }
 
 // ── RENDER AGENTS ─────────────────────────────────────────────────────────
+function retailAvatarColor(name) {
+  var palette = ['#1a1a2e','#185FA5','#0F6E56','#854F0B','#993556','#3C3489','#5F5E5A'];
+  var h = 0; for (var i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) % 997;
+  return palette[h % palette.length];
+}
+function retailInitials(f, l) {
+  return ((f||' ')[0] + (l||' ')[0]).toUpperCase();
+}
+
 function renderAgents() {
   const container = document.getElementById('agent-list');
   if (!agents.length) {
@@ -3389,9 +3458,13 @@ function renderAgents() {
       var lbl = RETAIL_STATUS[o].label;
       return '<option value="'+o+'"'+(o===cur?' selected':'')+'>'+lbl+'</option>';
     }).join('');
+    var av = '<span class="avatar" style="background:' + retailAvatarColor(a.first_name+a.last_name) + ';">' + retailInitials(a.first_name, a.last_name) + '</span>';
     return '<div class="agent-row">' +
-      '<span>' + a.first_name + ' ' + a.last_name + pctBadge +
-        ' <span class="rt-status ' + stInfo.cls + '" style="margin-left:6px;">' + stInfo.label + '</span></span>' +
+      '<span style="display:flex;align-items:center;gap:11px;">' + av +
+        '<span style="display:flex;flex-direction:column;gap:2px;">' +
+          '<span style="font-weight:600;color:#1a1d29;">' + a.first_name + ' ' + a.last_name + pctBadge + '</span>' +
+          '<span class="rt-status ' + stInfo.cls + '" style="align-self:flex-start;">' + stInfo.label + '</span>' +
+        '</span></span>' +
       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
         '<label style="font-size:12px;color:#6b7280;">Status</label>' +
         '<select id="status-' + a.id + '" onchange="saveAgentStatus(\'' + a.id + '\')" ' +
