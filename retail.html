@@ -7,366 +7,557 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
+
+    /* ═══ CORA RETAIL — CSS consolide (1 couche, 0 doublon, 0 classe morte) ═══ */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; font-size: 14px; background: #f5f5f5; color: #222; }
-
-    /* ── HEADER ── */
-    #header { background: #1a1a2e; color: white; padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-    #header h1 { font-size: 18px; font-weight: bold; margin-right: auto; }
-    #header label { font-size: 12px; color: #aaa; display: block; margin-bottom: 3px; }
-    select { padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; background: white; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      background: var(--canvas);
+      color: var(--ink);
+      animation: coraFadeIn 0.28s ease-out;
+    }
+    select {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+    }
     .week-nav { display: flex; align-items: center; gap: 8px; }
-    .week-nav button { background: #16213e; color: white; border: 1px solid #444; cursor: pointer; padding: 6px 12px; border-radius: 4px; font-size: 14px; }
-    .week-nav button:hover { background: #0f3460; }
-    #week-label { color: white; font-size: 13px; min-width: 160px; text-align: center; }
-
-    /* ── TABS ── */
-    #tabs { display: flex; background: white; border-bottom: 2px solid #ddd; padding: 0 24px; }
-    .tab-btn { padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 14px; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; }
-    .tab-btn.active { color: #1a1a2e; border-bottom-color: #1a1a2e; font-weight: bold; }
-    .tab-btn:hover { color: #1a1a2e; }
-
-    /* ── LAYOUT ── */
-    .tab-content { display: none; padding: 24px; }
+    .week-nav button {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .week-nav button:hover { background: var(--navy-hover); }
+    #week-label {
+      color: var(--ink);
+      font-size: 13px;
+      min-width: 160px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-weight: 600;
+      background: #f3f4f7;
+    }
+    .tab-content { display: none; padding: 24px 28px; }
     .tab-content.active { display: block; }
-    .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-
-    /* ── PLANNING TABLE ── */
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 22px 24px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+      border: 1px solid var(--line);
+    }
     #planning-grid { overflow-x: auto; }
-    table { border-collapse: collapse; width: 100%; min-width: 700px; }
-    th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: center; font-size: 13px; vertical-align: middle; }
-    th.today-col  { background: #0f3460; }
-    th.closed-col { background: #6b7280; }
-    td { padding: 8px 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px; vertical-align: middle; }
-    td.agent-name { text-align: left; font-weight: bold; background: #f9f9f9; white-space: nowrap; min-width: 150px; }
-    .planning-cell { display:flex; align-items:center; justify-content:center; gap:6px; }
-
-    /* ── SHIFT BADGES ── */
-    .shift-badge     { border-radius: 14px; padding: 3px 10px; display: inline-block; font-size: 12px; font-weight: 600; }
-    .shift-rest      { background: #e5e7eb; color: #6b7280; }
-    .shift-absent    { background: #fce7f3; color: #9d174d; }
-    .shift-holiday   { background: #fef9c3; color: #92400e; }
-    .shift-scheduled { background: #f3e8ff; color: #7c3aed; cursor: pointer; border: 1px dashed #c4b5fd; }
-    .shift-scheduled:hover { background: #ede9fe; }
-    .shift-working   { background: #dbeafe; color: #1e40af; }
-
-    /* ── SUMMARY ROW ── */
-    tr.summary-row td { background: #f0fdf4; font-size: 11px; }
-    tr.summary-row td.understaffed { background: #fff1f2; }
-    tr.summary-row td.day-neutral  { background: #f3f4f6; color: #9ca3af; }
-
-    /* ── AGENTS ── */
-    .agent-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    table {
+      border-collapse: separate;
+      width: 100%;
+      min-width: 700px;
+      border-radius: 12px;
+      overflow: hidden;
+      border-spacing: 0;
+    }
+    th {
+      background: #1a1a2e;
+      color: white;
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    td {
+      padding: 8px 10px;
+      text-align: center;
+      border: 1px solid #e0e0e0;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    .agent-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid #f1f2f5;
+      justify-content: space-between;
+      transition: background 0.12s ease;
+    }
     .agent-row:last-child { border-bottom: none; }
     .agent-row span { flex: 1; }
-
-    /* ── BUTTONS ── */
-    .btn { padding: 6px 14px; border-radius: 4px; border: none; cursor: pointer; font-size: 13px; }
+    .btn {
+      padding: 6px 14px;
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      transition: all 0.14s ease;
+    }
     .btn-primary { background: #1a1a2e; color: white; }
     .btn-primary:hover { background: #0f3460; }
-    .btn-danger  { background: #fee2e2; color: #b91c1c; }
-    .btn-danger:hover  { background: #fecaca; }
-    .btn-save    { background: #dcfce7; color: #166534; }
-    .btn-save:hover    { background: #bbf7d0; }
-
-    /* ── ADD AGENT FORM ── */
-    #add-agent-form { display: none; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-top: 12px; }
-    #add-agent-form input { padding: 7px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-right: 8px; margin-bottom: 6px; }
-
-    /* ── FORECAST ── */
-    .forecast-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
-    @media (max-width: 900px) { .forecast-grid { grid-template-columns: repeat(3, 1fr); } }
-    .forecast-day-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; }
-    .forecast-day-card h4 { font-size: 12px; font-weight: bold; color: #1a1a2e; margin-bottom: 8px; text-align: center; }
-    .forecast-day-card.today-card  { border-color: #1a1a2e; background: #f0f9ff; }
-    .forecast-day-card.closed-card { background: #f8fafc; opacity: 0.6; }
-    .forecast-day-card.auto-filled { border-color: #a5b4fc; background: #fafbff; }
-    .hourly-bar-wrap { flex: 1; height: 14px; background: #ffffff; border-radius: 3px; overflow: hidden; display: flex; border: 1px solid #e5e7eb; }
-    .forecast-day-card label { display: block; font-size: 11px; color: #666; margin-bottom: 2px; margin-top: 8px; }
-    .forecast-day-card input { width: 100%; padding: 5px 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-    .auto-badge { display:inline-block; font-size:9px; background:#ede9fe; color:#5b21b6; border-radius:3px; padding:1px 5px; margin-left:4px; vertical-align:middle; }
-    /* ── RECAP OF THE WEEK card internals ── */
-    .recap-card { display:flex; flex-direction:column; height:100%; }
-    .recap-tasks { display:flex; flex-direction:column; gap:3px; margin-bottom:8px; }
-    .recap-task-row { display:flex; justify-content:space-between; align-items:center; font-size:11px; }
-    .recap-task-name { display:flex; align-items:center; gap:5px; min-width:0; font-weight:600; }
-    .recap-dot { display:inline-block; width:8px; height:8px; border-radius:2px; flex-shrink:0; }
-    .recap-task-vol { font-weight:600; color:#374151; margin-left:8px; flex-shrink:0; }
-    .recap-metrics { border-top:1px solid #e5e7eb; padding-top:7px; display:flex; flex-direction:column; gap:4px; font-size:11px; }
-    .recap-metric { display:flex; justify-content:space-between; align-items:center; }
-    .recap-metric-label { color:#6b7280; }
-    .recap-metric-val { font-weight:700; color:#374151; }
-    .recap-status { margin-top:8px; border-radius:5px; padding:5px 8px; font-size:11px; font-weight:700; text-align:center; }
-    .recap-status.ok    { background:#f0fdf4; color:#166534; }
-    .recap-status.short { background:#fff7ed; color:#9a3412; border:1px solid #fdba74; text-align:left; }
-    .hourly-chart { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
-    .hourly-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
-    .hourly-label { font-size: 9px; color: #9ca3af; width: 28px; flex-shrink: 0; text-align: right; }
-    .hourly-bar-wrap { flex: 1; height: 10px; background: #f3f4f6; border-radius: 3px; overflow: hidden; display: flex; }
-    .hourly-vol { font-size: 9px; color: #6b7280; width: 24px; flex-shrink: 0; }
-    .breaks-table { width:100%; border-collapse:collapse; font-size:12px; }
-    .breaks-table th { background:#f9fafb; color:#6b7280; padding:6px 8px; text-align:left; border:1px solid #e5e7eb; font-size:11px; text-transform:uppercase; }
-    .breaks-table td { padding:6px 8px; border:1px solid #e5e7eb; vertical-align:middle; }
-    .breaks-table input[type="text"] { width:90px; padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; }
-    .breaks-table input[type="number"] { width:55px; padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; }
-    .breaks-table select { padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; background:white; }
-    .btn-xs { padding:2px 8px; font-size:11px; border-radius:4px; border:none; cursor:pointer; }
-    .btn-xs-danger { background:#fee2e2; color:#b91c1c; }
-    .trend-wrap { display:flex; align-items:center; gap:10px; }
-    .trend-wrap input { width:70px; padding:6px 10px; border:1px solid #d1d5db; border-radius:4px; font-size:14px; font-weight:bold; text-align:center; }
-    .trend-note { font-size:12px; color:#6b7280; }
-    /* Forecast header band */
-    .forecast-header { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid #e5e7eb; }
-    .aht-task-table { border-collapse:collapse; font-size:12px; }
-    .aht-task-table th { background:#f9fafb; color:#6b7280; padding:5px 10px; border:1px solid #e5e7eb; font-size:11px; text-transform:uppercase; }
-    .aht-task-table td { padding:5px 10px; border:1px solid #e5e7eb; vertical-align:middle; }
-    .aht-task-table input { width:50px; padding:3px 6px; border:1px solid #d1d5db; border-radius:4px; font-size:12px; text-align:center; }
-    .task-dot { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:middle; }
-
-    /* ── REGULATIONS ── */
-    .reg-section { margin-bottom: 24px; }
-    .reg-section h3 { font-size: 13px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
-    /* ── Settings tab ── */
-    .set-h3 { font-size: 13px; font-weight: bold; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin: 0 0 14px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
-    .set-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-save { background: #dcfce7; color: #166534; }
+    .btn-save:hover { background: #bbf7d0; }
+    #add-agent-form {
+      display: none;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    #add-agent-form input {
+      padding: 7px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-right: 8px;
+      margin-bottom: 6px;
+    }
+    .breaks-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .breaks-table th {
+      background: #f9fafb;
+      color: #6b7280;
+      padding: 6px 8px;
+      text-align: left;
+      border: 1px solid #e5e7eb;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .breaks-table td { padding: 6px 8px; border: 1px solid #e5e7eb; vertical-align: middle; }
+    .breaks-table input[type="text"] {
+      width: 90px;
+      padding: 3px 6px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .breaks-table input[type="number"] {
+      width: 55px;
+      padding: 3px 6px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .breaks-table select {
+      padding: 3px 6px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 12px;
+      background: white;
+    }
+    .btn-xs { padding: 2px 8px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; }
+    .btn-xs-danger { background: #fee2e2; color: #b91c1c; }
+    .set-h3 {
+      font-size: 13px;
+      font-weight: bold;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .set-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
     .set-head .set-h3 { margin: 0; padding: 0; border-bottom: none; flex: 1; min-width: 0; }
     .set-head .btn { flex-shrink: 0; }
     .set-note { font-size: 12px; color: #6b7280; margin: 0 0 12px; }
     .set-rules { display: flex; flex-direction: column; gap: 12px; }
-    .set-rule { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; color: #374151; }
+    .set-rule {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: #374151;
+    }
     .set-rule-lbl { min-width: 200px; flex: 0 0 auto; }
-    .set-rule-input { width: 80px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; text-align: center; }
+    .set-rule-input {
+      width: 80px;
+      padding: 5px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 13px;
+      text-align: center;
+    }
     .set-rule-unit { color: #6b7280; font-size: 13px; }
     .set-rule-ro { font-weight: 600; color: #374151; }
     .set-rule-hint { font-size: 11px; color: #9ca3af; }
-    @media (max-width: 640px) { .set-rule-lbl { min-width: 140px; } }
-    .toggle-wrap { display: flex; align-items: center; gap: 10px; }
     .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
     .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #d1d5db; border-radius: 24px; transition: 0.3s; }
-    .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #d1d5db;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
     input:checked + .toggle-slider { background: #1a1a2e; }
-    input:checked + .toggle-slider:before { transform: translateX(20px); }
+    input:checked + .toggle-slider:before { transform: translatex(20px); }
     .toggle-label { font-size: 13px; color: #374151; }
     .hours-table { width: 100%; border-collapse: collapse; }
-    .hours-table th { background: #f9fafb; color: #6b7280; font-size: 11px; text-transform: uppercase; font-weight: 600; padding: 8px 12px; text-align: left; border: 1px solid #e5e7eb; }
+    .hours-table th {
+      background: #f9fafb;
+      color: #6b7280;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding: 8px 12px;
+      text-align: left;
+      border: 1px solid #e5e7eb;
+    }
     .hours-table td { padding: 8px 12px; border: 1px solid #e5e7eb; font-size: 13px; vertical-align: middle; }
     .hours-table tr.rest-day td { opacity: 0.45; }
     .hours-table tr.rest-day td:first-child { opacity: 1; }
-    .hours-table select { padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; background: white; }
-    .rest-badge { background: #f3f4f6; color: #6b7280; border-radius: 4px; padding: 2px 8px; font-size: 11px; margin-left: 8px; }
-    .date-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 10px; min-height: 32px; }
-    .date-tag { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 20px; padding: 4px 12px; font-size: 12px; }
-    .date-tag.holiday-tag { background: #fef9c3; color: #92400e; border-color: #fde68a; }
-    .date-tag button { background: none; border: none; cursor: pointer; color: inherit; font-size: 14px; line-height: 1; padding: 0; opacity: 0.7; }
-    .date-tag button:hover { opacity: 1; }
-    .date-add-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-    .date-add-row input[type="date"] { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; }
-    .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 8px; }
-    .info-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
-    .info-box .info-val { font-size: 18px; font-weight: bold; color: #1a1a2e; margin-top: 4px; }
-    .info-box .info-lbl { font-size: 11px; color: #9ca3af; text-transform: uppercase; }
-
-    /* ── REST OVERRIDE POPUP ── */
-    #rest-override-popup {
-      display: none; position: fixed; background: white;
-      border: 1px solid #e5e7eb; border-radius: 10px; padding: 18px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 600; min-width: 280px; max-width: 340px;
+    .hours-table select {
+      padding: 5px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 13px;
+      background: white;
     }
-    .rop-title { font-size: 13px; font-weight: bold; color: #1a1a2e; margin-bottom: 4px; }
-    .btn-export { background:#1a1a2e; color:#fff; }
-    .btn-export:hover { background:#0f3460; }
-    /* ── Calendar ── */
-    .cal-nav { display:flex; align-items:center; gap:10px; }
-    .cal-nav-btn { background:#16213e; color:#fff; border:none; border-radius:6px; width:30px; height:30px; cursor:pointer; font-size:12px; }
-    .cal-nav-btn:hover { background:#0f3460; }
-    .cal-month-label { font-size:14px; font-weight:bold; color:#1a1a2e; min-width:150px; text-align:center; }
-    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-    .cal-dow { text-align:center; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; padding-bottom:4px; }
-    .cal-cell { min-height:64px; border:1px solid #e5e7eb; border-radius:8px; padding:6px; background:#fff; position:relative; font-size:12px; }
-    .cal-cell.empty { background:transparent; border:none; }
-    .cal-cell.today { border-color:#1a1a2e; box-shadow:0 0 0 1px #1a1a2e; }
-    .cal-cell.holiday { background:#fef9c3; cursor:pointer; }
-    .cal-cell.holiday.forced-open { background:#dcfce7; }
-    .cal-cell.weekend { background:#f9fafb; }
-    .cal-daynum { font-weight:600; color:#374151; }
-    .cal-holiday-name { font-size:9px; color:#92400e; margin-top:2px; line-height:1.1; }
-    .cal-forced { font-size:9px; font-weight:700; margin-top:2px; }
-    .cal-forced.open { color:#166534; }
-    .cal-forced.closed { color:#b91c1c; }
-    .cal-monthly-wrap { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
-    .cal-monthly-grid { flex:1; min-width:340px; }
-    .cal-agent-list { width:200px; flex-shrink:0; border:1px solid #e5e7eb; border-radius:8px; padding:10px; background:#f9fafb; }
-    .cal-agent-list h4 { font-size:11px; text-transform:uppercase; color:#6b7280; margin:0 0 8px; }
-    .cal-agent-item { padding:7px 10px; background:#fff; border:1px solid #e5e7eb; border-radius:6px; margin-bottom:6px; font-size:12px; cursor:pointer; transition:border-color .15s; }
-    .cal-agent-item:hover { border-color:#1a1a2e; }
-    .cal-leave-bar { font-size:9px; border-radius:4px; padding:1px 4px; margin-top:2px; color:#fff; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-    /* 12-month annual overview */
-    .cal-year-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
-    .cal-mini { border:1px solid #e5e7eb; border-radius:8px; padding:8px; background:#fff; }
-    .cal-mini-title { text-align:center; font-size:12px; font-weight:700; color:#1a1a2e; background:#f9fafb; border-radius:5px; padding:3px 0; margin-bottom:6px; }
-    .cal-mini-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
-    .cal-mini-dow { text-align:center; font-size:8px; font-weight:600; color:#9ca3af; }
-    .cal-mini-cell { text-align:center; font-size:10px; color:#374151; padding:3px 0; border-radius:3px; }
-    .cal-mini-cell.empty { background:transparent; }
-    .cal-mini-cell.today { outline:2px solid #1a1a2e; font-weight:700; }
-    .cal-mini-cell.holiday { background:#fef9c3; color:#92400e; font-weight:700; cursor:pointer; }
-    .cal-mini-cell.holiday.forced-open { background:#dcfce7; color:#166534; }
-    .cal-mini-cell.holiday:hover { background:#fde68a; }
-    /* Monthly view cells with leave lanes */
-    .cal-cell-month { min-height:78px; }
-    .cal-lanes { position:relative; margin-top:2px; }
-    .cal-bar { position:absolute; left:0; right:0; height:14px; line-height:14px; font-size:9px;
-      font-weight:600; padding:0 4px; overflow:hidden; white-space:nowrap; cursor:pointer; box-sizing:border-box; }
-    .leave-field { margin-bottom:10px; }
-    .leave-label { display:block; font-size:11px; color:#6b7280; margin-bottom:3px; }
-    .leave-input { width:100%; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; box-sizing:border-box; }
-    #leave-popup, #dayopen-popup {
-      display:none; position:fixed; background:white; border:1px solid #e5e7eb;
-      border-radius:14px; padding:18px 20px; box-shadow:0 12px 32px rgba(0,0,0,0.16);
-      z-index:600; min-width:240px;
+    .rest-badge {
+      background: #f3f4f6;
+      color: #6b7280;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      margin-left: 8px;
     }
-    /* ── Shift pill (Weekly cell) + switch popover ── */
-    .shift-pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#374151;
-      background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:3px 10px; cursor:pointer;
-      transition: border-color .15s, box-shadow .15s; white-space:nowrap; }
-    .shift-pill:hover { border-color:#1a1a2e; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
-    .shift-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-    #shift-popup {
-      display:none; position:fixed; background:white;
-      border:1px solid #e5e7eb; border-radius:14px; padding:18px 20px;
-      box-shadow:0 12px 32px rgba(0,0,0,0.16); z-index:600; min-width:240px;
-    }
-    .sft-title { font-size:14px; font-weight:700; color:#1a1a2e; margin-bottom:2px; }
-    .sft-subtitle { font-size:11px; color:#9ca3af; margin-bottom:16px; }
-    .sft-row { display:flex; align-items:center; justify-content:center; gap:14px; }
-    .sft-side { font-size:12px; font-weight:600; color:#9ca3af; transition:color .15s; }
-    .sft-side.active { color:#1a1a2e; }
-    .sft-hours { text-align:center; font-size:12px; color:#6b7280; margin-top:14px; font-weight:600; }
-    .rop-subtitle { font-size: 11px; color: #6b7280; margin-bottom: 14px; }
-    .rop-day { display: flex; align-items: center; justify-content: space-between;
-      padding: 7px 10px; border-radius: 6px; margin-bottom: 5px;
-      border: 1px solid #e5e7eb; background: #f9fafb; }
-    .rop-day.is-current { background: #f3e8ff; border-color: #c4b5fd; }
-    .rop-day.is-other-rest { opacity: 0.5; }
-    .rop-day-name { font-size: 12px; font-weight: 500; color: #374151; }
-    .rop-day-wl { font-size: 11px; color: #9ca3af; }
-    .rop-select-btn { font-size: 11px; padding: 3px 10px; background: #1a1a2e; color: white; border: none; border-radius: 4px; cursor: pointer; }
-    .rop-select-btn:hover { background: #0f3460; }
-    .rop-cancel { margin-top: 12px; width: 100%; background: #f3f4f6; color: #374151; padding: 7px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
-    .rop-cancel:hover { background: #e5e7eb; }
-
-    /* ── VIEW TOGGLE ── */
-    .view-toggle{display:flex;gap:8px;margin-bottom:16px;}
-    .view-toggle button{padding:6px 16px;border-radius:6px;border:1px solid #e5e7eb;background:white;cursor:pointer;font-size:13px;color:#6b7280;}
-    .view-toggle button.active{background:#1a1a2e;color:white;border-color:#1a1a2e;}
-    /* ── INTRADAY TIMELINE ── */
-    #intraday-container{overflow-x:auto;}
-    .intraday-day-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-    .intraday-day-btn{padding:5px 14px;border-radius:20px;border:1px solid #e5e7eb;background:white;cursor:pointer;font-size:12px;color:#6b7280;}
-    .intraday-day-btn.active{background:#1a1a2e;color:white;border-color:#1a1a2e;}
-    .intraday-day-btn.closed-day{background:#f3f4f6;color:#bbb;cursor:not-allowed;}
-    .intraday-grid{display:grid;}
-    .intraday-agent-cell{padding:7px 10px;font-size:12px;font-weight:600;background:#f9fafb;border:1px solid #e5e7eb;white-space:nowrap;display:flex;align-items:center;min-height:56px;}
-    .intraday-hour-header{padding:5px 4px;text-align:center;font-size:10px;color:#9ca3af;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;display:flex;align-items:center;justify-content:center;}
-    .intraday-block{border:1px solid #e5e7eb;min-height:56px;position:relative;background:white;}
-    .task-block { position:absolute;top:3px;bottom:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;overflow:hidden;white-space:nowrap;padding:0 3px;cursor:grab; }
-    .task-block[draggable="true"]:active { cursor:grabbing; }
-    .task-block.dragging { opacity:0.4; }
-    .intraday-block.drag-over { outline:2px dashed #6366f1; background:#f0f0ff; }
-    .intraday-reset-btn { font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid #d1d5db;background:white;color:#6b7280;cursor:pointer;margin-left:8px; }
-    .intraday-reset-btn:hover { background:#fee2e2;color:#b91c1c;border-color:#fca5a5; }
-    .intraday-rest-cell{background:#f9fafb;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af;min-height:56px;}
-    .intraday-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;}
-    .filler-tag{font-size:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:10px;padding:1px 7px;margin-left:4px;}
-
-    .shift-parttime { background:#fef9c3; color:#854d0e; border-radius:14px; padding:3px 10px; display:inline-block; font-size:11px; font-weight:600; }
-    .shift-partial  { background:#dbeafe; color:#1e40af; border-radius:14px; padding:3px 10px; display:inline-block; font-size:11px; font-weight:600; }
-    .pct-badge      { font-size:10px; background:#f3f4f6; color:#6b7280; border-radius:10px; padding:1px 7px; margin-left:6px; }
-
-    /* ── SYSTEM ── */
-    #loader { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.75); z-index: 999; align-items: center; justify-content: center; font-size: 16px; color: #1a1a2e; }
-    #loader.active { display: flex; }
-    #toast { position: fixed; bottom: 24px; right: 24px; color: white; padding: 12px 20px; border-radius: 6px; font-size: 13px; display: none; z-index: 1000; }
-    #toast.success { background: #166534; }
-    #toast.error   { background: #b91c1c; }
-    #status-bar { background: white; border-top: 1px solid #eee; padding: 8px 24px; font-size: 12px; color: #888; display: flex; justify-content: space-between; align-items: center; }
-
-    /* ── WEEK PICKER ── */
-    #week-picker-popup {
-      display:none; position:fixed; background:white; border:1px solid #e5e7eb;
-      border-radius:10px; padding:16px; box-shadow:0 8px 28px rgba(0,0,0,.18);
-      z-index:700; min-width:280px;
-    }
-    .wkp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-    .wkp-month-label { font-size:14px; font-weight:bold; color:#1a1a2e; }
-    .wkp-nav { background:none; border:none; cursor:pointer; color:#6b7280; font-size:16px; padding:2px 8px; border-radius:4px; }
-    .wkp-nav:hover { background:#f3f4f6; }
-    .wkp-grid { display:grid; grid-template-columns:auto repeat(7,1fr); gap:2px; font-size:11px; }
-    .wkp-day-hdr { text-align:center; color:#9ca3af; padding:3px 0; font-weight:600; }
-    .wkp-wn { color:#9ca3af; font-size:10px; padding:3px 4px; display:flex; align-items:center; justify-content:center; }
-    .wkp-day { text-align:center; padding:5px 3px; border-radius:4px; cursor:pointer; color:#374151; }
-    .wkp-day:hover { background:#f3f4f6; }
-    .wkp-day.other-month { color:#d1d5db; }
-    .wkp-day.today { font-weight:bold; color:#1a1a2e; }
-    .wkp-day.in-selected-week { background:#e0e7ff; color:#3730a3; border-radius:0; }
-    .wkp-day.week-start { border-radius:4px 0 0 4px; }
-    .wkp-day.week-end { border-radius:0 4px 4px 0; }
-    #week-label { cursor:pointer; border-radius:4px; padding:4px 8px; }
-    #week-label:hover { background:rgba(255,255,255,.15); }
-
-    /* ════════════════════════════════════════════════════════════
-       CORA RETAIL — couche de design (surcharge propre du theme CORA)
-       Plus clair, plus aere, ombres douces, coins arrondis.
-       Le navy #1a1a2e reste l'accent (ADN marque).
-       ════════════════════════════════════════════════════════════ */
-
-    /* Fade-in fluide au chargement de la page (effet bascule) */
-    @keyframes coraFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-    body { background: #f7f8fa; animation: coraFadeIn .28s ease-out; }
-
-    /* Cartes : blanc, ombre douce diffuse, coins arrondis, pas de bordure dure */
-    .card {
-      background: #ffffff !important;
-      border: none !important;
-      border-radius: 14px !important;
-      box-shadow: 0 1px 3px rgba(16,24,40,.04), 0 4px 16px rgba(16,24,40,.06) !important;
-      padding: 22px !important;
-    }
-
-    /* Header : on garde le navy, un poil plus doux et arrondi en bas */
-    #header {
-      background: #1a1a2e;
-      box-shadow: 0 1px 0 rgba(16,24,40,.04);
-    }
-
-    /* Apple slider toggle CS <-> Retail (aligne verticalement dans le header) */
-    .mode-toggle {
+    .date-tag {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      align-self: center;
-    }
-    .mode-lbl {
+      gap: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 20px;
+      padding: 4px 12px;
       font-size: 12px;
-      font-weight: 600;
-      color: #9aa0b5;
-      white-space: nowrap;
-      line-height: 1;
     }
-    .mode-lbl-active { color: #ffffff; }
+    .date-tag.holiday-tag { background: #fef9c3; color: #92400e; border-color: #fde68a; }
+    .date-tag button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      opacity: 0.7;
+    }
+    .date-tag button:hover { opacity: 1; }
+    #rest-override-popup {
+      display: none;
+      position: fixed;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      z-index: 600;
+      min-width: 280px;
+      max-width: 340px;
+    }
+    .btn-export { background: var(--navy); color: #fff; border: none; padding: 8px 16px; }
+    .btn-export:hover { background: var(--navy-hover); }
+    .cal-nav { display: flex; align-items: center; gap: 10px; }
+    .cal-nav-btn {
+      background: #16213e;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .cal-nav-btn:hover { background: #0f3460; }
+    .cal-month-label { font-size: 14px; font-weight: bold; color: #1a1a2e; min-width: 150px; text-align: center; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .cal-dow {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      padding-bottom: 4px;
+    }
+    .cal-cell {
+      min-height: 64px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 6px;
+      background: #fff;
+      position: relative;
+      font-size: 12px;
+    }
+    .cal-cell.empty { background: transparent; border: none; }
+    .cal-cell.today { border-color: #1a1a2e; box-shadow: 0 0 0 1px #1a1a2e; }
+    .cal-cell.holiday { background: #fef9c3; cursor: pointer; }
+    .cal-cell.holiday.forced-open { background: #dcfce7; }
+    .cal-cell.weekend { background: #f9fafb; }
+    .cal-daynum { font-weight: 600; color: #374151; }
+    .cal-monthly-wrap { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+    .cal-monthly-grid { flex: 1; min-width: 340px; }
+    .cal-agent-list {
+      width: 200px;
+      flex-shrink: 0;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px;
+      background: #f9fafb;
+    }
+    .cal-agent-list h4 { font-size: 11px; text-transform: uppercase; color: #6b7280; margin: 0 0 8px; }
+    .cal-agent-item {
+      padding: 7px 10px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .cal-agent-item:hover { border-color: #1a1a2e; }
+    .cal-year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .cal-mini { border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; background: #fff; }
+    .cal-mini-title {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1a1a2e;
+      background: #f9fafb;
+      border-radius: 5px;
+      padding: 3px 0;
+      margin-bottom: 6px;
+    }
+    .cal-mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-mini-dow { text-align: center; font-size: 8px; font-weight: 600; color: #9ca3af; }
+    .cal-mini-cell { text-align: center; font-size: 10px; color: #374151; padding: 3px 0; border-radius: 3px; }
+    .cal-mini-cell.empty { background: transparent; }
+    .cal-mini-cell.today { outline: 2px solid #1a1a2e; font-weight: 700; }
+    .cal-mini-cell.holiday { background: #fef9c3; color: #92400e; font-weight: 700; cursor: pointer; }
+    .cal-mini-cell.holiday.forced-open { background: #dcfce7; color: #166534; }
+    .cal-mini-cell.holiday:hover { background: #fde68a; }
+    .cal-cell-month { min-height: 78px; }
+    .cal-lanes { position: relative; margin-top: 2px; }
+    .cal-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 14px;
+      line-height: 14px;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 0 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .leave-field { margin-bottom: 10px; }
+    .leave-label { display: block; font-size: 11px; color: #6b7280; margin-bottom: 3px; }
+    .leave-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+    #leave-popup, #dayopen-popup {
+      display: none;
+      position: fixed;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+      z-index: 600;
+      min-width: 240px;
+    }
+    #shift-popup {
+      display: none;
+      position: fixed;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+      z-index: 600;
+      min-width: 240px;
+    }
+    .sft-title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+    .sft-subtitle { font-size: 11px; color: #9ca3af; margin-bottom: 16px; }
+    .sft-row { display: flex; align-items: center; justify-content: center; gap: 14px; }
+    .sft-side { font-size: 12px; font-weight: 600; color: #9ca3af; transition: color 0.15s; }
+    .sft-side.active { color: #1a1a2e; }
+    .view-toggle {
+      display: inline-flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      background: #f3f4f7;
+      padding: 4px;
+      border-radius: 11px;
+    }
+    .view-toggle button {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      color: #7a8194;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      transition: all 0.14s ease;
+    }
+    .view-toggle button.active {
+      background: #fff;
+      color: #1a1a2e;
+      border-color: #1a1a2e;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.1);
+    }
+    #intraday-container { overflow-x: auto; }
+    .pct-badge {
+      font-size: 10px;
+      background: #f3f4f6;
+      color: #6b7280;
+      border-radius: 10px;
+      padding: 1px 7px;
+      margin-left: 6px;
+    }
+    #loader {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.75);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #1a1a2e;
+    }
+    #loader.active { display: flex; }
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+      z-index: 1000;
+    }
+    #toast.success { background: #166534; }
+    #toast.error { background: #b91c1c; }
+    #status-bar {
+      background: var(--card);
+      border-top: 1px solid var(--line);
+      padding: 9px 28px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+    #week-picker-popup {
+      display: none;
+      position: fixed;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+      z-index: 700;
+      min-width: 280px;
+    }
+    .wkp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .wkp-month-label { font-size: 14px; font-weight: bold; color: #1a1a2e; }
+    .wkp-nav {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 16px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .wkp-nav:hover { background: #f3f4f6; }
+    .wkp-grid { display: grid; grid-template-columns: auto repeat(7, 1fr); gap: 2px; font-size: 11px; }
+    .wkp-day-hdr { text-align: center; color: #9ca3af; padding: 3px 0; font-weight: 600; }
+    .wkp-wn {
+      color: #9ca3af;
+      font-size: 10px;
+      padding: 3px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wkp-day { text-align: center; padding: 5px 3px; border-radius: 4px; cursor: pointer; color: #374151; }
+    .wkp-day:hover { background: #f3f4f6; }
+    .wkp-day.other-month { color: #d1d5db; }
+    .wkp-day.today { font-weight: bold; color: #1a1a2e; }
+    .wkp-day.in-selected-week { background: #e0e7ff; color: #3730a3; border-radius: 0; }
+    .wkp-day.week-start { border-radius: 4px 0 0 4px; }
+    .wkp-day.week-end { border-radius: 0 4px 4px 0; }
+    #week-label:hover { background: #e9ebf0; }
+    .mode-toggle { display: inline-flex; align-items: center; gap: 10px; align-self: center; }
+    .mode-lbl { font-size: 12px; font-weight: 600; color: #9aa0b5; white-space: nowrap; line-height: 1; }
+    .mode-lbl-active { color: #fff; }
     .ios-switch {
       position: relative;
       width: 46px;
       height: 26px;
       border-radius: 999px;
-      background: #ffffff;              /* fond blanc demande */
+      background: #fff;
       border: 1px solid #d7dae5;
       cursor: pointer;
       padding: 0;
       flex-shrink: 0;
-      transition: background .2s ease;
-      box-shadow: inset 0 1px 2px rgba(16,24,40,.06);
+      transition: background 0.2s ease;
+      box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.06);
     }
     .ios-knob {
       position: absolute;
@@ -375,208 +566,191 @@
       width: 20px;
       height: 20px;
       border-radius: 50%;
-      background: #1a1a2e;             /* knob navy pour contraste sur fond blanc */
-      transition: transform .22s cubic-bezier(.4,.0,.2,1);
-      box-shadow: 0 1px 3px rgba(16,24,40,.3);
+      background: #1a1a2e;
+      transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(16, 24, 40, 0.3);
     }
-    .ios-switch.on .ios-knob { transform: translateX(20px); }   /* ON = droite = Retail */
-
-    /* Alignement header : le bloc Region a un label au-dessus (~18px).
-       On aligne le toggle et le week-nav sur la ligne des champs. */
-    .mode-toggle { margin-top: 18px; }
-    #header .week-nav { margin-top: 18px; }
-
-    /* Boutons primaires : navy garde, coins un peu plus ronds */
-    .btn, button.btn-export { border-radius: 8px !important; }
-
-    /* Champs & selects : plus doux */
+    .ios-switch.on .ios-knob { transform: translatex(20px); }
+    button.btn-export { border-radius: 9px; }
     select, input[type="text"], input[type="number"], input[type="date"] {
-      border-radius: 8px !important;
-      border: 1px solid #e6e8ee !important;
+      border-radius: 9px;
+      border: 1px solid #e2e5ec;
+      background: #fff;
+      font-size: 13px;
+      transition: border-color 0.14s ease, box-shadow 0.14s ease;
+      padding: 7px 10px;
     }
-
-    /* Onglets : memes positions, juste plus aere */
-    #tabs { background: #ffffff; border-bottom: 1px solid #eef0f4; }
-
-    /* Tableaux : lignes plus douces, en-tetes navy conserves */
-    table { border-radius: 10px; overflow: hidden; }
-
-    /* Status bar : fond clair */
-    #status-bar { background: #ffffff; border-top: 1px solid #eef0f4; color: #6b7280; }
-
-    /* ── Badges shift Retail (pills pastel facon HighPerform) ── */
-    .rt-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: 12px; font-weight: 600;
-      padding: 3px 11px; border-radius: 999px; line-height: 1.4;
-    }
-    .rt-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .rt-open  { background:#E1F5EE; color:#0F6E56; }   /* Ouverture */
-    .rt-open  .dot { background:#1D9E75; }
-    .rt-close { background:#E6F1FB; color:#185FA5; }   /* Fermeture */
-    .rt-close .dot { background:#378ADD; }
-    .rt-off   { background:#F1EFE8; color:#5F5E5A; }   /* Repos / OFF */
-    .rt-leave { background:#FAEEDA; color:#854F0B; }   /* Conge */
-    .rt-leave .dot { background:#EF9F27; }
-    .rt-train { background:#EEEDFE; color:#3C3489; }   /* Formation */
-
-    /* ════════════════════════════════════════════════════════════
-       CORA RETAIL - MAKEOVER SaaS PRO (full)
-       Sharper, cleaner, plateforme pro. Navy CORA en accent.
-       ════════════════════════════════════════════════════════════ */
-
-    /* Icones inline Lucide : 16px, alignees, heritent la couleur */
-    .ic { width:16px; height:16px; flex-shrink:0; vertical-align:middle; }
-
-    /* Page : gris perle, respiration */
-    body { background:#f6f7f9; color:#1a1d29; }
-
-    /* Header : navy, un peu plus fin */
-    #header { background:#1a1a2e; padding:14px 28px; }
-
-    /* ── Onglets : segmented control pro (image 2) ── */
-    #tabs {
-      background:#ffffff;
-      border-bottom:1px solid #edeff3;
-      padding:10px 28px;
-      gap:6px;
-      display:flex;
-    }
-    .tab-btn {
-      display:inline-flex; align-items:center; gap:7px;
-      border:none !important;
-      border-radius:9px !important;
-      padding:8px 16px !important;
-      font-size:13px !important;
-      font-weight:600 !important;
-      color:#7a8194 !important;
-      background:transparent !important;
-      cursor:pointer;
-      transition:all .14s ease;
-    }
-    .tab-btn .ic { color:#9aa0b0; transition:color .14s ease; }
-    .tab-btn:hover { background:#f3f4f7 !important; color:#1a1a2e !important; }
-    .tab-btn:hover .ic { color:#1a1a2e; }
-    .tab-btn.active {
-      background:#1a1a2e !important;
-      color:#ffffff !important;
-      box-shadow:0 1px 2px rgba(16,24,40,.16);
-    }
-    .tab-btn.active .ic { color:#ffffff; }
-
-    /* ── Cartes : nettes, hairline + ombre tres subtile ── */
-    .card {
-      background:#ffffff !important;
-      border:1px solid #edeff3 !important;
-      border-radius:14px !important;
-      box-shadow:0 1px 2px rgba(16,24,40,.03) !important;
-      padding:22px 24px !important;
-      margin-bottom:18px !important;
-    }
-
-    /* ── Boutons de vue (Recap/Monthly/Weekly/Intraday) ── */
-    .view-toggle { display:inline-flex; gap:4px; background:#f3f4f7; padding:4px; border-radius:11px; }
-    .view-toggle button {
-      display:inline-flex; align-items:center; gap:6px;
-      border:none !important; background:transparent !important;
-      border-radius:8px !important; padding:7px 14px !important;
-      font-size:13px !important; font-weight:600 !important;
-      color:#7a8194 !important; cursor:pointer; transition:all .14s ease;
-    }
-    .view-toggle button .ic { color:#9aa0b0; }
-    .view-toggle button:hover { color:#1a1a2e !important; }
-    .view-toggle button.active {
-      background:#ffffff !important; color:#1a1a2e !important;
-      box-shadow:0 1px 2px rgba(16,24,40,.1);
-    }
-    .view-toggle button.active .ic { color:#1a1a2e; }
-
-    /* ── Boutons generaux ── */
-    .btn {
-      display:inline-flex; align-items:center; gap:6px;
-      border-radius:9px !important; font-weight:600 !important;
-      font-size:13px !important; transition:all .14s ease;
-    }
-    .btn .ic { width:15px; height:15px; }
-    .btn-export {
-      background:#1a1a2e !important; color:#fff !important; border:none !important;
-      padding:8px 16px !important;
-    }
-    .btn-export:hover { background:#0f3460 !important; }
-    .btn-export .ic { color:#fff; }
-
-    /* ── Champs : nets, fond blanc, focus navy ── */
-    select, input[type="text"], input[type="number"], input[type="date"] {
-      border-radius:9px !important;
-      border:1px solid #e2e5ec !important;
-      background:#ffffff !important;
-      font-size:13px !important;
-      transition:border-color .14s ease, box-shadow .14s ease;
-    }
-    select:focus, input:focus {
-      outline:none !important;
-      border-color:#1a1a2e !important;
-      box-shadow:0 0 0 3px rgba(26,26,46,.08) !important;
-    }
-
-    /* ── Tableaux pro (image 1 : en-tetes petites majuscules grises, lignes aerees) ── */
-    table { border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; }
-    .agent-row {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 18px;
-      border-bottom:1px solid #f1f2f5;
-      transition:background .12s ease;
-    }
-    .agent-row:hover { background:#fafbfc; }
-    .agent-row:last-child { border-bottom:none; }
-
-    /* Avatar initiales rond (facon image 1) */
+    .ic { width: 16px; height: 16px; flex-shrink: 0; vertical-align: middle; }
+    .view-toggle button .ic { color: #9aa0b0; }
+    .view-toggle button:hover { color: #1a1a2e; }
+    .view-toggle button.active .ic { color: #1a1a2e; }
+    .btn .ic { width: 15px; height: 15px; }
+    .btn-export .ic { color: #fff; }
+    select:focus, input:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.08); }
+    .agent-row:hover { background: #fafbfc; }
     .avatar {
-      width:34px; height:34px; border-radius:50%;
-      display:inline-flex; align-items:center; justify-content:center;
-      font-size:12px; font-weight:700; color:#fff;
-      flex-shrink:0; letter-spacing:.02em;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+      min-width: 34px;
     }
-
-    /* ── Status bar : clair et discret ── */
-    #status-bar {
-      background:#ffffff; border-top:1px solid #edeff3;
-      color:#7a8194; font-size:12px;
-    }
-
-    /* ── Pills STATUT agent (exclusives) ── */
     .rt-status {
-      display:inline-flex; align-items:center;
-      font-size:11px; font-weight:700; letter-spacing:.02em;
-      padding:3px 10px; border-radius:999px; line-height:1.5;
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      line-height: 1.5;
     }
-    .st-sm       { background:#EEEDFE; color:#3C3489; }
-    .st-asm      { background:#E0E7FF; color:#3730A3; }
-    .st-manager  { background:#E6F1FB; color:#185FA5; }
-    .st-stock    { background:#FAEEDA; color:#854F0B; }
-    .st-senior   { background:#E1F5EE; color:#0F6E56; }
-    .st-sa       { background:#F1EFE8; color:#5F5E5A; }
-    .st-part_time{ background:#FBEAF0; color:#993556; }
-
-    /* ── Pastilles SHIFT dans la grille mensuelle ── */
+    .st-sm { background: #EEEDFE; color: #3C3489; }
+    .st-asm { background: #E0E7FF; color: #3730A3; }
+    .st-manager { background: #E6F1FB; color: #185FA5; }
+    .st-stock { background: #FAEEDA; color: #854F0B; }
+    .st-senior { background: #E1F5EE; color: #0F6E56; }
+    .st-sa { background: #F1EFE8; color: #5F5E5A; }
+    .st-part_time { background: #FBEAF0; color: #993556; }
     .sh {
-      display:inline-flex; align-items:center; justify-content:center;
-      min-width:26px; font-size:11px; font-weight:700;
-      padding:3px 7px; border-radius:7px; line-height:1.4;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 26px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 7px;
+      line-height: 1.4;
     }
-    .sh-o  { background:#E1F5EE; color:#0F6E56; }
-    .sh-m  { background:#FAEEDA; color:#854F0B; }
-    .sh-c  { background:#E6F1FB; color:#185FA5; }
-    .sh-d  { background:#EEEDFE; color:#3C3489; }
-    .sh-os { background:#DCF2EC; color:#0F6E56; border:1px dashed #9FE1CB; }
-    .sh-ms { background:#FBF0DC; color:#854F0B; border:1px dashed #FAC775; }
-    .sh-cs { background:#E2EEFB; color:#185FA5; border:1px dashed #B5D4F4; }
-    .sh-off  { background:#F1F2F5; color:#9aa0b5; }
-    .sh-cp   { background:#FBEAF0; color:#993556; }
-    .sh-closed { color:#cdd2dc; }
-
-
-
+    .sh-o { background: #E1F5EE; color: #0F6E56; }
+    .sh-m { background: #FAEEDA; color: #854F0B; }
+    .sh-c { background: #E6F1FB; color: #185FA5; }
+    .sh-d { background: #EEEDFE; color: #3C3489; }
+    .sh-os { background: #DCF2EC; color: #0F6E56; border: 1px dashed #9FE1CB; }
+    .sh-ms { background: #FBF0DC; color: #854F0B; border: 1px dashed #FAC775; }
+    .sh-cs { background: #E2EEFB; color: #185FA5; border: 1px dashed #B5D4F4; }
+    .sh-off { background: #F1F2F5; color: #9aa0b5; }
+    .sh-cp { background: #FBEAF0; color: #993556; }
+    .sh-closed { color: #cdd2dc; }
+    :root {
+      --navy: #1a1a2e;
+      --navy-hover: #0f3460;
+      --canvas: #f6f7f9;
+      --card: #fff;
+      --line: #e9ebf0;
+      --line-soft: #f1f2f5;
+      --ink: #1a1d29;
+      --muted: #6b7280;
+      --faint: #9aa0b0;
+      --sb-w: 236px;
+    }
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sb-w);
+      background: var(--navy);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 14px;
+      z-index: 100;
+    }
+    #main { margin-left: var(--sb-w); min-height: 100vh; display: flex; flex-direction: column; }
+    .sb-brand { display: flex; align-items: center; gap: 11px; padding: 6px 8px 20px; }
+    .sb-logo { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
+    .sb-brand-txt { display: flex; flex-direction: column; line-height: 1; }
+    .sb-name {
+      font-family: "Arial Black", Arial, sans-serif;
+      font-weight: 900;
+      font-size: 22px;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+    .sb-tag {
+      font-family: "Century Schoolbook", "Times New Roman", serif;
+      font-style: italic;
+      font-size: 11px;
+      color: #AFABAB;
+      margin-top: 4px;
+    }
+    .sb-nav { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: #b9bccd;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-align: left;
+      transition: background 0.14s ease, color 0.14s ease;
+    }
+    .nav-item .ic { width: 17px; height: 17px; color: #8f94a8; transition: color 0.14s ease; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+    .nav-item:hover .ic { color: #fff; }
+    .nav-item.active { background: #fff; color: var(--navy); }
+    .nav-item.active .ic { color: var(--navy); }
+    .sb-foot { margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+    .sb-foot .mode-toggle { margin-top: 0; flex-wrap: wrap; gap: 8px; }
+    .sb-foot .mode-lbl { font-size: 11px; }
+    #topbar {
+      display: flex;
+      align-items: flex-end;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding: 16px 28px;
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+    }
+    #topbar .tb-field { display: flex; flex-direction: column; gap: 4px; }
+    #topbar .tb-field label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    #topbar .week-nav { margin-left: auto; }
+    @media (max-width: 640px) {
+      .set-rule-lbl {
+        min-width: 140px;
+      }
+    }
+    @media (max-width: 820px) {
+      :root {
+        --sb-w: 64px;
+      }
+      .sb-brand-txt, .nav-item span, .sb-foot .mode-lbl {
+        display: none;
+      }
+      .nav-item {
+        justify-content: center;
+        padding: 11px 0;
+      }
+      .sb-brand {
+        justify-content: center;
+        padding: 6px 0 18px;
+      }
+      .sb-foot .ios-switch {
+        margin: 0 auto;
+      }
+    }
+    @keyframes coraFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
   </style>
 </head>
 <body>
@@ -594,88 +768,56 @@
   <div class="wkp-grid" id="wkp-grid"></div>
 </div>
 
-<!-- REST OVERRIDE POPUP -->
-<div id="rest-override-popup">
-  <div class="rop-title">🔄 Change scheduled rest day</div>
-  <div class="rop-subtitle" id="rop-subtitle"></div>
-  <div id="rop-days"></div>
-  <button class="rop-cancel" onclick="closeRestOverride()">Cancel</button>
-</div>
 
-<!-- SHIFT SWITCH POPUP -->
-<div id="shift-popup">
-  <div class="sft-title">Switch shift</div>
-  <div class="sft-subtitle" id="sft-subtitle"></div>
-  <div class="sft-row">
-    <span class="sft-side" id="sft-morning-label">Morning</span>
-    <label class="toggle"><input type="checkbox" id="sft-toggle">
-      <span class="toggle-slider"></span></label>
-    <span class="sft-side" id="sft-afternoon-label">Afternoon</span>
-  </div>
-  <div class="sft-hours" id="sft-hours"></div>
-</div>
-
-<!-- HEADER -->
-<div id="header">
-  <div style="display:flex;align-items:center;gap:14px;margin-right:auto;">
-    <img src="CORA_LOGO.png" alt="CORA"
-         style="width:24px;height:24px;flex-shrink:0;object-fit:contain;">
-    <div style="display:flex;flex-direction:column;line-height:1;">
-      <span style="font-family:'Arial Black',Arial,sans-serif;font-weight:900;
-                   font-size:36px;color:#ffffff;letter-spacing:0.5px;">CORA</span>
-      <span style="font-family:'Century Schoolbook','Times New Roman',serif;
-                   font-style:italic;font-size:12px;color:#AFABAB;margin-top:4px;">
-        Client Operations Rostering Assistant</span>
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sb-brand">
+    <img src="CORA_LOGO.png" alt="CORA" class="sb-logo">
+    <div class="sb-brand-txt">
+      <span class="sb-name">CORA</span>
+      <span class="sb-tag">Retail</span>
     </div>
   </div>
-  <div class="mode-toggle">
-    <span class="mode-lbl">Client Service</span>
-    <button class="ios-switch on" role="switch" aria-checked="true" aria-label="Basculer vers Client Service"
-            onclick="window.location.href='index.html'">
-      <span class="ios-knob"></span>
-    </button>
-    <span class="mode-lbl mode-lbl-active">Retail</span>
+  <div class="sb-nav">
+    <button class="nav-item active" onclick="switchTab('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span>Planning</span></button>
+    <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Agents</span></button>
+    <button class="nav-item" onclick="switchTab('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button>
+    <button class="nav-item" onclick="switchTab('regulations', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
   </div>
-  <div>
-    <label>Region</label>
-    <select id="region-select"><option value="">- Select region -</option></select>
+  <div class="sb-foot">
+    <div class="mode-toggle">
+      <span class="mode-lbl">Client Service</span>
+      <button class="ios-switch on" role="switch" aria-checked="true" aria-label="Switch to Client Service" onclick="window.location.href='index.html'">
+        <span class="ios-knob"></span>
+      </button>
+      <span class="mode-lbl mode-lbl-active">Retail</span>
+    </div>
   </div>
-  <div class="week-nav">
-    <button onclick="changeWeek(-1)">◀</button>
-    <div id="week-label" onclick="toggleWeekPicker(event)" title="Click to jump to any week">Week -</div>
-    <button onclick="changeWeek(+1)">▶</button>
-  </div>
-</div>
+</nav>
 
-<!-- TABS -->
-<div id="tabs">
-  <button class="tab-btn active" onclick="switchTab('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span>Planning</span></button>
-  <button class="tab-btn" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Agents</span></button>
-  <button class="tab-btn" onclick="switchTab('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button>
-  <button class="tab-btn" onclick="switchTab('regulations', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
-</div>
+<!-- MAIN COLUMN -->
+<div id="main">
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <div class="tb-field">
+      <label>Region</label>
+      <select id="region-select"><option value="">- Select region -</option></select>
+    </div>
+    <div class="week-nav">
+      <button onclick="changeWeek(-1)" aria-label="Previous">&#9664;</button>
+      <div id="week-label" onclick="toggleWeekPicker(event)" title="Click to jump to any week">Week -</div>
+      <button onclick="changeWeek(+1)" aria-label="Next">&#9654;</button>
+    </div>
+  </header>
 
 <!-- PLANNING TAB -->
 <div id="tab-planning" class="tab-content active">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-      <div class="view-toggle">
-        <button id="btn-view-recap" class="active" onclick="switchPlanningView('recap')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Recap</span></button>
-        <button id="btn-view-monthly" onclick="switchPlanningView('monthly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/></svg><span>Monthly</span></button>
-        <button id="btn-view-weekly" onclick="switchPlanningView('weekly')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="15" x2="17" y2="15"/></svg><span>Weekly</span></button>
-        <button id="btn-view-intraday" onclick="switchPlanningView('intraday')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Intraday</span></button>
-      </div>
-      <div id="planning-legend" style="font-size:11px;color:#6b7280;display:none;">
-        Click <span style="background:#f3e8ff;color:#7c3aed;border-radius:3px;padding:1px 5px;border:1px dashed #c4b5fd;">Sched. Rest</span> to reassign rest day
-      </div>
-      <button id="btn-export" class="btn btn-export" style="margin-left:auto;" onclick="exportCurrentView()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
+      <h2 style="font-size:15px;margin:0;">Monthly planning</h2>
+      <button id="btn-export" class="btn btn-export" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
     </div>
-    <div id="planning-recap">
-      <div id="forecast-grid"><p style="color:#888">Select a region to view the recap.</p></div>
-    </div>
-    <div id="planning-monthly" style="display:none;"><p style="color:#888">Select a region to view the monthly planning.</p></div>
-    <div id="planning-weekly" style="display:none;"><p style="color:#888">Select a region to view the planning.</p></div>
-    <div id="planning-intraday" style="display:none;"><p style="color:#888">Select a region.</p></div>
+    <div id="planning-monthly"><p style="color:#888">Select a region to view the monthly planning.</p></div>
   </div>
 </div>
 
@@ -725,8 +867,6 @@
   <div class="leave-field">
     <label class="leave-label">Type</label>
     <select id="leave-type" class="leave-input">
-      <option value="leave">🏝️ Leave</option>
-      <option value="sick">🚑 Sick</option>
       <option value="absence">⛔ Absence</option>
     </select>
   </div>
@@ -762,6 +902,8 @@
     <div class="card"><p style="color:#888">Select a region to view settings.</p></div>
   </div>
 </div>
+
+</div><!-- /#main -->
 
 <div id="status-bar"><span id="status-text">Ready - select a region to begin</span><span id="status-sign">© Roman Inc.</span></div>
 
@@ -836,10 +978,8 @@ let regulations = {
 let ropState = { agentId: null, currentRestDay: null };
 
 // Planning view state
-var currentPlanningView = 'recap';
-var currentIntradayDate = null;
+var currentPlanningView = 'monthly';
 var tasks = [];  // loaded from tasks table
-var scheduleOverrides = {}; // [date][agentId][start_min] = {end_min, task}
 
 // Default task config (pastel colors, used for seeding and fallback)
 var TASK_DEFAULTS = [
@@ -916,35 +1056,6 @@ function getDayHoursForDate(dateStr) {
     : { open: 10, close: 18 };
 }
 
-function getDayHoursLabel(dateStr) {
-  const h = getDayHoursForDate(dateStr);
-  return String(h.open).padStart(2, '0') + ':00\u2013' + String(h.close).padStart(2, '0') + ':00';
-}
-
-// ── TASK HELPERS ──────────────────────────────────────────────────────────
-function getTask(name) {
-  return tasks.find(function(t){return t.name===name;}) ||
-    TASK_DEFAULTS.find(function(t){return t.name===name;}) ||
-    {name:name,color_bg:'#f3f4f6',color_text:'#374151',priority:99,is_filler:false,aht_minutes:5};
-}
-function tasksSortedByPriority() {
-  var src = tasks.length ? tasks : TASK_DEFAULTS;
-  return src.slice().sort(function(a,b){return a.priority-b.priority;});
-}
-// Display order: matches TASK_DEFAULTS order (stable, no tie-breaking ambiguity)
-// CALL, FRAUD, CHAT, MAIL, BACK-OFFICE, CLIENTELING
-function tasksInDisplayOrder() {
-  var order = TASK_DEFAULTS.map(function(d){return d.name;});
-  var src   = tasks.length ? tasks : TASK_DEFAULTS;
-  return order.map(function(name){
-    return src.find(function(t){return t.name===name;}) ||
-      TASK_DEFAULTS.find(function(t){return t.name===name;});
-  }).filter(Boolean);
-}
-
-// Columns that exist in the `tasks` DB table
-var TASK_DB_COLS = ['region_id','name','priority','is_filler','color_bg','color_text','aht_minutes'];
-
 function taskToDbRow(t, regionId) {
   var row = {};
   TASK_DB_COLS.forEach(function(col){ if (col in t) row[col] = t[col]; });
@@ -1005,10 +1116,6 @@ async function loadAgentTags() {
   });
 }
 
-function handleTagClick(btn) {
-  toggleAgentTag(btn.dataset.agent, btn.dataset.tag);
-}
-
 async function toggleAgentTag(agentId, tag) {
   var cur = agentTags[agentId] || [];
   var has = cur.includes(tag);
@@ -1037,51 +1144,6 @@ async function loadMonthlyBoTargets() {
   });
 }
 
-async function saveMonthlyBoTargets() {
-  if (!currentRegionId) return;
-  var upserts = [];
-  document.querySelectorAll('.bo-target-row').forEach(function(row){
-    var year  = parseInt(row.dataset.year);
-    var month = parseInt(row.dataset.month);
-    ['BACK-OFFICE','FRAUD'].forEach(function(task){
-      var el = row.querySelector('.bo-vol-'+task.toLowerCase().replace('-',''));
-      if (!el) return;
-      var vol = parseInt(el.value) || 0;
-      upserts.push({region_id:currentRegionId, year:year, month:month, task:task, volume:vol});
-    });
-  });
-  showLoader();
-  var {error} = await sb.from('retail_monthly_bo_targets')
-    .upsert(upserts, {onConflict:'region_id,year,month,task'});
-  hideLoader();
-  if (error) { showToast('Save failed','error'); return; }
-  showToast('Monthly targets saved \u2713');
-  await loadMonthlyBoTargets();
-  await loadWeekData();
-}
-
-// ── PLANNING VIEW SWITCH ──────────────────────────────────────────────────
-function switchPlanningView(v) {
-  currentPlanningView = v;
-  document.getElementById('btn-view-recap').classList.toggle('active', v==='recap');
-  document.getElementById('btn-view-monthly').classList.toggle('active', v==='monthly');
-  document.getElementById('btn-view-weekly').classList.toggle('active', v==='weekly');
-  document.getElementById('btn-view-intraday').classList.toggle('active', v==='intraday');
-  document.getElementById('planning-recap').style.display    = v==='recap'    ? '' : 'none';
-  document.getElementById('planning-monthly').style.display  = v==='monthly'  ? '' : 'none';
-  document.getElementById('planning-weekly').style.display   = v==='weekly'   ? '' : 'none';
-  document.getElementById('planning-intraday').style.display = v==='intraday' ? '' : 'none';
-  if (v==='recap')    renderForecast();
-  if (v==='monthly')  renderMonthlyPlanning();
-  if (v==='intraday') renderIntraday(currentIntradayDate);
-}
-
-function openIntradayForDay(ds) {
-  currentIntradayDate = ds;
-  switchPlanningView('intraday');
-}
-
-// ── HISTORICAL VOLUME HELPERS ─────────────────────────────────────────────
 function getEquivalentLastYearDate(dateStr) {
   var d    = new Date(dateStr + 'T12:00:00');
   var wn   = getWeekNumber(d);
@@ -1369,7 +1431,7 @@ function showToast(msg, type) {
 
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
-  document.querySelectorAll('.tab-btn').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
   if (name === 'regulations' && currentRegionId) renderRegulations();
@@ -1555,35 +1617,12 @@ async function saveRegulations() {
   showToast('Regulations saved \u2713');
   renderRegulations();
   renderPlanning();
-  renderForecast();
 }
 
 // ── DATE TAG MANAGEMENT ───────────────────────────────────────────────────
-function addClosedDate() {
-  const input = document.getElementById('new-closed-date');
-  const val   = input.value;
-  if (!val) { showToast('Select a date first', 'error'); return; }
-  if (regulations.closed_dates.includes(val)) { showToast('Date already added', 'error'); return; }
-  regulations.closed_dates.push(val);
-  regulations.closed_dates.sort();
-  input.value = '';
-  renderDateTags('closed-dates-tags', regulations.closed_dates, 'closed');
-}
-
 function removeClosedDate(dateStr) {
   regulations.closed_dates = regulations.closed_dates.filter(function(d) { return d !== dateStr; });
   renderDateTags('closed-dates-tags', regulations.closed_dates, 'closed');
-}
-
-function addHoliday() {
-  const input = document.getElementById('new-holiday-date');
-  const val   = input.value;
-  if (!val) { showToast('Select a date first', 'error'); return; }
-  if (regulations.public_holidays.includes(val)) { showToast('Date already added', 'error'); return; }
-  regulations.public_holidays.push(val);
-  regulations.public_holidays.sort();
-  input.value = '';
-  renderDateTags('holiday-dates-tags', regulations.public_holidays, 'holiday');
 }
 
 function removeHoliday(dateStr) {
@@ -1664,8 +1703,8 @@ function renderRegulations() {
     ? Math.floor(breakDayMin/60) + 'h' + (breakDayMin%60 ? String(breakDayMin%60).padStart(2,'0') : '')
     : breakDayMin + 'min';
 
-  // Build the migrated AHT / Priority / Monthly Targets + Trend content
-  var settingsExtra = buildForecastSettingsHtml();
+  // (AHT/Priority/Monthly-Targets bloc retire - refonte Settings a venir)
+  var settingsExtra = '';
 
   document.getElementById('regulations-content').innerHTML =
     rotationNote +
@@ -1844,21 +1883,10 @@ async function loadWeekData() {
 
   // Run rotation engine BEFORE rendering
   await computeAndSaveRotation();
-  await loadScheduleOverrides();
-
-  // Set intraday default date to first open day of week
-  var _days = getWeekDays(currentWeekMonday);
-  var _firstOpen = _days.find(function(d){return !getDayClosureType(toDateStr(d));});
-  if (_firstOpen) currentIntradayDate = toDateStr(_firstOpen);
 
   setStatus(currentRegionName + ' \u00b7 W' + getWeekNumber(currentWeekMonday) + ' \u00b7 ' + agents.length + ' agents');
   renderPlanning();
   renderAgents();
-  renderForecast();
-  // Volume anomaly + last-week coverage (async, refresh recap when ready)
-  Promise.all([computeWeekAnomaly(), computeLastWeekCoverage()]).then(function(){
-    if (currentPlanningView === 'recap') renderForecast();
-  });
 }
 
 // ── REGULATION HELPER ─────────────────────────────────────────────────────
@@ -1943,24 +1971,6 @@ function computeCloseMinFromWork(ds, grossMin) {
   return Math.min(closeMin, hours.close * 60);
 }
 
-function formatMinutes(totalMin) {
-  var h = Math.floor(totalMin / 60), m = totalMin % 60;
-  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
-}
-
-// ── ROTATION ENGINE ───────────────────────────────────────────────────────
-// Runs on every week load. Always recalculates auto rest days fresh.
-//
-// Rest days needed = open days − 5.
-// "Open days" = days not blocked by regulation (weekends, holidays, closed dates).
-// Bank holidays and closed dates are free days — they do NOT consume a rest day.
-// Agents must always work exactly 5 days unless a bank holiday/closure reduces the week.
-//
-// Statuses:
-//   'working'        — auto-assigned, always recalculated
-//   'rest_scheduled' — auto-assigned rotation rest, always recalculated
-//   'rest_override'  — manually set by manager via popup, NEVER overwritten by engine
-//   'absent'         — unplanned absence set by manager, NEVER overwritten by engine
 async function computeAndSaveRotation() {
   const days     = getWeekDays(currentWeekMonday);
   const openDays = days.filter(function(day) { return !getDayClosureType(toDateStr(day)); });
@@ -2058,143 +2068,8 @@ async function computeAndSaveRotation() {
 
 // ── PLANNING ENGINE ───────────────────────────────────────────────────────
 // ── SCHEDULE OVERRIDES (drag & drop persistence) ──────────────────────────
-async function loadScheduleOverrides() {
-  scheduleOverrides = {};
-  if (!currentRegionId || !agents.length) return;
-  var days = getWeekDays(currentWeekMonday);
-  var start = toDateStr(days[0]), end = toDateStr(days[6]);
-  var { data, error } = await sb.from('retail_schedule_overrides').select('*')
-    .eq('region_id', currentRegionId).gte('date', start).lte('date', end);
-  if (error || !data) return;
-  data.forEach(function(row) {
-    if (!scheduleOverrides[row.date]) scheduleOverrides[row.date] = {};
-    if (!scheduleOverrides[row.date][row.agent_id])
-      scheduleOverrides[row.date][row.agent_id] = { tasks:{}, breaks:{} };
-    if (row.override_type === 'task')
-      scheduleOverrides[row.date][row.agent_id].tasks[parseInt(row.slot_key)] = row.value;
-    else if (row.override_type === 'shift')
-      scheduleOverrides[row.date][row.agent_id].shift = row.value; // 'morning' | 'afternoon'
-    else if (row.override_type === 'break') {
-      // slot_key format: "BreakName_startMin"
-      var parts = row.slot_key.split('_');
-      var origStart = parseInt(parts[parts.length - 1]);
-      var bName = parts.slice(0, parts.length - 1).join('_');
-      scheduleOverrides[row.date][row.agent_id].breaks[bName + '_' + origStart] = parseInt(row.value);
-    }
-  });
-}
-
-// Drag state
-var dragState = null;
-
-function onBlockDragStart(event) {
-  var d = event.currentTarget.dataset;
-  dragState = {
-    dtype:     d.dtype,
-    agentId:   d.agent,
-    ds:        d.date,
-    hour:      d.hour !== undefined ? parseInt(d.hour) : null,
-    task:      d.task || null,
-    breakName: d.bname || null,
-    startMin:  d.bstart !== undefined ? parseInt(d.bstart) : null,
-  };
-  event.currentTarget.classList.add('dragging');
-  event.dataTransfer.effectAllowed = 'move';
-  event.dataTransfer.setData('text/plain', d.dtype); // required for Firefox
-}
-
-function onBlockDragEnd(event) {
-  event.currentTarget.classList.remove('dragging');
-}
-
-function onCellDragOver(event) {
-  event.preventDefault();
-  event.currentTarget.classList.add('drag-over');
-}
-
-function onCellDragLeave(event) {
-  event.currentTarget.classList.remove('drag-over');
-}
-
-// Drop on a task hour cell — swap task labels between two hour slots
-function onTaskCellDrop(event) {
-  event.preventDefault();
-  event.stopPropagation();
-  event.currentTarget.classList.remove('drag-over');
-  if (!dragState || dragState.dtype !== 'task') return;
-  var d = event.currentTarget.dataset;
-  var tAgent = d.agent, tDs = d.date, tHour = parseInt(d.hour), tTask = d.task;
-  // No-op: same cell
-  if (dragState.agentId === tAgent && dragState.hour === tHour) return;
-  swapTaskHours(dragState.agentId, dragState.ds, dragState.hour, dragState.task,
-                tAgent, tDs, tHour, tTask);
-  dragState = null;
-}
-
-// Drop on a break chip — swap break start times between two chips of same type
-function onBreakChipDrop(event) {
-  event.preventDefault();
-  event.stopPropagation();
-  event.currentTarget.classList.remove('drag-over');
-  if (!dragState || dragState.dtype !== 'break') return;
-  var d = event.currentTarget.dataset;
-  if (d.bname !== dragState.breakName) { showToast('Can only swap same break type', 'error'); return; }
-  if (dragState.agentId === d.agent && dragState.startMin === parseInt(d.bstart)) return;
-  swapBreakSlots(dragState.agentId, dragState.ds, dragState.breakName, dragState.startMin,
-                 d.agent, d.date, parseInt(d.bstart));
-  dragState = null;
-}
-
-async function swapTaskHours(agA, dsA, hA, taskA, agB, dsB, hB, taskB) {
-  var upserts = [
-    { region_id:currentRegionId, agent_id:agA, date:dsA, override_type:'task', slot_key:String(hA), value:taskB },
-    { region_id:currentRegionId, agent_id:agB, date:dsB, override_type:'task', slot_key:String(hB), value:taskA },
-  ];
-  var { error } = await sb.from('retail_schedule_overrides').upsert(upserts, {onConflict:'agent_id,date,override_type,slot_key'});
-  if (error) { showToast('Swap failed: '+error.message,'error'); return; }
-  // Update cache
-  [{ ag:agA,ds:dsA,h:hA,task:taskB }, { ag:agB,ds:dsB,h:hB,task:taskA }].forEach(function(u){
-    if (!scheduleOverrides[u.ds]) scheduleOverrides[u.ds]={};
-    if (!scheduleOverrides[u.ds][u.ag]) scheduleOverrides[u.ds][u.ag]={tasks:{},breaks:{}};
-    scheduleOverrides[u.ds][u.ag].tasks[u.h] = u.task;
-  });
-  renderIntraday(currentIntradayDate);
-  showToast('\u21C4 Swapped');
-}
-
-async function swapBreakSlots(agA, dsA, bName, startA, agB, dsB, startB) {
-  // slot_key includes startMin so same-name breaks at same time don't collide
-  var upserts = [
-    { region_id:currentRegionId, agent_id:agA, date:dsA, override_type:'break', slot_key:bName+'_'+startA, value:String(startB) },
-    { region_id:currentRegionId, agent_id:agB, date:dsB, override_type:'break', slot_key:bName+'_'+startB, value:String(startA) },
-  ];
-  var { error } = await sb.from('retail_schedule_overrides').upsert(upserts, {onConflict:'agent_id,date,override_type,slot_key'});
-  if (error) { showToast('Swap failed: '+error.message,'error'); return; }
-  [{ ag:agA,ds:dsA,start:startB,origStart:startA }, { ag:agB,ds:dsB,start:startA,origStart:startB }].forEach(function(u){
-    if (!scheduleOverrides[u.ds]) scheduleOverrides[u.ds]={};
-    if (!scheduleOverrides[u.ds][u.ag]) scheduleOverrides[u.ds][u.ag]={tasks:{},breaks:{}};
-    scheduleOverrides[u.ds][u.ag].breaks[bName+'_'+u.origStart] = u.start;
-  });
-  renderIntraday(currentIntradayDate);
-  showToast('\u21C4 Break swapped');
-}
-
-async function resetDayOverrides(ds) {
-  if (!confirm('Reset all manual overrides for this day?')) return;
-  var { error } = await sb.from('retail_schedule_overrides')
-    .delete().eq('region_id', currentRegionId).eq('date', ds);
-  if (error) { showToast('Reset failed','error'); return; }
-  if (scheduleOverrides[ds]) delete scheduleOverrides[ds];
-  renderIntraday(ds);
-  showToast('Overrides cleared \u2713');
-}
-
-// ── RENDER PLANNING ───────────────────────────────────────────────────────
 function renderPlanning() {
-  renderWeeklyPlanning();
-  if (currentPlanningView === 'monthly')  renderMonthlyPlanning();
-  if (currentPlanningView === 'recap')    renderForecast();
-  if (currentPlanningView === 'intraday') renderIntraday(currentIntradayDate);
+  renderMonthlyPlanning();
 }
 // ── RETAIL MONTHLY : CONSTANTES ───────────────────────────────────────────
 // Statuts (exclusifs) et ordre d'affichage des blocs facon Excel Duphot.
@@ -2506,333 +2381,6 @@ function renderMonthlyPlanning() {
   container.innerHTML = html;
 }
 
-function renderWeeklyPlanning() {
-  const container = document.getElementById('planning-weekly');
-  const legend    = document.getElementById('planning-legend');
-  if (!agents.length) {
-    container.innerHTML = '<p style="color:#888">No agents for this region. Add agents in the Agents tab.</p>';
-    if (legend) legend.style.display = 'none';
-    return;
-  }
-
-  const days    = getWeekDays(currentWeekMonday);
-  const summary = {};
-
-  // Determine if rotation is active (open days > 5)
-  const openDays = days.filter(function(day) { return !getDayClosureType(toDateStr(day)); });
-  if (legend) legend.style.display = openDays.length > 5 ? 'block' : 'none';
-
-  days.forEach(function(day) {
-    const ds      = toDateStr(day);
-    const closure = getDayClosureType(ds);
-    var working   = 0;
-    agents.forEach(function(a) {
-      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-      if (!closure && s === 'working') working++;
-    });
-    var need = 0;
-    if (!closure) {
-      const f = forecasts[ds];
-      if (f && f.contact_volume > 0) need = Math.ceil((f.contact_volume / 60) / regulations.max_daily_hours);
-    }
-    summary[ds] = { working: working, need: need, closure: closure };
-  });
-
-  // Precompute each day's shift assignment (shared source of truth)
-  var weekShifts = {};
-  days.forEach(function(day) {
-    var ds = toDateStr(day);
-    if (!getDayClosureType(ds)) weekShifts[ds] = computeAgentShifts(ds);
-  });
-
-  // Table headers
-  let html = '<table><tr><th style="text-align:left">Agent</th>';
-  days.forEach(function(day, i) {
-    const ds      = toDateStr(day);
-    const closure = getDayClosureType(ds);
-    let thClass   = '';
-    if      (isToday(day)) thClass = ' class="today-col"';
-    else if (closure)      thClass = ' class="closed-col"';
-
-    const icon = closure === 'holiday' ? ' \ud83c\udfd6\ufe0f'
-               : closure === 'closed'  ? ' \ud83d\udd12'
-               : closure === 'weekend' ? ' \ud83c\udf34'
-               : '';
-
-    // Daily contact volume for header
-    var dayVol = '';
-    if (!closure) {
-      var fDay = forecasts[ds];
-      if (fDay && fDay.contact_volume > 0) {
-        dayVol = '<br><small style="font-weight:normal;opacity:0.85;font-size:10px;color:#a5b4fc;">' +
-          Math.round(fDay.contact_volume/60*10)/10 + 'h workload</small>';
-      }
-    }
-
-    html += '<th' + thClass + '>' +
-      DAY_NAMES[i] + icon + '<br>' +
-      '<small style="font-weight:normal">' + formatDate(day) + '</small><br>' +
-      '<small style="font-weight:normal;opacity:0.75;font-size:10px">' + getDayHoursLabel(ds) + '</small>' +
-      dayVol +
-      '</th>';
-  });
-  html += '</tr>';
-
-  // Agent rows
-  agents.forEach(function(a) {
-    var pct = a.work_pct || 100;
-    var ptSchedule = pct < 100 ? computePartTimeForAgent(a, openDays) : null;
-    var nameLabel = a.first_name + ' ' + a.last_name +
-      (pct < 100 ? ' <span class="pct-badge">'+pct+'%</span>' : '');
-    html += '<tr><td class="agent-name">' + nameLabel + '</td>';
-    days.forEach(function(day) {
-      const ds      = toDateStr(day);
-      const status  = (availability[a.id] && availability[a.id][ds]) || 'working';
-      const closure = getDayClosureType(ds);
-
-      let cellBg = '';
-      if (isToday(day))  cellBg = 'background:#f0f9ff;';
-      if (closure)       cellBg = 'background:#f9fafb;';
-      if (status === 'rest_scheduled' || status === 'rest_override') cellBg = 'background:#faf5ff;';
-      if (status === 'rest_parttime') cellBg = 'background:#fefce8;';
-
-      var badge = '';
-      var leaveType = closure ? null : agentOnLeave(a.id, ds);
-      if (closure === 'holiday')
-        badge = '<span class="shift-badge shift-holiday">\uD83C\uDFD6\uFE0F Holiday</span>';
-      else if (closure === 'weekend')
-        badge = '<span class="shift-badge shift-rest">\uD83C\uDF34 Weekend</span>';
-      else if (leaveType) {
-        var lmap = { leave:['\uD83C\uDFDD\uFE0F Leave','fef9c3','854d0e'], sick:['\uD83D\uDE91 Sick','fee2e2','b91c1c'], absence:['\u26D4 Absence','fce7f3','9d174d'] };
-        var li = lmap[leaveType] || lmap.absence;
-        badge = '<span class="shift-badge" style="background:#'+li[1]+';color:#'+li[2]+';">'+li[0]+'</span>';
-      }
-      else if (status === 'rest_parttime')
-        badge = '<span class="shift-parttime">\uD83D\uDD51 Part-time rest</span>';
-      else if (status === 'rest_scheduled' || status === 'rest_override')
-        badge = '<span class="shift-badge shift-scheduled" onclick="showRestOverridePicker(\''+a.id+'\',\''+ds+'\',event)">\uD83D\uDCC5 Sched. Rest</span>';
-      else if (status === 'absent')
-        badge = '<span class="shift-badge shift-absent">\uD83C\uDFE5 Absent</span>';
-      else {
-        // Working day — show the agent's ACTUAL shift hours (Morning/Afternoon)
-        var hoursInfo = getDayHoursForDate(ds);
-        var si = (weekShifts[ds] || {})[a.id];
-        var shiftLabel, shiftName;
-        if (si) {
-          shiftLabel = formatMinutes(si.startMin) + '-' + formatMinutes(si.endMin);
-          shiftName  = si.shift;
-        } else {
-          shiftLabel = String(hoursInfo.open).padStart(2,'0')+':00-'+String(hoursInfo.close).padStart(2,'0')+':00';
-          shiftName  = 'morning';
-        }
-        if (ptSchedule && ptSchedule.partialDay && ptSchedule.partialDay.ds === ds) {
-          var pd = ptSchedule.partialDay;
-          shiftLabel = formatMinutes(si ? si.startMin : hoursInfo.open*60) + '-' + formatMinutes(pd.closeMin);
-        }
-        var dot = shiftName === 'afternoon' ? '#166534' : '#4ade80';
-        badge = '<span class="shift-pill" onclick="showShiftPicker(\''+a.id+'\',\''+ds+'\',\''+shiftName+'\',event)" title="Click to switch shift">' +
-          '<span class="shift-dot" style="background:'+dot+';"></span>' + shiftLabel + '</span>';
-      }
-
-      var html_cell = '<td style="' + cellBg + '"><div class="planning-cell">' + badge + '</div></td>';
-      html += html_cell;
-    });
-    html += '</tr>';
-  });
-
-  // Summary row
-  html += '<tr class="summary-row"><td style="text-align:left;font-weight:bold;font-size:11px;">Staffing</td>';
-  days.forEach(function(day) {
-    const ds = toDateStr(day);
-    const s  = summary[ds];
-    if (s.closure) {
-      const label = s.closure === 'weekend' ? '\ud83c\udf34 Weekend' : '\ud83c\udfd6\ufe0f Holiday';
-      html += '<td class="day-neutral" style="font-size:11px;">' + label + '</td>';
-    } else {
-      const ok  = s.working >= s.need || s.need === 0;
-      const cls = (!ok && s.need > 0) ? 'understaffed' : '';
-      const warn = cls ? '\u26A0\uFE0F ' : '';
-      const needStyle = cls ? 'font-weight:bold;color:#b91c1c;' : '';
-      html += '<td class="' + cls + '" style="font-size:11px;' + needStyle + '">' +
-        warn + 'Need: <b>' + s.need + '</b><br>' +
-        '\uD83D\uDC65 ' + s.working + ' working' +
-        '</td>';
-    }
-  });
-  html += '</tr></table>';
-
-  container.innerHTML = html;
-}
-
-// ── TOGGLE ABSENT ─────────────────────────────────────────────────────────
-// Checkbox is UNCHECKED when agent is absent, CHECKED when present/working.
-// onchange passes !this.checked, so: uncheck → absent=true, check → absent=false.
-async function toggleAbsent(agentId, dayStr, markAbsent) {
-  const newStatus = markAbsent ? 'absent' : 'working';
-  const { error } = await sb.from('retail_agent_availability')
-    .upsert({ agent_id: agentId, week_date: dayStr, day_status: newStatus },
-             { onConflict: 'agent_id,week_date' });
-  if (error) { showToast('Failed to save', 'error'); return; }
-  if (!availability[agentId]) availability[agentId] = {};
-  availability[agentId][dayStr] = newStatus;
-  renderPlanning();
-  showToast(markAbsent ? '\ud83c\udfe5 Marked absent' : '\u2713 Marked present');
-}
-
-// ── REST OVERRIDE POPUP ───────────────────────────────────────────────────
-function showRestOverridePicker(agentId, currentRestDay, event) {
-  event.stopPropagation();
-  ropState = { agentId: agentId, currentRestDay: currentRestDay };
-
-  const agent = agents.find(function(a) { return a.id === agentId; });
-  const days  = getWeekDays(currentWeekMonday);
-  const openDays = days.filter(function(day) { return !getDayClosureType(toDateStr(day)); });
-
-  document.getElementById('rop-subtitle').textContent =
-    (agent ? agent.first_name + ' ' + agent.last_name : '') +
-    ' — currently resting on ' + formatDateDisplay(currentRestDay);
-
-  const daysHtml = openDays.map(function(day, i) {
-    const ds        = toDateStr(day);
-    const f         = forecasts[ds];
-    const wlH       = f ? Math.round(f.contact_volume / 60) : 0; // contact_volume is already minutes
-    const isCurrent = ds === currentRestDay;
-    const agentAv   = availability[agentId] || {};
-    const isOtherRest = agentAv[ds] === 'rest_scheduled' && !isCurrent;
-    const dayLabel  = DAY_NAMES[days.indexOf(day)] + ' ' + formatDate(day);
-
-    let cls = 'rop-day';
-    if (isCurrent)    cls += ' is-current';
-    if (isOtherRest)  cls += ' is-other-rest';
-
-    const btn = (!isCurrent && !isOtherRest)
-      ? '<button class="rop-select-btn" onclick="applyRestOverride(\'' + agentId + '\',\'' + currentRestDay + '\',\'' + ds + '\')">Select</button>'
-      : (isCurrent ? '<span style="font-size:11px;color:#7c3aed;">current</span>' : '<span style="font-size:11px;color:#9ca3af;">also resting</span>');
-
-    return '<div class="' + cls + '">' +
-      '<div><div class="rop-day-name">' + dayLabel + '</div>' +
-      '<div class="rop-day-wl">' + wlH + 'h workload</div></div>' +
-      btn + '</div>';
-  }).join('');
-
-  document.getElementById('rop-days').innerHTML = daysHtml;
-
-  const popup = document.getElementById('rest-override-popup');
-  popup.style.display = 'block';
-
-  // Position near click, keep within viewport
-  const x = Math.min(event.clientX + 10, window.innerWidth  - 360);
-  const y = Math.min(event.clientY + 10, window.innerHeight - 420);
-  popup.style.left = Math.max(8, x) + 'px';
-  popup.style.top  = Math.max(8, y) + 'px';
-
-  setTimeout(function() {
-    document.addEventListener('click', closeRestOverrideOnOutside);
-  }, 0);
-}
-
-function closeRestOverrideOnOutside(e) {
-  const popup = document.getElementById('rest-override-popup');
-  if (popup && !popup.contains(e.target)) {
-    closeRestOverride();
-  }
-}
-
-function closeRestOverride() {
-  document.getElementById('rest-override-popup').style.display = 'none';
-  document.removeEventListener('click', closeRestOverrideOnOutside);
-}
-
-// ── SHIFT SWITCH POPOVER ──────────────────────────────────────────────────
-var shiftPickerState = { agentId: null, ds: null };
-
-function showShiftPicker(agentId, ds, currentShift, event) {
-  event.stopPropagation();
-  shiftPickerState = { agentId: agentId, ds: ds };
-
-  var agent = agents.find(function(a){return a.id===agentId;});
-  var dateLabel = formatDateDisplay(ds);
-  document.getElementById('sft-subtitle').textContent =
-    (agent ? agent.first_name + ' ' + agent.last_name : '') + ' \u00b7 ' + dateLabel;
-
-  var toggle = document.getElementById('sft-toggle');
-  toggle.checked = (currentShift === 'afternoon'); // checked = afternoon
-
-  updateShiftPickerLabels();
-
-  // Wire the toggle (replace handler each open to avoid stacking)
-  toggle.onchange = function() {
-    updateShiftPickerLabels();
-    applyShiftOverride(shiftPickerState.agentId, shiftPickerState.ds,
-      toggle.checked ? 'afternoon' : 'morning');
-  };
-
-  var popup = document.getElementById('shift-popup');
-  popup.style.display = 'block';
-  var x = Math.min(event.clientX + 10, window.innerWidth  - 280);
-  var y = Math.min(event.clientY + 10, window.innerHeight - 200);
-  popup.style.left = Math.max(8, x) + 'px';
-  popup.style.top  = Math.max(8, y) + 'px';
-
-  setTimeout(function(){ document.addEventListener('click', closeShiftOnOutside); }, 0);
-}
-
-function updateShiftPickerLabels() {
-  var toggle = document.getElementById('sft-toggle');
-  var isAfternoon = toggle.checked;
-  document.getElementById('sft-morning-label').classList.toggle('active', !isAfternoon);
-  document.getElementById('sft-afternoon-label').classList.toggle('active', isAfternoon);
-  // Preview hours for the chosen shift — use the SAME conditional-extension logic
-  // as computeAgentShifts (single source of truth) so Weekly and popover agree.
-  var ds = shiftPickerState.ds;
-  if (ds) {
-    var hrs = getDayHoursForDate(ds);
-    var breaks = regulations.breaks || [];
-    var breakMin = breaks.reduce(function(s,b){return s+(b.duration||0);},0);
-    var openDays = getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));});
-    var wd = Math.min(openDays.length, 5);
-    var workH = Math.min(regulations.weekly_hours/Math.max(1,wd), regulations.max_daily_hours||8);
-    var dur = Math.round(workH*60) + breakMin;
-    // Conditional walls: extend only if presence > opening amplitude
-    var openAmpMin = (hrs.close - hrs.open) * 60;
-    var extMin = Math.max(0, dur - openAmpMin);
-    var extBeforeH = Math.ceil((extMin/60)/2);
-    var extAfterH  = Math.ceil((extMin/60)/2);
-    var gridOpen  = hrs.open  - extBeforeH;
-    var gridClose = hrs.close + extAfterH;
-    var startMin, endMin;
-    if (isAfternoon) { endMin = gridClose*60; startMin = endMin - dur; }
-    else             { startMin = gridOpen*60; endMin = startMin + dur; }
-    document.getElementById('sft-hours').textContent = formatMinutes(startMin) + ' - ' + formatMinutes(endMin);
-  }
-}
-
-async function applyShiftOverride(agentId, ds, shift) {
-  // Persist to schedule_overrides (type 'shift'), then recompute everything.
-  var row = { region_id: currentRegionId, agent_id: agentId, date: ds,
-    override_type: 'shift', slot_key: 'shift', value: shift };
-  var { error } = await sb.from('retail_schedule_overrides')
-    .upsert([row], { onConflict: 'agent_id,date,override_type,slot_key' });
-  if (error) { showToast('Failed to switch shift: ' + error.message, 'error'); return; }
-
-  // Update local cache so the UI refreshes immediately
-  if (!scheduleOverrides[ds]) scheduleOverrides[ds] = {};
-  if (!scheduleOverrides[ds][agentId]) scheduleOverrides[ds][agentId] = { tasks:{}, breaks:{} };
-  scheduleOverrides[ds][agentId].shift = shift;
-
-  showToast('Shift updated \u2713');
-  renderPlanning(); // recompute weekly + intraday with the new shift
-}
-
-function closeShiftOnOutside(e) {
-  var popup = document.getElementById('shift-popup');
-  if (popup && !popup.contains(e.target)) closeShiftPopup();
-}
-function closeShiftPopup() {
-  document.getElementById('shift-popup').style.display = 'none';
-  document.removeEventListener('click', closeShiftOnOutside);
-}
-
 function addBreakRow() {
   var tbody = document.querySelector('.breaks-table');
   if (!tbody) return;
@@ -2854,582 +2402,6 @@ function removeBreakRow(btn) {
   btn.closest('tr').remove();
 }
 
-async function applyRestOverride(agentId, oldRestDay, newRestDay) {
-  closeRestOverride();
-  showLoader();
-  const upserts = [
-    { agent_id: agentId, week_date: oldRestDay, day_status: 'working' },
-    { agent_id: agentId, week_date: newRestDay, day_status: 'rest_override' },
-  ];
-  const { error } = await sb.from('retail_agent_availability')
-    .upsert(upserts, { onConflict: 'agent_id,week_date' });
-  hideLoader();
-  if (error) { showToast('Failed to update rest day', 'error'); return; }
-  if (!availability[agentId]) availability[agentId] = {};
-  availability[agentId][oldRestDay] = 'working';
-  availability[agentId][newRestDay] = 'rest_scheduled';
-  showToast('Rest day updated \u2713');
-  renderPlanning();
-}
-
-// ── SHARED SHIFT ASSIGNMENT ───────────────────────────────────────────────
-// Single source of truth for Morning/Afternoon assignment, used by both the
-// intraday engine and the Weekly view. Returns { agentId: {shift, startMin, endMin} }.
-// Honors manual overrides stored in scheduleOverrides[ds][agentId].shift.
-function computeAgentShifts(ds) {
-  var hours    = getDayHoursForDate(ds);
-  var openDays = getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));});
-  var workingDays = Math.min(openDays.length, 5);
-  var breaks   = regulations.breaks || [];
-  var breakMinTotal = breaks.reduce(function(s,b){return s+(b.duration||0);}, 0);
-
-  // Full-time presence (work + breaks), capped at max_daily_hours.
-  var ftWorkH = Math.min(regulations.weekly_hours / Math.max(1, workingDays), regulations.max_daily_hours || 8);
-  var ftPresenceMin = Math.round(ftWorkH * 60) + breakMinTotal;
-  var openAmplitudeMin = (hours.close - hours.open) * 60;
-
-  // Extension: only push the walls if presence needed > opening amplitude.
-  // The extra time is split — morning extends before, afternoon extends after.
-  var extMin = Math.max(0, ftPresenceMin - openAmplitudeMin); // total extra to add
-  var extBeforeH = Math.ceil((extMin / 60) / 2);              // hours added before opening
-  var extAfterH  = Math.ceil((extMin / 60) / 2);              // hours added after closing
-  var presenceOpen  = hours.open  - extBeforeH;
-  var presenceClose = hours.close + extAfterH;
-
-  var working = agents.filter(function(a){
-    if (getDayClosureType(ds)) return false;
-    if (agentOnLeave(a.id, ds)) return false;
-    var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-    return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent' && s !== 'rest_parttime';
-  });
-
-  function presenceMinForAgent(a){
-    var pct = a.work_pct || 100;
-    var workH = (regulations.weekly_hours / Math.max(1, workingDays)) * (pct/100);
-    var capH  = regulations.max_daily_hours || 8;
-    workH = Math.min(workH, capH);
-    return Math.round(workH * 60) + breakMinTotal;
-  }
-  function agentIsHot(a){
-    var tags = agentTags[a.id] || [];
-    return tags.includes('can_call') || tags.includes('can_chat');
-  }
-
-  // Forecast hot volume split (morning vs afternoon) for the auto decision
-  var f = forecasts[ds] || {}; var hourly = f.hourly || {};
-  var midHour = Math.floor((hours.open + hours.close) / 2);
-  var hotMorning = 0, hotAfternoon = 0;
-  for (var h = hours.open; h < hours.close; h++) {
-    var hv = ((hourly['call']||{})[h]||0) + ((hourly['chat']||{})[h]||0);
-    if (h < midHour) hotMorning += hv; else hotAfternoon += hv;
-  }
-  var nWork = working.length;
-  var totalHot = hotMorning + hotAfternoon;
-  var afternoonShare = totalHot > 0 ? (hotAfternoon/totalHot) : 0.4;
-  var nAfternoon = Math.round(nWork * afternoonShare);
-  if (nWork >= 2) nAfternoon = Math.max(1, Math.min(nAfternoon, nWork - 1));
-  else nAfternoon = 0;
-
-  var hotAgents  = working.filter(agentIsHot);
-  var coldAgents = working.filter(function(a){return !agentIsHot(a);});
-
-  var shiftOf = {};
-  working.forEach(function(a){ shiftOf[a.id] = 'morning'; });
-
-  var afternoonPicks = [];
-  if (nAfternoon > 0 && hotAgents.length) afternoonPicks.push(hotAgents[hotAgents.length-1]);
-  var pickOrder = hotAgents.slice(0, Math.max(0, hotAgents.length-1)).concat(coldAgents);
-  for (var pi = 0; pi < pickOrder.length && afternoonPicks.length < nAfternoon; pi++) {
-    if (afternoonPicks.indexOf(pickOrder[pi]) === -1) afternoonPicks.push(pickOrder[pi]);
-  }
-  afternoonPicks.forEach(function(a){ shiftOf[a.id] = 'afternoon'; });
-
-  // Apply manual overrides (manager forced a shift for this agent/day)
-  working.forEach(function(a){
-    var ov = scheduleOverrides[ds] && scheduleOverrides[ds][a.id] && scheduleOverrides[ds][a.id].shift;
-    if (ov === 'morning' || ov === 'afternoon') shiftOf[a.id] = ov;
-  });
-
-  // Build windows
-  var result = { _gridOpen: presenceOpen, _gridClose: presenceClose };
-  working.forEach(function(a){
-    var dur = presenceMinForAgent(a);
-    var startMin, endMin;
-    if (shiftOf[a.id] === 'afternoon') {
-      endMin   = presenceClose * 60;
-      startMin = endMin - dur;
-    } else {
-      startMin = presenceOpen * 60;
-      endMin   = startMin + dur;
-    }
-    result[a.id] = { shift: shiftOf[a.id], startMin: startMin, endMin: endMin };
-  });
-  return result;
-}
-
-// ── INTRADAY ENGINE ───────────────────────────────────────────────────────
-function computeIntradaySchedule(ds) {
-  var closure  = getDayClosureType(ds);
-  var hours    = getDayHoursForDate(ds);
-  var openDays = getWeekDays(currentWeekMonday).filter(function(d){return !getDayClosureType(toDateStr(d));});
-  var workingDays = Math.min(openDays.length, 5);
-  var breaks   = regulations.breaks || [];
-  var sorted   = tasksSortedByPriority();
-  var filler   = sorted.find(function(t){return t.is_filler;}) || null;
-  var primary  = sorted.filter(function(t){return !t.is_filler;});
-  var f = forecasts[ds] || {};
-  var hourly = f.hourly || {};
-
-  var demand = {};
-  for (var h = hours.open; h < hours.close; h++) {
-    demand[h] = {};
-    sorted.forEach(function(t){
-      demand[h][t.name] = (hourly[t.name.toLowerCase()] || {})[h] || 0;
-    });
-  }
-
-  var working = agents.filter(function(a){
-    if (closure) return false;
-    if (agentOnLeave(a.id, ds)) return false;
-    var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-    return s !== 'rest_scheduled' && s !== 'rest_override' && s !== 'absent' && s !== 'rest_parttime';
-  });
-
-  // Compute personal closeMin for part-time agents on their partial day
-  var agentCloseMin = {};
-  working.forEach(function(a){
-    var pct = a.work_pct || 100;
-    if (pct < 100) {
-      var pt = computePartTimeForAgent(a, getWeekDays(currentWeekMonday)
-        .filter(function(d){return !getDayClosureType(toDateStr(d));}));
-      if (pt.partialDay && pt.partialDay.ds === ds) {
-        agentCloseMin[a.id] = pt.partialDay.closeMin;
-      }
-    }
-  });
-
-  // ── SHIFTS: extended presence grid (1h before opening, 1h after closing) ──
-  // Uses the shared shift assignment (honors manual overrides). The extra hours
-  // host COLD tasks only (CSC closed, no Call/Chat).
-  var shiftInfo = computeAgentShifts(ds); // {agentId:{shift,startMin,endMin}, _gridOpen, _gridClose}
-  var presenceOpen  = shiftInfo._gridOpen;
-  var presenceClose = shiftInfo._gridClose;
-  function isHotTask(name){ return name === 'CALL' || name === 'CHAT'; }
-
-  var agentStartMin = {}, agentEndMin = {};
-  working.forEach(function(a){
-    var si = shiftInfo[a.id];
-    if (si) { agentStartMin[a.id] = si.startMin; agentEndMin[a.id] = si.endMin; }
-    else    { agentStartMin[a.id] = hours.open*60; agentEndMin[a.id] = hours.close*60; }
-    // Respect part-time early close if more restrictive
-    if (agentCloseMin[a.id] && agentCloseMin[a.id] < agentEndMin[a.id]) {
-      agentEndMin[a.id] = agentCloseMin[a.id];
-    }
-  });
-
-  // Helper: is agent present during hour h?
-  function agentPresent(a, h){
-    var hS = h*60, hE = (h+1)*60;
-    return agentStartMin[a.id] < hE && agentEndMin[a.id] > hS;
-  }
-  // Helper: is hour h within CSC opening hours (hot flows allowed)?
-  function isOpenHour(h){ return h >= hours.open && h < hours.close; }
-
-  if (closure || !working.length) {
-    return agents.map(function(a){
-      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-      return { agent:a, blocks:[], isClosed:!!closure,
-               isRest:['rest_scheduled','rest_override','rest_parttime'].includes(s),
-               isPartTimeRest: s==='rest_parttime',
-               isAbsent:s==='absent' };
-    });
-  }
-
-  var nW = working.length;
-  var lunch = breaks.find(function(b){return b.duration>=30;}) ||
-    {name:'Lunch',duration:60,window_start:12,window_end:14};
-  var lDur = lunch.duration;
-  var lSlots = Math.max(1, Math.floor((lunch.window_end-lunch.window_start)*60/lDur));
-  var lGroup = Math.max(1, Math.ceil(nW/lSlots));
-  var shorts = breaks.filter(function(b){return b.duration<30;});
-
-  var agBrk = {};
-  working.forEach(function(a,i){
-    agBrk[a.id] = [];
-    var ls = lunch.window_start*60 + Math.floor(i/lGroup)*lDur;
-    agBrk[a.id].push({startMin:ls, endMin:ls+lDur, name:lunch.name, isLunch:true});
-    shorts.forEach(function(br){
-      var sl=Math.max(1,Math.floor((br.window_end-br.window_start)*60/br.duration));
-      var gr=Math.max(1,Math.ceil(nW/sl));
-      var bs=br.window_start*60+Math.floor(i/gr)*br.duration;
-      agBrk[a.id].push({startMin:bs,endMin:bs+br.duration,name:br.name,isLunch:false});
-    });
-  });
-
-  var equity = {};
-  working.forEach(function(a){equity[a.id]=0;});
-  var agHour = {};
-  working.forEach(function(a){agHour[a.id]={};});
-
-  // Compute effective minutes for a given agent in a given hour slot
-  function effectiveMinForHour(ag, hStart, hEnd) {
-    return (agBrk[ag.id]||[]).reduce(function(rem, br){
-      return rem - Math.max(0, Math.min(br.endMin,hEnd) - Math.max(br.startMin,hStart));
-    }, 60);
-  }
-
-  // ── REALTIME vs STOCK model ───────────────────────────────────────────────
-  // Realtime tasks (CALL, CHAT) must be handled in their own hour — a call at
-  // 10h can't be answered at 15h. Stock tasks (MAIL, BACK-OFFICE, FRAUD,
-  // CLIENTELING) are a pool of work to drain across the day whenever there is
-  // free capacity. FRAUD is stock but pushed to the morning (it has
-  // morning_only + priority 1, so it naturally goes first while mornings last).
-  var REALTIME = { 'CALL':true, 'CHAT':true };
-  function isRealtime(t){ return !!REALTIME[t.name]; }
-
-  // Daily remaining work (in minutes) for each STOCK task = sum of the day's
-  // hourly volume × AHT. Realtime tasks are NOT pre-summed (handled per hour).
-  var stockRemaining = {}; // taskName -> minutes of work still to do today
-  primary.forEach(function(t){
-    if (isRealtime(t)) return;
-    var totalVol = 0;
-    for (var hh = hours.open; hh < hours.close; hh++) {
-      totalVol += (demand[hh]||{})[t.name]||0;
-    }
-    stockRemaining[t.name] = totalVol * t.aht_minutes;
-  });
-
-  // Track unmet workload for the production alert (per task, whole day)
-  var coverageGaps = {}; // taskName -> true if any unmet work remained
-
-  for (var h = presenceOpen; h < presenceClose; h++) {
-    var hS=h*60, hE=(h+1)*60;
-    var openHour = isOpenHour(h);
-
-    // Agents present this hour (shift-aware), sorted by equity (fairness)
-    var allSorted = working.filter(function(a){
-      return agentPresent(a, h);
-    }).sort(function(a,b){
-      return (equity[a.id]||0)-(equity[b.id]||0);
-    });
-
-    var pool = allSorted.slice();
-
-    // Helper: agent allowed to do a task? (strict pills — never auto-cross)
-    function canDo(ag, t){
-      if (!t.required_tag) return true;
-      return (agentTags[ag.id]||[]).includes(t.required_tag);
-    }
-
-    // ── PASS 1: REALTIME (hot) tasks — ONLY during CSC opening hours ────────
-    if (openHour) {
-      primary.forEach(function(t){
-        if (!isRealtime(t) || !pool.length) return;
-        var vol=(demand[h]||{})[t.name]||0;
-        if (!vol) return;
-        var eligible = pool.filter(function(ag){ return canDo(ag,t); });
-        if (!eligible.length) { coverageGaps[t.name] = true; return; }
-        var workMinNeeded = vol * t.aht_minutes;
-        var totalEff = eligible.reduce(function(s,ag){return s+effectiveMinForHour(ag,hS,hE);},0);
-        var avgEff = totalEff / eligible.length;
-        var need = Math.ceil(workMinNeeded / Math.max(1, avgEff));
-        if (need > eligible.length) coverageGaps[t.name] = true;
-        need = Math.min(need, eligible.length);
-        for(var i=0;i<need;i++){
-          var ag=eligible[i];
-          pool.splice(pool.indexOf(ag), 1);
-          agHour[ag.id][h]=t.name;
-          equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
-        }
-      });
-
-      // Guarantee at least 1 hot-flow agent on this open hour (if any hot volume
-      // or simply to keep the floor covered). If none got assigned a hot task but
-      // hot agents are free, park one on the highest hot demand (or CALL).
-      var anyHotAssigned = working.some(function(a){ return isHotTask(agHour[a.id][h]); });
-      if (!anyHotAssigned) {
-        var freeHot = pool.filter(function(ag){
-          return (agentTags[ag.id]||[]).includes('can_call') || (agentTags[ag.id]||[]).includes('can_chat');
-        });
-        if (freeHot.length) {
-          var ag = freeHot[0];
-          var hotTask = (agentTags[ag.id]||[]).includes('can_call') ? 'CALL' : 'CHAT';
-          pool.splice(pool.indexOf(ag), 1);
-          agHour[ag.id][h] = hotTask;
-          equity[ag.id]=(equity[ag.id]||0)+effectiveMinForHour(ag,hS,hE);
-        } else {
-          // No hot agent available to cover this open hour → flag the gap
-          coverageGaps['CALL'] = true;
-        }
-      }
-    }
-
-    // ── PASS 2: STOCK (cold) tasks by priority, draining the daily pool ─────
-    // Cold tasks run on ANY hour (open or extended). Hot tasks never run on
-    // extended hours (CSC closed), so PASS 1 is skipped there.
-    primary.forEach(function(t){
-      if (isRealtime(t) || !pool.length) return;
-      if (t.morning_only && h >= 12) return;        // fraud only in the morning
-      if ((stockRemaining[t.name]||0) <= 0) return;  // nothing left for this task
-      var eligible = pool.filter(function(ag){ return canDo(ag,t); });
-      if (!eligible.length) return;
-      for (var i=0; i<eligible.length; i++) {
-        if ((stockRemaining[t.name]||0) <= 0) break;
-        var ag = eligible[i];
-        if (pool.indexOf(ag) === -1) continue;
-        pool.splice(pool.indexOf(ag), 1);
-        agHour[ag.id][h]=t.name;
-        var eff = effectiveMinForHour(ag,hS,hE);
-        stockRemaining[t.name] -= eff;
-        if (t.priority<=2) equity[ag.id]=(equity[ag.id]||0)+eff;
-      }
-    });
-
-    // ── PASS 3: anyone still free → filler if they have the pill, else empty ─
-    pool.forEach(function(ag){
-      if (filler && canDo(ag, filler)) agHour[ag.id][h]=filler.name;
-      else agHour[ag.id][h]='';
-    });
-  }
-
-  // After the day: any stock task with work still remaining = understaffed.
-  // (It carries over to the next day via the forecast; here we just flag it.)
-  primary.forEach(function(t){
-    if (isRealtime(t)) return;
-    if ((stockRemaining[t.name]||0) > 0) coverageGaps[t.name] = true;
-  });
-
-  // ── Apply stored overrides on top of computed schedule ───────────────────
-  working.forEach(function(a) {
-    var agOv = scheduleOverrides[ds] && scheduleOverrides[ds][a.id];
-    if (!agOv) return;
-    // Task overrides: replace computed task for specific hours
-    if (agOv.tasks) Object.keys(agOv.tasks).forEach(function(hStr) {
-      var hh = parseInt(hStr);
-      if (agHour[a.id] && hh >= presenceOpen && hh < presenceClose) {
-        agHour[a.id][hh] = agOv.tasks[hStr];
-      }
-    });
-    // Break overrides: shift break start/end times using "bName_origStart" keys
-    if (agOv.breaks) Object.keys(agOv.breaks).forEach(function(slotKey) {
-      var newStart = agOv.breaks[slotKey];
-      // slot_key = "BreakName_origStart" — extract name
-      var parts = slotKey.split('_');
-      var origStart = parseInt(parts[parts.length - 1]);
-      var bName = parts.slice(0, parts.length - 1).join('_');
-      var brk = agBrk[a.id] && agBrk[a.id].find(function(b){
-        return b.name === bName && b.startMin === origStart;
-      });
-      if (brk) { var dur = brk.endMin - brk.startMin; brk.startMin = newStart; brk.endMin = newStart + dur; }
-    });
-  });
-
-  function buildBlocks(aid) {
-    var brks=agBrk[aid]||[], evts=[];
-    var startMin = (agentStartMin[aid] != null) ? agentStartMin[aid] : (hours.open*60);
-    var endMin   = (agentEndMin[aid]   != null) ? agentEndMin[aid]   : (hours.close*60);
-    for (var h=presenceOpen; h<presenceClose; h++) {
-      var hS=h*60, hE=(h+1)*60;
-      // Clip this hour to the agent's presence window
-      var cS = Math.max(hS, startMin), cE = Math.min(hE, endMin);
-      if (cS >= cE) continue; // agent not present this hour
-      var task=agHour[aid]?agHour[aid][h]:null;
-
-      // Push break events that fall within the present part of this hour
-      brks.forEach(function(br){
-        var s=Math.max(br.startMin,cS), e=Math.min(br.endMin,cE);
-        if(s<e) evts.push({start:s,end:e,task:'__break__',label:br.name,isLunch:br.isLunch});
-      });
-
-      if (task) {
-        var brsInHour = brks.filter(function(br){
-          return br.startMin<cE && br.endMin>cS;
-        }).sort(function(a,b){return a.startMin-b.startMin;});
-
-        if (!brsInHour.length) {
-          evts.push({start:cS, end:cE, task:task, label:task});
-        } else {
-          var cursor = cS;
-          brsInHour.forEach(function(br){
-            var bS = Math.max(br.startMin, cS);
-            var bE = Math.min(br.endMin, cE);
-            if (cursor < bS) evts.push({start:cursor, end:bS, task:task, label:task});
-            cursor = bE;
-          });
-          if (cursor < cE) evts.push({start:cursor, end:cE, task:task, label:task});
-        }
-      }
-    }
-    evts.sort(function(a,b){return a.start-b.start;});
-    var merged=[];
-    evts.forEach(function(ev){
-      if(ev.start>=ev.end) return;
-      var last=merged[merged.length-1];
-      if(last&&last.task===ev.task&&last.end===ev.start){last.end=ev.end;}
-      else merged.push({start:ev.start,end:ev.end,task:ev.task,label:ev.label});
-    });
-    return merged;
-  }
-
-  var result = agents.map(function(a){
-    var s=(availability[a.id]&&availability[a.id][ds])||'working';
-    var isRest=['rest_scheduled','rest_override','rest_parttime'].includes(s);
-    var isPartTimeRest = s === 'rest_parttime';
-    var isAbsent=s==='absent';
-    if(closure||isRest||isAbsent) return {agent:a,blocks:[],isClosed:!!closure,isRest:isRest,isPartTimeRest:isPartTimeRest,isAbsent:isAbsent};
-    return {agent:a,blocks:buildBlocks(a.id),isClosed:false,isRest:false,isPartTimeRest:false,isAbsent:false};
-  });
-  // Expose the production alert (tasks where workload > workforce today)
-  result.coverageGaps = Object.keys(coverageGaps);
-  result.gridOpen  = presenceOpen;
-  result.gridClose = presenceClose;
-  return result;
-}
-
-function renderIntraday(ds) {
-  var container = document.getElementById('planning-intraday');
-  if (!currentRegionId) { container.innerHTML='<p style="color:#888">Select a region.</p>'; return; }
-  var days   = getWeekDays(currentWeekMonday);
-  var target = ds || toDateStr(days.find(function(d){return !getDayClosureType(toDateStr(d));}) || days[0]);
-  currentIntradayDate = target;
-
-  var dayBtns = days.map(function(day,i){
-    var dayDs=toDateStr(day), cl=getDayClosureType(dayDs), isSel=dayDs===target;
-    var cls='intraday-day-btn'+(cl?' closed-day':'')+(isSel?' active':'');
-    var oc = cl ? '' : ' onclick="renderIntraday(\'' + dayDs + '\')"';
-    return '<button class="'+cls+'"'+oc+'>'+DAY_SHORT[i]+' '+formatDate(day)+'</button>';
-  }).join('');
-
-  var closure = getDayClosureType(target);
-  if (closure) {
-    var msg = closure==='holiday' ? '\uD83C\uDFD6\uFE0F Bank holiday - center closed'
-                                  : '\uD83C\uDF34 Weekend - center closed';
-    container.innerHTML = '<div class="intraday-day-btns">'+dayBtns+'</div>' +
-      '<p style="color:#9ca3af;padding:32px 0;text-align:center;">'+msg+'</p>';
-    return;
-  }
-
-  var hours    = getDayHoursForDate(target);
-  var schedule = computeIntradaySchedule(target);
-  var gridOpen  = (schedule.gridOpen  != null) ? schedule.gridOpen  : (hours.open - 1);
-  var gridClose = (schedule.gridClose != null) ? schedule.gridClose : (hours.close + 1);
-  var nH = gridClose - gridOpen;
-  var AGENT_W = 150, HOUR_W = Math.max(60, Math.floor(1100/nH));
-  var cols = AGENT_W+'px ' + Array(nH).fill(HOUR_W+'px').join(' ');
-
-  // Production alert banner — only shown when workload > workforce on some task.
-  // Replaces the old task legend (tasks are named in the grid cells already).
-  var gridTotalW = AGENT_W + nH * HOUR_W; // match the intraday table width
-  var gaps = schedule.coverageGaps || [];
-  var alertBanner = '';
-  if (gaps.length) {
-    var gapNames = gaps.map(function(n){
-      // Display friendly task names (e.g. BACK-OFFICE -> Back Office), kept bold
-      var friendly = n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
-      return '<b>' + friendly + '</b>';
-    }).join(', ');
-    alertBanner =
-      '<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;' +
-      'padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;' +
-      'box-sizing:border-box;max-width:' + gridTotalW + 'px;' +
-      'box-shadow:0 1px 3px rgba(0,0,0,0.1);">' +
-        '<span style="font-size:15px;flex-shrink:0;">\u26A0\uFE0F</span>' +
-        '<span style="font-size:12px;color:#9a3412;font-weight:400;">' +
-          'Production alert: workload &gt; workforce on ' + gapNames + '. ' +
-          'Unmet work carries over to the next day.' +
-        '</span>' +
-      '</div>';
-  }
-
-  // Header
-  var header = '<div class="intraday-agent-cell" style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Agent</div>';
-  for (var h=gridOpen; h<gridClose; h++) {
-    var nextH = h + 1;
-    var outOpen = (h < hours.open || h >= hours.close);
-    var hdrStyle = outOpen ? ' style="background:#f1f5f9;color:#94a3b8;"' : '';
-    header += '<div class="intraday-hour-header"'+hdrStyle+'>' +
-      String(h).padStart(2,'0') + '\u2013' + String(nextH).padStart(2,'0') + 'h</div>';
-  }
-
-  // Rows
-  var rows = '';
-  schedule.forEach(function(entry){
-    var a = entry.agent;
-    rows += '<div class="intraday-agent-cell">'+a.first_name+' '+a.last_name+'</div>';
-    if (entry.isClosed||entry.isRest||entry.isAbsent) {
-      var lbl = entry.isAbsent ? '\uD83C\uDFE5 Absent'
-              : entry.isPartTimeRest ? '\uD83D\uDD51 Part-time rest'
-              : entry.isClosed ? '\uD83D\uDD12 Closed' : '\uD83D\uDCC5 Rest';
-      for (var hh=gridOpen; hh<gridClose; hh++)
-        rows += '<div class="intraday-rest-cell">'+(hh===gridOpen?lbl:'')+'</div>';
-      return;
-    }
-    for (var h=gridOpen; h<gridClose; h++) {
-      var hS=h*60, hE=(h+1)*60;
-      var ov = entry.blocks.filter(function(b){return b.start<hE&&b.end>hS;});
-
-      // Determine the task for this hour (for drag purposes)
-      var hourTask = null;
-      ov.forEach(function(b){ if(b.task!=='__break__') hourTask=b.task; });
-
-      // Hour cell — is a drop zone for task drops
-      var cellAttrs = hourTask
-        ? ' data-agent="'+a.id+'" data-date="'+target+'" data-hour="'+h+'" data-task="'+hourTask+'"'+
-          ' ondragover="onCellDragOver(event)" ondragleave="onCellDragLeave(event)"'+
-          ' ondrop="onTaskCellDrop(event)"'
-        : '';
-      var cell = '<div class="intraday-block"'+cellAttrs+'>';
-
-      ov.forEach(function(b){
-        var bS=Math.max(b.start,hS), bE=Math.min(b.end,hE);
-        var pL=((bS-hS)/60)*100, pW=((bE-bS)/60)*100;
-        var isBreak = b.task==='__break__';
-        var t   = isBreak ? null : getTask(b.task);
-        var brCol = b.isLunch ? BREAK_COLORS.lunch : BREAK_COLORS.short;
-        var bg  = t ? t.color_bg  : brCol.bg;
-        var txt = t ? t.color_text : brCol.text;
-
-        var chipAttrs = '';
-        if (isBreak) {
-          // Break chip: draggable, droppable (for break swaps)
-          chipAttrs = ' data-dtype="break" data-agent="'+a.id+'" data-date="'+target+
-            '" data-bname="'+b.label+'" data-bstart="'+b.start+'"'+
-            ' draggable="true"'+
-            ' ondragstart="onBlockDragStart(event)" ondragend="onBlockDragEnd(event)"'+
-            ' ondragover="onCellDragOver(event)" ondragleave="onCellDragLeave(event)"'+
-            ' ondrop="onBreakChipDrop(event)"';
-        } else {
-          // Task chip: draggable, covers the whole hour slot
-          chipAttrs = ' data-dtype="task" data-agent="'+a.id+'" data-date="'+target+
-            '" data-hour="'+h+'" data-task="'+b.task+'"'+
-            ' draggable="true"'+
-            ' ondragstart="onBlockDragStart(event)" ondragend="onBlockDragEnd(event)"';
-        }
-
-        cell += '<div class="task-block"'+chipAttrs+' style="left:'+pL+'%;width:'+pW+'%;background:'+bg+
-          ';color:'+txt+';border:1px solid '+(isBreak ? txt : txt+'25')+
-          ';font-size:'+(pW>15?'9':'7')+'px;">'+(pW>12?b.label:'')+'</div>';
-      });
-      cell += '</div>';
-      rows += cell;
-    }
-  });
-
-  // (Need row removed — Intraday is agent-facing; FTE need lives in Forecast/Weekly.)
-
-  // Check if this day has any overrides
-  var hasOverrides = !!(scheduleOverrides[target] && Object.keys(scheduleOverrides[target]).length);
-  var resetBtn = hasOverrides
-    ? '<button class="intraday-reset-btn" onclick="resetDayOverrides(\''+target+'\')">\u21BA Reset overrides</button>'
-    : '';
-
-  container.innerHTML =
-    '<div class="intraday-day-btns">'+dayBtns+resetBtn+'</div>' +
-    '<div id="intraday-container"><div class="intraday-grid" style="grid-template-columns:'+cols+
-    ';grid-auto-rows:auto;">'+header+rows+'</div></div>';
-}
-
-// ── RENDER AGENTS ─────────────────────────────────────────────────────────
 function retailAvatarColor(name) {
   var palette = ['#1a1a2e','#185FA5','#0F6E56','#854F0B','#993556','#3C3489','#5F5E5A'];
   var h = 0; for (var i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) % 997;
@@ -3537,437 +2509,76 @@ async function deleteAgent(id) {
   await loadWeekData();
 }
 
-// saveForecast — forecast is auto-computed, direct manual save not needed.
-// This stub exists because the "Save Forecast" button in the UI calls it.
-// Saving AHT/Trend is done via saveForecastSettings() in the header.
-async function saveForecast() {
-  showToast('Forecast is auto-computed - use \u201cSave AHT & Trend\u201d above to adjust settings \u2713');
-}
-function buildForecastSettingsHtml() {
-  if (!currentRegionId) return '';
-  var aht   = regulations.aht_tasks || {};
-  var trend = regulations.trend_pct || 0;
+// ── EXPORT MONTHLY (Excel) ────────────────────────────────────────────────
+// Lit directement la table Monthly affichee (#planning-monthly table) et la
+// serialise en .xlsx style. Garantit que l'export = ce qui est a l'ecran.
+function exportMonthly() {
+  if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
+  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  var table = document.querySelector('#planning-monthly table');
+  if (!table) { showToast('Nothing to export', 'error'); return; }
 
-  // Use live tasks from DB (correct colors + priority)
-  var ahtRows = tasksInDisplayOrder().map(function(t) {
-    var val = aht[t.name] || t.aht_minutes || 0;
-    return '<tr class="aht-task-row" data-task="' + t.name + '">' +
-      '<td><span class="task-dot" style="background:' + t.color_bg + ';border:1px solid ' + t.color_text + '40;"></span>' + t.name + '</td>' +
-      '<td><input class="aht-val" type="number" value="' + val + '" min="0" step="0.5"> min</td>' +
-      '<td><select class="task-pri-sel" style="padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:11px;">' +
-        [1,2,3,4,5].map(function(p){ return '<option value="'+p+'"'+(t.priority===p?' selected':'')+'>P'+p+'</option>'; }).join('') +
-      '</select></td>' +
-      '</tr>';
-  }).join('');
-
-  var trendSign = trend > 0 ? '+' : '';
-  var trendDesc = trend === 0 ? 'flat - using history as-is'
-                : trend > 0  ? 'volume growing vs last year'
-                : 'volume declining vs last year';
-
-  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var curYear = currentWeekMonday.getFullYear();
-  var boRows = '';
-  for (var m = 1; m <= 12; m++) {
-    var mk = curYear + '-' + String(m).padStart(2,'0');
-    var boVol  = (monthlyBoTargets[mk] && monthlyBoTargets[mk]['BACK-OFFICE']) || 0;
-    var frVol  = (monthlyBoTargets[mk] && monthlyBoTargets[mk]['FRAUD']) || 0;
-    boRows += '<tr class="bo-target-row" data-year="'+curYear+'" data-month="'+m+'">' +
-      '<td style="font-size:12px;color:#374151;">'+monthNames[m-1]+'</td>' +
-      '<td><input type="number" class="bo-vol-backoffice" value="'+boVol+'" min="0" style="width:70px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"></td>' +
-      '<td><input type="number" class="bo-vol-fraud" value="'+frVol+'" min="0" style="width:70px;padding:3px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;"></td>' +
-      '</tr>';
+  var NAVY = '1A1A2E';
+  // Helper cellule stylee
+  function mc(value, opts) {
+    opts = opts || {};
+    var cell = { v: (value == null ? '' : value), t: (typeof value === 'number' ? 'n' : 's') };
+    var s = {
+      alignment: { horizontal: opts.align || 'center', vertical: 'center', wrapText: false },
+      font: { name: 'Arial', sz: opts.sz || 10, bold: !!opts.bold,
+              color: { rgb: (opts.color || '222222').replace('#','') } },
+      border: {
+        top:{style:'thin',color:{rgb:'E0E0E0'}}, bottom:{style:'thin',color:{rgb:'E0E0E0'}},
+        left:{style:'thin',color:{rgb:'E0E0E0'}}, right:{style:'thin',color:{rgb:'E0E0E0'}}
+      }
+    };
+    if (opts.bg) s.fill = { patternType:'solid', fgColor:{ rgb: opts.bg.replace('#','') } };
+    cell.s = s;
+    return cell;
   }
 
-  return (
-    // ── BUBBLE 5: AHT & Priority per task ────────────────────────────────
-    '<div class="card">' +
-      '<div class="set-head"><h3 class="set-h3">AHT & Priority per task</h3>' +
-        '<button class="btn btn-save" onclick="saveForecastSettings()">\uD83D\uDCBE Save</button></div>' +
-      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Task</th><th>AHT</th><th>Priority</th></tr>' + ahtRows + '</table>' +
-    '</div>' +
-
-    // ── BUBBLE 6: Monthly Targets (with Trend integrated on top) ─────────
-    '<div class="card">' +
-      '<div class="set-head"><h3 class="set-h3">Monthly Targets - ' + curYear + '</h3>' +
-        '<button class="btn btn-save" onclick="saveMonthlyBoTargets()">\uD83D\uDCBE Save</button></div>' +
-      // Trend row, inline at the top
-      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #e5e7eb;">' +
-        '<span style="font-size:12px;font-weight:600;color:#374151;">Forecast trend</span>' +
-        '<input type="number" id="fc-trend-pct" value="' + trend + '" step="0.1" placeholder="0" style="width:70px;padding:5px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;text-align:center;">' +
-        '<span style="font-size:14px;font-weight:bold;color:#374151;">%</span>' +
-        '<span class="trend-note" style="font-size:11px;color:#9ca3af;">' + trendSign + trend + '% - ' + trendDesc + '</span>' +
-      '</div>' +
-      '<p class="set-note">Contacts per month \u2192 auto-spread hourly by CALL curve</p>' +
-      '<table class="aht-task-table" style="max-width:420px;"><tr><th>Month</th><th style="color:#7c3aed;">Back-Office</th><th style="color:#be123c;">Fraud</th></tr>' +
-      boRows + '</table>' +
-    '</div>'
-  );
-}
-
-async function saveForecastSettings() {
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
-
-  // Read trend % from forecast header
-  var trendEl = document.getElementById('fc-trend-pct');
-  if (trendEl) regulations.trend_pct = parseFloat(trendEl.value) || 0;
-
-  // Read AHT and priority per task from forecast header
-  var newAht = {}, priorityUpserts = [];
-  document.querySelectorAll('.aht-task-row').forEach(function(row) {
-    var task = row.dataset.task;
-    var val  = parseFloat(row.querySelector('.aht-val').value) || 0;
-    var pri  = parseInt(row.querySelector('.task-pri-sel') ? row.querySelector('.task-pri-sel').value : 99);
-    if (task) {
-      newAht[task] = val;
-      priorityUpserts.push(taskToDbRow({
-        name: task, priority: pri, aht_minutes: val,
-        color_bg:   (getTask(task).color_bg   || '#f3f4f6'),
-        color_text: (getTask(task).color_text || '#374151'),
-        is_filler:  (getTask(task).is_filler  || false),
-      }, currentRegionId));
-    }
+  // Parcours des lignes du tableau
+  var rows = [];
+  var trs = table.querySelectorAll('tr');
+  var maxCols = 0;
+  trs.forEach(function(tr){
+    var cells = tr.querySelectorAll('th,td');
+    var row = [];
+    cells.forEach(function(td){
+      var txt = (td.textContent || '').trim();
+      var isHead = td.tagName === 'TH';
+      // colspan (en-tetes de bloc) : on met le texte puis on remplit de vides
+      var span = parseInt(td.getAttribute('colspan') || '1');
+      var opts = { sz: 9 };
+      if (isHead) { opts.bg = NAVY; opts.color = 'FFFFFF'; opts.bold = true; }
+      else if (span > 1) { opts.bg = 'EEF0F6'; opts.bold = true; opts.align = 'left'; }
+      // Premiere colonne (nom agent / label) alignee a gauche
+      if (td.cellIndex === 0 && !isHead) opts.align = 'left';
+      row.push(mc(txt, opts));
+      for (var s = 1; s < span; s++) row.push(mc('', opts));
+    });
+    if (row.length > maxCols) maxCols = row.length;
+    rows.push(row);
   });
-  if (Object.keys(newAht).length > 0) regulations.aht_tasks = newAht;
+  // Uniformiser la largeur des lignes
+  rows.forEach(function(r){ while (r.length < maxCols) r.push(mc('')); });
 
-  showLoader();
-  // Save AHT+trend to regulations
-  var { error: e1 } = await sb.from('retail_regulations').upsert([
-    { region_id: currentRegionId, rule_key: 'trend_pct',  rule_value: String(regulations.trend_pct) },
-    { region_id: currentRegionId, rule_key: 'aht_tasks',  rule_value: JSON.stringify(regulations.aht_tasks) },
-  ], { onConflict: 'region_id,rule_key' });
-  // Save priority+aht to tasks table
-  var { error: e2 } = await sb.from('retail_tasks').upsert(priorityUpserts, { onConflict: 'region_id,name' });
-  hideLoader();
-
-  if (e1 || e2) { showToast('Save failed', 'error'); return; }
-  showToast('Saved \u2713');
-  await loadTasks();
-  await loadWeekData();
-}
-
-// ── EXCEL EXPORT ──────────────────────────────────────────────────────────
-// Faithful "instant T" reproduction of Recap / Weekly / Intraday into a styled
-// .xlsx using SheetJS. Colours mirror the on-screen cells.
-function excelWeekTag() {
-  return 'w' + getWeekNumber(currentWeekMonday);
-}
-
-// Build a styled cell object for SheetJS.
-function xc(value, opts) {
-  opts = opts || {};
-  var cell = { v: (value == null ? '' : value), t: (typeof value === 'number' ? 'n' : 's') };
-  var s = {
-    alignment: { horizontal: opts.align || 'center', vertical: 'center', wrapText: true },
-    font: { name: 'Arial', sz: opts.sz || 10, bold: !!opts.bold,
-            color: { rgb: (opts.color || '222222').replace('#','') } }
-  };
-  if (opts.bg) s.fill = { patternType: 'solid', fgColor: { rgb: opts.bg.replace('#','') } };
-  // Badge-style border (assorted to text colour) or default light grid border
-  var bc = opts.borderColor ? opts.borderColor.replace('#','') : 'E0E0E0';
-  var bstyle = opts.borderColor ? 'medium' : 'thin';
-  s.border = {
-    top:    { style: bstyle, color: { rgb: bc } },
-    bottom: { style: bstyle, color: { rgb: bc } },
-    left:   { style: bstyle, color: { rgb: bc } },
-    right:  { style: bstyle, color: { rgb: bc } }
-  };
-  cell.s = s;
-  return cell;
-}
-
-function exportCurrentView() {
-  if (typeof XLSX === 'undefined') {
-    showToast('Excel library not loaded - check your connection', 'error');
-    return;
-  }
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
-  if (currentPlanningView === 'recap')        exportRecap();
-  else if (currentPlanningView === 'intraday') exportIntraday();
-  else                                         exportWeekly();
-}
-
-function downloadSheet(opts) {
-  // opts: { rows, colWidths, sheetName, fileName, title, nCols, extraMerges }
-  var rows = opts.rows;
-  var nCols = opts.nCols;
-
-  // Title banner row (merged across all columns)
-  var titleRow = [ xc(opts.title, { bg: '1a1a2e', color: 'FFFFFF', bold: true, sz: 13, align: 'left' }) ];
-  for (var c = 1; c < nCols; c++) titleRow.push(xc('', { bg: '1a1a2e' }));
-  var allRows = [ titleRow, [] ].concat(rows); // title, spacer, then content
-  var ROW_OFFSET = 2; // title + spacer rows added before content
-
-  var ws = XLSX.utils.aoa_to_sheet(allRows);
-  if (opts.colWidths) ws['!cols'] = opts.colWidths.map(function(w){ return { wch: w }; });
-
-  // Merges: the title bar + any extra merges from the caller (offset by 2 rows)
-  var merges = [ { s: { r: 0, c: 0 }, e: { r: 0, c: nCols - 1 } } ];
-  (opts.extraMerges || []).forEach(function(m){
-    merges.push({ s: { r: m.r + ROW_OFFSET, c: m.c0 }, e: { r: m.r + ROW_OFFSET, c: m.c1 } });
-  });
-  ws['!merges'] = merges;
-
-  // Row heights
-  var rowHeights = [ { hpt: 26 }, { hpt: 6 } ]; // title, spacer
-  rowHeights.push({ hpt: 30 }); // header row
-  for (var r = 1; r < rows.length; r++) rowHeights.push({ hpt: 22 });
-  ws['!rows'] = rowHeights;
-
-  // Freeze first column + top 3 rows (title, spacer, header)
-  ws['!freeze'] = { xSplit: 1, ySplit: 3, topLeftCell: 'B4', activePane: 'bottomRight', state: 'frozen' };
-  ws['!panes'] = [{ xSplit: 1, ySplit: 3, topLeftCell: 'B4', activePane: 'bottomRight', state: 'frozen' }];
-
-  // A4 landscape, fit to one page wide, ready to print
-  ws['!pageSetup'] = { orientation: 'landscape', paperSize: 9, fitToWidth: 1, fitToHeight: 0, scale: 100 };
-  ws['!margins'] = { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 };
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  // Largeurs : 1ere colonne large, jours etroits
+  var cols = [{ wch: 22 }];
+  for (var c = 1; c < maxCols; c++) cols.push({ wch: 5 });
+  ws['!cols'] = cols;
+  // Fige la 1ere colonne + la 1ere ligne
+  ws['!freeze'] = { xSplit:1, ySplit:1, topLeftCell:'B2', activePane:'bottomRight', state:'frozen' };
+  ws['!pageSetup'] = { orientation:'landscape', paperSize:9, fitToWidth:1, fitToHeight:0 };
 
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, opts.sheetName);
-  XLSX.writeFile(wb, opts.fileName + '.xlsx');
-  showToast('Exported ' + opts.fileName + ' \u2713');
+  XLSX.utils.book_append_sheet(wb, ws, 'Monthly');
+  var ref = new Date(currentWeekMonday);
+  var tag = ref.getFullYear() + '-' + String(ref.getMonth()+1).padStart(2,'0');
+  XLSX.writeFile(wb, 'CORA_Retail_Monthly_' + tag + '.xlsx');
+  showToast('Exported \u2713');
 }
-
-// ── WEEKLY EXPORT ─────────────────────────────────────────────────────────
-function exportWeekly() {
-  var days = getWeekDays(currentWeekMonday);
-  var weekShifts = {};
-  days.forEach(function(day){
-    var ds = toDateStr(day);
-    if (!getDayClosureType(ds)) weekShifts[ds] = computeAgentShifts(ds);
-  });
-
-  var NAVY = '1a1a2e';
-  var rows = [];
-
-  var header = [ xc('Agent', { bg: NAVY, color: 'FFFFFF', bold: true, align: 'left' }) ];
-  days.forEach(function(day, i){
-    header.push(xc(DAY_NAMES[i] + ' ' + formatDate(day), { bg: NAVY, color: 'FFFFFF', bold: true }));
-  });
-  rows.push(header);
-
-  agents.forEach(function(a){
-    var pct = a.work_pct || 100;
-    var openDays = days.filter(function(d){return !getDayClosureType(toDateStr(d));});
-    var ptSchedule = pct < 100 ? computePartTimeForAgent(a, openDays) : null;
-    var name = a.first_name + ' ' + a.last_name + (pct < 100 ? ' (' + pct + '%)' : '');
-    var row = [ xc(name, { align: 'left', bold: true }) ];
-
-    days.forEach(function(day){
-      var ds = toDateStr(day);
-      var status = (availability[a.id] && availability[a.id][ds]) || 'working';
-      var closure = getDayClosureType(ds);
-      if (closure === 'holiday')      row.push(xc('Holiday', { bg: 'fef9c3', color: '92400e', borderColor: '92400e' }));
-      else if (closure === 'weekend') row.push(xc('Weekend', { bg: 'e5e7eb', color: '6b7280', borderColor: '9ca3af' }));
-      else if (status === 'rest_parttime') row.push(xc('Part-time rest', { bg: 'fef9c3', color: '854d0e', borderColor: '854d0e' }));
-      else if (status === 'rest_scheduled' || status === 'rest_override')
-        row.push(xc('Sched. Rest', { bg: 'f3e8ff', color: '7c3aed', borderColor: '7c3aed' }));
-      else if (status === 'absent')   row.push(xc('Absent', { bg: 'fce7f3', color: '9d174d', borderColor: '9d174d' }));
-      else {
-        var si = (weekShifts[ds] || {})[a.id];
-        var label, bg, color;
-        if (si) {
-          label = formatMinutes(si.startMin) + '-' + formatMinutes(si.endMin);
-          if (si.shift === 'afternoon') { bg = 'dcfce7'; color = '166534'; }
-          else                          { bg = 'f0fdf4'; color = '16a34a'; }
-        } else {
-          var h = getDayHoursForDate(ds);
-          label = String(h.open).padStart(2,'0')+':00-'+String(h.close).padStart(2,'0')+':00';
-          bg = 'dbeafe'; color = '1e40af';
-        }
-        if (ptSchedule && ptSchedule.partialDay && ptSchedule.partialDay.ds === ds) {
-          label = formatMinutes(si ? si.startMin : getDayHoursForDate(ds).open*60) + '-' + formatMinutes(ptSchedule.partialDay.closeMin);
-        }
-        row.push(xc(label, { bg: bg, color: color, bold: true, borderColor: color }));
-      }
-    });
-    rows.push(row);
-  });
-
-  var widths = [22].concat(days.map(function(){ return 16; }));
-  downloadSheet({
-    rows: rows, colWidths: widths, sheetName: 'Weekly', nCols: days.length + 1,
-    title: 'Planning Manager  \u00b7  Weekly  \u00b7  ' + excelWeekTag() + '  \u00b7  ' + (currentRegionName || ''),
-    fileName: 'Planning_Manager_Weekly_' + excelWeekTag()
-  });
-}
-
-// ── RECAP EXPORT ──────────────────────────────────────────────────────────
-function exportRecap() {
-  var days = getWeekDays(currentWeekMonday);
-  var NAVY = '1a1a2e';
-  var hiddenTasks = {};
-  if (currentRegionCity === 'Paris')         hiddenTasks = { 'CHAT': true };
-  else if (currentRegionCity === 'Shanghai') hiddenTasks = { 'MAIL': true };
-  var RECAP_ORDER = ['CALL','MAIL','CHAT','BACK-OFFICE','FRAUD'].filter(function(n){return !hiddenTasks[n];});
-
-  var rows = [];
-  var header = [ xc('', { bg: NAVY, color: 'FFFFFF', bold: true }) ];
-  days.forEach(function(day, i){
-    header.push(xc(DAY_NAMES[i] + ' ' + formatDate(day), { bg: NAVY, color: 'FFFFFF', bold: true }));
-  });
-  rows.push(header);
-
-  RECAP_ORDER.forEach(function(name){
-    var t = getTask(name);
-    var row = [ xc(name, { align: 'left', bold: true, color: (t.color_text||'222222') }) ];
-    days.forEach(function(day){
-      var ds = toDateStr(day);
-      if (getDayClosureType(ds)) { row.push(xc('-', { bg: 'f9fafb', color: '9ca3af' })); return; }
-      var f = forecasts[ds] || { hourly:{} };
-      var vol = Object.values((f.hourly||{})[name.toLowerCase()]||{}).reduce(function(s,v){return s+v;},0);
-      row.push(xc(vol, { bg: (t.color_bg||'FFFFFF'), color: (t.color_text||'222222'), borderColor: (t.color_text||'E0E0E0') }));
-    });
-    rows.push(row);
-  });
-
-  function dayNeed(ds){ var f=forecasts[ds]||{}; return f.contact_volume>0 ? Math.ceil((f.contact_volume/60)/regulations.max_daily_hours) : 0; }
-  function dayWorking(ds){ var w=0; agents.forEach(function(a){var s=(availability[a.id]&&availability[a.id][ds])||'working'; if(s==='working')w++;}); return w; }
-  function metricRow(label, fn) {
-    var row = [ xc(label, { align: 'left', bold: true, bg: 'f9fafb', color: '6b7280' }) ];
-    days.forEach(function(day){
-      var ds = toDateStr(day);
-      if (getDayClosureType(ds)) { row.push(xc('-', { bg: 'f9fafb', color: '9ca3af' })); return; }
-      row.push(fn(ds));
-    });
-    rows.push(row);
-  }
-
-  metricRow('Workload (h)', function(ds){ var f=forecasts[ds]||{}; return xc(f.contact_volume>0?+(f.contact_volume/60).toFixed(1):0, {}); });
-  metricRow('Need',    function(ds){ return xc(dayNeed(ds), {}); });
-  metricRow('Working', function(ds){ return xc(dayWorking(ds), {}); });
-  metricRow('Status',  function(ds){
-    var ok = dayWorking(ds) >= dayNeed(ds) || dayNeed(ds) === 0;
-    return ok ? xc('Staffed', { bg: 'f0fdf4', color: '166534', borderColor: '166534' })
-              : xc('Understaffed', { bg: 'fff1f2', color: 'b91c1c', bold: true, borderColor: 'b91c1c' });
-  });
-
-  var widths = [16].concat(days.map(function(){ return 16; }));
-  downloadSheet({
-    rows: rows, colWidths: widths, sheetName: 'Recap', nCols: days.length + 1,
-    title: 'Planning Manager  \u00b7  Recap of the Week  \u00b7  ' + excelWeekTag() + '  \u00b7  ' + (currentRegionName || ''),
-    fileName: 'Planning_Manager_Recap_' + excelWeekTag()
-  });
-}
-
-// ── INTRADAY EXPORT ───────────────────────────────────────────────────────
-function exportIntraday() {
-  var ds = currentIntradayDate || toDateStr(getWeekDays(currentWeekMonday)[0]);
-  var hours = getDayHoursForDate(ds);
-  var schedule = computeIntradaySchedule(ds);
-  var gridOpen  = (schedule.gridOpen  != null) ? schedule.gridOpen  : (hours.open - 1);
-  var gridClose = (schedule.gridClose != null) ? schedule.gridClose : (hours.close + 1);
-  var NAVY = '1a1a2e';
-
-  // 15-minute slots across the grid
-  var slotMin = 15;
-  var startM = gridOpen * 60, endM = gridClose * 60;
-  var nSlots = (endM - startM) / slotMin;
-
-  var rows = [];
-  var extraMerges = [];
-
-  // Header: show the hour label at each :00 slot, blank otherwise (merged per hour)
-  var header = [ xc('Agent', { bg: NAVY, color: 'FFFFFF', bold: true, align: 'left' }) ];
-  for (var s = 0; s < nSlots; s++) {
-    var mins = startM + s * slotMin;
-    var isHourStart = (mins % 60 === 0);
-    var label = isHourStart ? (String(mins/60).padStart(2,'0') + 'h') : '';
-    header.push(xc(label, { bg: NAVY, color: 'FFFFFF', bold: true, sz: 9 }));
-  }
-  rows.push(header);
-  // Merge each hour's 4 header slots (row index 0 in content = header)
-  for (var hh = 0; hh < (endM-startM)/60; hh++) {
-    var c0 = 1 + hh*4;
-    extraMerges.push({ r: 0, c0: c0, c1: c0 + 3 });
-  }
-
-  // Helper: what is the agent doing in [mS, mE)? returns {task, isBreak} or null
-  function activityAt(blocks, mS, mE) {
-    var task = null, isBreak = false;
-    blocks.forEach(function(b){
-      if (b.start < mE && b.end > mS) {
-        if (b.task === '__break__') isBreak = true;
-        else task = b.task;
-      }
-    });
-    if (task) return { key: task, isBreak: false };
-    if (isBreak) return { key: '__break__', isBreak: true };
-    return null;
-  }
-
-  var rowIdx = 1; // content row 0 is the header; agents start at 1
-  schedule.forEach(function(entry){
-    var a = entry.agent;
-    var row = [ xc(a.first_name + ' ' + a.last_name, { align: 'left', bold: true }) ];
-
-    if (entry.isClosed || entry.isRest || entry.isAbsent) {
-      var lbl = entry.isAbsent ? 'Absent' : entry.isPartTimeRest ? 'Part-time rest'
-              : entry.isClosed ? 'Closed' : 'Rest';
-      for (var k = 0; k < nSlots; k++) row.push(xc(k === 0 ? lbl : '', { bg: 'f9fafb', color: '9ca3af' }));
-      extraMerges.push({ r: rowIdx, c0: 1, c1: nSlots }); // merge the whole strip
-      rows.push(row); rowIdx++;
-      return;
-    }
-
-    // Build slot activities, then merge consecutive identical ones
-    var slotKeys = [];
-    for (var sl = 0; sl < nSlots; sl++) {
-      var mS = startM + sl*slotMin, mE = mS + slotMin;
-      slotKeys.push(activityAt(entry.blocks, mS, mE));
-    }
-
-    var sl2 = 0;
-    while (sl2 < nSlots) {
-      var act = slotKeys[sl2];
-      var runEnd = sl2 + 1;
-      while (runEnd < nSlots && sameActivity(slotKeys[runEnd], act)) runEnd++;
-      var span = runEnd - sl2;
-
-      // Cell styling for this activity
-      var cellOpts, text;
-      if (!act) { cellOpts = {}; text = ''; }
-      else if (act.isBreak) { cellOpts = { bg: 'fef9c3', color: '854d0e', sz: 9, borderColor: '854d0e' }; text = 'Break'; }
-      else {
-        var t = getTask(act.key);
-        cellOpts = { bg: (t.color_bg||'FFFFFF'), color: (t.color_text||'222222'), sz: 9, borderColor: (t.color_text||'E0E0E0') };
-        text = act.key;
-      }
-      row.push(xc(text, cellOpts));
-      for (var f = 1; f < span; f++) row.push(xc('', cellOpts)); // filler cells to be merged
-
-      if (span > 1) {
-        var col0 = 1 + sl2;            // +1 for agent column
-        extraMerges.push({ r: rowIdx, c0: col0, c1: col0 + span - 1 });
-      }
-      sl2 = runEnd;
-    }
-    rows.push(row); rowIdx++;
-  });
-
-  // Column widths: agent wide, each 15-min slot narrow
-  var widths = [22];
-  for (var w = 0; w < nSlots; w++) widths.push(4);
-
-  var dLabel = formatDate(new Date(ds + 'T00:00:00'));
-  downloadSheet({
-    rows: rows, colWidths: widths, sheetName: 'Intraday', nCols: nSlots + 1,
-    title: 'Planning Manager  \u00b7  Intraday  \u00b7  ' + dLabel + '  \u00b7  ' + (currentRegionName || ''),
-    fileName: 'Planning_Manager_Intraday_' + excelWeekTag(),
-    extraMerges: extraMerges
-  });
-}
-
-// Compare two slot activities for the merge logic
-function sameActivity(x, y) {
-  if (!x && !y) return true;
-  if (!x || !y) return false;
-  return x.key === y.key && x.isBreak === y.isBreak;
-}
-
-// ── CALENDAR ──────────────────────────────────────────────────────────────
-var REGION_COUNTRY = { 'Paris':'FR','New York':'US','Shanghai':'CN','Seoul':'KR','Tokyo':'JP','Singapore':'SG' };
-var CAL_DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 function switchCalendarView(v) {
   currentCalView = v;
@@ -4170,7 +2781,7 @@ function showLeavePicker(agentId, event) {
   var firstOfMonth = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth(), 1));
   document.getElementById('leave-start').value = firstOfMonth;
   document.getElementById('leave-end').value = firstOfMonth;
-  document.getElementById('leave-type').value = 'leave';
+  document.getElementById('leave-type').value = 'absence';
   var p = document.getElementById('leave-popup');
   p.style.display = 'block';
   p.style.left = Math.min(event.clientX+10, window.innerWidth-280) + 'px';
@@ -4247,391 +2858,6 @@ async function applyDayOpen(ds, isOpen) {
 // ── WEEKLY VOLUME ANOMALY DETECTION ───────────────────────────────────────
 // Compares this week's forecast workload to the average of 8 weeks of history
 // (4 before + 4 after the equivalent week last year). Flags >+30% / <-30%.
-var anomalyState = null; // { pct, direction, current, baseline } | null
-
-function weekWorkloadFromForecast() {
-  // Sum of this week's forecast contact_volume (workload minutes)
-  var total = 0;
-  getWeekDays(currentWeekMonday).forEach(function(day){
-    var f = forecasts[toDateStr(day)];
-    if (f && f.contact_volume) total += f.contact_volume;
-  });
-  return total;
-}
-
-function rawToWorkloadMin(dayMap) {
-  // dayMap: { TASK: { hour: vol } } → workload minutes using current AHT
-  var aht = regulations.aht_tasks || {};
-  var total = 0;
-  Object.keys(dayMap).forEach(function(task){
-    var a = aht[task] || aht[task.toUpperCase()] || 5;
-    Object.values(dayMap[task]).forEach(function(v){ total += (v||0) * a; });
-  });
-  return total;
-}
-
-var lastWeekCoverage = null; // coverage % of previous week, for "vs LW"
-
-async function computeWeekAnomaly() {
-  anomalyState = null;
-  if (!currentRegionId) return;
-
-  // Equivalent Monday last year
-  var eqMondayStr = getEquivalentLastYearDate(toDateStr(currentWeekMonday));
-  var eqMonday = new Date(eqMondayStr + 'T12:00:00');
-
-  // Build the 8 surrounding weeks (-4..+4 excluding 0 → but include all 8 around)
-  var weekOffsets = [-4,-3,-2,-1,1,2,3,4];
-  var allDates = [];
-  var weekDateGroups = [];
-  weekOffsets.forEach(function(off){
-    var mon = new Date(eqMonday); mon.setDate(eqMonday.getDate() + off*7);
-    var grp = [];
-    for (var i=0;i<7;i++){ var d=new Date(mon); d.setDate(mon.getDate()+i);
-      var dsv = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-      grp.push(dsv); allDates.push(dsv); }
-    weekDateGroups.push(grp);
-  });
-
-  // Fetch all needed historical rows in one query
-  var { data, error } = await sb.from('retail_historical_volume')
-    .select('date,hour,task,volume').eq('region_id', currentRegionId).in('date', allDates);
-  if (error || !data) return;
-
-  var byDate = {};
-  data.forEach(function(r){
-    if (!byDate[r.date]) byDate[r.date] = {};
-    if (!byDate[r.date][r.task]) byDate[r.date][r.task] = {};
-    byDate[r.date][r.task][r.hour] = r.volume;
-  });
-
-  // Weekly workload for each of the 8 reference weeks
-  var weekTotals = [];
-  weekDateGroups.forEach(function(grp){
-    var wt = 0, hasData = false;
-    grp.forEach(function(dsv){ if (byDate[dsv]) { wt += rawToWorkloadMin(byDate[dsv]); hasData = true; } });
-    if (hasData) weekTotals.push(wt);
-  });
-  if (weekTotals.length < 3) { anomalyState = null; return; }
-
-  var baseline = weekTotals.reduce(function(s,v){return s+v;},0) / weekTotals.length;
-  if (baseline <= 0) { anomalyState = null; return; }
-
-  var current = weekWorkloadFromForecast();
-  var pct = Math.round(((current - baseline) / baseline) * 100);
-  // Always store the trend; the card decides how to display severity.
-  var direction = pct >= 30 ? 'high' : pct <= -30 ? 'low' : 'normal';
-  anomalyState = { pct: pct, direction: direction, current: current, baseline: baseline };
-}
-
-// Compute previous week's coverage % (capacity vs need) for the "vs LW" delta.
-async function computeLastWeekCoverage() {
-  lastWeekCoverage = null;
-  if (!currentRegionId) return;
-  var lwMonday = new Date(currentWeekMonday); lwMonday.setDate(lwMonday.getDate() - 7);
-  var lwDays = getWeekDays(lwMonday);
-
-  // Load last week's equivalent-year history
-  var histDates = lwDays.map(function(d){ return getEquivalentLastYearDate(toDateStr(d)); });
-  var saved = historicalVolume;            // preserve current week's history
-  historicalVolume = {};
-  await loadHistoricalVolume(histDates);
-  var lwForecast = buildAutoForecast(lwDays);
-  historicalVolume = saved;                // restore
-
-  var totalNeed = 0, totalWorking = 0;
-  lwDays.forEach(function(day){
-    var ds = toDateStr(day);
-    if (getDayClosureType(ds)) return;
-    var f = lwForecast[ds];
-    var wl = (f && f.contact_volume) ? f.contact_volume : 0;
-    var need = wl > 0 ? Math.ceil((wl/60)/regulations.max_daily_hours) : 0;
-    var working = 0;
-    agents.forEach(function(a){
-      if (agentOnLeave(a.id, ds)) return;
-      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-      if (s === 'working') working++;
-    });
-    totalNeed += need; totalWorking += working;
-  });
-  lastWeekCoverage = totalNeed > 0 ? Math.round((totalWorking/totalNeed)*100) : 100;
-}
-
-function anomalyBannerHtml() {
-  if (!anomalyState) return '';
-  var a = anomalyState;
-  if (a.direction === 'normal') return '';
-  var isHigh = a.direction === 'high';
-  var bg = isHigh ? '#fff7ed' : '#eff6ff';
-  var bd = isHigh ? '#fdba74' : '#93c5fd';
-  var tx = isHigh ? '#9a3412' : '#1e40af';
-  var icon = isHigh ? '\uD83D\uDCC8' : '\uD83D\uDCC9';
-  var word = isHigh ? 'above' : 'below';
-  var sign = a.pct > 0 ? '+' : '';
-  return '<div style="background:'+bg+';border:1px solid '+bd+';color:'+tx+';'+
-    'border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;">'+
-    icon + ' Volume anomaly: this week is ' + sign + a.pct + '% ' + word +
-    ' the seasonal average (8-week history baseline).</div>';
-}
-
-// ── RECAP DASHBOARD SUMMARY (coverage, busiest day, absences) ─────────────
-function buildRecapSummary() {
-  var days = getWeekDays(currentWeekMonday);
-  var totalNeed = 0, totalWorking = 0;
-
-  days.forEach(function(day){
-    var ds = toDateStr(day);
-    if (getDayClosureType(ds)) return;
-    var f = forecasts[ds];
-    var wl = (f && f.contact_volume) ? f.contact_volume : 0;
-    var need = wl > 0 ? Math.ceil((wl/60)/regulations.max_daily_hours) : 0;
-    var working = 0;
-    agents.forEach(function(a){
-      if (agentOnLeave(a.id, ds)) return;
-      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-      if (s === 'working') working++;
-    });
-    totalNeed += need; totalWorking += working;
-  });
-  var coverage = totalNeed > 0 ? Math.round((totalWorking / totalNeed) * 100) : 100;
-
-  // Absences this week, with dates + motive
-  var weekStart = toDateStr(days[0]), weekEnd = toDateStr(days[6]);
-  var MOTIVE = { leave:['\uD83C\uDFDD\uFE0F','Leave'], sick:['\uD83D\uDE91','Sick'], absence:['\u26D4','Absence'] };
-  var absences = [];
-  agentLeaves.forEach(function(lv){
-    if (lv.end_date >= weekStart && lv.start_date <= weekEnd) {
-      var a = agents.find(function(x){return x.id===lv.agent_id;});
-      if (!a) return;
-      var mo = MOTIVE[lv.type] || MOTIVE.absence;
-      // Show the overlap with this week, in European format
-      var s = lv.start_date < weekStart ? weekStart : lv.start_date;
-      var e = lv.end_date   > weekEnd   ? weekEnd   : lv.end_date;
-      absences.push({
-        name: a.first_name + ' ' + (a.last_name||'').charAt(0) + '.',
-        icon: mo[0], motive: mo[1],
-        range: shortDate(s) + (s!==e ? '\u2013' + shortDate(e) : '')
-      });
-    }
-  });
-
-  return { coverage: coverage, absences: absences };
-}
-
-function shortDate(ds){
-  var d = new Date(ds + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
-}
-
-function recapSummaryHtml() {
-  var s = buildRecapSummary();
-  var covColor = s.coverage >= 100 ? '#166534' : s.coverage >= 85 ? '#9a3412' : '#b91c1c';
-
-  var card = function(label, valueHtml, sub){
-    return '<div style="flex:1;min-width:160px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;'+
-      'padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'+
-      '<div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">'+label+'</div>'+
-      valueHtml + (sub?'<div style="font-size:11px;color:#9ca3af;margin-top:3px;">'+sub+'</div>':'') + '</div>';
-  };
-
-  // Coverage card with "vs LW"
-  var vsLw = '';
-  if (lastWeekCoverage != null) {
-    var delta = s.coverage - lastWeekCoverage;
-    var dColor = delta > 0 ? '#166534' : delta < 0 ? '#b91c1c' : '#9ca3af';
-    var dSign = delta > 0 ? '+' : '';
-    vsLw = '<span style="font-size:12px;font-weight:600;color:'+dColor+';margin-left:8px;">'+dSign+delta+' pts vs LW</span>';
-  }
-  var covCard = card('Week coverage',
-    '<div style="display:flex;align-items:baseline;"><span style="font-size:22px;font-weight:700;color:'+covColor+';">'+s.coverage+'%</span>'+vsLw+'</div>',
-    'capacity vs need');
-
-  // Trend card (replaces Busiest day) — always shows the week vs 8-week trend
-  var trendCard;
-  if (anomalyState) {
-    var p = anomalyState.pct;
-    var sign = p > 0 ? '+' : '';
-    var icon, note, tColor;
-    if (p > 20)        { icon='\uD83D\uDCC8'; note='Critical rise in traffic - needs your attention'; tColor='#b91c1c'; }
-    else if (p >= 15)  { icon='\uD83D\uDCC8'; note='Alert - busier week than usual'; tColor='#9a3412'; }
-    else if (p >= 10)  { icon='\uD83D\uDCC8'; note='Light alert - slightly busier than usual'; tColor='#9a3412'; }
-    else if (p > -10)  { icon='\u2796'; note='In line with the seasonal norm'; tColor='#374151'; }
-    else if (p > -15)  { icon='\uD83D\uDCC9'; note='Slow week vs norm'; tColor='#1e40af'; }
-    else               { icon='\uD83D\uDCC9'; note='Very slow week vs norm'; tColor='#1e40af'; }
-    trendCard = card('Week vs trend',
-      '<div style="font-size:22px;font-weight:700;color:'+tColor+';">'+icon+' '+sign+p+'%</div>', note);
-  } else {
-    trendCard = card('Week vs trend', '<div style="font-size:15px;color:#9ca3af;">\u2014</div>', 'not enough history');
-  }
-
-  // Absences card with dates + motive
-  var absCard;
-  if (s.absences.length) {
-    var lines = s.absences.map(function(x){
-      return '<div style="font-size:12px;color:#374151;margin-top:2px;">'+x.icon+' '+x.name+
-        ' <span style="color:#9ca3af;">'+x.motive+' \u00b7 '+x.range+'</span></div>';
-    }).join('');
-    absCard = card('Absences this week', '<div>'+lines+'</div>', '');
-  } else {
-    absCard = card('Absences this week', '<div style="font-size:15px;font-weight:600;color:#166534;">None</div>', 'full team available');
-  }
-
-  return '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">'+
-    covCard + trendCard + absCard + '</div>';
-}
-
-// ── WEEKLY PRODUCTION ALERT (aggregated across the 7 days) ─────────────────
-function computeWeekCoverageGaps() {
-  var gapSet = {};
-  getWeekDays(currentWeekMonday).forEach(function(day){
-    var ds = toDateStr(day);
-    if (getDayClosureType(ds)) return;
-    var sched = computeIntradaySchedule(ds);
-    (sched.coverageGaps || []).forEach(function(g){ gapSet[g] = true; });
-  });
-  return Object.keys(gapSet);
-}
-
-function productionAlertBannerHtml() {
-  var gaps = computeWeekCoverageGaps();
-  if (!gaps.length) return '';
-  var lines = gaps.map(function(n){
-    var friendly = n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
-    return '<div style="font-size:12px;color:#9a3412;margin-top:3px;">\u2022 Unmet work on <b>'+friendly+'</b></div>';
-  }).join('');
-  return '<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;'+
-    'padding:12px 14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">'+
-    '<div style="font-size:13px;font-weight:700;color:#9a3412;">\u26A0\uFE0F Production alert</div>'+
-    lines +
-    '<div style="font-size:11px;color:#c2855a;margin-top:6px;">Unmet work carries over to the next day.</div>'+
-    '</div>';
-}
-
-// ── WEEKLY FORECAST / RECAP RENDER ────────────────────────────────────────
-function renderForecast() {
-  const container = document.getElementById('forecast-grid');
-  if (!currentRegionId) {
-    container.innerHTML = '<p style="color:#888">Select a region first.</p>';
-    return;
-  }
-
-  const days = getWeekDays(currentWeekMonday);
-  const forecastOpenDays = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
-
-  let html = recapSummaryHtml() + '<div class="forecast-grid">';
-  days.forEach(function(day, i) {
-    const ds        = toDateStr(day);
-    const f         = forecasts[ds] || { contact_volume: 0, aht_minutes: 0, hourly: {} };
-    const closure   = getDayClosureType(ds);
-    const isBlocked = !!closure;
-
-    let cls = 'forecast-day-card recap-card';
-    if (isToday(day)) cls += ' today-card';
-    if (isBlocked)    cls += ' closed-card';
-
-    const titleHtml = '<h4>' + DAY_SHORT[i] +
-      '<br><span style="font-weight:normal">' + formatDate(day) + '</span></h4>';
-
-    // Closed day: just the title + a closed note, nothing else.
-    if (isBlocked) {
-      const closedNote = '<div style="font-size:10px;color:#9ca3af;margin-top:4px;text-align:center;">' +
-        (closure === 'weekend' ? '\uD83C\uDF34 Weekend off' : '\uD83C\uDFD6\uFE0F Holiday') + '</div>';
-      html += '<div class="' + cls + '">' + titleHtml + closedNote + '</div>';
-      return;
-    }
-
-    // ── Task visibility per region (by city) ────────────────────────────────
-    // Europe (Paris): no Chat.  Greater China (Shanghai): no Mail.  Others: all.
-    var hiddenTasks = {};
-    if (currentRegionCity === 'Paris')        hiddenTasks = { 'CHAT': true };
-    else if (currentRegionCity === 'Shanghai') hiddenTasks = { 'MAIL': true };
-
-    // Task order for the recap: Call, Mail, Chat, Back Office, Fraud
-    var RECAP_ORDER = ['CALL','MAIL','CHAT','BACK-OFFICE','FRAUD'];
-
-    // ── Per-task rows (volume; 0 shown, not hidden) ─────────────────────────
-    var taskRows = '';
-    RECAP_ORDER.forEach(function(name){
-      if (hiddenTasks[name]) return;
-      var t   = getTask(name);
-      var key = name.toLowerCase();
-      var vol = Object.values((f.hourly||{})[key]||{}).reduce(function(s,v){return s+v;},0);
-      var extra = '';
-      if (name === 'MAIL' && f.carryIn > 0)
-        extra = ' <span style="color:#9ca3af;font-size:9px;">incl. '+f.carryIn+' c/o</span>';
-      taskRows +=
-        '<div class="recap-task-row">' +
-          '<span class="recap-task-name" style="color:'+t.color_text+';">' +
-            '<span class="recap-dot" style="background:'+t.color_bg+';border:1px solid '+t.color_text+'50;"></span>' +
-            name + extra +
-          '</span>' +
-          '<span class="recap-task-vol">'+vol+'</span>' +
-        '</div>';
-    });
-
-    // ── Metrics: Workload (h), Need, Working — identical to Weekly logic ─────
-    var workH = f.contact_volume > 0 ? (f.contact_volume/60).toFixed(1) : '0.0';
-    var need = 0;
-    if (f.contact_volume > 0) need = Math.ceil((f.contact_volume / 60) / regulations.max_daily_hours);
-    var working = 0;
-    agents.forEach(function(a){
-      var s = (availability[a.id] && availability[a.id][ds]) || 'working';
-      if (s === 'working') working++;
-    });
-
-    var metricsHtml =
-      '<div class="recap-metrics">' +
-        '<div class="recap-metric"><span class="recap-metric-label">\u23F1 Workload</span>' +
-          '<span class="recap-metric-val">'+workH+'h</span></div>' +
-        '<div class="recap-metric"><span class="recap-metric-label">\uD83D\uDC65 Need</span>' +
-          '<span class="recap-metric-val">'+need+'</span></div>' +
-        '<div class="recap-metric"><span class="recap-metric-label">\uD83D\uDC65 Working</span>' +
-          '<span class="recap-metric-val">'+working+'</span></div>' +
-      '</div>';
-
-    // ── Status: per-day production alert with need vs positioned per task ──
-    var statusHtml = '';
-    if (!getDayClosureType(ds)) {
-      var sched = computeIntradaySchedule(ds);
-      var dayGaps = sched.coverageGaps || [];
-      if (dayGaps.length) {
-        // Positioned hours per task = agent-block minutes assigned to that task
-        var positioned = {};
-        sched.forEach(function(entry){
-          if (!entry.blocks) return;
-          entry.blocks.forEach(function(b){
-            if (b.task === '__break__' || !b.task) return;
-            positioned[b.task] = (positioned[b.task]||0) + (b.end - b.start);
-          });
-        });
-        var aht = regulations.aht_tasks || {};
-        var gapLines = dayGaps.map(function(n){
-          var friendly = n.charAt(0) + n.slice(1).toLowerCase().replace('-',' ');
-          var key = n.toLowerCase();
-          var vol = Object.values((f.hourly||{})[key]||{}).reduce(function(s,v){return s+v;},0);
-          var needH = ((vol * (aht[n] || aht[n.toUpperCase()] || 5)) / 60);
-          var posH  = (positioned[n] || 0) / 60;
-          return '<div style="font-size:10px;color:#9a3412;margin-top:1px;">'+friendly+
-            ' <span style="color:#c2855a;">('+needH.toFixed(1)+'h need vs '+posH.toFixed(1)+'h positioned)</span></div>';
-        }).join('');
-        statusHtml = '<div class="recap-status short">\u26A0\uFE0F Production alert'+gapLines+'</div>';
-      }
-    }
-
-    html += '<div class="' + cls + '">' +
-      titleHtml +
-      '<div class="recap-tasks">' + taskRows + '</div>' +
-      metricsHtml +
-      statusHtml +
-      '</div>';
-  });
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-// ── WEEK PICKER ───────────────────────────────────────────────────────────
-var wkpDate = new Date(); // month currently shown in picker
-
 function toggleWeekPicker(event) {
   event.stopPropagation();
   var popup = document.getElementById('week-picker-popup');
