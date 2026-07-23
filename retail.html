@@ -262,9 +262,11 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .pill-info    { background:var(--info-soft); color:var(--info-tx); }
 
 /* Avatar */
-.avatar { width:32px; height:32px; min-width:32px; border-radius:var(--r-pill);
+.avatar { width:32px; height:32px; min-width:32px; height:32px; border-radius:var(--r-pill);
   display:inline-flex; align-items:center; justify-content:center;
-  font-size:11.5px; font-weight:600; color:#fff; flex-shrink:0; }
+  font-size:11.5px; font-weight:600; color:#fff; flex-shrink:0;
+  line-height:1; letter-spacing:.02em; text-align:center;
+  font-variant-numeric:tabular-nums; padding-left:.02em; }
 
 /* Alertes (remplace la bulle violette non conforme) */
 .alert { display:flex; gap:var(--s3); align-items:flex-start; padding:var(--s3) var(--s4);
@@ -330,6 +332,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth thead th.is-weekend { background:var(--bg-base-3); }
 .mth thead th.is-today .dnum { color:var(--nav-active-bg); }
 .mth thead th.is-today { box-shadow:inset 0 -2px 0 var(--nav-active-bg); }
+.mth thead th.has-issue { box-shadow:inset 0 -3px 0 var(--dang); }
+.mth thead th.has-issue .dnum { color:var(--dang-tx); }
 
 /* --- corps --- */
 .mth td { border-bottom:1px solid var(--line); }
@@ -380,11 +384,17 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh-mid    { background:var(--warn-soft); color:var(--warn-tx); }
 .sh-close  { background:var(--info-soft); color:var(--info-tx); }
 .sh-late   { background:#EDE9FE; color:#5B21B6; }
+.sh-teal   { background:#CCFBF1; color:#115E59; }
+.sh-pink   { background:#FCE7F3; color:#9D174D; }
+.sh-slate  { background:#E2E8F0; color:#334155; }
 .sh-stock  { background:var(--bg-base); color:var(--tx-2); border:1px dashed var(--line-2); }
 .sh-stock.sh-open  { border-color:#86EFAC; color:var(--ok-tx); }
 .sh-stock.sh-mid   { border-color:#FCD34D; color:var(--warn-tx); }
 .sh-stock.sh-close { border-color:#93C5FD; color:var(--info-tx); }
 .sh-stock.sh-late  { border-color:#C4B5FD; color:#5B21B6; }
+.sh-stock.sh-teal  { border-color:#5EEAD4; color:#115E59; }
+.sh-stock.sh-pink  { border-color:#F9A8D4; color:#9D174D; }
+.sh-stock.sh-slate { border-color:#CBD5E1; color:#334155; }
 /* OFF : nettement distinct (hachures + gris franc) */
 .sh-off { background:repeating-linear-gradient(135deg,#E9EAEE 0 4px,#F3F4F6 4px 8px);
           color:var(--tx-3); font-weight:500; }
@@ -572,10 +582,10 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 /* ═══ INFO-BULLE DE PREMIERE CONNEXION ═══════════════════════════ */
 .onb-tip {
   display:none;
-  position:absolute; left:calc(100% + 14px); top:0;
-  width:230px; z-index:300;
+  position:fixed;              /* sort du flux : passe au-dessus de tout */
+  width:240px; z-index:9999;
   background:var(--bg-base); border:1px solid var(--line);
-  border-radius:var(--r-lg); box-shadow:0 12px 32px rgba(16,24,40,.16);
+  border-radius:var(--r-lg); box-shadow:0 16px 40px rgba(16,24,40,.22);
   padding:var(--s4);
 }
 .onb-tip.show { display:block; animation:onbIn .22s ease-out; }
@@ -584,13 +594,23 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   to   { opacity:1; transform:none; }
 }
 .onb-arrow {
-  position:absolute; left:-7px; top:18px; width:12px; height:12px;
+  position:absolute; left:-7px; top:22px; width:12px; height:12px;
   background:var(--bg-base); border-left:1px solid var(--line);
   border-bottom:1px solid var(--line); transform:rotate(45deg);
 }
 .onb-txt { font-size:12.5px; color:var(--tx-1); line-height:1.45; margin-bottom:var(--s3); }
 .onb-btn { width:100%; justify-content:center; }
 @media (max-width:900px) { .onb-tip { display:none !important; } }
+
+/* ═══ TABLEAUX DE SETTINGS : alignement identique ════════════════ */
+.set-tbl { table-layout:fixed; width:100%; max-width:840px; }
+.set-tbl th { font-weight:600; }
+.set-tbl td { vertical-align:middle; }
+.set-tbl select { width:100%; max-width:132px; }
+.set-tbl .sh-dur { color:var(--tx-2); font-variant-numeric:tabular-nums; }
+.set-tbl .sh-dur.is-over { color:var(--dang-tx); font-weight:600; }
+.set-tbl tr.rest-day td { opacity:.5; }
+.set-tbl tr.rest-day td:first-child { opacity:1; }
 
 /* ═══ BOUTON IA : lueur rotative facon Arc Raiders ═══════════════ */
 /* Un halo conique tourne autour du bord du bouton. Discret au repos,
@@ -846,8 +866,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   <div class="wrap">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="font-size:15px;">Agent List</h2>
-      <button class="btn btn-primary" onclick="toggleAddAgentForm()">+ Add Agent</button>
+      <h2 class="page-title">Agents</h2>
+      <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()">+ Add agent</button>
     </div>
     <div id="add-agent-form">
       <div class="form-grid">
@@ -1586,7 +1606,20 @@ function showOnboardingIfNeeded() {
   if (onboardingSeen()) return;
   if (currentRegionId) return;          // deja en train de travailler
   tip.classList.add('show');
+  positionOnboarding();
 }
+
+// Place la bulle juste a droite du selecteur de region, au-dessus de tout.
+function positionOnboarding() {
+  var tip = document.getElementById('onb-tip');
+  var anchor = document.getElementById('region-select');
+  if (!tip || !anchor || !tip.classList.contains('show')) return;
+  var r = anchor.getBoundingClientRect();
+  tip.style.left = (r.right + 14) + 'px';
+  tip.style.top  = Math.max(8, r.top - 14) + 'px';
+}
+window.addEventListener('resize', positionOnboarding);
+window.addEventListener('scroll', positionOnboarding, true);
 
 function dismissOnboarding() {
   var tip = document.getElementById('onb-tip');
@@ -1692,6 +1725,7 @@ async function onStoreChange() {
   var st = stores.find(function(s) { return s.id === currentStoreId; });
   currentStoreName = st ? st.name : '';
   await loadShiftConfig();
+  await loadStoreSettings();
   updateStatusBar();
   renderMonthlyPlanning();
   renderAgents();
@@ -1847,7 +1881,8 @@ async function saveRegulations() {
   const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'region_id,rule_key' });
   hideLoader();
   if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
-  showToast('Regulations saved \u2713');
+  await saveStoreSettings();
+  showToast('Settings saved \u2713');
   renderRegulations();
   renderPlanning();
 }
@@ -1901,77 +1936,168 @@ function inputToMin(v) {
   return h * 60 + mn;
 }
 
+// Palettes proposees a la creation d'un shift
+var SHIFT_TONES = [
+  { key:'open',  label:'Green'  },
+  { key:'mid',   label:'Amber'  },
+  { key:'late',  label:'Violet' },
+  { key:'close', label:'Blue'   },
+  { key:'teal',  label:'Teal'   },
+  { key:'pink',  label:'Pink'   },
+  { key:'slate', label:'Slate'  },
+];
+
+// Selecteur d'heure identique a celui des horaires d'ouverture (pas de input time)
+function hourSelect(cls, selMin) {
+  var o = '';
+  for (var h = 0; h <= 23; h++) {
+    for (var q = 0; q < 60; q += 15) {
+      var v = h * 60 + q;
+      o += '<option value="' + v + '"' + (v === selMin ? ' selected' : '') + '>' +
+           String(h).padStart(2,'0') + ':' + String(q).padStart(2,'0') + '</option>';
+    }
+  }
+  return '<select class="' + cls + '">' + o + '</select>';
+}
+
+function durLabel(min) {
+  var h = Math.floor(min / 60), m = min % 60;
+  return h + 'h' + (m ? String(m).padStart(2,'0') : '');
+}
+
 function buildShiftSettingsHtml() {
   if (!currentStoreId) {
     return '<div class="card">' +
-      '<div class="set-head"><h3 class="set-h3">Shift structure</h3></div>' +
-      '<p class="set-note">Select a store to configure its shifts.</p></div>';
+      '<div class="page-head" style="margin-bottom:0"><h2 class="page-title">Shift structure</h2></div>' +
+      '<p class="set-note" style="margin-top:var(--s3)">Select a store to configure its shifts.</p></div>';
   }
 
   var maxDaily = regulations.max_daily_hours || 8;
 
-  function rows(grid, title) {
+  function block(grid, title) {
     var list = RETAIL_SHIFTS[grid] || [];
-    var h = '<div class="sec-title" style="margin-top:var(--s4)">' + title + '</div>';
-    h += '<table class="tbl tbl-framed"><thead><tr>' +
-         '<th>Code</th><th>Starts</th><th>Ends</th><th>Duration</th><th>Status</th>' +
+    var h = '<div class="sec-title" style="margin-top:var(--s5)">' + title + '</div>';
+    h += '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
+         '<th style="width:120px">Code</th><th>Starts</th><th>Ends</th>' +
+         '<th style="width:110px">Duration</th><th style="width:130px">Colour</th>' +
+         '<th style="width:52px"></th>' +
          '</tr></thead><tbody>';
     list.forEach(function(s) {
-      var dur = (s.endMin - s.startMin) / 60;
-      var over = dur > maxDaily;
-      h += '<tr class="sh-row" data-code="' + s.code + '" data-grid="' + grid + '">' +
-        '<td><span class="sh ' + shiftCls(s.code) + '">' + s.code + '</span></td>' +
-        '<td><input type="time" class="sh-start" value="' + minToInput(s.startMin) + '"></td>' +
-        '<td><input type="time" class="sh-end" value="' + minToInput(s.endMin) + '"></td>' +
-        '<td class="sh-dur">' + dur.toFixed(2).replace(/\.00$/, '') + ' h</td>' +
-        '<td class="sh-flag">' + (over
-            ? '<span class="pill pill-dang">Over ' + maxDaily + 'h</span>'
-            : '<span class="pill pill-ok">OK</span>') + '</td>' +
+      var dur  = s.endMin - s.startMin;
+      var over = dur / 60 > maxDaily;
+      h += '<tr class="sh-row" data-grid="' + grid + '">' +
+        '<td><input type="text" class="sh-code" value="' + s.code +
+           '" maxlength="3" style="width:64px;text-transform:uppercase">' +
+           '<span class="sh ' + shiftCls(s.code) + '" style="margin-left:8px">' + s.code + '</span></td>' +
+        '<td>' + hourSelect('sh-start', s.startMin) + '</td>' +
+        '<td>' + hourSelect('sh-end',   s.endMin)   + '</td>' +
+        '<td class="sh-dur' + (over ? ' is-over' : '') + '">' + durLabel(dur) +
+           (over ? ' <span class="pill pill-dang">&gt; ' + maxDaily + 'h</span>' : '') + '</td>' +
+        '<td><select class="sh-tone">' +
+           SHIFT_TONES.map(function(t) {
+             return '<option value="' + t.key + '"' +
+                    ((s.tone || 'close') === t.key ? ' selected' : '') + '>' + t.label + '</option>';
+           }).join('') + '</select></td>' +
+        '<td><button class="btn-xs btn-xs-danger" onclick="removeShiftRow(this)" title="Remove">&#10005;</button></td>' +
         '</tr>';
     });
-    return h + '</tbody></table>';
+    h += '</tbody></table>';
+    h += '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" ' +
+         'onclick="addShiftRow(\'' + grid + '\')">+ New shift</button>';
+    return h;
   }
 
   return '<div class="card">' +
-    '<div class="set-head"><h3 class="set-h3">Shift structure</h3>' +
+    '<div class="page-head" style="margin-bottom:0">' +
+      '<h2 class="page-title">Shift structure</h2>' +
       '<button class="btn btn-save btn-sm" onclick="saveShiftConfig()">Save</button></div>' +
-    '<p class="set-note">These hours drive the legend and the labels shown in the ' +
-      'monthly planning. A shift longer than the legal daily limit (' + maxDaily +
-      'h) is flagged and cannot be saved.</p>' +
-    rows('sales', 'Sales shifts') +
-    rows('stock', 'Stock shifts') +
+    block('sales', 'Sales shifts') +
+    block('stock', 'Stock shifts') +
     '</div>';
+}
+
+// Ajoute une ligne vierge dans la grille choisie
+function addShiftRow(grid) {
+  var tables = document.querySelectorAll('.set-tbl');
+  var target = null;
+  tables.forEach(function(t) {
+    var r = t.querySelector('.sh-row');
+    if (r && r.dataset.grid === grid) target = t;
+  });
+  if (!target) target = tables[grid === 'stock' ? 1 : 0];
+  if (!target) return;
+
+  var tr = document.createElement('tr');
+  tr.className = 'sh-row';
+  tr.dataset.grid = grid;
+  tr.innerHTML =
+    '<td><input type="text" class="sh-code" value="" maxlength="3" placeholder="X" ' +
+      'style="width:64px;text-transform:uppercase"></td>' +
+    '<td>' + hourSelect('sh-start', 600) + '</td>' +
+    '<td>' + hourSelect('sh-end',  1080) + '</td>' +
+    '<td class="sh-dur">8h</td>' +
+    '<td><select class="sh-tone">' +
+      SHIFT_TONES.map(function(t) {
+        return '<option value="' + t.key + '">' + t.label + '</option>';
+      }).join('') + '</select></td>' +
+    '<td><button class="btn-xs btn-xs-danger" onclick="removeShiftRow(this)">&#10005;</button></td>';
+  target.querySelector('tbody').appendChild(tr);
+}
+
+function removeShiftRow(btn) {
+  var tr = btn.closest('tr');
+  if (tr) tr.remove();
 }
 
 async function saveShiftConfig() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   var maxDaily = regulations.max_daily_hours || 8;
-  var rows = [], problem = null;
+  var rows = [], problem = null, seen = {};
+  var counters = { sales: 0, stock: 0 };
 
   document.querySelectorAll('.sh-row').forEach(function(tr) {
-    var code  = tr.dataset.code;
+    if (problem) return;
     var grid  = tr.dataset.grid;
-    var start = inputToMin(tr.querySelector('.sh-start').value);
-    var end   = inputToMin(tr.querySelector('.sh-end').value);
-    if (start == null || end == null) { problem = code + ': invalid time'; return; }
-    if (end <= start)                 { problem = code + ': end must be after start'; return; }
+    var code  = (tr.querySelector('.sh-code').value || '').trim().toUpperCase();
+    var start = parseInt(tr.querySelector('.sh-start').value);
+    var end   = parseInt(tr.querySelector('.sh-end').value);
+    var tone  = tr.querySelector('.sh-tone').value;
+
+    if (!code) { problem = 'Every shift needs a code'; return; }
+    if (seen[code]) { problem = 'Duplicate code: ' + code; return; }
+    seen[code] = true;
+    if (end <= start) { problem = code + ': end must be after start'; return; }
     if ((end - start) / 60 > maxDaily) {
-      problem = code + ' lasts ' + ((end - start) / 60).toFixed(2) +
-                'h, over the ' + maxDaily + 'h legal limit';
+      problem = code + ' lasts ' + durLabel(end - start) +
+                ', over the ' + maxDaily + 'h legal limit';
       return;
     }
-    var order = (RETAIL_SHIFTS[grid] || []).findIndex(function(s) { return s.code === code; });
+    counters[grid]++;
     rows.push({
-      store_id: currentStoreId, code: code, grid: grid,
-      label: code, start_min: start, end_min: end,
-      sort_order: order >= 0 ? order + 1 : 99, is_active: true
+      store_id: currentStoreId, code: code, grid: grid, label: code,
+      start_min: start, end_min: end, tone: tone,
+      sort_order: counters[grid], is_active: true,
+      is_opening: false, is_closing: false
     });
   });
 
   if (problem) { showToast(problem, 'error'); return; }
-  if (!rows.length) return;
+  if (!rows.length) { showToast('At least one shift is required', 'error'); return; }
+
+  // Le shift qui commence le plus tot ouvre, celui qui finit le plus tard ferme
+  ['sales','stock'].forEach(function(g) {
+    var list = rows.filter(function(r) { return r.grid === g; });
+    if (!list.length) return;
+    list.slice().sort(function(a,b){ return a.start_min - b.start_min; })[0].is_opening = true;
+    list.slice().sort(function(a,b){ return b.end_min   - a.end_min;   })[0].is_closing = true;
+  });
 
   showLoader();
+  // Retirer les shifts supprimes par le manager
+  var keep = rows.map(function(r) { return r.code; });
+  await sb.from('retail_shift_config').delete()
+    .eq('store_id', currentStoreId).not('code', 'in', '(' + keep.join(',') + ')');
+
   var res = await sb.from('retail_shift_config')
     .upsert(rows, { onConflict: 'store_id,code' });
   hideLoader();
@@ -1995,11 +2121,13 @@ function renderRegulations() {
     const isRestDay = (isSat && regulations.saturday_rest) || (isSun && regulations.sunday_rest);
     const restNote  = isRestDay ? '<span class="rest-badge">rest day</span>' : '';
     const trClass   = isRestDay ? ' class="rest-day"' : '';
+    var durH = Math.max(0, h.close - h.open);
     hoursRows += '<tr' + trClass + ' data-day="' + key + '">' +
-      '<td style="font-weight:bold;color:#374151;">' + DAY_NAMES[i] + ' ' + restNote + '</td>' +
+      '<td style="font-weight:600">' + DAY_NAMES[i] + ' ' + restNote + '</td>' +
       '<td>' + hourSelectHtml('reg-open-' + key, h.open) + '</td>' +
-      '<td style="text-align:center;color:#9ca3af;">\u2192</td>' +
       '<td>' + hourSelectHtml('reg-close-' + key, h.close) + '</td>' +
+      '<td>' + durH + 'h</td>' +
+      '<td></td><td></td>' +
       '</tr>';
   });
 
@@ -2039,11 +2167,10 @@ function renderRegulations() {
 
     // ── BUBBLE 1: Labor Rules ────────────────────────────────────────────
     '<div class="card">' +
-      '<div class="set-head" style="margin-bottom:6px;">' +
-        '<h2 class="card-title" style="margin:0;">Settings \u00b7 ' + currentRegionName + '</h2>' +
-        '<button class="btn btn-save" onclick="saveRegulations()">Save</button>' +
+      '<div class="page-head" style="margin-bottom:var(--s3)">' +
+        '<h2 class="page-title">Labor rules</h2>' +
+        '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button>' +
       '</div>' +
-      '<h3 class="set-h3">Labor Rules</h3>' +
       '<div class="set-rules">' +
         '<div class="set-rule"><span class="set-rule-lbl">Max working days / week</span>' +
           '<span class="set-rule-ro">5 days</span></div>' +
@@ -2064,11 +2191,13 @@ function renderRegulations() {
 
     // ── BUBBLE 2: Operating Hours ────────────────────────────────────────
     '<div class="card">' +
-      '<div class="set-head"><h3 class="set-h3">Operating Hours (per day)</h3>' +
-        '<button class="btn btn-save" onclick="saveRegulations()">Save</button></div>' +
-      '<p class="set-note">Dimmed rows are current rest days. Hours are saved and apply if the rule is toggled off.</p>' +
-      '<table class="hours-table" style="max-width:420px;"><tr><th>Day</th><th>Opens</th><th style="width:32px;"></th><th>Closes</th></tr>' +
-      hoursRows + '</table>' +
+      '<div class="page-head" style="margin-bottom:0">' +
+        '<h2 class="page-title">Operating hours</h2>' +
+        '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button></div>' +
+      '<table class="tbl tbl-framed set-tbl" style="margin-top:var(--s5)"><thead><tr>' +
+        '<th style="width:120px">Day</th><th>Starts</th><th>Ends</th>' +
+        '<th style="width:110px">Duration</th><th style="width:130px"></th><th style="width:52px"></th>' +
+      '</tr></thead><tbody>' + hoursRows + '</tbody></table>' +
     '</div>' +
 
     // ── BUBBLE 4 + 5: AHT & Priority, Monthly Targets + Trend (migrated) ──
@@ -2401,15 +2530,15 @@ var RETAIL_BLOCK_ORDER = [
 // Horaires par defaut (utilises si la boutique n'a pas encore de config en base)
 var RETAIL_SHIFTS_DEFAULT = {
   sales: [
-    { code: 'O', label: '09H30 - 18H00', startMin: 570, endMin: 1080 },
-    { code: 'M', label: '10H30 - 19H00', startMin: 630, endMin: 1140 },
-    { code: 'D', label: '10H45 - 19H15', startMin: 645, endMin: 1155 },
-    { code: 'C', label: '11H15 - 19H45', startMin: 675, endMin: 1185 },
+    { code:'O', label:'09H30 - 18H00', startMin:570, endMin:1080, tone:'open',  isOpening:true,  isClosing:false },
+    { code:'M', label:'10H30 - 19H00', startMin:630, endMin:1140, tone:'mid',   isOpening:false, isClosing:false },
+    { code:'D', label:'10H45 - 19H15', startMin:645, endMin:1155, tone:'late',  isOpening:false, isClosing:false },
+    { code:'C', label:'11H15 - 19H45', startMin:675, endMin:1185, tone:'close', isOpening:false, isClosing:true  },
   ],
   stock: [
-    { code: 'OS', label: '08H00 - 16H30', startMin: 480, endMin:  990 },
-    { code: 'MS', label: '09H00 - 17H30', startMin: 540, endMin: 1050 },
-    { code: 'CS', label: '10H00 - 18H30', startMin: 600, endMin: 1110 },
+    { code:'OS', label:'08H00 - 16H30', startMin:480, endMin: 990, tone:'open',  isOpening:true,  isClosing:false },
+    { code:'MS', label:'09H00 - 17H30', startMin:540, endMin:1050, tone:'mid',   isOpening:false, isClosing:false },
+    { code:'CS', label:'10H00 - 18H30', startMin:600, endMin:1110, tone:'close', isOpening:false, isClosing:true  },
   ],
 };
 
@@ -2423,6 +2552,42 @@ function minToLabel(m) {
 }
 
 // Charge les shifts de la boutique courante. Repli sur les valeurs par defaut.
+// Reglages propres a la boutique (ouverture samedi / dimanche).
+// Les regles de droit du travail restent au niveau du pays.
+var storeSettings = null;
+
+async function loadStoreSettings() {
+  storeSettings = null;
+  if (!currentStoreId) return;
+  var res = await sb.from('retail_store_settings').select('*')
+    .eq('store_id', currentStoreId);
+  if (res.error || !res.data || !res.data.length) return;
+  storeSettings = res.data[0];
+
+  // La boutique pilote l'ouverture du week-end
+  regulations.saturday_rest = !storeSettings.saturday_open;
+  regulations.sunday_rest   = !storeSettings.sunday_open;
+  if (storeSettings.day_hours && Object.keys(storeSettings.day_hours).length) {
+    regulations.day_hours = storeSettings.day_hours;
+  }
+}
+
+async function saveStoreSettings() {
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  var satEl = document.getElementById('reg-saturday');
+  var sunEl = document.getElementById('reg-sunday');
+  var row = {
+    store_id: currentStoreId,
+    saturday_open: satEl ? !satEl.checked : true,
+    sunday_open:   sunEl ? !sunEl.checked : false,
+    day_hours: regulations.day_hours || {}
+  };
+  var res = await sb.from('retail_store_settings')
+    .upsert(row, { onConflict: 'store_id' });
+  if (res.error) { showToast('Store settings not saved', 'error'); return; }
+  storeSettings = row;
+}
+
 async function loadShiftConfig() {
   RETAIL_SHIFTS = JSON.parse(JSON.stringify(RETAIL_SHIFTS_DEFAULT));
   if (!currentStoreId) return;
@@ -2436,10 +2601,13 @@ async function loadShiftConfig() {
     if (r.is_active === false) return;
     var g = (r.grid === 'stock') ? 'stock' : 'sales';
     byGrid[g].push({
-      code:     r.code,
-      label:    minToLabel(r.start_min) + ' - ' + minToLabel(r.end_min),
-      startMin: r.start_min,
-      endMin:   r.end_min,
+      code:      r.code,
+      label:     minToLabel(r.start_min) + ' - ' + minToLabel(r.end_min),
+      startMin:  r.start_min,
+      endMin:    r.end_min,
+      tone:      r.tone || 'close',
+      isOpening: !!r.is_opening,
+      isClosing: !!r.is_closing,
     });
   });
   if (byGrid.sales.length) RETAIL_SHIFTS.sales = byGrid.sales;
@@ -2458,17 +2626,37 @@ function retailStatusOf(agent) {
 // colonnes RH en bout de ligne (O, C, OFF, DIM, Feries, Conges).
 // Mappe un code de shift vers sa classe couleur.
 // Ouverture = vert | Milieu = ambre | Fermeture = bleu | Stock = contour | OFF/CP = neutre/rouge
+// La couleur d'un shift vient de sa configuration (Settings), pas de sa lettre.
+// Cela permet de creer des shifts personnalises avec la couleur voulue.
 function shiftCls(code) {
   if (!code) return 'sh-none';
   if (code === 'OFF') return 'sh-off';
   if (code === 'A')   return 'sh-cp';
-  var isStock = code.length > 1 && code.charAt(code.length-1) === 'S';
+
+  var def = findShiftDef(code);
+  if (def) {
+    return (def.grid === 'stock' ? 'sh-stock ' : '') + 'sh-' + (def.tone || 'close');
+  }
+
+  // Repli si le shift n'est pas (encore) configure : deduction par la lettre
+  var isStock = code.length > 1 && code.charAt(code.length - 1) === 'S';
   var base = code.charAt(0);
   var tone = (base === 'O') ? 'sh-open'
            : (base === 'M') ? 'sh-mid'
-           : (base === 'D') ? 'sh-late'   // D = violet (distinct de C)
-           : 'sh-close';                  // C = fermeture (bleu)
+           : (base === 'D') ? 'sh-late'
+           : 'sh-close';
   return isStock ? ('sh-stock ' + tone) : tone;
+}
+
+// Retrouve la definition d'un shift par son code
+function findShiftDef(code) {
+  var found = null;
+  ['sales', 'stock'].forEach(function(g) {
+    (RETAIL_SHIFTS[g] || []).forEach(function(s) {
+      if (s.code === code) found = Object.assign({}, s, { grid: g });
+    });
+  });
+  return found;
 }
 
 // Surbrillance croisee ligne + colonne au survol (semi-transparente).
@@ -2730,7 +2918,7 @@ async function renderTraffic() {
         var why = (clo === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
         html += '<div class="tr-day is-closed" title="' + why.replace(/"/g,'') + '">' +
           '<div class="tr-day-h">' + head + '</div>' +
-          '<div class="tr-closed">' + (clo === 'holiday' ? 'Holiday' : 'Closed') + '</div>' +
+          '<div class="tr-closed">CLOSED</div>' +
           '</div>';
         return;
       }
@@ -3259,6 +3447,53 @@ function renderMonthlyPlanning() {
   var html = '';
 
   // En-tete : mois + legende mise en avant
+  // ── CONTROLES BLOQUANTS DE COUVERTURE ─────────────────────────────────
+  // Chaque jour ouvert doit avoir : au moins une ouverture, au moins une
+  // fermeture, et au moins un SM ou ASM present.
+  var openCodes  = {}, closeCodes = {};
+  ['sales','stock'].forEach(function(g) {
+    (RETAIL_SHIFTS[g] || []).forEach(function(s) {
+      if (s.isOpening) openCodes[s.code]  = true;
+      if (s.isClosing) closeCodes[s.code] = true;
+    });
+  });
+  // Repli si rien n'est marque : le plus tot ouvre, le plus tard ferme
+  if (!Object.keys(openCodes).length) {
+    ['sales','stock'].forEach(function(g) {
+      var l = (RETAIL_SHIFTS[g] || []).slice().sort(function(a,b){return a.startMin-b.startMin;});
+      if (l[0]) openCodes[l[0].code] = true;
+    });
+  }
+  if (!Object.keys(closeCodes).length) {
+    ['sales','stock'].forEach(function(g) {
+      var l = (RETAIL_SHIFTS[g] || []).slice().sort(function(a,b){return b.endMin-a.endMin;});
+      if (l[0]) closeCodes[l[0].code] = true;
+    });
+  }
+
+  var issues = [];   // { ds, num, missing: [] }
+  monthDays.forEach(function(d) {
+    if (d.closure) return;
+    var hasOpen = false, hasClose = false, hasLead = false;
+    agents.forEach(function(a) {
+      var r = agentRows[a.id].find(function(x) { return x.d.ds === d.ds; });
+      if (!r || r.res.special) return;             // absent, repos ou ferme
+      if (openCodes[r.res.code])  hasOpen  = true;
+      if (closeCodes[r.res.code]) hasClose = true;
+      var st = retailStatusOf(a);
+      if (st === 'SM' || st === 'ASM') hasLead = true;
+    });
+    var missing = [];
+    if (!hasOpen)  missing.push('opening');
+    if (!hasClose) missing.push('closing');
+    if (!hasLead)  missing.push('SM/ASM');
+    if (missing.length) issues.push({ ds: d.ds, num: d.num, missing: missing });
+  });
+
+  // Index pour marquer les colonnes concernees
+  var issueByDs = {};
+  issues.forEach(function(i) { issueByDs[i.ds] = i.missing; });
+
   var nOverrides = 0;
   agents.forEach(function(a) {
     Object.keys(planningOverrides[a.id] || {}).forEach(function(ds) {
@@ -3286,6 +3521,27 @@ function renderMonthlyPlanning() {
   html += '<span class="legend-item"><span class="sh sh-cp">A</span> Absence</span>';
   html += '</div>';
 
+  // Alerte de couverture : jours sans ouverture, sans fermeture ou sans SM/ASM
+  if (issues.length) {
+    var byType = { opening: [], closing: [], 'SM/ASM': [] };
+    issues.forEach(function(i) {
+      i.missing.forEach(function(m) { byType[m].push(i.num); });
+    });
+    var lines = [];
+    if (byType.opening.length)
+      lines.push('<b>No opening shift</b> on day' + (byType.opening.length > 1 ? 's' : '') +
+                 ' ' + byType.opening.join(', '));
+    if (byType.closing.length)
+      lines.push('<b>No closing shift</b> on day' + (byType.closing.length > 1 ? 's' : '') +
+                 ' ' + byType.closing.join(', '));
+    if (byType['SM/ASM'].length)
+      lines.push('<b>No SM or ASM</b> on day' + (byType['SM/ASM'].length > 1 ? 's' : '') +
+                 ' ' + byType['SM/ASM'].join(', '));
+    html += '<div class="alert alert-warn"><span>' +
+            '<strong>Coverage issue</strong><br>' + lines.join('<br>') +
+            '</span></div>';
+  }
+
   // ── En-tete de colonnes, partage par les 2 tableaux ──
   function headRow(firstLabel) {
     var h = '<thead><tr><th class="c-agent">' + firstLabel + '</th>';
@@ -3295,7 +3551,9 @@ function renderMonthlyPlanning() {
       if (d.dow === 0 || d.dow === 6) cls += ' is-weekend';
       if (d.ds === todayStr) cls += ' is-today';
       var dl = ['S','M','T','W','T','F','S'][d.dow];
-      h += '<th class="' + cls + '" data-col="' + i + '">' +
+      if (issueByDs[d.ds]) cls += ' has-issue';
+      var tip = issueByDs[d.ds] ? ' title="Missing: ' + issueByDs[d.ds].join(', ') + '"' : '';
+      h += '<th class="' + cls + '" data-col="' + i + '"' + tip + '>' +
            '<span class="dow">' + dl + '</span><span class="dnum">' + d.num + '</span></th>';
     });
     rhCols.forEach(function(c){ h += '<th class="c-rh">' + c + '</th>'; });
