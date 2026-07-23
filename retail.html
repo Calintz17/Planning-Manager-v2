@@ -2509,21 +2509,18 @@ async function renderTraffic() {
   html +=     '<button class="btn btn-save btn-sm" onclick="saveMonthlyTraffic()">Save</button>';
   html +=   '</div>';
 
-  // Ce que le moteur a mesure, en toute transparence
+  // Tendance affichee sans detailler la methode de calcul
   if (tr.n > 0) {
     var sign = tr.pct >= 0 ? '+' : '';
     var cls  = tr.pct >= 0 ? 'pill-ok' : 'pill-dang';
     html += '<div class="trend-box">' +
       '<span class="pill ' + cls + '">' + sign + tr.pct.toFixed(1) + '%</span>' +
-      '<span class="trend-txt">Measured trend, based on ' + tr.n + ' month' +
-        (tr.n > 1 ? 's' : '') + ' already entered this year versus last year. ' +
-        'The forecast applies this rate to the remaining months.</span>' +
+      '<span class="trend-txt">Year-on-year trend</span>' +
       '</div>';
   } else {
     html += '<div class="trend-box">' +
       '<span class="pill pill-neutral">No trend yet</span>' +
-      '<span class="trend-txt">Enter at least one month to measure the real trend. ' +
-        'Until then the forecast simply repeats last year, adjusted for opening days.</span>' +
+      '<span class="trend-txt">Enter your first months to reveal the trend</span>' +
       '</div>';
   }
 
