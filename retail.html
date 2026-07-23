@@ -3399,10 +3399,21 @@ function renderMonthlyPlanning() {
                      closure: closure, vol: vol });
   }
 
-  // ── Repos : pour chaque agent, on force au plus 5 jours travailles / semaine.
-  // Les jours OFF tombent sur les jours OUVERTS de plus faible trafic de la
-  // semaine (c'est le trafic qui determine le repos).
-  // On groupe les jours du mois par semaine ISO (lundi -> dimanche).
+  // ══════════════════════════════════════════════════════════════════════
+  // MOTEUR D'AFFECTATION - 4 COUCHES
+  //
+  //   1. SOCLE      : chaque jour ouvert recoit une equipe minimale
+  //                   (1 ouverture, 1 fermeture, 1 SM/ASM, 1 stock si present).
+  //                   Ces agents sont poses en premier, plus rien ne les deloge.
+  //   2. TRAFIC     : le reste de l'effectif se repartit proportionnellement
+  //                   au trafic du jour, avec un plancher de 50% de l'equipe.
+  //   3. LEGAL      : 5 jours travailles maximum par semaine et par agent,
+  //                   temps partiels ramenes a leur pourcentage.
+  //   4. PREFERENCES: a competence egale, on departage avec les preferences,
+  //                   equilibrees par un systeme de dette pour eviter qu'un
+  //                   agent monopolise ses creneaux favoris.
+  // ══════════════════════════════════════════════════════════════════════
+
   function weekKey(d) {
     var dd = new Date(d);
     var day = dd.getDay();
@@ -3417,86 +3428,173 @@ function renderMonthlyPlanning() {
     weeks[wk].push(d);
   });
 
-  // restMap[agentId][ds] = true si l'agent est en repos ce jour-la
+  // restMap[agentId][ds] = true si l'agent est au repos ce jour-la
   var restMap = {};
   agents.forEach(function(a) { restMap[a.id] = {}; });
 
-  Object.keys(weeks).forEach(function(wk) {
-    var wkDays = weeks[wk];
-    // jours ouverts de la semaine (candidats au travail / repos)
-    var openDays = wkDays.filter(function(d) { return !d.closure; });
-    // jours fermes = repos d'office, ne comptent pas dans les 5j
-    // nb de repos a poser parmi les jours ouverts pour ne pas depasser 5 jours
-    var restNeeded = Math.max(0, openDays.length - 5);
-    if (restNeeded === 0) return;
-    // trier les jours ouverts par trafic croissant : les plus faibles = repos
-    var sorted = openDays.slice().sort(function(x, y) { return x.vol - y.vol; });
-    var restDays = sorted.slice(0, restNeeded).map(function(d) { return d.ds; });
-    // appliquer a tous les agents (repos collectif sur jours faibles ;
-    // les overrides individuels via availability restent prioritaires plus bas)
-    agents.forEach(function(a) {
-      restDays.forEach(function(ds) { restMap[a.id][ds] = true; });
-    });
-  });
+  // ── Disponibilite de base : absences et conges sont indiscutables ──
+  function isBlocked(a, d) {
+    if (d.closure) return true;
+    if (agentOnLeave(a.id, d.ds)) return true;
+    var st = (availability[a.id] && availability[a.id][d.ds]) || null;
+    return st === 'absent';
+  }
 
-  // ── TEMPS PARTIEL : jours OFF individuels supplementaires ─────────────
-  // Un agent a X% doit travailler X% des jours ouvrables du mois.
-  // On lui pose des repos EN PLUS du repos collectif, sur les jours de plus
-  // faible trafic (les jours forts restent couverts en priorite).
-  // ── PREFERENCES : jours a eviter et week-end ──────────────────────────
-  // On pose des repos supplementaires sur les jours que l'agent souhaite
-  // eviter, UNIQUEMENT si la couverture le permet (jamais au detriment
-  // des regles legales ni des jours a fort trafic).
-  agents.forEach(function(a) {
-    var p = agentPrefs[a.id];
-    if (!p) return;
-    var avoid = p.avoid_days || [];
-    var skipWeekend = (p.weekend_ok === false);
-    if (!avoid.length && !skipWeekend) return;
+  // ── Compteur de dette de preference ──
+  // Monte quand l'agent obtient sa preference, descend sinon.
+  // Le plus bas est servi en premier a egalite.
+  var prefDebt = {};
+  agents.forEach(function(a) { prefDebt[a.id] = 0; });
 
-    monthDays.forEach(function(d) {
-      if (d.closure) return;
-      if (restMap[a.id] && restMap[a.id][d.ds]) return;
-      var wantsOff = avoid.indexOf(d.dow) !== -1 ||
-                     (skipWeekend && (d.dow === 0 || d.dow === 6));
-      if (!wantsOff) return;
+  function prefScoreFor(a, d) {
+    var p = agentPrefs[a.id] || {};
+    var s = 0;
+    if ((p.avoid_days || []).indexOf(d.dow) !== -1) s -= 2;      // veut eviter
+    if (p.weekend_ok === false && (d.dow === 0 || d.dow === 6)) s -= 2;
+    return s;
+  }
 
-      // Ne pas descendre sous 2 agents presents ce jour-la
-      var presentThatDay = agents.filter(function(o) {
-        if (restMap[o.id] && restMap[o.id][d.ds]) return false;
-        if (agentOnLeave(o.id, d.ds)) return false;
-        return true;
-      }).length;
-      if (presentThatDay > 2) restMap[a.id][d.ds] = true;
-    });
-  });
-
+  // Quota individuel de jours travailles sur le mois (temps partiel inclus)
+  var monthOpenDays = monthDays.filter(function(d) { return !d.closure; }).length;
+  var quota = {};
   agents.forEach(function(a) {
     var pct = a.work_pct || 100;
-    if (pct >= 100) return;
-
-    // Jours ou l'agent est actuellement prevu au travail
-    var workable = monthDays.filter(function(d) {
-      if (d.closure) return false;                       // boutique fermee
-      if (restMap[a.id] && restMap[a.id][d.ds]) return false;  // deja au repos
-      var st = (availability[a.id] && availability[a.id][d.ds]) || null;
-      if (st === 'absent' || st === 'rest_scheduled' ||
-          st === 'rest_override' || st === 'rest_parttime') return false;
-      if (agentOnLeave(a.id, d.ds)) return false;        // conge declare
-      return true;
+    // Plafond legal : 5 jours par semaine ouverte
+    var legalMax = 0;
+    Object.keys(weeks).forEach(function(wk) {
+      var openW = weeks[wk].filter(function(d) { return !d.closure; }).length;
+      legalMax += Math.min(openW, 5);
     });
-
-    // Combien de jours retirer pour atteindre le pourcentage vise
-    var target   = Math.round(workable.length * pct / 100);
-    var toRemove = Math.max(0, workable.length - target);
-    if (toRemove === 0) return;
-
-    // Retirer en priorite les jours les moins charges
-    workable.slice()
-      .sort(function(x, y) { return x.vol - y.vol; })
-      .slice(0, toRemove)
-      .forEach(function(d) { restMap[a.id][d.ds] = true; });
+    quota[a.id] = Math.min(legalMax, Math.round(monthOpenDays * pct / 100));
   });
+
+  var worked = {};                                  // jours deja affectes
+  agents.forEach(function(a) { worked[a.id] = 0; });
+  var workedInWeek = {};                            // par semaine, pour les 5j
+  agents.forEach(function(a) { workedInWeek[a.id] = {}; });
+
+  function canWork(a, d) {
+    if (isBlocked(a, d)) return false;
+    if (worked[a.id] >= quota[a.id]) return false;
+    var wk = weekKey(d.date);
+    if ((workedInWeek[a.id][wk] || 0) >= 5) return false;
+    return true;
+  }
+
+  function assign(a, d) {
+    var wk = weekKey(d.date);
+    worked[a.id]++;
+    workedInWeek[a.id][wk] = (workedInWeek[a.id][wk] || 0) + 1;
+  }
+
+  // assignedMap[ds] = [agentIds] retenus pour travailler ce jour
+  var assignedMap = {};
+  monthDays.forEach(function(d) { assignedMap[d.ds] = []; });
+
+  // Trafic moyen des jours ouverts, base de la ponderation
+  var openList = monthDays.filter(function(d) { return !d.closure; });
+  var avgVol = openList.length
+    ? openList.reduce(function(s, d) { return s + (d.vol || 0); }, 0) / openList.length
+    : 0;
+
+  // Statuts d'encadrement et de stock
+  function isLead(a)  { var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; }
+  function isStock(a) { return retailStatusOf(a) === 'STOCK'; }
+  var hasStockTeam = agents.some(isStock);
+
+  // Ordre de traitement : les jours les plus charges servis en premier,
+  // pour qu'ils captent l'effectif avant que les quotas ne s'epuisent.
+  var byLoad = openList.slice().sort(function(x, y) { return (y.vol || 0) - (x.vol || 0); });
+
+  byLoad.forEach(function(d) {
+    var taken = {};
+
+    // Choisit le meilleur candidat parmi ceux qui remplissent le filtre.
+    // Depart : moins d'heures deja posees, puis dette de preference,
+    // puis preference du jour. Deterministe.
+    function pick(filterFn) {
+      var pool = agents.filter(function(a) {
+        return !taken[a.id] && canWork(a, d) && (!filterFn || filterFn(a));
+      });
+      if (!pool.length) return null;
+      pool.sort(function(x, y) {
+        // 1. Celui qui a le moins travaille (equite de charge)
+        var byLoadDiff = (worked[x.id] / Math.max(1, quota[x.id])) -
+                         (worked[y.id] / Math.max(1, quota[y.id]));
+        if (Math.abs(byLoadDiff) > 0.01) return byLoadDiff;
+        // 2. Celui dont la preference a le moins ete respectee
+        var d1 = prefDebt[x.id] - prefDebt[y.id];
+        if (d1 !== 0) return d1;
+        // 3. Celui qui n'a pas de reticence pour ce jour
+        var p1 = prefScoreFor(y, d) - prefScoreFor(x, d);
+        if (p1 !== 0) return p1;
+        return x.id < y.id ? -1 : 1;
+      });
+      var chosen = pool[0];
+      taken[chosen.id] = true;
+      assign(chosen, d);
+      assignedMap[d.ds].push(chosen.id);
+      // Mise a jour de la dette : travailler un jour non souhaite la baisse
+      prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
+      return chosen;
+    }
+
+    // ── COUCHE 1 : socle incompressible ──
+    pick(isLead);                       // un SM ou ASM
+    if (hasStockTeam) pick(isStock);    // un stockiste
+    pick(function(a) { return !isStock(a); });   // ouverture (vente)
+    pick(function(a) { return !isStock(a); });   // fermeture (vente)
+
+    // ── COUCHE 2 : ventilation selon le trafic, plancher 50% ──
+    var ratio  = avgVol > 0 ? (d.vol || 0) / avgVol : 1;
+    var target = Math.round(agents.length * ratio);
+    var floor  = Math.ceil(agents.length * 0.5);       // jamais moins de 50%
+    target = Math.max(floor, Math.min(agents.length, target));
+
+    while (assignedMap[d.ds].length < target) {
+      if (!pick(null)) break;           // plus personne de disponible
+    }
+  });
+
+  // ── FILET DE SECURITE ──────────────────────────────────────────────────
+  // Si des quotas se sont epuises, certains jours peuvent rester sous le
+  // plancher. On repasse pour combler, en assouplissant le quota mensuel
+  // (jamais la limite legale des 5 jours par semaine, ni les absences).
+  var minFloor = Math.max(1, Math.ceil(agents.length * 0.5));
+  openList.forEach(function(d) {
+    if (assignedMap[d.ds].length >= minFloor) return;
+    var already = {};
+    assignedMap[d.ds].forEach(function(id) { already[id] = true; });
+
+    var pool = agents.filter(function(a) {
+      if (already[a.id]) return false;
+      if (isBlocked(a, d)) return false;
+      var wk = weekKey(d.date);
+      return (workedInWeek[a.id][wk] || 0) < 5;      // la loi reste intouchable
+    });
+    // Servir d'abord ceux qui ont le moins travaille
+    pool.sort(function(x, y) {
+      var r = (worked[x.id] / Math.max(1, quota[x.id])) -
+              (worked[y.id] / Math.max(1, quota[y.id]));
+      if (Math.abs(r) > 0.01) return r;
+      return x.id < y.id ? -1 : 1;
+    });
+    for (var i = 0; i < pool.length && assignedMap[d.ds].length < minFloor; i++) {
+      assign(pool[i], d);
+      assignedMap[d.ds].push(pool[i].id);
+    }
+  });
+
+  // ── Traduction en jours de repos ──
+  monthDays.forEach(function(d) {
+    if (d.closure) return;
+    agents.forEach(function(a) {
+      if (assignedMap[d.ds].indexOf(a.id) === -1) restMap[a.id][d.ds] = true;
+    });
+  });
+
+  // Note : les preferences et les temps partiels sont deja pris en compte
+  // par le moteur d'affectation ci-dessus (quotas et dette de preference).
 
   // ── Determination de la lettre de shift d'un agent un jour donne ──
   // Renvoie {code, cls} ou un statut special.
@@ -3548,17 +3646,22 @@ function renderMonthlyPlanning() {
     // eveningShare. Stable d'un rendu a l'autre.
     var idx = agents.indexOf(agent);
     var dayNum = day.num;
-    // pseudo-position de l'agent dans la file (deterministe)
-    var slot = (idx + dayNum) % grid.length;
 
-    // Preference individuelle matin / soir : elle prime sur la repartition
-    // automatique (l'agent reste couvert par sa grille de statut).
-    var pref = (agentPrefs[agent.id] || {}).shift_pref;
-    if (pref === 'morning')      slot = 0;
-    else if (pref === 'evening') slot = grid.length - 1;
-    // si le soir est charge, on biaise vers les shifts tardifs (fin de tableau)
-    if (eveningShare >= 0.55) slot = grid.length - 1 - (idx % grid.length);
+    // Repartition de base : deterministe, et biaisee par la charge du soir.
+    var slot;
+    if (eveningShare >= 0.55)      slot = grid.length - 1 - (idx % grid.length);
     else if (eveningShare <= 0.45) slot = idx % grid.length;
+    else                           slot = (idx + dayNum) % grid.length;
+
+    // Preference matin / soir : appliquee UN JOUR SUR DEUX seulement.
+    // L'agent obtient son creneau favori plus souvent que les autres, sans
+    // pour autant le monopoliser : la rotation reste assuree.
+    var pref = (agentPrefs[agent.id] || {}).shift_pref;
+    if (pref === 'morning' || pref === 'evening') {
+      var turn = (dayNum + idx) % 2 === 0;      // alternance stable
+      if (turn) slot = (pref === 'morning') ? 0 : grid.length - 1;
+    }
+
     var sh = grid[slot] || grid[0];
     return { code: sh.code };
   }
