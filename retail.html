@@ -488,10 +488,19 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .wkp-day.in-selected-week { background:var(--info-soft); color:var(--info-tx); }
 
 /* ═══ SETTINGS ═══════════════════════════════════════════════════ */
-.set-rules { display:flex; flex-direction:column; gap:var(--s3); }
-.set-rule { display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; font-size:13px; color:var(--tx-1); }
-.set-rule-lbl { min-width:200px; flex:0 0 auto; color:var(--tx-2); }
-.set-rule-input { width:80px; text-align:center; }
+.set-rules { display:flex; flex-direction:column; gap:0; }
+.set-rule {
+  display:grid; grid-template-columns:260px 120px 1fr;
+  align-items:center; gap:var(--s3);
+  height:52px; padding:0;
+  border-bottom:1px solid var(--line);
+  font-size:13px; color:var(--tx-1);
+}
+.set-rule > * { min-width:0; }
+.set-rule:last-child { border-bottom:none; }
+.set-rule-lbl { color:var(--tx-2); }
+.set-rule-input { width:100%; max-width:110px; text-align:center; }
+.set-rule-ro { font-weight:600; }
 .set-rule-unit { color:var(--tx-3); font-size:12.5px; }
 .set-rule-ro { font-weight:600; }
 .set-rule-hint { font-size:11.5px; color:var(--tx-3); }
@@ -603,7 +612,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 @media (max-width:900px) { .onb-tip { display:none !important; } }
 
 /* ═══ TABLEAUX DE SETTINGS : alignement identique ════════════════ */
-.set-tbl { table-layout:fixed; width:100%; max-width:840px; }
+.set-tbl { table-layout:fixed; width:100%; }
 .set-tbl th { font-weight:600; }
 .set-tbl td { vertical-align:middle; }
 .set-tbl select { width:100%; max-width:132px; }
@@ -692,6 +701,22 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 @media (prefers-reduced-motion: reduce) {
   #btn-forecast::before, #btn-forecast::after, .ai-star { animation: none; }
 }
+
+.trend-box { display:flex; align-items:flex-start; gap:var(--s3);
+  padding:var(--s3) var(--s4); background:var(--bg-base-2);
+  border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s4); }
+.trend-txt { font-size:12.5px; color:var(--tx-2); line-height:1.45; }
+
+.tone-picker { display:flex; gap:8px; flex-wrap:wrap; }
+.tone-chip {
+  width:38px; height:32px; border-radius:var(--r-md); cursor:pointer;
+  border:2px solid transparent; font-family:var(--font);
+  font-size:12px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:border-color .12s, transform .12s;
+}
+.tone-chip:hover { transform:translateY(-1px); }
+.tone-chip.on { border-color:var(--tx-1); }
 
 /* ═══ TRAFFIC ════════════════════════════════════════════════════ */
 .tr-days { display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:var(--s2); }
@@ -785,7 +810,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   <div class="sb-brand">
     <img src="CORA_LOGO.png" alt="" class="sb-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="sb-logo-fb" aria-hidden="true">C</span>
     <span class="sb-name">CORA</span>
-    <span class="sb-tag">Retail</span>
   </div>
 
   <div class="sb-sec">Workspace</div>
@@ -1546,7 +1570,7 @@ async function init() {
     const opt = document.createElement('option');
     opt.value        = r.id;
     opt.dataset.city = r.city;
-    opt.textContent  = r.name + ' \u00b7 ' + r.city;
+    opt.textContent  = r.name;
     sel.appendChild(opt);
   });
   sel.addEventListener('change', onRegionChange);
@@ -1978,32 +2002,25 @@ function buildShiftSettingsHtml() {
     var list = RETAIL_SHIFTS[grid] || [];
     var h = '<div class="sec-title" style="margin-top:var(--s5)">' + title + '</div>';
     h += '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
-         '<th style="width:120px">Code</th><th>Starts</th><th>Ends</th>' +
-         '<th style="width:110px">Duration</th><th style="width:130px">Colour</th>' +
-         '<th style="width:52px"></th>' +
+         '<th style="width:90px">Code</th><th>Starts</th><th>Ends</th>' +
+         '<th style="width:150px">Duration</th><th style="width:52px"></th>' +
          '</tr></thead><tbody>';
     list.forEach(function(s) {
       var dur  = s.endMin - s.startMin;
       var over = dur / 60 > maxDaily;
-      h += '<tr class="sh-row" data-grid="' + grid + '">' +
-        '<td><input type="text" class="sh-code" value="' + s.code +
-           '" maxlength="3" style="width:64px;text-transform:uppercase">' +
-           '<span class="sh ' + shiftCls(s.code) + '" style="margin-left:8px">' + s.code + '</span></td>' +
+      h += '<tr class="sh-row" data-grid="' + grid + '" data-code="' + s.code +
+           '" data-tone="' + (s.tone || 'close') + '">' +
+        '<td><span class="sh ' + shiftCls(s.code) + '">' + s.code + '</span></td>' +
         '<td>' + hourSelect('sh-start', s.startMin) + '</td>' +
         '<td>' + hourSelect('sh-end',   s.endMin)   + '</td>' +
-        '<td class="sh-dur' + (over ? ' is-over' : '') + '">' + durLabel(dur) +
+        '<td class="sh-dur">' + durLabel(dur) +
            (over ? ' <span class="pill pill-dang">&gt; ' + maxDaily + 'h</span>' : '') + '</td>' +
-        '<td><select class="sh-tone">' +
-           SHIFT_TONES.map(function(t) {
-             return '<option value="' + t.key + '"' +
-                    ((s.tone || 'close') === t.key ? ' selected' : '') + '>' + t.label + '</option>';
-           }).join('') + '</select></td>' +
         '<td><button class="btn-xs btn-xs-danger" onclick="removeShiftRow(this)" title="Remove">&#10005;</button></td>' +
         '</tr>';
     });
     h += '</tbody></table>';
     h += '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" ' +
-         'onclick="addShiftRow(\'' + grid + '\')">+ New shift</button>';
+         'onclick="openShiftCreator(\'' + grid + '\')">+ New shift</button>';
     return h;
   }
 
@@ -2016,37 +2033,93 @@ function buildShiftSettingsHtml() {
     '</div>';
 }
 
-// Ajoute une ligne vierge dans la grille choisie
-function addShiftRow(grid) {
-  var tables = document.querySelectorAll('.set-tbl');
-  var target = null;
-  tables.forEach(function(t) {
-    var r = t.querySelector('.sh-row');
-    if (r && r.dataset.grid === grid) target = t;
-  });
-  if (!target) target = tables[grid === 'stock' ? 1 : 0];
-  if (!target) return;
+// ── CREATION D'UN SHIFT (pop-in) ──────────────────────────────────────────
+var shiftCreatorGrid = 'sales';
 
-  var tr = document.createElement('tr');
-  tr.className = 'sh-row';
-  tr.dataset.grid = grid;
-  tr.innerHTML =
-    '<td><input type="text" class="sh-code" value="" maxlength="3" placeholder="X" ' +
-      'style="width:64px;text-transform:uppercase"></td>' +
-    '<td>' + hourSelect('sh-start', 600) + '</td>' +
-    '<td>' + hourSelect('sh-end',  1080) + '</td>' +
-    '<td class="sh-dur">8h</td>' +
-    '<td><select class="sh-tone">' +
-      SHIFT_TONES.map(function(t) {
-        return '<option value="' + t.key + '">' + t.label + '</option>';
-      }).join('') + '</select></td>' +
-    '<td><button class="btn-xs btn-xs-danger" onclick="removeShiftRow(this)">&#10005;</button></td>';
-  target.querySelector('tbody').appendChild(tr);
+function openShiftCreator(grid) {
+  shiftCreatorGrid = grid;
+  document.getElementById('sc-sub').textContent =
+    (grid === 'stock' ? 'Stock' : 'Sales') + ' shift';
+  document.getElementById('sc-code').value = '';
+  document.getElementById('sc-start').innerHTML = hourOptions(600);
+  document.getElementById('sc-end').innerHTML   = hourOptions(1080);
+  renderTonePicker('close');
+  document.getElementById('shift-creator').classList.add('open');
+  setTimeout(function() { document.getElementById('sc-code').focus(); }, 60);
+}
+
+function closeShiftCreator() {
+  document.getElementById('shift-creator').classList.remove('open');
+}
+
+function hourOptions(selMin) {
+  var o = '';
+  for (var h = 0; h <= 23; h++) {
+    for (var q = 0; q < 60; q += 15) {
+      var v = h * 60 + q;
+      o += '<option value="' + v + '"' + (v === selMin ? ' selected' : '') + '>' +
+           String(h).padStart(2,'0') + ':' + String(q).padStart(2,'0') + '</option>';
+    }
+  }
+  return o;
+}
+
+function renderTonePicker(sel) {
+  var box = document.getElementById('sc-tones');
+  box.innerHTML = SHIFT_TONES.map(function(t) {
+    return '<button type="button" class="tone-chip sh-' + t.key +
+           (t.key === sel ? ' on' : '') + '" data-tone="' + t.key +
+           '" onclick="pickTone(this)" title="' + t.label + '">A</button>';
+  }).join('');
+}
+
+function pickTone(btn) {
+  document.querySelectorAll('#sc-tones .tone-chip').forEach(function(b) {
+    b.classList.remove('on');
+  });
+  btn.classList.add('on');
+}
+
+function confirmShiftCreation() {
+  var code  = (document.getElementById('sc-code').value || '').trim().toUpperCase();
+  var start = parseInt(document.getElementById('sc-start').value);
+  var end   = parseInt(document.getElementById('sc-end').value);
+  var toneEl = document.querySelector('#sc-tones .tone-chip.on');
+  var tone  = toneEl ? toneEl.dataset.tone : 'close';
+  var maxDaily = regulations.max_daily_hours || 8;
+
+  if (!code) { showToast('Enter a shift letter', 'error'); return; }
+  if (code.length > 2) { showToast('Use one or two characters', 'error'); return; }
+  var exists = false;
+  ['sales','stock'].forEach(function(g) {
+    (RETAIL_SHIFTS[g] || []).forEach(function(s) { if (s.code === code) exists = true; });
+  });
+  if (exists) { showToast('Code ' + code + ' already exists', 'error'); return; }
+  if (end <= start) { showToast('End must be after start', 'error'); return; }
+  if ((end - start) / 60 > maxDaily) {
+    showToast('Shift lasts ' + durLabel(end - start) + ', over the ' + maxDaily + 'h limit', 'error');
+    return;
+  }
+
+  RETAIL_SHIFTS[shiftCreatorGrid].push({
+    code: code, label: minToLabel(start) + ' - ' + minToLabel(end),
+    startMin: start, endMin: end, tone: tone,
+    isOpening: false, isClosing: false
+  });
+
+  closeShiftCreator();
+  renderRegulations();
+  showToast('Shift ' + code + ' added - remember to save');
 }
 
 function removeShiftRow(btn) {
   var tr = btn.closest('tr');
-  if (tr) tr.remove();
+  if (!tr) return;
+  var grid = tr.dataset.grid, code = tr.dataset.code;
+  RETAIL_SHIFTS[grid] = (RETAIL_SHIFTS[grid] || []).filter(function(s) {
+    return s.code !== code;
+  });
+  renderRegulations();
 }
 
 async function saveShiftConfig() {
@@ -2058,10 +2131,10 @@ async function saveShiftConfig() {
   document.querySelectorAll('.sh-row').forEach(function(tr) {
     if (problem) return;
     var grid  = tr.dataset.grid;
-    var code  = (tr.querySelector('.sh-code').value || '').trim().toUpperCase();
+    var code  = tr.dataset.code;
     var start = parseInt(tr.querySelector('.sh-start').value);
     var end   = parseInt(tr.querySelector('.sh-end').value);
-    var tone  = tr.querySelector('.sh-tone').value;
+    var tone  = tr.dataset.tone || 'close';
 
     if (!code) { problem = 'Every shift needs a code'; return; }
     if (seen[code]) { problem = 'Duplicate code: ' + code; return; }
@@ -2147,11 +2220,7 @@ function renderRegulations() {
 
   const openDayCount = getWeekDays(currentWeekMonday)
     .filter(function(day) { return !getDayClosureType(toDateStr(day)); }).length;
-  const rotationNote = openDayCount > 5
-    ? '<div class="alert alert-info"><span>' +
-      '<strong>Rotation active</strong> \u00b7 ' + openDayCount + ' jours ouverts cette semaine. ' +
-      'Le moteur attribue automatiquement 2 jours de repos par agent.</span></div>'
-    : '';
+  const rotationNote = '';
 
   // Dynamic break/day total = sum of all break durations (read-only, reflects Break Structure)
   var breakDayMin = (regulations.breaks || []).reduce(function(s,b){ return s + (b.duration||0); }, 0);
@@ -2173,7 +2242,7 @@ function renderRegulations() {
       '</div>' +
       '<div class="set-rules">' +
         '<div class="set-rule"><span class="set-rule-lbl">Max working days / week</span>' +
-          '<span class="set-rule-ro">5 days</span></div>' +
+          '<span class="set-rule-ro">5 days</span><span></span></div>' +
         '<div class="set-rule"><span class="set-rule-lbl">Max hours / day</span>' +
           '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8) + '" min="1" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
         '<div class="set-rule"><span class="set-rule-lbl">Max hours / week</span>' +
@@ -2798,25 +2867,111 @@ function monthTotalFromDays(year, month) {
 // ── PREVISION "IA" ────────────────────────────────────────────────────────
 // Projection locale : base historique + saisonnalite + tendance.
 // Presentee comme une analyse intelligente, calculee sans appel externe.
+// ── MOTEUR DE PREVISION ───────────────────────────────────────────────────
+// Methode, en clair :
+//   1. On mesure la TENDANCE reelle : pour chaque mois deja saisi cette annee,
+//      on compare au meme mois de l'an dernier. La moyenne de ces ecarts
+//      donne l'evolution constatee (ex : -4,2%). Rien n'est invente.
+//   2. On calcule un PROFIL SAISONNIER : le poids de chaque mois par rapport
+//      a la moyenne annuelle, corrige du nombre de jours reellement ouverts
+//      (un mois avec 2 jours feries recoit mecaniquement moins de visiteurs).
+//   3. On projette : profil saisonnier x tendance mesuree.
+//   4. Les mois deja saisis a la main ne sont JAMAIS ecrases.
+//
+// Plus il y a de mois renseignes, plus la tendance est fiable. Avec 1 seul
+// mois l'estimation reste fragile ; a partir de 3 elle devient solide.
+
+// Nombre de jours reellement ouverts dans un mois (hors feries et fermetures)
+// Nombre de jours ouverts dans un mois.
+// On se base sur les regles d'ouverture de la boutique (week-end) et sur les
+// jours feries CONNUS. Les mois hors du calendrier charge ne doivent pas etre
+// consideres comme fermes : sinon la prevision s'effondre.
+function openDaysInMonth(year, month) {
+  var n = new Date(year, month, 0).getDate(), open = 0;
+  for (var d = 1; d <= n; d++) {
+    var dt = new Date(year, month - 1, d);
+    var ds = toDateStr(dt);
+    var dow = dt.getDay();
+    // Week-end chome selon les reglages de la boutique
+    if (dow === 6 && regulations.saturday_rest) continue;
+    if (dow === 0 && regulations.sunday_rest)   continue;
+    // Jour ferie connu, sauf si le manager a force l'ouverture
+    if (calHolidays[ds] && calOverrides[ds] !== true) continue;
+    // Fermeture exceptionnelle explicite
+    if (calOverrides[ds] === false) continue;
+    open++;
+  }
+  return open;
+}
+
+// Analyse de la tendance : compare les mois saisis a leur equivalent N-1
+function computeTrend(year) {
+  var ratios = [], months = [];
+  for (var m = 1; m <= 12; m++) {
+    var r = trafficMonthly[monthKey(year, m)];
+    if (!r) continue;
+    var cy = r.current_year, ly = r.last_year;
+    // On ne retient que les mois saisis a la main, avec une reference valable
+    if (cy == null || cy <= 0 || !ly || ly <= 0) continue;
+    if (r.source === 'forecast') continue;      // ne pas apprendre de soi-meme
+    ratios.push(cy / ly);
+    months.push(m);
+  }
+  if (!ratios.length) return { pct: 0, n: 0, months: [] };
+  var avg = ratios.reduce(function(s, v) { return s + v; }, 0) / ratios.length;
+  return { pct: (avg - 1) * 100, n: ratios.length, months: months };
+}
+
 function forecastYear(year) {
   var out = {};
-  var lastYearVals = [];
+  var ly = [];
   for (var m = 1; m <= 12; m++) {
     var rec = trafficMonthly[monthKey(year, m)];
-    lastYearVals.push(rec ? (rec.last_year || 0) : 0);
+    ly.push(rec ? (rec.last_year || 0) : 0);
   }
-  var base = lastYearVals.reduce(function(s, v) { return s + v; }, 0) / 12;
-  if (base <= 0) return out;
+  var totalLY = ly.reduce(function(s, v) { return s + v; }, 0);
+  if (totalLY <= 0) return out;
 
+  // Trafic moyen par JOUR OUVERT sur l'annee de reference
+  var totalOpen = 0, openPerMonth = [];
   for (var m2 = 1; m2 <= 12; m2++) {
-    var ly = lastYearVals[m2 - 1] || base;
-    // Indice de saisonnalite du mois
-    var seasonal = ly / base;
-    // Tendance douce : croissance annuelle moderee
-    var trend = 1.035;
-    // Legere correction pour lisser les mois extremes
-    var smoothed = base * (0.85 * seasonal + 0.15);
-    out[m2] = Math.round(smoothed * trend);
+    var o = openDaysInMonth(year, m2);
+    openPerMonth.push(o);
+    totalOpen += o;
+  }
+  if (totalOpen <= 0) return out;
+  var perOpenDay = totalLY / totalOpen;
+
+  var trend = computeTrend(year);
+  var factor = 1 + (trend.pct / 100);
+
+  for (var m3 = 1; m3 <= 12; m3++) {
+    var rec3 = trafficMonthly[monthKey(year, m3)];
+    // Un mois saisi manuellement est conserve tel quel
+    if (rec3 && rec3.current_year != null && rec3.current_year > 0 &&
+        rec3.source !== 'forecast') {
+      out[m3] = rec3.current_year;
+      continue;
+    }
+
+    var refLY = ly[m3 - 1];
+    var open  = openPerMonth[m3 - 1];
+
+    // Base : intensite propre au mois (visiteurs par jour ouvert l'an dernier),
+    // ramenee au nombre de jours ouverts cette annee.
+    var base;
+    if (refLY > 0 && open > 0) {
+      var lyOpen = openDaysInMonth(year - 1, m3) || open;
+      base = (refLY / lyOpen) * open;
+    } else {
+      base = perOpenDay * open;
+    }
+
+    // Lissage leger vers la moyenne : evite qu'un mois atypique de N-1
+    // ne se reproduise mecaniquement.
+    var smooth = 0.88 * base + 0.12 * (perOpenDay * open);
+
+    out[m3] = Math.max(0, Math.round(smooth * factor));
   }
   return out;
 }
@@ -2848,14 +3003,31 @@ async function renderTraffic() {
   var html = '';
 
   // ── Carte 1 : saisie mensuelle ──
+  var tr = computeTrend(year);
+
   html += '<div class="card">';
-  html +=   '<div class="card-head"><div>';
-  html +=     '<div class="card-title">Monthly traffic ' + year + ' \u00b7 ' + currentStoreName + '</div>';
-  html +=     '<div class="card-sub">Enter the expected total for each month. ' +
-              'Days are spread automatically.</div>';
+  html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
+  html +=     '<h2 class="page-title">Monthly traffic ' + year + '</h2>';
+  html +=     '<button class="btn btn-save btn-sm" onclick="saveMonthlyTraffic()">Save</button>';
   html +=   '</div>';
-  html +=   '<button class="btn btn-save btn-sm" onclick="saveMonthlyTraffic()">Save</button>';
-  html +=   '</div>';
+
+  // Ce que le moteur a mesure, en toute transparence
+  if (tr.n > 0) {
+    var sign = tr.pct >= 0 ? '+' : '';
+    var cls  = tr.pct >= 0 ? 'pill-ok' : 'pill-dang';
+    html += '<div class="trend-box">' +
+      '<span class="pill ' + cls + '">' + sign + tr.pct.toFixed(1) + '%</span>' +
+      '<span class="trend-txt">Measured trend, based on ' + tr.n + ' month' +
+        (tr.n > 1 ? 's' : '') + ' already entered this year versus last year. ' +
+        'The forecast applies this rate to the remaining months.</span>' +
+      '</div>';
+  } else {
+    html += '<div class="trend-box">' +
+      '<span class="pill pill-neutral">No trend yet</span>' +
+      '<span class="trend-txt">Enter at least one month to measure the real trend. ' +
+        'Until then the forecast simply repeats last year, adjusted for opening days.</span>' +
+      '</div>';
+  }
 
   html += '<table class="tbl tbl-framed"><thead><tr>' +
           '<th>Month</th><th style="text-align:right">Last year</th>' +
@@ -3096,7 +3268,7 @@ function openCellEditor(agentId, ds, evt) {
             '<span class="ce-lbl">' + s.label + '</span></button>';
   });
   html += '<div class="ce-sep"></div>';
-  [['OFF', 'Repos'], ['A', 'Absence']].forEach(function(o) {
+  [['OFF', 'Day off'], ['A', 'Absence']].forEach(function(o) {
     html += '<button class="ce-opt' + (current === o[0] ? ' is-current' : '') +
             '" onclick="applyCellOverride(\'' + o[0] + '\')">' +
             '<span class="sh ' + shiftCls(o[0]) + '">' + o[0] + '</span>' +
@@ -3504,8 +3676,8 @@ function renderMonthlyPlanning() {
 
   html += '<div class="card-head">';
   html +=   '<div><div class="card-title">' + monthName + '</div>';
-  html +=   '<div class="card-sub">' + agents.length + ' agents \u00b7 ' + nDays + ' jours' +
-            (nOverrides ? ' \u00b7 ' + nOverrides + ' modification' + (nOverrides > 1 ? 's' : '') + ' manuelle' + (nOverrides > 1 ? 's' : '') : '') +
+  html +=   '<div class="card-sub">' + agents.length + ' agents \u00b7 ' + nDays + ' days' +
+            (nOverrides ? ' \u00b7 ' + nOverrides + ' manual change' + (nOverrides > 1 ? 's' : '') : '') +
             '</div></div>';
   if (nOverrides) {
     html += '<button class="btn btn-ghost btn-sm" onclick="clearMonthOverrides()">Reset manual changes</button>';
@@ -3517,30 +3689,12 @@ function renderMonthlyPlanning() {
     html += '<span class="legend-item"><span class="sh ' + shiftCls(s.code) + '">' + s.code + '</span> <b>' + s.label + '</b></span>';
   });
   html += '<span class="legend-item"><span class="sh sh-stock sh-open">OS</span> Stock (OS/MS/CS)</span>';
-  html += '<span class="legend-item"><span class="sh sh-off">OFF</span> Repos</span>';
+  html += '<span class="legend-item"><span class="sh sh-off">OFF</span> Day off</span>';
   html += '<span class="legend-item"><span class="sh sh-cp">A</span> Absence</span>';
   html += '</div>';
 
-  // Alerte de couverture : jours sans ouverture, sans fermeture ou sans SM/ASM
-  if (issues.length) {
-    var byType = { opening: [], closing: [], 'SM/ASM': [] };
-    issues.forEach(function(i) {
-      i.missing.forEach(function(m) { byType[m].push(i.num); });
-    });
-    var lines = [];
-    if (byType.opening.length)
-      lines.push('<b>No opening shift</b> on day' + (byType.opening.length > 1 ? 's' : '') +
-                 ' ' + byType.opening.join(', '));
-    if (byType.closing.length)
-      lines.push('<b>No closing shift</b> on day' + (byType.closing.length > 1 ? 's' : '') +
-                 ' ' + byType.closing.join(', '));
-    if (byType['SM/ASM'].length)
-      lines.push('<b>No SM or ASM</b> on day' + (byType['SM/ASM'].length > 1 ? 's' : '') +
-                 ' ' + byType['SM/ASM'].join(', '));
-    html += '<div class="alert alert-warn"><span>' +
-            '<strong>Coverage issue</strong><br>' + lines.join('<br>') +
-            '</span></div>';
-  }
+  // Les jours en defaut sont signales par un trait rouge sous la date
+  // (voir .has-issue). Pas de banniere : elle alourdissait la page.
 
   // ── En-tete de colonnes, partage par les 2 tableaux ──
   function headRow(firstLabel) {
@@ -3618,8 +3772,7 @@ function renderMonthlyPlanning() {
 
   var html2 = '';
   html2 += '<div class="card-head"><div>';
-  html2 +=   '<div class="card-title">Couverture &amp; effectifs</div>';
-  html2 +=   '<div class="card-sub">Vue manag\u00e9riale \u00b7 pr\u00e9sences par jour et par statut</div>';
+  html2 +=   '<div class="card-title">Coverage &amp; headcount</div>';
   html2 += '</div></div>';
 
   html2 += '<div class="mth-wrap"><table class="mth" id="mth-summary">';
@@ -3636,9 +3789,9 @@ function renderMonthlyPlanning() {
     return r + '</tr>';
   }
 
-  html2 += sumRow('Total pr\u00e9sents', totPres, 'tot');
-  html2 += sumRow('Ouvertures',      totO,    'tot');
-  html2 += sumRow('Fermetures',      totC,    'tot tot-last');
+  html2 += sumRow('Total present', totPres, 'tot');
+  html2 += sumRow('Opening',       totO,    'tot');
+  html2 += sumRow('Closing',       totC,    'tot tot-last');
 
   // Une ligne par statut effectivement present dans l'equipe
   RETAIL_BLOCK_ORDER.forEach(function(block) {
@@ -4428,6 +4581,43 @@ init();
     <div class="ce-sub" id="ce-sub"></div>
   </div>
   <div id="ce-body"></div>
+</div>
+
+<!-- SHIFT CREATOR -->
+<div id="shift-creator" class="modal-overlay" onclick="if(event.target===this)closeShiftCreator()">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">New shift</div>
+        <div class="modal-sub" id="sc-sub"></div>
+      </div>
+      <button class="icon-btn" onclick="closeShiftCreator()" aria-label="Close">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fld">
+          <label>Letter</label>
+          <input type="text" id="sc-code" maxlength="2" placeholder="E"
+                 style="text-transform:uppercase;font-weight:600">
+        </div>
+        <div class="fld"><label>Starts</label><select id="sc-start"></select></div>
+        <div class="fld"><label>Ends</label><select id="sc-end"></select></div>
+      </div>
+      <div class="fld" style="margin-top:var(--s4)">
+        <label>Colour</label>
+        <div class="tone-picker" id="sc-tones"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeShiftCreator()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmShiftCreation()">Add shift</button>
+      </div>
+    </div>
+  </div>
 </div>
 </body>
 </html>
