@@ -1,9 +1,24 @@
 <!DOCTYPE html>
+<!--
+  ════════════════════════════════════════════════════════════════════════
+  CORA RETAIL - v2.0
+  Client Operations Rostering Assistant - module Retail
+
+  Perimetre     : hierarchie Region > Country > Store, planning mensuel,
+                  moteur d'affectation 4 couches, trafic et prevision,
+                  gestion des agents, calendrier des absences, parametrage.
+  Design system : voir CORA_DESIGN_SYSTEM.txt (tokens, composants, regles).
+  Base          : Supabase, tables retail_*.
+
+  Regle de maintenance : un selecteur CSS = une seule definition,
+  zero !important, zero code mort. Auditer avant chaque livraison.
+  ════════════════════════════════════════════════════════════════════════
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail</title>
+  <title>CORA Retail v2.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -78,7 +93,6 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 
 /* ═══ ICONES : taille unique partout (fix loupe geante) ══════════ */
 .ic { width:18px; height:18px; flex-shrink:0; display:block; }
-.ic-sm { width:16px; height:16px; }
 
 /* ═══ ONGLETS : un seul visible a la fois ════════════════════════ */
 .tab-content { display:none; padding: var(--s5) var(--s6) var(--s8); }
@@ -100,7 +114,6 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   color:var(--brand-on); align-items:center; justify-content:center; font-size:13px;
   font-weight:800; flex-shrink:0; align-self:center; }
 .sb-name { font-size:17px; font-weight:700; color:var(--tx-1); letter-spacing:-.02em; }
-.sb-tag  { font-size:10.5px; color:var(--tx-3); font-weight:500; margin-left:2px; }
 
 /* --- Sections --- */
 .sb-sec { font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
@@ -254,7 +267,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 /* Badges / pills */
 .pill { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500;
         padding:3px 9px; border-radius:var(--r-pill); line-height:1.5; }
-.pill-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .pill-neutral { background:var(--bg-base-3); color:var(--tx-2); }
 .pill-ok      { background:var(--ok-soft);   color:var(--ok-tx); }
 .pill-warn    { background:var(--warn-soft); color:var(--warn-tx); }
@@ -269,10 +281,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   font-variant-numeric:tabular-nums; padding-left:.02em; }
 
 /* Alertes (remplace la bulle violette non conforme) */
-.alert { display:flex; gap:var(--s3); align-items:flex-start; padding:var(--s3) var(--s4);
-  border-radius:var(--r-md); font-size:13px; margin-bottom:var(--s4); border:1px solid transparent; }
-.alert-info { background:var(--info-soft); color:var(--info-tx); border-color:#BFDBFE; }
-.alert-warn { background:var(--warn-soft); color:var(--warn-tx); border-color:#FDE68A; }
 
 /* Tables generiques */
 .tbl { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
@@ -502,8 +510,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .set-rule-input { width:100%; max-width:110px; text-align:center; }
 .set-rule-ro { font-weight:600; }
 .set-rule-unit { color:var(--tx-3); font-size:12.5px; }
-.set-rule-ro { font-weight:600; }
-.set-rule-hint { font-size:11.5px; color:var(--tx-3); }
 .set-note { font-size:12.5px; color:var(--tx-2); margin-bottom:var(--s3); }
 .hours-table { width:100%; border-collapse:separate; border-spacing:0;
   border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; }
@@ -519,11 +525,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .toggle-label { font-size:12.5px; color:var(--tx-2); }
 
 /* ═══ SETTINGS : en-tete de carte + tables encadrees ═════════════ */
-.set-head { display:flex; align-items:center; justify-content:space-between;
-  gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap; }
-.set-head .set-h3, .set-head h2 { margin:0; }
-.set-h3 { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--tx-2); }
 
 /* Tables encadrees (contour fin) */
 .tbl-framed { border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; }
@@ -617,7 +618,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .set-tbl td { vertical-align:middle; }
 .set-tbl select { width:100%; max-width:132px; }
 .set-tbl .sh-dur { color:var(--tx-2); font-variant-numeric:tabular-nums; }
-.set-tbl .sh-dur.is-over { color:var(--dang-tx); font-weight:600; }
 .set-tbl tr.rest-day td { opacity:.5; }
 .set-tbl tr.rest-day td:first-child { opacity:1; }
 
@@ -1049,8 +1049,6 @@ let calMonth          = new Date(); // month currently shown in Calendar tab
 let currentCalView    = 'annual';
 let calHolidaysYear   = null; // which year is currently loaded
 let agents            = [];
-let forecasts         = {};
-let historicalVolume  = {}; // historicalVolume[dateStr][task][hour] = volume
 // availability[agentId][dateStr] = 'working' | 'rest_scheduled' | 'rest_override' | 'absent'
 let availability      = {};
 
@@ -1079,30 +1077,17 @@ let regulations = {
 };
 
 // Rest override popup state
-let ropState = { agentId: null, currentRestDay: null };
 
 // Planning view state
-var currentPlanningView = 'monthly';
-var tasks = [];  // loaded from tasks table
 
 // Default task config (pastel colors, used for seeding and fallback)
-var TASK_DEFAULTS = [
-  { name:'FRAUD',       priority:1, is_filler:false, color_bg:'#eef2ff', color_text:'#4338ca', aht_minutes:10, required_tag:'can_fraud',       morning_only:true  },
-  { name:'CALL',        priority:1, is_filler:false, color_bg:'#fef2f2', color_text:'#dc2626', aht_minutes:10, required_tag:'can_call',        morning_only:false },
-  { name:'CHAT',        priority:2, is_filler:false, color_bg:'#fff7ed', color_text:'#ea580c', aht_minutes:8,  required_tag:'can_chat',        morning_only:false },
-  { name:'MAIL',        priority:3, is_filler:false, color_bg:'#eff6ff', color_text:'#2563eb', aht_minutes:5,  required_tag:'can_mail',        morning_only:false },
-  { name:'BACK-OFFICE', priority:4, is_filler:false, color_bg:'#f5f3ff', color_text:'#7c3aed', aht_minutes:10, required_tag:'can_backoffice',  morning_only:false },
-  { name:'CLIENTELING', priority:5, is_filler:true,  color_bg:'#f0fdf4', color_text:'#16a34a', aht_minutes:15, required_tag:'can_clienteling', morning_only:false },
-];
 var BREAK_COLORS = {
   lunch: { bg:'#fef9c3', text:'#a16207' },
   short: { bg:'#fefce8', text:'#ca8a04' },
 };
 
 // Agent eligibility tags: { agentId: Set(['can_fraud','can_backoffice']) }
-var agentTags = {};
 // Monthly BO targets: { year_month: { task: volume } }
-var monthlyBoTargets = {};
 
 // ── DATE HELPERS ──────────────────────────────────────────────────────────
 function getMondayOfCurrentWeek() {
@@ -1150,364 +1135,7 @@ function formatDateDisplay(dateStr) {
 
 function isToday(date) { return toDateStr(date) === toDateStr(new Date()); }
 
-function dowToKeyIndex(dow) { return dow === 0 ? 6 : dow - 1; }
-
-function getDayHoursForDate(dateStr) {
-  const d   = new Date(dateStr + 'T12:00:00');
-  const key = DAY_KEYS[dowToKeyIndex(d.getDay())];
-  return (regulations.day_hours && regulations.day_hours[key])
-    ? regulations.day_hours[key]
-    : { open: 10, close: 18 };
-}
-
 // Columns that exist in the `retail_tasks` DB table
-var TASK_DB_COLS = ['region_id','name','priority','is_filler','color_bg','color_text','aht_minutes'];
-
-function taskToDbRow(t, regionId) {
-  var row = {};
-  TASK_DB_COLS.forEach(function(col){ if (col in t) row[col] = t[col]; });
-  row.region_id = regionId;
-  return row;
-}
-
-async function loadTasks() {
-  var {data, error} = await sb.from('retail_tasks').select('*')
-    .eq('region_id', currentRegionId).order('priority');
-  if (error) { showToast('Error loading tasks','error'); return; }
-  if (!data || data.length === 0) { await seedTasks(); return; }
-
-  // Seed any missing tasks (e.g. FRAUD added in P2)
-  var existingNames = data.map(function(t){return t.name;});
-  var missing = TASK_DEFAULTS.filter(function(d){return !existingNames.includes(d.name);});
-  if (missing.length > 0) {
-    var newRows = missing.map(function(t){ return taskToDbRow(t, currentRegionId); });
-    var res = await sb.from('retail_tasks').upsert(newRows, {onConflict:'region_id,name'}).select();
-    if (res.data) data = data.concat(res.data);
-  }
-
-  // Merge DB rows with TASK_DEFAULTS to restore in-memory-only fields
-  // (required_tag, morning_only) — DB wins for everything else
-  tasks = data.map(function(t){
-    var def = TASK_DEFAULTS.find(function(d){return d.name===t.name;}) || {};
-    return Object.assign({}, def, t);
-  });
-  var aht = {};
-  tasks.forEach(function(t){ aht[t.name] = t.aht_minutes; });
-  regulations.aht_tasks = aht;
-}
-
-async function seedTasks() {
-  var rows = TASK_DEFAULTS.map(function(t){ return taskToDbRow(t, currentRegionId); });
-  var {data, error} = await sb.from('retail_tasks')
-    .upsert(rows, {onConflict:'region_id,name'}).select();
-  if (error) { showToast('Error seeding tasks: '+error.message,'error'); return; }
-  if (data) {
-    tasks = data.map(function(t){
-      var def = TASK_DEFAULTS.find(function(d){return d.name===t.name;}) || {};
-      return Object.assign({}, def, t);
-    });
-    var aht = {}; tasks.forEach(function(t){aht[t.name]=t.aht_minutes;});
-    regulations.aht_tasks = aht;
-  }
-}
-
-async function loadAgentTags() {
-  agentTags = {};
-  if (!agents.length) return;
-  var ids = agents.map(function(a){return a.id;});
-  var {data, error} = await sb.from('retail_agent_tags').select('*').in('agent_id', ids);
-  if (error || !data) return;
-  data.forEach(function(row){
-    if (!agentTags[row.agent_id]) agentTags[row.agent_id] = [];
-    agentTags[row.agent_id].push(row.tag);
-  });
-}
-
-async function toggleAgentTag(agentId, tag) {
-  var cur = agentTags[agentId] || [];
-  var has = cur.includes(tag);
-  var res;
-  if (has) {
-    res = await sb.from('retail_agent_tags').delete().eq('agent_id', agentId).eq('tag', tag);
-    if (!res.error) agentTags[agentId] = cur.filter(function(t){return t!==tag;});
-  } else {
-    res = await sb.from('retail_agent_tags').upsert({agent_id:agentId, tag:tag}, {onConflict:'agent_id,tag'});
-    if (!res.error) { if (!agentTags[agentId]) agentTags[agentId]=[]; agentTags[agentId].push(tag); }
-  }
-  if (res.error) { showToast('Failed to update tag', 'error'); return; }
-  renderAgents();
-}
-
-async function loadMonthlyBoTargets() {
-  monthlyBoTargets = {};
-  if (!currentRegionId) return;
-  var {data, error} = await sb.from('retail_monthly_bo_targets').select('*')
-    .eq('region_id', currentRegionId).order('year').order('month');
-  if (error || !data) return;
-  data.forEach(function(row){
-    var key = row.year + '-' + String(row.month).padStart(2,'0');
-    if (!monthlyBoTargets[key]) monthlyBoTargets[key] = {};
-    monthlyBoTargets[key][row.task] = row.volume;
-  });
-}
-
-function getEquivalentLastYearDate(dateStr) {
-  var d    = new Date(dateStr + 'T12:00:00');
-  var wn   = getWeekNumber(d);
-  var dow  = d.getDay();
-  var ly   = d.getFullYear() - 1;
-  var jan4 = new Date(Date.UTC(ly, 0, 4));
-  var jan4dow = jan4.getUTCDay() || 7;
-  var w1Mon = new Date(jan4);
-  w1Mon.setUTCDate(jan4.getUTCDate() - jan4dow + 1);
-  var tgtMon = new Date(w1Mon);
-  tgtMon.setUTCDate(w1Mon.getUTCDate() + (wn - 1) * 7);
-  var dayOff = dow === 0 ? 6 : dow - 1;
-  var tgt = new Date(tgtMon);
-  tgt.setUTCDate(tgtMon.getUTCDate() + dayOff);
-  return tgt.getUTCFullYear() + '-' +
-    String(tgt.getUTCMonth() + 1).padStart(2,'0') + '-' +
-    String(tgt.getUTCDate()).padStart(2,'0');
-}
-
-async function loadHistoricalVolume(histDates) {
-  historicalVolume = {};
-  if (!histDates.length) return;
-  var { data, error } = await sb
-    .from('retail_historical_volume').select('date,hour,task,volume')
-    .eq('region_id', currentRegionId).in('date', histDates);
-  if (error || !data) return;
-  data.forEach(function(row) {
-    if (!historicalVolume[row.date]) historicalVolume[row.date] = {};
-    if (!historicalVolume[row.date][row.task]) historicalVolume[row.date][row.task] = {};
-    historicalVolume[row.date][row.task][row.hour] = row.volume;
-  });
-}
-
-// ── FORECAST HELPERS ──────────────────────────────────────────────────────
-// Net productive minutes per agent per day:
-// (weekly_hours / working_days × 60) − total break minutes
-function getNetProductiveMinPerDay(openDaysCount) {
-  var workingDays = Math.min(openDaysCount, 5);
-  if (workingDays === 0) return 480;
-  var shiftMin    = (regulations.weekly_hours / workingDays) * 60;
-  var breakMin    = (regulations.breaks || []).reduce(function(s, b) { return s + (b.duration || 0); }, 0);
-  return Math.max(60, shiftMin - breakMin);
-}
-
-// Build auto-forecast for all 7 days from history × trend.
-//
-// CARRY-OVER RULES (all non-CALL tasks: MAIL, CHAT, CLIENTELING, BACK-OFFICE):
-//   • Received BEFORE opening hour of an open day → redistributed to opening hour (same day)
-//   • Received AFTER closing hour of an open day  → carried to next open day's opening hour
-//   • Any volume on a fully CLOSED day (weekend/holiday) → carried to next open day
-//   • If no next open day in this week → noted as carry-to-next-week
-//
-// CALL cannot be received outside operating hours (phones are closed).
-//
-// Incoming carry from PREVIOUS week is computed from the 3 days before days[0]
-// (already loaded into historicalVolume).
-function buildAutoForecast(days) {
-  var trend    = 1 + (regulations.trend_pct || 0) / 100;
-  var aht      = regulations.aht_tasks || {};
-  var ALL_TASKS = ['CALL','CHAT','MAIL','CLIENTELING','BACK-OFFICE','FRAUD'];
-  var NON_CALL  = ['CHAT','MAIL','CLIENTELING','BACK-OFFICE'];
-  // FRAUD has no historical volume — it's populated via monthly BO injection below
-  // openDays = days within the window that are not closed (used for FTE calc)
-  var openDays      = days.filter(function(d) { return !getDayClosureType(toDateStr(d)); });
-
-  // ── Step 2: process each day in order (carry flows naturally) ────────────
-  var carryOver = 0; // starts at 0 for day -3; by day 0 it holds the real carry-in
-  var result    = {};
-
-  days.forEach(function(day) {
-    var ds      = toDateStr(day);
-    var closure = getDayClosureType(ds);
-    var histDs  = getEquivalentLastYearDate(ds);
-    var hist    = historicalVolume[histDs] || {};
-    var hours   = getDayHoursForDate(ds);
-
-    if (closure) {
-      // Fully closed day: collect ALL non-CALL volume → carry forward
-      NON_CALL.forEach(function(task) {
-        var d = hist[task] || {};
-        Object.values(d).forEach(function(v) { carryOver += Math.round(v * trend); });
-      });
-      result[ds] = { contact_volume: 0, aht_minutes: 0, auto: true,
-                     hourly: {}, fte: 0, carryIn: 0, closed: true };
-      return;
-    }
-
-    // Open day ─────────────────────────────────────────────────────────────
-    var dayCarryIn   = carryOver;
-    carryOver        = 0;
-    var newCarryOut  = 0;
-    var hourly       = {};
-
-    ALL_TASKS.forEach(function(task) {
-      var taskData = hist[task] || {};
-      var key      = task.toLowerCase();
-      hourly[key]  = {};
-      var isCall   = (task === 'CALL');
-
-      Object.keys(taskData).forEach(function(hStr) {
-        var h   = parseInt(hStr);
-        var vol = Math.round((taskData[h] || 0) * trend);
-        if (vol === 0) return;
-
-        if (isCall) {
-          // CALL: only operating hours
-          if (h >= hours.open && h < hours.close) {
-            hourly[key][h] = (hourly[key][h] || 0) + vol;
-          }
-          // outside hours: irrelevant (phone is closed)
-        } else {
-          // Non-CALL redistribution
-          if (h < hours.open) {
-            // Before opening → add to opening hour (overnight backlog, same day)
-            hourly[key][hours.open] = (hourly[key][hours.open] || 0) + vol;
-          } else if (h >= hours.close) {
-            // After closing → carry to next open day
-            newCarryOut += vol;
-          } else {
-            // During operating hours → keep
-            hourly[key][h] = (hourly[key][h] || 0) + vol;
-          }
-        }
-      });
-    });
-
-    // Inject carry-in from previous day/weekend into MAIL at opening hour
-    if (dayCarryIn > 0) {
-      hourly['mail'] = hourly['mail'] || {};
-      hourly['mail'][hours.open] = (hourly['mail'][hours.open] || 0) + dayCarryIn;
-    }
-
-    // Roll over after-hours volume to next day
-    carryOver = newCarryOut;
-
-    // Compute total workload (minutes)
-    var totalWorkloadMin = 0;
-    ALL_TASKS.forEach(function(task) {
-      var key     = task.toLowerCase();
-      var taskAht = aht[task] || 0;
-      Object.values(hourly[key] || {}).forEach(function(vol) {
-        totalWorkloadMin += vol * taskAht;
-      });
-    });
-
-    var fte    = 0;
-    var netMin = getNetProductiveMinPerDay(openDays.length);
-    if (totalWorkloadMin > 0) fte = Math.ceil(totalWorkloadMin / netMin);
-
-    result[ds] = {
-      contact_volume: Math.round(totalWorkloadMin),
-      aht_minutes:    0,
-      auto:           true,
-      hourly:         hourly,
-      fte:            fte,
-      carryIn:        dayCarryIn,
-      netMin:         netMin,
-    };
-  });
-
-  // Inject monthly BO+FRAUD distribution on top of historical hourly data
-  var boHourly = buildBoHourlyFromMonthly(days, trend);
-  days.forEach(function(day){
-    var ds = toDateStr(day);
-    if (!result[ds] || result[ds].closed) return;
-    ['BACK-OFFICE','FRAUD'].forEach(function(task){
-      var taskHourly = boHourly[ds] && boHourly[ds][task];
-      if (!taskHourly || !Object.keys(taskHourly).length) return;
-      var key = task.toLowerCase().replace('-','');
-      // Use 'backoffice' and 'fraud' as keys
-      var storeKey = task === 'BACK-OFFICE' ? 'back-office' : 'fraud';
-      result[ds].hourly[storeKey] = result[ds].hourly[storeKey] || {};
-      Object.keys(taskHourly).forEach(function(h){
-        var hi = parseInt(h);
-        result[ds].hourly[storeKey][hi] = (result[ds].hourly[storeKey][hi]||0) + taskHourly[h];
-      });
-      // Add to contact_volume workload
-      var taskAht = aht[task] || 0;
-      Object.values(taskHourly).forEach(function(v){
-        result[ds].contact_volume += Math.round(v * taskAht);
-      });
-    });
-  });
-
-  // Note any remaining carry (last open day's after-hours → next week Monday)
-  if (carryOver > 0 && openDays.length > 0) {
-    var lastDs = toDateStr(openDays[openDays.length - 1]);
-    if (result[lastDs]) result[lastDs].carryToNextWeek = carryOver;
-  }
-
-  return result;
-}
-
-// ── MONTHLY BO → HOURLY DISTRIBUTION ─────────────────────────────────────
-// Spreads a monthly volume target into daily+hourly buckets using the CALL
-// curve as a proxy (BO traffic follows contact patterns).
-// Returns: { 'YYYY-MM-DD': { task: { hour: volume } } }
-function buildBoHourlyFromMonthly(days, trend) {
-  var result = {};
-  days.forEach(function(day){
-    var ds = toDateStr(day);
-    result[ds] = {};
-    if (getDayClosureType(ds)) return;
-
-    var d = new Date(ds + 'T12:00:00');
-    var year = d.getFullYear(), month = d.getMonth() + 1;
-    var key  = year + '-' + String(month).padStart(2,'0');
-    var targets = monthlyBoTargets[key] || {};
-
-    // Count open working days in this month for daily allocation
-    var openDaysInMonth = 0;
-    var daysInMonth = new Date(year, month, 0).getDate();
-    for (var dd = 1; dd <= daysInMonth; dd++) {
-      var testDs = year+'-'+String(month).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
-      if (!getDayClosureType(testDs)) openDaysInMonth++;
-    }
-    if (!openDaysInMonth) openDaysInMonth = 22; // fallback
-
-    var hours = getDayHoursForDate(ds);
-    ['BACK-OFFICE','FRAUD'].forEach(function(task){
-      var monthly = targets[task] || 0;
-      if (!monthly) return;
-      var daily = monthly / openDaysInMonth;
-
-      // Build CALL curve for this day from historicalVolume
-      var histDs   = getEquivalentLastYearDate(ds);
-      var callData = (historicalVolume[histDs] && historicalVolume[histDs]['CALL']) || {};
-      var callTotal = Object.values(callData).reduce(function(s,v){return s+v;},0);
-
-      var hourly = {};
-      var hClose = task === 'FRAUD' ? Math.min(12, hours.close) : hours.close;
-
-      if (callTotal > 0) {
-        // Pattern-based: weight each hour by CALL proportion
-        var callWindowTotal = 0;
-        for (var h = hours.open; h < hClose; h++) callWindowTotal += (callData[h]||0);
-        if (callWindowTotal > 0) {
-          for (var h = hours.open; h < hClose; h++) {
-            var w = (callData[h]||0) / callWindowTotal;
-            if (w > 0) hourly[h] = Math.round(daily * w);
-          }
-        }
-      }
-      // Fallback: flat distribution
-      if (!Object.keys(hourly).length) {
-        var nHours = hClose - hours.open;
-        if (nHours > 0) {
-          for (var h = hours.open; h < hClose; h++) {
-            hourly[h] = Math.round(daily / nHours);
-          }
-        }
-      }
-      result[ds][task] = hourly;
-    });
-  });
-  return result;
-}
 
 function changeWeek(dir) {
   currentWeekMonday.setDate(currentWeekMonday.getDate() + dir * 7);
@@ -1604,12 +1232,9 @@ async function onRegionChange() {
 
   await loadCountries();
   await loadRegulations();
-  await loadTasks();
-  await loadMonthlyBoTargets();
   await loadHolidays(calMonth.getFullYear());
   await loadCalendarData();
   await loadWeekData();
-  await loadAgentTags();
   renderAgents();
 }
 
@@ -1945,19 +1570,6 @@ function hourSelectHtml(id, selected) {
     opts += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + lbl + '</option>';
   }
   return '<select id="' + id + '">' + opts + '</select>';
-}
-
-// ── PARAMETRAGE DES SHIFTS (Settings) ─────────────────────────────────────
-function minToInput(m) {
-  var h = Math.floor(m / 60), mn = m % 60;
-  return String(h).padStart(2, '0') + ':' + String(mn).padStart(2, '0');
-}
-function inputToMin(v) {
-  var p = (v || '').split(':');
-  if (p.length !== 2) return null;
-  var h = parseInt(p[0]), mn = parseInt(p[1]);
-  if (isNaN(h) || isNaN(mn)) return null;
-  return h * 60 + mn;
 }
 
 // Palettes proposees a la creation d'un shift
@@ -2317,13 +1929,6 @@ async function loadWeekData() {
   if (e1) { hideLoader(); showToast('Error loading agents', 'error'); return; }
   agents = agentData || [];
 
-  const { data: fcData, error: e2 } = await sb
-    .from('retail_forecasts').select('*')
-    .eq('region_id', currentRegionId)
-    .gte('forecast_date', startDate).lte('forecast_date', endDate);
-  if (e2) { hideLoader(); showToast('Error loading forecasts', 'error'); return; }
-  forecasts = {};
-  (fcData || []).forEach(function(f) { forecasts[f.forecast_date] = f; });
 
   // Load availability — read day_status column
   availability = {};
@@ -2345,40 +1950,6 @@ async function loadWeekData() {
   hideLoader();
 
   // Load historical volume.
-  // Run on a 10-day window: 3 days before Monday + 7 current days.
-  // This lets carry-over propagate naturally without separate prevCarryIn logic.
-  var allDays = [];
-  for (var bi = 3; bi >= 1; bi--) {
-    var bDay = new Date(days[0]);
-    bDay.setDate(days[0].getDate() - bi);
-    allDays.push(bDay);
-  }
-  allDays = allDays.concat(days);
-
-  var histDates = allDays.map(function(day) { return getEquivalentLastYearDate(toDateStr(day)); });
-  await loadHistoricalVolume(histDates);
-
-  // Build auto-forecast on full 10-day window, take last 7 for this week
-  const autoFcAll = buildAutoForecast(allDays);
-  const autoFc    = {};
-  days.forEach(function(day) { autoFc[toDateStr(day)] = autoFcAll[toDateStr(day)]; });
-
-  // Auto-fill forecast for days with no saved data
-  days.forEach(function(day) {
-    var ds = toDateStr(day);
-    if (!forecasts[ds] || forecasts[ds].contact_volume === 0) {
-      forecasts[ds] = autoFc[ds];
-    } else {
-      // Saved forecast — keep volume but attach computed display fields from auto engine
-      forecasts[ds].hourly   = autoFc[ds].hourly;
-      forecasts[ds].carryIn  = autoFc[ds].carryIn;
-      forecasts[ds].fte      = autoFc[ds].fte;
-      forecasts[ds].netMin   = autoFc[ds].netMin;
-      forecasts[ds].carryToNextWeek = autoFc[ds].carryToNextWeek;
-      forecasts[ds].auto     = false;
-    }
-  });
-
   // Charger les modifications manuelles avant de calculer
   await loadPlanningOverrides();
   await loadAgentPrefs();
@@ -2421,59 +1992,6 @@ function agentOnLeave(agentId, dayStr) {
   return null;
 }
 
-// ── PART-TIME ENGINE ──────────────────────────────────────────────────────
-// All calculations use GROSS shift minutes (contract hours = weekly_hours/nDays×60).
-// Breaks are included inside the gross time — not subtracted.
-// This matches the spec example: 35h/week at 70% → 24.5h target.
-function computePartTimeForAgent(agent, openDays) {
-  var pct = agent.work_pct || 100;
-  if (pct >= 100) return { forcedRestDays: [], partialDay: null };
-
-  var nDays = Math.min(openDays.length, 5);
-  if (nDays === 0) return { forcedRestDays: [], partialDay: null };
-
-  var grossPerDay = (regulations.weekly_hours / nDays) * 60; // e.g. 37.5/5*60 = 450 min
-  var totalGross  = nDays * grossPerDay;                     // = weekly_hours*60
-  var targetGross = regulations.weekly_hours * pct / 100 * 60;
-  var toRemove    = Math.max(0, totalGross - targetGross);
-
-  // Sort open days by volume ascending (least busy = first candidate to remove)
-  var sorted = openDays.slice().sort(function(a, b) {
-    var vA = (forecasts[toDateStr(a)] || {}).contact_volume || 0;
-    var vB = (forecasts[toDateStr(b)] || {}).contact_volume || 0;
-    return vA - vB;
-  });
-
-  var forcedRestDays = [], partialDay = null, remaining = toRemove;
-
-  for (var i = 0; i < sorted.length; i++) {
-    if (remaining <= 0) break;
-    var ds = toDateStr(sorted[i]);
-    if (remaining >= grossPerDay) {
-      // Remove entire day
-      forcedRestDays.push(ds);
-      remaining -= grossPerDay;
-    } else {
-      // Partial day: work (grossPerDay - remaining) gross minutes from opening
-      var workGross = grossPerDay - remaining;
-      var closeMin  = computeCloseMinFromWork(ds, workGross);
-      partialDay    = { ds: ds, closeMin: closeMin, workMin: Math.round(workGross) };
-      remaining     = 0;
-    }
-  }
-
-  return { forcedRestDays: forcedRestDays, partialDay: partialDay };
-}
-
-// Compute end-of-shift minute for a given gross work duration from opening.
-// grossMin includes break time (e.g. 225 gross min from 10:00 → closes 13:45).
-function computeCloseMinFromWork(ds, grossMin) {
-  var hours    = getDayHoursForDate(ds);
-  var openMin  = hours.open * 60;
-  var closeMin = Math.round((openMin + grossMin) / 5) * 5; // round to 5-min boundary
-  return Math.min(closeMin, hours.close * 60);
-}
-
 async function computeAndSaveRotation() {
   const days     = getWeekDays(currentWeekMonday);
   const openDays = days.filter(function(day) { return !getDayClosureType(toDateStr(day)); });
@@ -2484,9 +2002,8 @@ async function computeAndSaveRotation() {
   // Rank open days by workload ascending — lowest workload = preferred rest day
   var ranked = openDays.map(function(day) {
     var ds = toDateStr(day);
-    var f  = forecasts[ds];
-    var wl = f ? f.contact_volume : 0; // already in minutes
-    return { ds: ds, workload: wl };
+    var t  = trafficDaily[ds];
+    return { ds: ds, workload: t ? (t.traffic || 0) : 0 };
   });
   ranked.sort(function(a, b) { return a.workload - b.workload; });
 
@@ -2543,19 +2060,8 @@ async function computeAndSaveRotation() {
     });
   });
 
-  // ── Part-time agents: add rest_parttime on forced rest days ──────────────
-  var ptUpserts = [];
-  agents.forEach(function(agent) {
-    if ((agent.work_pct || 100) >= 100) return;
-    var pt = computePartTimeForAgent(agent, openDays);
-    pt.forcedRestDays.forEach(function(ds) {
-      var existing = availability[agent.id] && availability[agent.id][ds];
-      if (existing === 'absent' || existing === 'rest_override') return;
-      ptUpserts.push({ agent_id: agent.id, week_date: ds, day_status: 'rest_parttime' });
-    });
-  });
-
-  var allUpserts = upserts.concat(ptUpserts);
+  // Les temps partiels sont geres par le moteur d'affectation mensuel.
+  var allUpserts = upserts;
   if (allUpserts.length === 0) return;
 
   var { error } = await sb.from('retail_agent_availability')
@@ -2851,17 +2357,6 @@ async function recomputeMonthDaily(year, month) {
     .upsert(rows, { onConflict: 'store_id,date' });
   if (res.error) { showToast('Traffic save failed', 'error'); return; }
   rows.forEach(function(r) { trafficDaily[r.date] = r; });
-}
-
-// Recalcule le total mensuel a partir des jours (utile apres une correction)
-function monthTotalFromDays(year, month) {
-  var nDays = new Date(year, month, 0).getDate();
-  var sum = 0;
-  for (var d = 1; d <= nDays; d++) {
-    var ds = toDateStr(new Date(year, month - 1, d));
-    if (trafficDaily[ds]) sum += (trafficDaily[ds].traffic || 0);
-  }
-  return sum;
 }
 
 // ── PREVISION "IA" ────────────────────────────────────────────────────────
@@ -3388,13 +2883,8 @@ function renderMonthlyPlanning() {
     // BRIDGE TRAFIC : le trafic reel de la boutique prime sur l'ancien
     // volume de contacts. C'est lui qui determine les jours creux (repos)
     // et les jours charges (tout le monde present).
-    var vol = 0;
-    if (trafficDaily[ds] && trafficDaily[ds].traffic != null) {
-      vol = trafficDaily[ds].traffic;
-    } else {
-      var f = forecasts[ds];
-      vol = (f && f.contact_volume) ? f.contact_volume : 0;
-    }
+    var vol = (trafficDaily[ds] && trafficDaily[ds].traffic != null)
+      ? trafficDaily[ds].traffic : 0;
     monthDays.push({ num: dnum, date: dObj, ds: ds, dow: dObj.getDay(),
                      closure: closure, vol: vol });
   }
@@ -3625,21 +3115,10 @@ function renderMonthlyPlanning() {
     // Sinon : l'agent travaille -> choix du shift selon le trafic et la grille
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid];
 
-    // Part-de-trafic du soir vs matin pour ce jour (via la courbe historique
-    // si dispo, sinon split 50/50). On pousse vers fermeture si le soir charge.
-    var hv = (historicalVolume[day.ds]) || null;
-    var morning = 0, evening = 0;
-    if (hv) {
-      Object.keys(hv).forEach(function(task) {
-        Object.keys(hv[task]).forEach(function(h) {
-          var hour = parseInt(h);
-          var v = hv[task][h] || 0;
-          if (hour < 14) morning += v; else evening += v;
-        });
-      });
-    }
-    var total = morning + evening;
-    var eveningShare = total > 0 ? evening / total : 0.5;
+    // Charge relative de la soiree. Le retail suit une regle simple et
+    // constatee : le vendredi et le samedi sont plus charges en fin de
+    // journee, on renforce alors les shifts de fermeture.
+    var eveningShare = (day.dow === 5 || day.dow === 6) ? 0.60 : 0.50;
 
     // On repartit les agents presents : ceux d'index pair tirent vers le matin
     // (O/M ou OS/MS), les autres vers le soir (C/D ou CS), pondere par le
@@ -3915,27 +3394,6 @@ function renderMonthlyPlanning() {
   attachCrossHighlight();
 }
 
-function addBreakRow() {
-  var tbody = document.querySelector('.breaks-table');
-  if (!tbody) return;
-  var opts = '';
-  for (var h = 0; h <= 23; h++) {
-    opts += '<option value="' + h + '">' + String(h).padStart(2,'0') + ':00</option>';
-  }
-  var tr = document.createElement('tr');
-  tr.className = 'break-row';
-  tr.innerHTML = '<td><input type="text" class="break-name" placeholder="Name" value="Break"></td>' +
-    '<td><input type="number" class="break-dur" value="15" min="5" max="120"></td>' +
-    '<td><select class="break-ws">' + opts + '</select></td>' +
-    '<td><select class="break-we">' + opts + '</select></td>' +
-    '<td><button class="btn-xs btn-xs-danger" onclick="removeBreakRow(this)">\u2715</button></td>';
-  tbody.appendChild(tr);
-}
-
-function removeBreakRow(btn) {
-  btn.closest('tr').remove();
-}
-
 function retailAvatarColor(name) {
   var palette = ['#1a1a2e','#185FA5','#0F6E56','#854F0B','#993556','#3C3489','#5F5E5A'];
   var h = 0; for (var i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) % 997;
@@ -4090,37 +3548,6 @@ async function deleteAgentFromEditor() {
   await loadWeekData();
 }
 
-async function saveAgentStatus(agentId) {
-  var el = document.getElementById('status-' + agentId);
-  if (!el) return;
-  var status = el.value;
-  showLoader();
-  var { error } = await sb.from('retail_agents').update({ status: status }).eq('id', agentId);
-  hideLoader();
-  if (error) { showToast('Failed to save status', 'error'); return; }
-  var a = agents.find(function(x){ return x.id === agentId; });
-  if (a) a.status = status;
-  showToast('Status updated \u2713');
-  renderAgents();
-  if (currentPlanningView === 'monthly') renderMonthlyPlanning();
-}
-
-async function saveAgentWorkPct(agentId) {
-  var el = document.getElementById('pct-' + agentId);
-  if (!el) return;
-  var pct = Math.max(10, Math.min(100, parseInt(el.value) || 100));
-  el.value = pct;
-  showLoader();
-  var { error } = await sb.from('retail_agents').update({ work_pct: pct }).eq('id', agentId);
-  hideLoader();
-  if (error) { showToast('Failed to save', 'error'); return; }
-  // Update local agent record
-  var a = agents.find(function(x){ return x.id === agentId; });
-  if (a) a.work_pct = pct;
-  showToast('Work % updated \u2713');
-  await loadWeekData();
-}
-
 async function addAgent() {
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
   var first  = document.getElementById('new-first-name').value.trim();
@@ -4142,16 +3569,6 @@ async function addAgent() {
   document.getElementById('new-pct').value        = 100;
   document.getElementById('add-agent-form').classList.remove('open');
   showToast(first + ' ' + last + ' added \u2713');
-  await loadWeekData();
-}
-
-async function deleteAgent(id) {
-  if (!confirm('Delete this agent? This cannot be undone.')) return;
-  showLoader();
-  const { error } = await sb.from('retail_agents').delete().eq('id', id);
-  hideLoader();
-  if (error) { showToast('Failed to delete', 'error'); return; }
-  showToast('Agent deleted');
   await loadWeekData();
 }
 
