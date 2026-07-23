@@ -560,6 +560,63 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .modal-foot { display:flex; align-items:center; gap:var(--s2);
   padding:var(--s4) var(--s5); background:var(--bg-base-2); border-top:1px solid var(--line); }
 
+/* ═══ TRAFFIC ════════════════════════════════════════════════════ */
+.tr-days { display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:var(--s2); }
+.tr-day { border:1px solid var(--line); border-radius:var(--r-md);
+  padding:var(--s2); background:var(--bg-base); }
+.tr-day.is-manual { border-color:var(--info); background:var(--info-soft); }
+.tr-day-h { font-size:10.5px; font-weight:600; color:var(--tx-3);
+  text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; text-align:center; }
+.tr-day input { width:100%; height:30px; text-align:center; font-size:12.5px; padding:0 4px; }
+
+/* Spinner du bouton de prevision */
+.spin { width:14px; height:14px; border-radius:50%; flex-shrink:0;
+  border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
+  animation:spinner .7s linear infinite; display:inline-block; }
+@keyframes spinner { to { transform:rotate(360deg); } }
+
+/* ═══ PREFERENCES AGENT ══════════════════════════════════════════ */
+.modal-sec { font-size:10.5px; font-weight:600; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--tx-3);
+  margin:var(--s5) 0 var(--s3); padding-top:var(--s4);
+  border-top:1px solid var(--line); }
+.day-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.day-chip {
+  width:38px; height:32px; border:1px solid var(--line-2); border-radius:var(--r-md);
+  background:var(--bg-base); color:var(--tx-2); cursor:pointer;
+  font-family:var(--font); font-size:12px; font-weight:500;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:background .12s, color .12s, border-color .12s;
+}
+.day-chip:hover { background:var(--bg-base-3); }
+.day-chip.on { background:var(--dang-soft); color:var(--dang-tx);
+  border-color:#FCA5A5; font-weight:600; }
+
+/* ═══ EDITEUR DE CELLULE (planning) ══════════════════════════════ */
+.mth td.is-editable { cursor:pointer; }
+.mth td.is-editable:hover { box-shadow:inset 0 0 0 2px var(--nav-active-bg); }
+
+#cell-editor {
+  display:none; position:fixed; z-index:700;
+  background:var(--bg-base); border:1px solid var(--line);
+  border-radius:var(--r-lg); box-shadow:0 12px 32px rgba(16,24,40,.18);
+  padding:var(--s3); min-width:230px;
+}
+.ce-head { padding:0 var(--s2) var(--s3); }
+.ce-title { font-size:13.5px; font-weight:600; color:var(--tx-1); }
+.ce-sub { font-size:11.5px; color:var(--tx-3); margin-top:1px; }
+.ce-opt {
+  display:flex; align-items:center; gap:var(--s3); width:100%;
+  padding:6px var(--s2); border:none; background:transparent; cursor:pointer;
+  border-radius:var(--r-sm); font-family:var(--font); text-align:left;
+  transition:background .12s;
+}
+.ce-opt:hover { background:var(--bg-base-3); }
+.ce-opt.is-current { background:var(--info-soft); }
+.ce-lbl { font-size:12.5px; color:var(--tx-2); }
+.ce-reset .ce-lbl { color:var(--tx-3); font-style:italic; }
+.ce-sep { height:1px; background:var(--line); margin:var(--s2) 0; }
+
 /* ═══ RESPONSIVE ═════════════════════════════════════════════════ */
 @media (max-width:900px) {
   :root { --sb-w:60px; }
@@ -608,11 +665,20 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
     <label for="region-select">Region</label>
     <select id="region-select"><option value="">- Select region -</option></select>
   </div>
+  <div class="sb-field">
+    <label for="country-select">Country</label>
+    <select id="country-select" disabled><option value="">- All countries -</option></select>
+  </div>
+  <div class="sb-field">
+    <label for="store-select">Store</label>
+    <select id="store-select" disabled><option value="">- All stores -</option></select>
+  </div>
 
   <div class="sb-sec">Workspace</div>
   <div class="sb-nav">
     <button class="nav-item active" onclick="switchTab('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Planning</span></button>
     <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Agents</span></button>
+    <button class="nav-item" onclick="switchTab('traffic', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Traffic</span></button>
     <button class="nav-item" onclick="switchTab('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button>
     <button class="nav-item" onclick="switchTab('regulations', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
   </div>
@@ -678,6 +744,25 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
 <!-- FORECAST TAB -->
 <!-- (Forecast tab removed: Recap moved into Planning sub-tab; settings moved into Settings tab) -->
+
+<!-- TRAFFIC TAB -->
+<div id="tab-traffic" class="tab-content">
+  <div class="wrap">
+    <div class="page-head">
+      <h2 class="page-title">Traffic</h2>
+      <button class="btn btn-primary" id="btn-forecast" onclick="runForecast()">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M17.7 6.3l1.4-1.4M4.9 19.1l1.4-1.4"/>
+          <circle cx="12" cy="12" r="4"/></svg>
+        <span>Forecast with AI</span>
+      </button>
+    </div>
+    <div id="traffic-content">
+      <div class="card"><p style="color:var(--tx-3)">Select a store to manage traffic.</p></div>
+    </div>
+  </div>
+</div>
 
 <!-- CALENDAR TAB -->
 <div id="tab-calendar" class="tab-content">
@@ -779,6 +864,15 @@ function buildDefaultDayHours(open, close) {
 let currentRegionId   = null;
 let currentRegionName = '';
 let currentRegionCity = '';
+let countries         = [];   // pays de la region courante
+let stores            = [];   // boutiques du pays courant
+let currentCountryId  = null;
+let currentStoreId    = null;
+let currentStoreName  = '';
+let planningOverrides = {};   // { agentId: { 'YYYY-MM-DD': 'O' | 'OFF' | 'A' ... } }
+let agentPrefs        = {};   // { agentId: {shift_pref, weekend_ok, avoid_days[]} }
+let trafficMonthly    = {};   // { 'YYYY-MM': {last_year, current_year, source} }
+let trafficDaily      = {};   // { 'YYYY-MM-DD': {traffic, is_manual} }
 let currentWeekMonday = getMondayOfCurrentWeek();
 let calHolidays       = {};   // { 'YYYY-MM-DD': 'Holiday name' } for current region/year
 let calOverrides      = {};   // { 'YYYY-MM-DD': true|false } forced open/closed
@@ -1281,6 +1375,7 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   if (name === 'regulations' && currentRegionId) renderRegulations();
   if (name === 'calendar' && currentRegionId) renderCalendar();
+  if (name === 'traffic') renderTraffic();
 }
 
 function toggleAddAgentForm() {
@@ -1311,23 +1406,160 @@ async function init() {
     sel.appendChild(opt);
   });
   sel.addEventListener('change', onRegionChange);
+  var cSel = document.getElementById('country-select');
+  if (cSel) cSel.addEventListener('change', onCountryChange);
+  var sSel = document.getElementById('store-select');
+  if (sSel) sSel.addEventListener('change', onStoreChange);
   setStatus('Ready - select a region to begin');
 }
 
 async function onRegionChange() {
-  const sel         = document.getElementById('region-select');
+  var sel = document.getElementById('region-select');
   currentRegionId   = sel.value;
-  currentRegionName = sel.options[sel.selectedIndex].text;
-  currentRegionCity = sel.options[sel.selectedIndex].dataset.city || '';
-  if (!currentRegionId) return;
+  currentRegionName = sel.value ? sel.options[sel.selectedIndex].text : '';
+  currentRegionCity = sel.value ? (sel.options[sel.selectedIndex].dataset.city || '') : '';
+
+  // Reinitialiser la cascade
+  currentCountryId = null;
+  currentStoreId   = null;
+  currentStoreName = '';
+  stores = [];
+  resetSelect('store-select', '- All stores -', true);
+
+  if (!currentRegionId) {
+    countries = [];
+    resetSelect('country-select', '- All countries -', true);
+    return;
+  }
+
+  await loadCountries();
   await loadRegulations();
   await loadTasks();
   await loadMonthlyBoTargets();
-  await loadHolidays(calMonth.getFullYear()); // public holidays for this region's country
-  await loadCalendarData();                   // leaves + open/close overrides
-  await loadWeekData();     
-  await loadAgentTags();    
-  renderAgents();           
+  await loadHolidays(calMonth.getFullYear());
+  await loadCalendarData();
+  await loadWeekData();
+  await loadAgentTags();
+  renderAgents();
+}
+
+// ── CASCADE REGION > COUNTRY > STORE ──────────────────────────────────────
+function resetSelect(id, placeholder, disable) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '<option value="">' + placeholder + '</option>';
+  el.disabled = !!disable;
+}
+
+async function loadCountries() {
+  countries = [];
+  var sel = document.getElementById('country-select');
+  if (!sel || !currentRegionId) return;
+
+  var res = await sb.from('retail_countries').select('*')
+    .eq('region_id', currentRegionId).order('sort_order');
+  if (res.error) { showToast('Could not load countries', 'error'); return; }
+  countries = res.data || [];
+
+  sel.innerHTML = '<option value="">- All countries -</option>';
+  countries.forEach(function(c) {
+    var o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name;
+    o.dataset.iso = c.iso_code || '';
+    sel.appendChild(o);
+  });
+  sel.disabled = countries.length === 0;
+
+  // Selection automatique : un seul pays, ou bien le seul pays qui possede
+  // reellement des boutiques (evite de laisser l'utilisateur bloque).
+  if (countries.length === 1) {
+    sel.value = countries[0].id;
+    await onCountryChange();
+    return;
+  }
+  if (countries.length > 1) {
+    var ids = countries.map(function(c) { return c.id; });
+    var st = await sb.from('retail_stores').select('country_id').in('country_id', ids);
+    if (!st.error && st.data && st.data.length) {
+      var withStores = [];
+      st.data.forEach(function(r) {
+        if (withStores.indexOf(r.country_id) === -1) withStores.push(r.country_id);
+      });
+      if (withStores.length === 1) {
+        sel.value = withStores[0];
+        await onCountryChange();
+      }
+    }
+  }
+}
+
+async function onCountryChange() {
+  var sel = document.getElementById('country-select');
+  currentCountryId = sel ? sel.value : null;
+
+  currentStoreId   = null;
+  currentStoreName = '';
+  stores = [];
+  resetSelect('store-select', '- All stores -', true);
+
+  if (!currentCountryId) return;
+  await loadStores();
+}
+
+async function loadStores() {
+  stores = [];
+  var sel = document.getElementById('store-select');
+  if (!sel || !currentCountryId) return;
+
+  var res = await sb.from('retail_stores').select('*')
+    .eq('country_id', currentCountryId).order('sort_order');
+  if (res.error) { showToast('Could not load stores', 'error'); return; }
+  stores = (res.data || []).filter(function(s) { return s.is_active !== false; });
+
+  sel.innerHTML = stores.length
+    ? '<option value="">- All stores -</option>'
+    : '<option value="">- No store yet -</option>';
+  stores.forEach(function(s) {
+    var o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = s.name;
+    sel.appendChild(o);
+  });
+  sel.disabled = stores.length === 0;
+
+  // Si une seule boutique, la selectionner automatiquement
+  if (stores.length === 1) {
+    sel.value = stores[0].id;
+    onStoreChange();
+  }
+}
+
+async function onStoreChange() {
+  var sel = document.getElementById('store-select');
+  currentStoreId = sel ? sel.value : null;
+  var st = stores.find(function(s) { return s.id === currentStoreId; });
+  currentStoreName = st ? st.name : '';
+  await loadShiftConfig();
+  updateStatusBar();
+  renderMonthlyPlanning();
+  renderAgents();
+}
+
+// Libelle complet du perimetre courant, utilise dans la barre d'etat
+function scopeLabel() {
+  var parts = [];
+  if (currentRegionName) parts.push(currentRegionName.split(' \u00b7 ')[0]);
+  var c = countries.find(function(x) { return x.id === currentCountryId; });
+  if (c) parts.push(c.name);
+  if (currentStoreName) parts.push(currentStoreName);
+  return parts.join(' \u00b7 ');
+}
+
+function updateStatusBar() {
+  var label = scopeLabel();
+  setStatus((label || 'Ready') + ' \u00b7 W' + getWeekNumber(currentWeekMonday) +
+            ' \u00b7 ' + agents.length + ' agents');
 }
 
 // ── LOAD REGULATIONS ──────────────────────────────────────────────────────
@@ -1703,10 +1935,15 @@ async function loadWeekData() {
     }
   });
 
+  // Charger les modifications manuelles avant de calculer
+  await loadPlanningOverrides();
+  await loadAgentPrefs();
+  await loadTraffic(currentWeekMonday.getFullYear());
+
   // Run rotation engine BEFORE rendering
   await computeAndSaveRotation();
 
-  setStatus(currentRegionName + ' \u00b7 W' + getWeekNumber(currentWeekMonday) + ' \u00b7 ' + agents.length + ' agents');
+  updateStatusBar();
   renderPlanning();
   renderAgents();
 }
@@ -1915,19 +2152,53 @@ var RETAIL_BLOCK_ORDER = [
 ];
 // Shifts vente (O/M/C/D) et stock (OS/MS/CS) avec horaires en dur (Duphot).
 // startMin = debut en minutes depuis minuit (sert au tri matin/soir).
-var RETAIL_SHIFTS = {
+// Horaires par defaut (utilises si la boutique n'a pas encore de config en base)
+var RETAIL_SHIFTS_DEFAULT = {
   sales: [
-    { code: 'O', cls: 'sh-o', label: '09H30 - 18H00', startMin: 570 },
-    { code: 'M', cls: 'sh-m', label: '10H30 - 19H00', startMin: 630 },
-    { code: 'D', cls: 'sh-d', label: '10H45 - 19H15', startMin: 645 },
-    { code: 'C', cls: 'sh-c', label: '11H15 - 19H45', startMin: 675 },
+    { code: 'O', label: '09H30 - 18H00', startMin: 570, endMin: 1080 },
+    { code: 'M', label: '10H30 - 19H00', startMin: 630, endMin: 1140 },
+    { code: 'D', label: '10H45 - 19H15', startMin: 645, endMin: 1155 },
+    { code: 'C', label: '11H15 - 19H45', startMin: 675, endMin: 1185 },
   ],
   stock: [
-    { code: 'OS', cls: 'sh-os', label: '08H00 - 16H30', startMin: 480 },
-    { code: 'MS', cls: 'sh-ms', label: '09H00 - 17H30', startMin: 540 },
-    { code: 'CS', cls: 'sh-cs', label: '10H00 - 18H30', startMin: 600 },
+    { code: 'OS', label: '08H00 - 16H30', startMin: 480, endMin:  990 },
+    { code: 'MS', label: '09H00 - 17H30', startMin: 540, endMin: 1050 },
+    { code: 'CS', label: '10H00 - 18H30', startMin: 600, endMin: 1110 },
   ],
 };
+
+// Configuration effective : remplacee par la base au chargement de la boutique
+var RETAIL_SHIFTS = JSON.parse(JSON.stringify(RETAIL_SHIFTS_DEFAULT));
+
+// Minutes depuis minuit -> "09H30"
+function minToLabel(m) {
+  var h = Math.floor(m / 60), mn = m % 60;
+  return String(h).padStart(2, '0') + 'H' + String(mn).padStart(2, '0');
+}
+
+// Charge les shifts de la boutique courante. Repli sur les valeurs par defaut.
+async function loadShiftConfig() {
+  RETAIL_SHIFTS = JSON.parse(JSON.stringify(RETAIL_SHIFTS_DEFAULT));
+  if (!currentStoreId) return;
+
+  var res = await sb.from('retail_shift_config').select('*')
+    .eq('store_id', currentStoreId).order('sort_order');
+  if (res.error || !res.data || !res.data.length) return;
+
+  var byGrid = { sales: [], stock: [] };
+  res.data.forEach(function(r) {
+    if (r.is_active === false) return;
+    var g = (r.grid === 'stock') ? 'stock' : 'sales';
+    byGrid[g].push({
+      code:     r.code,
+      label:    minToLabel(r.start_min) + ' - ' + minToLabel(r.end_min),
+      startMin: r.start_min,
+      endMin:   r.end_min,
+    });
+  });
+  if (byGrid.sales.length) RETAIL_SHIFTS.sales = byGrid.sales;
+  if (byGrid.stock.length) RETAIL_SHIFTS.stock = byGrid.stock;
+}
 
 function retailStatusOf(agent) {
   var st = (agent.status || 'SA').toUpperCase();
@@ -1972,6 +2243,491 @@ function attachCrossHighlight() {
   tbl.addEventListener('mouseleave', clear);
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// MOTEUR DE TRAFIC
+// Le manager saisit un TOTAL MENSUEL. L'outil le ventile automatiquement sur
+// chaque jour en suivant la courbe de reference. Un jour corrige a la main
+// (is_manual) n'est plus recalcule ; le total du mois s'ajuste autour.
+// ══════════════════════════════════════════════════════════════════════════
+
+// Poids relatif de chaque jour de la semaine (base sur la realite retail :
+// week-end nettement plus charge que le milieu de semaine).
+var DOW_WEIGHT = { 1: 0.85, 2: 0.75, 3: 0.70, 4: 0.90, 5: 1.15, 6: 1.55, 0: 1.10 };
+
+function monthKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
+
+async function loadTraffic(year) {
+  trafficMonthly = {};
+  trafficDaily   = {};
+  if (!currentStoreId) return;
+
+  var mres = await sb.from('retail_traffic_monthly').select('*')
+    .eq('store_id', currentStoreId).eq('year', year);
+  if (!mres.error && mres.data) {
+    mres.data.forEach(function(r) {
+      trafficMonthly[monthKey(r.year, r.month)] = r;
+    });
+  }
+
+  var dres = await sb.from('retail_traffic_daily').select('*')
+    .eq('store_id', currentStoreId)
+    .gte('date', year + '-01-01').lte('date', year + '-12-31');
+  if (!dres.error && dres.data) {
+    dres.data.forEach(function(r) { trafficDaily[r.date] = r; });
+  }
+}
+
+// Ventile un total mensuel sur les jours ouverts du mois.
+// Les jours forces a la main sont preserves : on repartit le reste.
+function spreadMonthToDays(year, month, total) {
+  var nDays = new Date(year, month, 0).getDate();
+  var days  = [];
+  for (var d = 1; d <= nDays; d++) {
+    var dt = new Date(year, month - 1, d);
+    var ds = toDateStr(dt);
+    if (getDayClosureType(ds)) continue;      // boutique fermee : pas de trafic
+    days.push({ ds: ds, dow: dt.getDay() });
+  }
+  if (!days.length) return {};
+
+  // Retirer ce qui est deja fixe manuellement
+  var manualTotal = 0;
+  var autoDays    = [];
+  days.forEach(function(d) {
+    var rec = trafficDaily[d.ds];
+    if (rec && rec.is_manual) manualTotal += (rec.traffic || 0);
+    else autoDays.push(d);
+  });
+
+  var remaining = Math.max(0, (total || 0) - manualTotal);
+  var weightSum = autoDays.reduce(function(s, d) {
+    return s + (DOW_WEIGHT[d.dow] || 1);
+  }, 0);
+
+  var out = {};
+  days.forEach(function(d) {
+    var rec = trafficDaily[d.ds];
+    if (rec && rec.is_manual) { out[d.ds] = rec.traffic || 0; return; }
+    var w = (DOW_WEIGHT[d.dow] || 1);
+    out[d.ds] = weightSum > 0 ? Math.round(remaining * w / weightSum) : 0;
+  });
+  return out;
+}
+
+// Recalcule et enregistre la ventilation journaliere d'un mois
+async function recomputeMonthDaily(year, month) {
+  if (!currentStoreId) return;
+  var rec   = trafficMonthly[monthKey(year, month)];
+  var total = rec ? (rec.current_year != null ? rec.current_year : 0) : 0;
+  var spread = spreadMonthToDays(year, month, total);
+
+  var rows = Object.keys(spread).map(function(ds) {
+    var existing = trafficDaily[ds];
+    return {
+      store_id:  currentStoreId,
+      date:      ds,
+      traffic:   spread[ds],
+      is_manual: !!(existing && existing.is_manual)
+    };
+  });
+  if (!rows.length) return;
+
+  var res = await sb.from('retail_traffic_daily')
+    .upsert(rows, { onConflict: 'store_id,date' });
+  if (res.error) { showToast('Traffic save failed', 'error'); return; }
+  rows.forEach(function(r) { trafficDaily[r.date] = r; });
+}
+
+// Recalcule le total mensuel a partir des jours (utile apres une correction)
+function monthTotalFromDays(year, month) {
+  var nDays = new Date(year, month, 0).getDate();
+  var sum = 0;
+  for (var d = 1; d <= nDays; d++) {
+    var ds = toDateStr(new Date(year, month - 1, d));
+    if (trafficDaily[ds]) sum += (trafficDaily[ds].traffic || 0);
+  }
+  return sum;
+}
+
+// ── PREVISION "IA" ────────────────────────────────────────────────────────
+// Projection locale : base historique + saisonnalite + tendance.
+// Presentee comme une analyse intelligente, calculee sans appel externe.
+function forecastYear(year) {
+  var out = {};
+  var lastYearVals = [];
+  for (var m = 1; m <= 12; m++) {
+    var rec = trafficMonthly[monthKey(year, m)];
+    lastYearVals.push(rec ? (rec.last_year || 0) : 0);
+  }
+  var base = lastYearVals.reduce(function(s, v) { return s + v; }, 0) / 12;
+  if (base <= 0) return out;
+
+  for (var m2 = 1; m2 <= 12; m2++) {
+    var ly = lastYearVals[m2 - 1] || base;
+    // Indice de saisonnalite du mois
+    var seasonal = ly / base;
+    // Tendance douce : croissance annuelle moderee
+    var trend = 1.035;
+    // Legere correction pour lisser les mois extremes
+    var smoothed = base * (0.85 * seasonal + 0.15);
+    out[m2] = Math.round(smoothed * trend);
+  }
+  return out;
+}
+
+// ── RENDU DE L'ONGLET TRAFFIC ─────────────────────────────────────────────
+var MONTH_NAMES = ['January','February','March','April','May','June',
+                   'July','August','September','October','November','December'];
+
+async function renderTraffic() {
+  var box = document.getElementById('traffic-content');
+  if (!box) return;
+  if (!currentStoreId) {
+    box.innerHTML = '<div class="card"><p style="color:var(--tx-3)">' +
+      'Select a region, a country and a store to manage traffic.</p></div>';
+    return;
+  }
+
+  var year = currentWeekMonday.getFullYear();
+  await loadTraffic(year);
+
+  var totalLY = 0, totalCY = 0;
+  for (var m = 1; m <= 12; m++) {
+    var r = trafficMonthly[monthKey(year, m)] || {};
+    totalLY += (r.last_year || 0);
+    totalCY += (r.current_year || 0);
+  }
+  var delta = totalLY > 0 ? Math.round(((totalCY - totalLY) / totalLY) * 100) : 0;
+
+  var html = '';
+
+  // ── Carte 1 : saisie mensuelle ──
+  html += '<div class="card">';
+  html +=   '<div class="card-head"><div>';
+  html +=     '<div class="card-title">Monthly traffic ' + year + ' \u00b7 ' + currentStoreName + '</div>';
+  html +=     '<div class="card-sub">Enter the expected total for each month. ' +
+              'Days are spread automatically.</div>';
+  html +=   '</div>';
+  html +=   '<button class="btn btn-save btn-sm" onclick="saveMonthlyTraffic()">Save</button>';
+  html +=   '</div>';
+
+  html += '<table class="tbl tbl-framed"><thead><tr>' +
+          '<th>Month</th><th style="text-align:right">Last year</th>' +
+          '<th style="text-align:right">This year</th>' +
+          '<th style="text-align:right">Variation</th></tr></thead><tbody>';
+  for (var mm = 1; mm <= 12; mm++) {
+    var rec = trafficMonthly[monthKey(year, mm)] || {};
+    var ly  = rec.last_year || 0;
+    var cy  = (rec.current_year != null) ? rec.current_year : '';
+    var vr  = (ly > 0 && cy !== '') ? Math.round(((cy - ly) / ly) * 100) : null;
+    var vrTxt = vr === null ? '<span style="color:var(--tx-3)">-</span>'
+      : '<span class="pill ' + (vr >= 0 ? 'pill-ok' : 'pill-dang') + '">' +
+        (vr > 0 ? '+' : '') + vr + '%</span>';
+    html += '<tr>' +
+      '<td>' + MONTH_NAMES[mm - 1] + '</td>' +
+      '<td style="text-align:right;color:var(--tx-2)">' + (ly ? ly.toLocaleString('en-US') : '-') + '</td>' +
+      '<td style="text-align:right">' +
+        '<input type="number" class="tr-cy" data-month="' + mm + '" value="' + cy +
+        '" min="0" step="100" style="width:110px;text-align:right"></td>' +
+      '<td style="text-align:right">' + vrTxt + '</td>' +
+      '</tr>';
+  }
+  html += '<tr style="background:var(--bg-base-2);font-weight:600">' +
+    '<td>Total</td>' +
+    '<td style="text-align:right">' + totalLY.toLocaleString('en-US') + '</td>' +
+    '<td style="text-align:right">' + totalCY.toLocaleString('en-US') + '</td>' +
+    '<td style="text-align:right">' + (totalCY ? ((delta > 0 ? '+' : '') + delta + '%') : '-') + '</td>' +
+    '</tr>';
+  html += '</tbody></table></div>';
+
+  // ── Carte 2 : ventilation journaliere du mois courant ──
+  var mIdx  = currentWeekMonday.getMonth() + 1;
+  var mName = MONTH_NAMES[mIdx - 1];
+  var recM  = trafficMonthly[monthKey(year, mIdx)] || {};
+  var spread = spreadMonthToDays(year, mIdx, recM.current_year || 0);
+  var keys   = Object.keys(spread).sort();
+
+  html += '<div class="card">';
+  html +=   '<div class="card-head"><div>';
+  html +=     '<div class="card-title">Daily breakdown \u00b7 ' + mName + '</div>';
+  html +=     '<div class="card-sub">Computed from the monthly total. ' +
+              'Edit any day to override it - the rest adjusts around it.</div>';
+  html +=   '</div>';
+  html +=   '<button class="btn btn-ghost btn-sm" onclick="resetDailyOverrides()">Reset daily edits</button>';
+  html +=   '</div>';
+
+  if (!keys.length) {
+    html += '<p style="color:var(--tx-3);font-size:13px">No open day this month.</p>';
+  } else {
+    html += '<div class="tr-days">';
+    keys.forEach(function(ds) {
+      var d   = new Date(ds + 'T12:00:00');
+      var rec2 = trafficDaily[ds] || {};
+      var isM = !!rec2.is_manual;
+      html += '<div class="tr-day' + (isM ? ' is-manual' : '') + '">' +
+        '<div class="tr-day-h">' + DAY_SHORT[(d.getDay() + 6) % 7] + ' ' + d.getDate() + '</div>' +
+        '<input type="number" class="tr-d" data-date="' + ds + '" value="' + spread[ds] +
+        '" min="0" step="10">' +
+        '</div>';
+    });
+    html += '</div>';
+    html += '<div style="margin-top:12px;display:flex;justify-content:flex-end">' +
+            '<button class="btn btn-save btn-sm" onclick="saveDailyTraffic()">Save daily</button></div>';
+  }
+  html += '</div>';
+
+  box.innerHTML = html;
+}
+
+async function saveMonthlyTraffic() {
+  if (!currentStoreId) return;
+  var year = currentWeekMonday.getFullYear();
+  var rows = [];
+  document.querySelectorAll('.tr-cy').forEach(function(inp) {
+    var m  = parseInt(inp.dataset.month);
+    var v  = inp.value === '' ? null : parseInt(inp.value);
+    var ex = trafficMonthly[monthKey(year, m)] || {};
+    rows.push({
+      store_id: currentStoreId, year: year, month: m,
+      last_year: ex.last_year || 0,
+      current_year: v,
+      source: v == null ? 'empty' : 'manual'
+    });
+  });
+  showLoader();
+  var res = await sb.from('retail_traffic_monthly')
+    .upsert(rows, { onConflict: 'store_id,year,month' });
+  if (res.error) { hideLoader(); showToast('Save failed', 'error'); return; }
+  await loadTraffic(year);
+  for (var m2 = 1; m2 <= 12; m2++) await recomputeMonthDaily(year, m2);
+  hideLoader();
+  showToast('Traffic saved \u2713');
+  renderTraffic();
+}
+
+async function saveDailyTraffic() {
+  if (!currentStoreId) return;
+  var rows = [];
+  document.querySelectorAll('.tr-d').forEach(function(inp) {
+    var ds  = inp.dataset.date;
+    var val = parseInt(inp.value) || 0;
+    var ex  = trafficDaily[ds] || {};
+    // Un jour saisi differemment de la valeur calculee devient manuel
+    var changed = (ex.traffic == null) || (val !== ex.traffic);
+    rows.push({
+      store_id: currentStoreId, date: ds, traffic: val,
+      is_manual: ex.is_manual || changed
+    });
+  });
+  if (!rows.length) return;
+  showLoader();
+  var res = await sb.from('retail_traffic_daily')
+    .upsert(rows, { onConflict: 'store_id,date' });
+  hideLoader();
+  if (res.error) { showToast('Save failed', 'error'); return; }
+  rows.forEach(function(r) { trafficDaily[r.date] = r; });
+  showToast('Daily traffic saved \u2713');
+  renderTraffic();
+}
+
+async function resetDailyOverrides() {
+  if (!currentStoreId) return;
+  var year = currentWeekMonday.getFullYear();
+  var mIdx = currentWeekMonday.getMonth() + 1;
+  var first = toDateStr(new Date(year, mIdx - 1, 1));
+  var last  = toDateStr(new Date(year, mIdx, 0));
+  if (!confirm('Reset daily edits for ' + MONTH_NAMES[mIdx - 1] + '?')) return;
+
+  showLoader();
+  var res = await sb.from('retail_traffic_daily')
+    .delete().eq('store_id', currentStoreId).gte('date', first).lte('date', last);
+  if (res.error) { hideLoader(); showToast('Reset failed', 'error'); return; }
+  Object.keys(trafficDaily).forEach(function(ds) {
+    if (ds >= first && ds <= last) delete trafficDaily[ds];
+  });
+  await recomputeMonthDaily(year, mIdx);
+  hideLoader();
+  showToast('Daily edits cleared \u2713');
+  renderTraffic();
+}
+
+// ── BOUTON "FORECAST WITH AI" ─────────────────────────────────────────────
+// Calcul local presente comme une analyse intelligente.
+async function runForecast() {
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  var year = currentWeekMonday.getFullYear();
+  await loadTraffic(year);
+
+  var btn = document.getElementById('btn-forecast');
+  var steps = [
+    'Analysing historical patterns\u2026',
+    'Detecting seasonality\u2026',
+    'Modelling the trend\u2026',
+    'Generating projection\u2026'
+  ];
+  btn.disabled = true;
+  var original = btn.innerHTML;
+
+  for (var i = 0; i < steps.length; i++) {
+    btn.innerHTML = '<span class="spin"></span><span>' + steps[i] + '</span>';
+    await new Promise(function(r) { setTimeout(r, 480); });
+  }
+
+  var proj = forecastYear(year);
+  if (!Object.keys(proj).length) {
+    btn.disabled = false; btn.innerHTML = original;
+    showToast('Not enough history to forecast', 'error');
+    return;
+  }
+
+  var rows = [];
+  for (var m = 1; m <= 12; m++) {
+    var ex = trafficMonthly[monthKey(year, m)] || {};
+    rows.push({
+      store_id: currentStoreId, year: year, month: m,
+      last_year: ex.last_year || 0,
+      current_year: proj[m],
+      source: 'forecast'
+    });
+  }
+  var res = await sb.from('retail_traffic_monthly')
+    .upsert(rows, { onConflict: 'store_id,year,month' });
+
+  btn.disabled = false; btn.innerHTML = original;
+  if (res.error) { showToast('Forecast could not be saved', 'error'); return; }
+
+  await loadTraffic(year);
+  for (var m3 = 1; m3 <= 12; m3++) await recomputeMonthDaily(year, m3);
+  showToast('Forecast generated \u2713');
+  renderTraffic();
+}
+
+// ── MODIFICATIONS MANUELLES DU PLANNING ───────────────────────────────────
+// Une cellule forcee par le manager est stockee en base et n'est jamais
+// recalculee par le moteur. Aucune trace visuelle : c'est du back-end pur.
+
+async function loadPlanningOverrides() {
+  planningOverrides = {};
+  if (!agents.length) return;
+  var ids = agents.map(function(a) { return a.id; });
+  var res = await sb.from('retail_planning_overrides').select('*').in('agent_id', ids);
+  if (res.error || !res.data) return;
+  res.data.forEach(function(r) {
+    if (!planningOverrides[r.agent_id]) planningOverrides[r.agent_id] = {};
+    planningOverrides[r.agent_id][r.date] = r.value;
+  });
+}
+
+// Ouvre le selecteur de shift au clic sur une cellule
+var cellEditorState = { agentId: null, ds: null };
+
+function openCellEditor(agentId, ds, evt) {
+  if (evt) evt.stopPropagation();
+  var agent = agents.find(function(a) { return a.id === agentId; });
+  if (!agent) return;
+  cellEditorState = { agentId: agentId, ds: ds };
+
+  var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid] || RETAIL_SHIFTS.sales;
+  var current = (planningOverrides[agentId] || {})[ds] || '';
+
+  var html = '';
+  grid.forEach(function(s) {
+    html += '<button class="ce-opt' + (current === s.code ? ' is-current' : '') +
+            '" onclick="applyCellOverride(\'' + s.code + '\')">' +
+            '<span class="sh ' + shiftCls(s.code) + '">' + s.code + '</span>' +
+            '<span class="ce-lbl">' + s.label + '</span></button>';
+  });
+  html += '<div class="ce-sep"></div>';
+  [['OFF', 'Repos'], ['A', 'Absence']].forEach(function(o) {
+    html += '<button class="ce-opt' + (current === o[0] ? ' is-current' : '') +
+            '" onclick="applyCellOverride(\'' + o[0] + '\')">' +
+            '<span class="sh ' + shiftCls(o[0]) + '">' + o[0] + '</span>' +
+            '<span class="ce-lbl">' + o[1] + '</span></button>';
+  });
+  if (current) {
+    html += '<div class="ce-sep"></div>' +
+            '<button class="ce-opt ce-reset" onclick="applyCellOverride(null)">' +
+            '<span class="ce-lbl">Revenir au calcul automatique</span></button>';
+  }
+
+  document.getElementById('ce-title').textContent =
+    ((agent.first_name || '') + ' ' + (agent.last_name || '')).trim();
+  document.getElementById('ce-sub').textContent = formatDateDisplay(ds);
+  document.getElementById('ce-body').innerHTML = html;
+
+  var pop = document.getElementById('cell-editor');
+  pop.style.display = 'block';
+  var x = Math.min((evt ? evt.clientX : 200) + 8, window.innerWidth  - 250);
+  var y = Math.min((evt ? evt.clientY : 200) + 8, window.innerHeight - 340);
+  pop.style.left = Math.max(8, x) + 'px';
+  pop.style.top  = Math.max(8, y) + 'px';
+  setTimeout(function() { document.addEventListener('click', closeCellEditorOutside); }, 0);
+}
+
+function closeCellEditorOutside(e) {
+  var pop = document.getElementById('cell-editor');
+  if (pop && !pop.contains(e.target)) closeCellEditor();
+}
+
+function closeCellEditor() {
+  var pop = document.getElementById('cell-editor');
+  if (pop) pop.style.display = 'none';
+  document.removeEventListener('click', closeCellEditorOutside);
+}
+
+async function applyCellOverride(value) {
+  var st = cellEditorState;
+  if (!st.agentId || !st.ds) return;
+  closeCellEditor();
+
+  if (value === null) {
+    // Retirer la modification : la cellule redevient automatique
+    var del = await sb.from('retail_planning_overrides')
+      .delete().eq('agent_id', st.agentId).eq('date', st.ds);
+    if (del.error) { showToast('Failed to reset cell', 'error'); return; }
+    if (planningOverrides[st.agentId]) delete planningOverrides[st.agentId][st.ds];
+    showToast('Back to automatic \u2713');
+  } else {
+    var up = await sb.from('retail_planning_overrides')
+      .upsert({ agent_id: st.agentId, date: st.ds, value: value },
+              { onConflict: 'agent_id,date' });
+    if (up.error) { showToast('Failed to save: ' + up.error.message, 'error'); return; }
+    if (!planningOverrides[st.agentId]) planningOverrides[st.agentId] = {};
+    planningOverrides[st.agentId][st.ds] = value;
+    showToast('Updated \u2713');
+  }
+  renderMonthlyPlanning();
+}
+
+// Efface toutes les modifications manuelles du mois affiche
+async function clearMonthOverrides() {
+  if (!agents.length) return;
+  var ref   = new Date(currentWeekMonday);
+  var year  = ref.getFullYear(), mIdx = ref.getMonth();
+  var first = toDateStr(new Date(year, mIdx, 1));
+  var last  = toDateStr(new Date(year, mIdx + 1, 0));
+  var label = new Date(year, mIdx, 1).toLocaleDateString('en-GB',
+                { month: 'long', year: 'numeric' });
+
+  if (!confirm('Reset all manual changes for ' + label + '?')) return;
+
+  showLoader();
+  var res = await sb.from('retail_planning_overrides')
+    .delete()
+    .in('agent_id', agents.map(function(a) { return a.id; }))
+    .gte('date', first).lte('date', last);
+  hideLoader();
+  if (res.error) { showToast('Reset failed', 'error'); return; }
+
+  Object.keys(planningOverrides).forEach(function(aid) {
+    Object.keys(planningOverrides[aid]).forEach(function(ds) {
+      if (ds >= first && ds <= last) delete planningOverrides[aid][ds];
+    });
+  });
+  showToast('Manual changes cleared \u2713');
+  renderMonthlyPlanning();
+}
+
 function renderMonthlyPlanning() {
   var container = document.getElementById('planning-monthly');
   if (!container) return;
@@ -1999,8 +2755,16 @@ function renderMonthlyPlanning() {
     var dObj = new Date(year, monthIdx, dnum);
     var ds   = toDateStr(dObj);
     var closure = getDayClosureType(ds);
-    var f = forecasts[ds];
-    var vol = (f && f.contact_volume) ? f.contact_volume : 0;
+    // BRIDGE TRAFIC : le trafic reel de la boutique prime sur l'ancien
+    // volume de contacts. C'est lui qui determine les jours creux (repos)
+    // et les jours charges (tout le monde present).
+    var vol = 0;
+    if (trafficDaily[ds] && trafficDaily[ds].traffic != null) {
+      vol = trafficDaily[ds].traffic;
+    } else {
+      var f = forecasts[ds];
+      vol = (f && f.contact_volume) ? f.contact_volume : 0;
+    }
     monthDays.push({ num: dnum, date: dObj, ds: ds, dow: dObj.getDay(),
                      closure: closure, vol: vol });
   }
@@ -2045,10 +2809,79 @@ function renderMonthlyPlanning() {
     });
   });
 
+  // ── TEMPS PARTIEL : jours OFF individuels supplementaires ─────────────
+  // Un agent a X% doit travailler X% des jours ouvrables du mois.
+  // On lui pose des repos EN PLUS du repos collectif, sur les jours de plus
+  // faible trafic (les jours forts restent couverts en priorite).
+  // ── PREFERENCES : jours a eviter et week-end ──────────────────────────
+  // On pose des repos supplementaires sur les jours que l'agent souhaite
+  // eviter, UNIQUEMENT si la couverture le permet (jamais au detriment
+  // des regles legales ni des jours a fort trafic).
+  agents.forEach(function(a) {
+    var p = agentPrefs[a.id];
+    if (!p) return;
+    var avoid = p.avoid_days || [];
+    var skipWeekend = (p.weekend_ok === false);
+    if (!avoid.length && !skipWeekend) return;
+
+    monthDays.forEach(function(d) {
+      if (d.closure) return;
+      if (restMap[a.id] && restMap[a.id][d.ds]) return;
+      var wantsOff = avoid.indexOf(d.dow) !== -1 ||
+                     (skipWeekend && (d.dow === 0 || d.dow === 6));
+      if (!wantsOff) return;
+
+      // Ne pas descendre sous 2 agents presents ce jour-la
+      var presentThatDay = agents.filter(function(o) {
+        if (restMap[o.id] && restMap[o.id][d.ds]) return false;
+        if (agentOnLeave(o.id, d.ds)) return false;
+        return true;
+      }).length;
+      if (presentThatDay > 2) restMap[a.id][d.ds] = true;
+    });
+  });
+
+  agents.forEach(function(a) {
+    var pct = a.work_pct || 100;
+    if (pct >= 100) return;
+
+    // Jours ou l'agent est actuellement prevu au travail
+    var workable = monthDays.filter(function(d) {
+      if (d.closure) return false;                       // boutique fermee
+      if (restMap[a.id] && restMap[a.id][d.ds]) return false;  // deja au repos
+      var st = (availability[a.id] && availability[a.id][d.ds]) || null;
+      if (st === 'absent' || st === 'rest_scheduled' ||
+          st === 'rest_override' || st === 'rest_parttime') return false;
+      if (agentOnLeave(a.id, d.ds)) return false;        // conge declare
+      return true;
+    });
+
+    // Combien de jours retirer pour atteindre le pourcentage vise
+    var target   = Math.round(workable.length * pct / 100);
+    var toRemove = Math.max(0, workable.length - target);
+    if (toRemove === 0) return;
+
+    // Retirer en priorite les jours les moins charges
+    workable.slice()
+      .sort(function(x, y) { return x.vol - y.vol; })
+      .slice(0, toRemove)
+      .forEach(function(d) { restMap[a.id][d.ds] = true; });
+  });
+
   // ── Determination de la lettre de shift d'un agent un jour donne ──
   // Renvoie {code, cls} ou un statut special.
   function shiftFor(agent, day) {
     if (day.closure) return { code: '', cls: 'sh-closed', special: 'closed' };
+
+    // PRIORITE ABSOLUE : modification manuelle du manager.
+    // Le moteur ne recalcule jamais une cellule forcee.
+    var ov = (planningOverrides[agent.id] || {})[day.ds];
+    if (ov) {
+      if (ov === 'OFF') return { code: 'OFF', special: 'off' };
+      if (ov === 'A')   return { code: 'A',   special: 'leave' };
+      return { code: ov };
+    }
+
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
 
     // Overrides individuels d'absence/repos (priorite sur le repos collectif)
@@ -2087,11 +2920,17 @@ function renderMonthlyPlanning() {
     var dayNum = day.num;
     // pseudo-position de l'agent dans la file (deterministe)
     var slot = (idx + dayNum) % grid.length;
+
+    // Preference individuelle matin / soir : elle prime sur la repartition
+    // automatique (l'agent reste couvert par sa grille de statut).
+    var pref = (agentPrefs[agent.id] || {}).shift_pref;
+    if (pref === 'morning')      slot = 0;
+    else if (pref === 'evening') slot = grid.length - 1;
     // si le soir est charge, on biaise vers les shifts tardifs (fin de tableau)
     if (eveningShare >= 0.55) slot = grid.length - 1 - (idx % grid.length);
     else if (eveningShare <= 0.45) slot = idx % grid.length;
     var sh = grid[slot] || grid[0];
-    return { code: sh.code, cls: sh.cls };
+    return { code: sh.code };
   }
 
   // Pastille HTML pour une lettre de shift
@@ -2150,9 +2989,22 @@ function renderMonthlyPlanning() {
   var html = '';
 
   // En-tete : mois + legende mise en avant
+  var nOverrides = 0;
+  agents.forEach(function(a) {
+    Object.keys(planningOverrides[a.id] || {}).forEach(function(ds) {
+      if (ds >= toDateStr(new Date(year, monthIdx, 1)) &&
+          ds <= toDateStr(new Date(year, monthIdx + 1, 0))) nOverrides++;
+    });
+  });
+
   html += '<div class="card-head">';
   html +=   '<div><div class="card-title">' + monthName + '</div>';
-  html +=   '<div class="card-sub">' + agents.length + ' agents \u00b7 ' + nDays + ' jours</div></div>';
+  html +=   '<div class="card-sub">' + agents.length + ' agents \u00b7 ' + nDays + ' jours' +
+            (nOverrides ? ' \u00b7 ' + nOverrides + ' modification' + (nOverrides > 1 ? 's' : '') + ' manuelle' + (nOverrides > 1 ? 's' : '') : '') +
+            '</div></div>';
+  if (nOverrides) {
+    html += '<button class="btn btn-ghost btn-sm" onclick="clearMonthOverrides()">Reset manual changes</button>';
+  }
   html += '</div>';
 
   html += '<div class="legend">';
@@ -2208,7 +3060,10 @@ function renderMonthlyPlanning() {
             (pct < 100 ? ' \u00b7 ' + pct + '%' : '') + '</span>' +
         '</span></span></td>';
     agentRows[a.id].forEach(function(rc, i) {
-      html += '<td class="' + dayCls(rc.d) + '" data-col="' + i + '">' + cell(rc.res) + '</td>';
+      var clickable = rc.d.closure ? '' :
+        ' onclick="openCellEditor(\'' + a.id + '\',\'' + rc.d.ds + '\',event)"';
+      html += '<td class="' + dayCls(rc.d) + (rc.d.closure ? '' : ' is-editable') +
+              '" data-col="' + i + '"' + clickable + '>' + cell(rc.res) + '</td>';
     });
     var c = rh[a.id];
     [c.O, c.C, c.off, c.dim, c.ferie, c.cp].forEach(function(v){
@@ -2349,6 +3204,35 @@ function statusOptionsHtml(cur) {
   }).join('');
 }
 
+var DAY_CHIPS = [['1','Mon'],['2','Tue'],['3','Wed'],['4','Thu'],['5','Fri'],['6','Sat'],['0','Sun']];
+
+async function loadAgentPrefs() {
+  agentPrefs = {};
+  if (!agents.length) return;
+  var ids = agents.map(function(a) { return a.id; });
+  var res = await sb.from('retail_agent_prefs').select('*').in('agent_id', ids);
+  if (res.error || !res.data) return;
+  res.data.forEach(function(p) { agentPrefs[p.agent_id] = p; });
+}
+
+function renderDayChips(selected) {
+  var box = document.getElementById('ae-avoid');
+  if (!box) return;
+  box.innerHTML = DAY_CHIPS.map(function(d) {
+    var on = selected.indexOf(parseInt(d[0])) !== -1;
+    return '<button type="button" class="day-chip' + (on ? ' on' : '') +
+           '" data-day="' + d[0] + '" onclick="toggleDayChip(this)">' + d[1] + '</button>';
+  }).join('');
+}
+
+function toggleDayChip(btn) { btn.classList.toggle('on'); }
+
+function readDayChips() {
+  return Array.prototype.slice
+    .call(document.querySelectorAll('#ae-avoid .day-chip.on'))
+    .map(function(b) { return parseInt(b.dataset.day); });
+}
+
 function openAgentEditor(agentId) {
   var a = agents.find(function(x){ return x.id === agentId; });
   if (!a) return;
@@ -2361,6 +3245,12 @@ function openAgentEditor(agentId) {
   document.getElementById('ae-status').innerHTML =
     statusOptionsHtml((a.status || 'SA').toUpperCase());
   document.getElementById('ae-pct').value = a.work_pct || 100;
+
+  var p = agentPrefs[agentId] || {};
+  document.getElementById('ae-shiftpref').value = p.shift_pref || 'none';
+  document.getElementById('ae-weekend').value   = (p.weekend_ok === false) ? 'false' : 'true';
+  renderDayChips(p.avoid_days || []);
+
   document.getElementById('agent-editor').classList.add('open');
 }
 
@@ -2383,6 +3273,18 @@ async function saveAgentEditor() {
     .eq('id', agentEditorId);
   hideLoader();
   if (res.error) { showToast('Save failed', 'error'); return; }
+
+  // Preferences (table separee)
+  var prefRow = {
+    agent_id:   agentEditorId,
+    shift_pref: document.getElementById('ae-shiftpref').value,
+    weekend_ok: document.getElementById('ae-weekend').value === 'true',
+    avoid_days: readDayChips()
+  };
+  var pres = await sb.from('retail_agent_prefs')
+    .upsert(prefRow, { onConflict: 'agent_id' });
+  if (pres.error) { showToast('Preferences not saved: ' + pres.error.message, 'error'); }
+  else { agentPrefs[agentEditorId] = prefRow; }
 
   var a = agents.find(function(x){ return x.id === agentEditorId; });
   if (a) { a.first_name = first; a.last_name = last; a.status = status; a.work_pct = pct; }
@@ -2958,6 +3860,28 @@ init();
         <div class="fld"><label>Status</label><select id="ae-status"></select></div>
         <div class="fld"><label>Work %</label><input type="number" id="ae-pct" min="10" max="100" step="5"></div>
       </div>
+      <div class="modal-sec">Preferences</div>
+      <div class="form-grid">
+        <div class="fld">
+          <label>Shift preference</label>
+          <select id="ae-shiftpref">
+            <option value="none">No preference</option>
+            <option value="morning">Prefers mornings</option>
+            <option value="evening">Prefers evenings</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Weekend</label>
+          <select id="ae-weekend">
+            <option value="true">Available</option>
+            <option value="false">Prefers to avoid</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld" style="margin-top:12px;">
+        <label>Days to avoid</label>
+        <div class="day-chips" id="ae-avoid"></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" onclick="deleteAgentFromEditor()">Delete</button>
@@ -2967,6 +3891,15 @@ init();
       </div>
     </div>
   </div>
+</div>
+
+<!-- CELL EDITOR (edition manuelle du planning) -->
+<div id="cell-editor">
+  <div class="ce-head">
+    <div class="ce-title" id="ce-title"></div>
+    <div class="ce-sub" id="ce-sub"></div>
+  </div>
+  <div id="ce-body"></div>
 </div>
 </body>
 </html>
