@@ -312,7 +312,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
    - surbrillance croisee ligne+colonne au survol
    - bloc RH visuellement detache
    ════════════════════════════════════════════════════════════════ */
-.mth-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--bg-base); }
+.mth-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r-md); background:var(--bg-base); }
 .mth { border-collapse:separate; border-spacing:0; font-size:12.5px; width:max-content; min-width:100%; }
 
 /* --- colonne agent : auto-fit, pas de wrap --- */
@@ -545,6 +545,9 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .page-head { display:flex; align-items:center; justify-content:space-between;
   gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap; }
 .page-title { font-size:17px; font-weight:600; color:var(--tx-1); }
+/* Un en-tete place DANS une carte annule le padding lateral pour rester
+   aligne sur le bord de la carte, comme les en-tetes hors carte. */
+.card > .page-head:first-child { margin-bottom:var(--s4); }
 
 /* ═══ AGENT ROW (lecture seule + edit) ═══════════════════════════ */
 .agent-row { display:flex; align-items:center; gap:var(--s4);
@@ -2945,17 +2948,41 @@ function renderMonthlyPlanning() {
   }
 
   // Quota individuel de jours travailles sur le mois (temps partiel inclus)
+  // ── QUOTAS : calcules SEMAINE PAR SEMAINE ─────────────────────────────
+  // Un temps partiel a 50% doit travailler la moitie de CHAQUE semaine,
+  // pas la moitie du mois. Sans cela le moteur pourrait lui donner deux
+  // semaines completes puis deux semaines vides.
+  //
+  // Quand le calcul tombe sur un demi-jour (50% de 5 jours = 2,5), on
+  // alterne 3 et 2 d'une semaine a l'autre pour que la moyenne reste juste.
+  var weekKeys = Object.keys(weeks).sort();
+  var weekQuota = {};      // weekQuota[agentId][weekKey] = nb de jours
   var monthOpenDays = monthDays.filter(function(d) { return !d.closure; }).length;
-  var quota = {};
+
   agents.forEach(function(a) {
     var pct = a.work_pct || 100;
-    // Plafond legal : 5 jours par semaine ouverte
-    var legalMax = 0;
-    Object.keys(weeks).forEach(function(wk) {
-      var openW = weeks[wk].filter(function(d) { return !d.closure; }).length;
-      legalMax += Math.min(openW, 5);
+    weekQuota[a.id] = {};
+    var carry = 0;         // reste fractionnaire reporte d'une semaine a l'autre
+
+    weekKeys.forEach(function(wk, wi) {
+      var openW  = weeks[wk].filter(function(d) { return !d.closure; }).length;
+      var legalW = Math.min(openW, 5);            // plafond legal hebdomadaire
+      var exact  = legalW * pct / 100 + carry;    // droit theorique + report
+      var days   = Math.floor(exact);
+      carry      = exact - days;
+      // Si le reste depasse un demi-jour, on arrondit au superieur et on
+      // retire ce demi-jour du report : d'ou l'alternance 3 / 2 / 3 / 2.
+      if (carry >= 0.5) { days += 1; carry -= 1; }
+      weekQuota[a.id][wk] = Math.max(0, Math.min(legalW, days));
     });
-    quota[a.id] = Math.min(legalMax, Math.round(monthOpenDays * pct / 100));
+  });
+
+  // Quota mensuel = somme des quotas hebdomadaires (coherence garantie)
+  var quota = {};
+  agents.forEach(function(a) {
+    quota[a.id] = weekKeys.reduce(function(s, wk) {
+      return s + (weekQuota[a.id][wk] || 0);
+    }, 0);
   });
 
   var worked = {};                                  // jours deja affectes
@@ -2967,7 +2994,11 @@ function renderMonthlyPlanning() {
     if (isBlocked(a, d)) return false;
     if (worked[a.id] >= quota[a.id]) return false;
     var wk = weekKey(d.date);
-    if ((workedInWeek[a.id][wk] || 0) >= 5) return false;
+    var doneThisWeek = workedInWeek[a.id][wk] || 0;
+    if (doneThisWeek >= 5) return false;                       // plafond legal
+    var wq = (weekQuota[a.id] && weekQuota[a.id][wk] != null)
+      ? weekQuota[a.id][wk] : 5;
+    if (doneThisWeek >= wq) return false;                      // quota de la semaine
     return true;
   }
 
@@ -3060,7 +3091,13 @@ function renderMonthlyPlanning() {
       if (already[a.id]) return false;
       if (isBlocked(a, d)) return false;
       var wk = weekKey(d.date);
-      return (workedInWeek[a.id][wk] || 0) < 5;      // la loi reste intouchable
+      var done = workedInWeek[a.id][wk] || 0;
+      if (done >= 5) return false;                   // la loi reste intouchable
+      // On peut depasser le quota mensuel pour tenir le plancher de couverture,
+      // mais jamais le quota hebdomadaire d'un temps partiel.
+      var wq = (weekQuota[a.id] && weekQuota[a.id][wk] != null)
+        ? weekQuota[a.id][wk] : 5;
+      return done < wq;
     });
     // Servir d'abord ceux qui ont le moins travaille
     pool.sort(function(x, y) {
