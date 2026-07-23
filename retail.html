@@ -344,6 +344,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth th.c-rh:first-of-type, .mth td.c-rh:first-of-type { border-left:2px solid var(--line-2); }
 
 /* --- lignes de totaux (haut) : detachees aussi --- */
+.mth tr.st-row td.c-agent { font-weight:500; color:var(--tx-1); }
+.mth tr.st-row td { color:var(--tx-2); }
 .mth tr.tot td { background:var(--bg-base-2); font-weight:600; color:var(--tx-2); font-size:11.5px; }
 .mth tr.tot td.c-agent { background:var(--bg-base-2); color:var(--tx-2); }
 .mth tr.tot-last td { border-bottom:2px solid var(--line-2); }
@@ -372,10 +374,12 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh-open   { background:var(--ok-soft);   color:var(--ok-tx); }
 .sh-mid    { background:var(--warn-soft); color:var(--warn-tx); }
 .sh-close  { background:var(--info-soft); color:var(--info-tx); }
+.sh-late   { background:#EDE9FE; color:#5B21B6; }
 .sh-stock  { background:var(--bg-base); color:var(--tx-2); border:1px dashed var(--line-2); }
 .sh-stock.sh-open  { border-color:#86EFAC; color:var(--ok-tx); }
 .sh-stock.sh-mid   { border-color:#FCD34D; color:var(--warn-tx); }
 .sh-stock.sh-close { border-color:#93C5FD; color:var(--info-tx); }
+.sh-stock.sh-late  { border-color:#C4B5FD; color:#5B21B6; }
 /* OFF : nettement distinct (hachures + gris franc) */
 .sh-off { background:repeating-linear-gradient(135deg,#E9EAEE 0 4px,#F3F4F6 4px 8px);
           color:var(--tx-3); font-weight:500; }
@@ -477,7 +481,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .set-rule-ro { font-weight:600; }
 .set-rule-hint { font-size:11.5px; color:var(--tx-3); }
 .set-note { font-size:12.5px; color:var(--tx-2); margin-bottom:var(--s3); }
-.hours-table { width:100%; border-collapse:separate; border-spacing:0; }
+.hours-table { width:100%; border-collapse:separate; border-spacing:0;
+  border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; }
 .hours-table th { background:var(--bg-base-2); color:var(--tx-2); font-size:10.5px;
   text-transform:uppercase; letter-spacing:.06em; font-weight:600; padding:8px var(--s3);
   text-align:left; border-bottom:1px solid var(--line); }
@@ -489,14 +494,71 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   padding:2px 8px; font-size:10.5px; margin-left:var(--s2); }
 .toggle-label { font-size:12.5px; color:var(--tx-2); }
 
-/* ═══ AGENTS ═════════════════════════════════════════════════════ */
-.agent-row { display:flex; align-items:center; justify-content:space-between; gap:var(--s4);
-  padding:var(--s3) var(--s4); border-bottom:1px solid var(--line); transition:background .12s; }
+/* ═══ SETTINGS : en-tete de carte + tables encadrees ═════════════ */
+.set-head { display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap; }
+.set-head .set-h3, .set-head h2 { margin:0; }
+.set-h3 { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--tx-2); }
+
+/* Tables encadrees (contour fin) */
+.tbl-framed { border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; }
+
+/* ═══ NAV MOIS (calendrier) : coherent avec la charte ════════════ */
+.cal-nav { display:inline-flex; align-items:center; gap:var(--s2); }
+.cal-nav-btn {
+  width:32px; height:32px; border:1px solid var(--line-2); border-radius:var(--r-md);
+  background:var(--bg-base); color:var(--tx-2); cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:15px; line-height:1; padding:0; transition:background .15s, color .15s;
+}
+.cal-nav-btn:hover { background:var(--bg-base-3); color:var(--tx-1); }
+.cal-month-label { font-size:13.5px; font-weight:600; color:var(--tx-1);
+  min-width:150px; text-align:center; }
+
+/* En-tete de page (hors carte) */
+.page-head { display:flex; align-items:center; justify-content:space-between;
+  gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap; }
+.page-title { font-size:17px; font-weight:600; color:var(--tx-1); }
+
+/* ═══ AGENT ROW (lecture seule + edit) ═══════════════════════════ */
+.agent-row { display:flex; align-items:center; gap:var(--s4);
+  padding:11px var(--s4); border-bottom:1px solid var(--line); transition:background .12s; }
 .agent-row:hover { background:var(--bg-base-2); }
 .agent-row:last-child { border-bottom:none; }
+.ag-id { display:flex; align-items:center; gap:11px; min-width:0; flex:1; }
+.ag-txt { display:flex; flex-direction:column; line-height:1.3; min-width:0; }
+.ag-name { font-weight:600; color:var(--tx-1); white-space:nowrap; }
+.ag-sub { font-size:11.5px; color:var(--tx-3); }
+.ag-meta { display:flex; align-items:center; gap:var(--s3); flex-shrink:0; }
+.ag-pct { font-size:12.5px; font-weight:600; color:var(--tx-2);
+  min-width:44px; text-align:right; font-variant-numeric:tabular-nums; }
+
+/* ═══ FORMULAIRES ════════════════════════════════════════════════ */
 #add-agent-form { display:none; background:var(--bg-base-2); border:1px solid var(--line);
   border-radius:var(--r-md); padding:var(--s4); margin-bottom:var(--s4); }
-#add-agent-form input { margin-right:var(--s2); }
+#add-agent-form.open { display:block; }
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:var(--s3); }
+.fld { display:flex; flex-direction:column; gap:5px; min-width:0; }
+.fld label { font-size:10.5px; font-weight:600; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--tx-3); }
+.fld input, .fld select { width:100%; }
+.fld input:disabled { background:var(--bg-base-3); color:var(--tx-3); cursor:not-allowed; }
+.form-actions { display:flex; justify-content:flex-end; gap:var(--s2); margin-top:var(--s4); }
+
+/* ═══ MODALE ═════════════════════════════════════════════════════ */
+.modal-overlay { display:none; position:fixed; inset:0; z-index:800;
+  background:rgba(16,24,40,.34); align-items:center; justify-content:center; padding:var(--s5); }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--bg-base); border-radius:var(--r-xl); width:100%; max-width:520px;
+  box-shadow:0 20px 48px rgba(16,24,40,.20); overflow:hidden; }
+.modal-head { display:flex; align-items:flex-start; justify-content:space-between;
+  gap:var(--s3); padding:var(--s5) var(--s5) var(--s4); }
+.modal-title { font-size:16px; font-weight:600; color:var(--tx-1); }
+.modal-sub { font-size:12.5px; color:var(--tx-3); margin-top:2px; }
+.modal-body { padding:0 var(--s5) var(--s5); }
+.modal-foot { display:flex; align-items:center; gap:var(--s2);
+  padding:var(--s4) var(--s5); background:var(--bg-base-2); border-top:1px solid var(--line); }
 
 /* ═══ RESPONSIVE ═════════════════════════════════════════════════ */
 @media (max-width:900px) {
@@ -581,13 +643,11 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 <!-- PLANNING TAB -->
 <div id="tab-planning" class="tab-content active">
   <div class="wrap">
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
-      <h2 style="font-size:15px;margin:0;">Monthly planning</h2>
+    <div class="page-head">
+      <h2 class="page-title">Monthly planning</h2>
       <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
     </div>
-    <div id="planning-monthly"><p style="color:var(--tx-3)">Select a region to view the monthly planning.</p></div>
-  </div>
+    <div id="planning-monthly"><div class="card"><p style="color:var(--tx-3)">Select a region to view the monthly planning.</p></div></div>
   </div>
 </div>
 
@@ -600,10 +660,16 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
       <button class="btn btn-primary" onclick="toggleAddAgentForm()">+ Add Agent</button>
     </div>
     <div id="add-agent-form">
-      <input type="text" id="new-first-name" placeholder="First name" />
-      <input type="text" id="new-last-name"  placeholder="Last name" />
-      <button class="btn btn-save" onclick="addAgent()">Save</button>
-      <button class="btn btn-ghost" onclick="toggleAddAgentForm()">Cancel</button>
+      <div class="form-grid">
+        <div class="fld"><label>First name</label><input type="text" id="new-first-name" placeholder="First name"></div>
+        <div class="fld"><label>Last name</label><input type="text" id="new-last-name" placeholder="Last name"></div>
+        <div class="fld"><label>Status</label><select id="new-status"></select></div>
+        <div class="fld"><label>Work %</label><input type="number" id="new-pct" value="100" min="10" max="100" step="5"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="toggleAddAgentForm()">Cancel</button>
+        <button class="btn btn-primary" onclick="addAgent()">Create agent</button>
+      </div>
     </div>
     <div id="agent-list"><p style="color:var(--tx-3)">Select a region to view agents.</p></div>
   </div>
@@ -622,13 +688,13 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
         <button id="btn-cal-annual" class="active" onclick="switchCalendarView('annual')">Annual</button>
         <button id="btn-cal-monthly" onclick="switchCalendarView('monthly')">Monthly</button>
       </div>
-      <div class="seg">
-        <button onclick="calChangeMonth(-1)" aria-label="Previous">&#8249;</button>
-        <div class="seg-label" id="cal-month-label"></div>
-        <button onclick="calChangeMonth(1)" aria-label="Next">&#8250;</button>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calChangeMonth(-1)" aria-label="Previous">&#8249;</button>
+        <span class="cal-month-label" id="cal-month-label"></span>
+        <button class="cal-nav-btn" onclick="calChangeMonth(1)" aria-label="Next">&#8250;</button>
       </div>
     </div>
-    <div id="calendar-annual"><p style="color:#888">Select a region to view the calendar.</p></div>
+    <div id="calendar-annual"><p style="color:var(--tx-3)">Select a region to view the calendar.</p></div>
     <div id="calendar-monthly" style="display:none;"><p style="color:var(--tx-3)">Select a region to view the calendar.</p></div>
   </div>
   </div>
@@ -1218,8 +1284,13 @@ function switchTab(name, btn) {
 }
 
 function toggleAddAgentForm() {
-  const f = document.getElementById('add-agent-form');
-  f.style.display = f.style.display === 'block' ? 'none' : 'block';
+  var f = document.getElementById('add-agent-form');
+  var opening = !f.classList.contains('open');
+  f.classList.toggle('open', opening);
+  if (opening) {
+    var sel = document.getElementById('new-status');
+    if (sel && !sel.options.length) sel.innerHTML = statusOptionsHtml('SA');
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
@@ -1491,7 +1562,7 @@ function renderRegulations() {
     // ── BUBBLE 1: Labor Rules ────────────────────────────────────────────
     '<div class="card">' +
       '<div class="set-head" style="margin-bottom:6px;">' +
-        '<h2 style="font-size:15px;margin:0;">\u2699\uFE0F Settings - ' + currentRegionName + '</h2>' +
+        '<h2 class="card-title" style="margin:0;">Settings \u00b7 ' + currentRegionName + '</h2>' +
         '<button class="btn btn-save" onclick="saveRegulations()">Save</button>' +
       '</div>' +
       '<h3 class="set-h3">Labor Rules</h3>' +
@@ -1873,12 +1944,13 @@ function retailStatusOf(agent) {
 function shiftCls(code) {
   if (!code) return 'sh-none';
   if (code === 'OFF') return 'sh-off';
-  if (code === 'CP')  return 'sh-cp';
+  if (code === 'A')   return 'sh-cp';
   var isStock = code.length > 1 && code.charAt(code.length-1) === 'S';
   var base = code.charAt(0);
   var tone = (base === 'O') ? 'sh-open'
            : (base === 'M') ? 'sh-mid'
-           : 'sh-close';                 // C et D = fermeture
+           : (base === 'D') ? 'sh-late'   // D = violet (distinct de C)
+           : 'sh-close';                  // C = fermeture (bleu)
   return isStock ? ('sh-stock ' + tone) : tone;
 }
 
@@ -1977,11 +2049,11 @@ function renderMonthlyPlanning() {
   // Renvoie {code, cls} ou un statut special.
   function shiftFor(agent, day) {
     if (day.closure) return { code: '', cls: 'sh-closed', special: 'closed' };
-    if (agentOnLeave(agent.id, day.ds)) return { code: 'CP', cls: 'sh-cp', special: 'leave' };
+    if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
 
     // Overrides individuels d'absence/repos (priorite sur le repos collectif)
     var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
-    if (st === 'absent') return { code: 'CP', cls: 'sh-cp', special: 'leave' };
+    if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
     if (st === 'rest_scheduled' || st === 'rest_override' || st === 'rest_parttime')
       return { code: 'OFF', cls: 'sh-off', special: 'off' };
 
@@ -2089,30 +2161,90 @@ function renderMonthlyPlanning() {
   });
   html += '<span class="legend-item"><span class="sh sh-stock sh-open">OS</span> Stock (OS/MS/CS)</span>';
   html += '<span class="legend-item"><span class="sh sh-off">OFF</span> Repos</span>';
-  html += '<span class="legend-item"><span class="sh sh-cp">CP</span> Absence</span>';
+  html += '<span class="legend-item"><span class="sh sh-cp">A</span> Absence</span>';
   html += '</div>';
 
+  // ── En-tete de colonnes, partage par les 2 tableaux ──
+  function headRow(firstLabel) {
+    var h = '<thead><tr><th class="c-agent">' + firstLabel + '</th>';
+    monthDays.forEach(function(d, i) {
+      var cls = 'c-day';
+      if (d.dow === 1) cls += ' wk-start';
+      if (d.dow === 0 || d.dow === 6) cls += ' is-weekend';
+      if (d.ds === todayStr) cls += ' is-today';
+      var dl = ['S','M','T','W','T','F','S'][d.dow];
+      h += '<th class="' + cls + '" data-col="' + i + '">' +
+           '<span class="dow">' + dl + '</span><span class="dnum">' + d.num + '</span></th>';
+    });
+    rhCols.forEach(function(c){ h += '<th class="c-rh">' + c + '</th>'; });
+    return h + '</tr></thead>';
+  }
+
+  // ══ TABLEAU 1 : PLANNING AGENTS (lignes continues, sans blocs) ══
   html += '<div class="mth-wrap"><table class="mth" id="mth-table">';
+  html += headRow('Agent');
+  html += '<tbody>';
 
-  // ── THEAD ──
-  html += '<thead><tr>';
-  html += '<th class="c-agent">Agent</th>';
-  monthDays.forEach(function(d, i) {
-    var cls = 'c-day';
-    if (d.dow === 1) cls += ' wk-start';
-    if (d.dow === 0 || d.dow === 6) cls += ' is-weekend';
-    if (d.ds === todayStr) cls += ' is-today';
-    var dl = ['S','M','T','W','T','F','S'][d.dow];
-    html += '<th class="' + cls + '" data-col="' + i + '">' +
-              '<span class="dow">' + dl + '</span><span class="dnum">' + d.num + '</span></th>';
+  // Agents tries par bloc de statut, mais SANS ligne d'en-tete ni sous-total
+  var ordered = [];
+  RETAIL_BLOCK_ORDER.forEach(function(block) {
+    agents.filter(function(a) {
+      return RETAIL_STATUS[retailStatusOf(a)].block === block.key;
+    }).forEach(function(a) { ordered.push(a); });
   });
-  rhCols.forEach(function(c){ html += '<th class="c-rh">' + c + '</th>'; });
-  html += '</tr></thead><tbody>';
 
-  // ── Lignes de totaux (bloc detache en haut) ──
-  function totalsRow(label, map, isLast) {
-    var r = '<tr class="tot' + (isLast ? ' tot-last' : '') + '">';
-    r += '<td class="c-agent">' + label + '</td>';
+  ordered.forEach(function(a) {
+    var name   = ((a.first_name || '') + ' ' + (a.last_name || '')).trim() || 'Agent';
+    var stInfo = RETAIL_STATUS[retailStatusOf(a)];
+    var pct    = a.work_pct || 100;
+    html += '<tr>';
+    html += '<td class="c-agent">' +
+      '<span style="display:inline-flex;align-items:center;gap:10px;">' +
+        '<span class="avatar" style="background:' + retailAvatarColor(name) + ';">' +
+          retailInitials(a.first_name, a.last_name) + '</span>' +
+        '<span style="display:inline-flex;flex-direction:column;line-height:1.25;">' +
+          '<span style="font-weight:500;">' + name + '</span>' +
+          '<span style="font-size:11px;color:var(--tx-3);">' + stInfo.label +
+            (pct < 100 ? ' \u00b7 ' + pct + '%' : '') + '</span>' +
+        '</span></span></td>';
+    agentRows[a.id].forEach(function(rc, i) {
+      html += '<td class="' + dayCls(rc.d) + '" data-col="' + i + '">' + cell(rc.res) + '</td>';
+    });
+    var c = rh[a.id];
+    [c.O, c.C, c.off, c.dim, c.ferie, c.cp].forEach(function(v){
+      html += '<td class="c-rh">' + v + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // ══ TABLEAU 2 : RECAP MANAGERIAL (bulle separee) ══
+  // Totaux globaux + effectif present par statut, chaque jour.
+  var statusDayCount = {};   // statusKey -> { ds: n }
+  var statusPresent  = {};   // statusKey -> total
+  Object.keys(RETAIL_STATUS).forEach(function(k){ statusDayCount[k] = {}; statusPresent[k] = 0; });
+  agents.forEach(function(a) {
+    var k = retailStatusOf(a);
+    agentRows[a.id].forEach(function(rc) {
+      if (!rc.res.special) {
+        statusDayCount[k][rc.d.ds] = (statusDayCount[k][rc.d.ds] || 0) + 1;
+        statusPresent[k]++;
+      }
+    });
+  });
+
+  var html2 = '';
+  html2 += '<div class="card-head"><div>';
+  html2 +=   '<div class="card-title">Couverture &amp; effectifs</div>';
+  html2 +=   '<div class="card-sub">Vue manag\u00e9riale \u00b7 pr\u00e9sences par jour et par statut</div>';
+  html2 += '</div></div>';
+
+  html2 += '<div class="mth-wrap"><table class="mth" id="mth-summary">';
+  html2 += headRow('Indicateur');
+  html2 += '<tbody>';
+
+  function sumRow(label, map, cls) {
+    var r = '<tr class="' + (cls || '') + '"><td class="c-agent">' + label + '</td>';
     monthDays.forEach(function(d, i) {
       r += '<td class="' + dayCls(d) + '" data-col="' + i + '">' +
            (d.closure ? '<span class="sh-none">\u00b7</span>' : (map[d.ds] || 0)) + '</td>';
@@ -2120,60 +2252,26 @@ function renderMonthlyPlanning() {
     rhCols.forEach(function(){ r += '<td class="c-rh"></td>'; });
     return r + '</tr>';
   }
-  html += totalsRow('Pr\u00e9sents', totPres, false);
-  html += totalsRow('Ouvertures', totO, false);
-  html += totalsRow('Fermetures', totC, true);
 
-  // ── Blocs par statut ──
+  html2 += sumRow('Total pr\u00e9sents', totPres, 'tot');
+  html2 += sumRow('Ouvertures',      totO,    'tot');
+  html2 += sumRow('Fermetures',      totC,    'tot tot-last');
+
+  // Une ligne par statut effectivement present dans l'equipe
   RETAIL_BLOCK_ORDER.forEach(function(block) {
-    var blockAgents = agents.filter(function(a) {
-      return RETAIL_STATUS[retailStatusOf(a)].block === block.key;
+    Object.keys(RETAIL_STATUS).forEach(function(k) {
+      if (RETAIL_STATUS[k].block !== block.key) return;
+      if (!agents.some(function(a){ return retailStatusOf(a) === k; })) return;
+      html2 += sumRow(RETAIL_STATUS[k].label, statusDayCount[k], 'st-row');
     });
-    if (!blockAgents.length) return;
-
-    html += '<tr class="blk"><td class="c-agent">' + block.title + '</td>';
-    monthDays.forEach(function(d,i){ html += '<td class="' + dayCls(d) + '" data-col="' + i + '"></td>'; });
-    rhCols.forEach(function(){ html += '<td class="c-rh"></td>'; });
-    html += '</tr>';
-
-    var subO=0, subC=0, subOff=0, subDim=0, subFer=0, subCp=0;
-
-    blockAgents.forEach(function(a) {
-      var name = ((a.first_name || '') + ' ' + (a.last_name || '')).trim() || 'Agent';
-      var stInfo = RETAIL_STATUS[retailStatusOf(a)];
-      var pct = a.work_pct || 100;
-      html += '<tr>';
-      html += '<td class="c-agent">' +
-        '<span style="display:inline-flex;align-items:center;gap:10px;">' +
-          '<span class="avatar" style="background:' + retailAvatarColor(name) + ';">' +
-            retailInitials(a.first_name, a.last_name) + '</span>' +
-          '<span style="display:inline-flex;flex-direction:column;line-height:1.25;">' +
-            '<span style="font-weight:500;">' + name + '</span>' +
-            '<span style="font-size:11px;color:var(--tx-3);">' + stInfo.label +
-              (pct < 100 ? ' \u00b7 ' + pct + '%' : '') + '</span>' +
-          '</span></span></td>';
-
-      agentRows[a.id].forEach(function(rc, i) {
-        html += '<td class="' + dayCls(rc.d) + '" data-col="' + i + '">' + cell(rc.res) + '</td>';
-      });
-
-      var c = rh[a.id];
-      subO+=c.O; subC+=c.C; subOff+=c.off; subDim+=c.dim; subFer+=c.ferie; subCp+=c.cp;
-      [c.O,c.C,c.off,c.dim,c.ferie,c.cp].forEach(function(v){
-        html += '<td class="c-rh">' + v + '</td>';
-      });
-      html += '</tr>';
-    });
-
-    html += '<tr class="sub"><td class="c-agent">Sous-total</td>';
-    monthDays.forEach(function(d,i){ html += '<td class="' + dayCls(d) + '" data-col="' + i + '"></td>'; });
-    [subO,subC,subOff,subDim,subFer,subCp].forEach(function(v){
-      html += '<td class="c-rh">' + v + '</td>';
-    });
-    html += '</tr>';
   });
 
-  html += '</tbody></table></div>';
+  html2 += '</tbody></table></div>';
+
+  // Les deux bulles
+  html = '<div class="card">' + html + '</div>' +
+         '<div class="card">' + html2 + '</div>';
+
   container.innerHTML = html;
   attachCrossHighlight();
 }
@@ -2209,43 +2307,101 @@ function retailInitials(f, l) {
 }
 
 function renderAgents() {
-  const container = document.getElementById('agent-list');
+  var container = document.getElementById('agent-list');
   if (!agents.length) {
-    container.innerHTML = '<p style="color:#888">No agents yet. Click Add Agent above.</p>';
+    container.innerHTML = '<p style="color:var(--tx-3)">No agents yet. Click Add Agent above.</p>';
     return;
   }
-  // Statut exclusif de l'agent (1 seul). Definit son bloc et sa grille de shifts.
-  var STATUS_OPTS = ['SM','ASM','MANAGER','STOCK','SENIOR','SA','PART_TIME'];
   container.innerHTML = agents.map(function(a) {
-    var pct = a.work_pct || 100;
-    var pctBadge = pct < 100
-      ? '<span class="pct-badge">' + pct + '%</span>'
-      : '<span class="pct-badge" style="color:#9ca3af;">100%</span>';
-    var cur = (a.status || 'SA').toUpperCase();
-    var stInfo = RETAIL_STATUS[cur] || RETAIL_STATUS['SA'];
-    var opts = STATUS_OPTS.map(function(o){
-      var lbl = RETAIL_STATUS[o].label;
-      return '<option value="'+o+'"'+(o===cur?' selected':'')+'>'+lbl+'</option>';
-    }).join('');
-    var av = '<span class="avatar" style="background:' + retailAvatarColor(a.first_name+a.last_name) + ';">' + retailInitials(a.first_name, a.last_name) + '</span>';
+    var pct    = a.work_pct || 100;
+    var stInfo = RETAIL_STATUS[(a.status || 'SA').toUpperCase()] || RETAIL_STATUS['SA'];
+    var name   = (a.first_name || '') + ' ' + (a.last_name || '');
+    var av = '<span class="avatar" style="background:' +
+             retailAvatarColor(a.first_name + a.last_name) + ';">' +
+             retailInitials(a.first_name, a.last_name) + '</span>';
     return '<div class="agent-row">' +
-      '<span style="display:flex;align-items:center;gap:11px;">' + av +
-        '<span style="display:flex;flex-direction:column;gap:2px;">' +
-          '<span style="font-weight:600;color:#1a1d29;">' + a.first_name + ' ' + a.last_name + pctBadge + '</span>' +
-          '<span class="rt-status ' + stInfo.cls + '" style="align-self:flex-start;">' + stInfo.label + '</span>' +
+      '<span class="ag-id">' + av +
+        '<span class="ag-txt">' +
+          '<span class="ag-name">' + name.trim() + '</span>' +
+          '<span class="ag-sub">' + currentRegionName + '</span>' +
         '</span></span>' +
-      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
-        '<label style="font-size:12px;color:#6b7280;">Status</label>' +
-        '<select id="status-' + a.id + '" onchange="saveAgentStatus(\'' + a.id + '\')" ' +
-          'style="padding:4px 8px;font-size:12px;">' + opts + '</select>' +
-        '<label style="font-size:12px;color:#6b7280;margin-left:8px;">Work %</label>' +
-        '<input type="number" id="pct-' + a.id + '" value="' + pct + '" min="10" max="100" step="5"' +
-          ' style="width:60px;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;text-align:center;">' +
-        '<button class="btn btn-save btn-sm" onclick="saveAgentWorkPct(\'' + a.id + '\')">Save</button>' +
-        '<button class="btn btn-danger btn-sm" onclick="deleteAgent(\'' + a.id + '\')">Delete</button>' +
-      '</div>' +
+      '<span class="ag-meta">' +
+        '<span class="pill pill-neutral">' + stInfo.label + '</span>' +
+        '<span class="ag-pct">' + pct + '%</span>' +
+      '</span>' +
+      '<button class="icon-btn" title="Edit agent" onclick="openAgentEditor(\'' + a.id + '\')">' +
+        '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+        'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/>' +
+        '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' +
+      '</button>' +
     '</div>';
   }).join('');
+}
+
+// ── EDITEUR D'AGENT (pop-in) ──────────────────────────────────────────────
+var STATUS_OPTS = ['SM','ASM','MANAGER','STOCK','SENIOR','SA','PART_TIME'];
+var agentEditorId = null;
+
+function statusOptionsHtml(cur) {
+  return STATUS_OPTS.map(function(o){
+    return '<option value="' + o + '"' + (o === cur ? ' selected' : '') + '>' +
+           RETAIL_STATUS[o].label + '</option>';
+  }).join('');
+}
+
+function openAgentEditor(agentId) {
+  var a = agents.find(function(x){ return x.id === agentId; });
+  if (!a) return;
+  agentEditorId = agentId;
+  document.getElementById('ae-title').textContent =
+    ((a.first_name||'') + ' ' + (a.last_name||'')).trim();
+  document.getElementById('ae-first').value  = a.first_name || '';
+  document.getElementById('ae-last').value   = a.last_name  || '';
+  document.getElementById('ae-store').value  = currentRegionName || '';
+  document.getElementById('ae-status').innerHTML =
+    statusOptionsHtml((a.status || 'SA').toUpperCase());
+  document.getElementById('ae-pct').value = a.work_pct || 100;
+  document.getElementById('agent-editor').classList.add('open');
+}
+
+function closeAgentEditor() {
+  document.getElementById('agent-editor').classList.remove('open');
+  agentEditorId = null;
+}
+
+async function saveAgentEditor() {
+  if (!agentEditorId) return;
+  var first  = document.getElementById('ae-first').value.trim();
+  var last   = document.getElementById('ae-last').value.trim();
+  var status = document.getElementById('ae-status').value;
+  var pct    = Math.max(10, Math.min(100, parseInt(document.getElementById('ae-pct').value) || 100));
+  if (!first || !last) { showToast('First and last name are required', 'error'); return; }
+
+  showLoader();
+  var res = await sb.from('retail_agents')
+    .update({ first_name: first, last_name: last, status: status, work_pct: pct })
+    .eq('id', agentEditorId);
+  hideLoader();
+  if (res.error) { showToast('Save failed', 'error'); return; }
+
+  var a = agents.find(function(x){ return x.id === agentEditorId; });
+  if (a) { a.first_name = first; a.last_name = last; a.status = status; a.work_pct = pct; }
+  closeAgentEditor();
+  showToast('Agent updated \u2713');
+  await loadWeekData();
+}
+
+async function deleteAgentFromEditor() {
+  if (!agentEditorId) return;
+  if (!confirm('Delete this agent? This cannot be undone.')) return;
+  var id = agentEditorId;
+  closeAgentEditor();
+  showLoader();
+  var res = await sb.from('retail_agents').delete().eq('id', id);
+  hideLoader();
+  if (res.error) { showToast('Failed to delete', 'error'); return; }
+  showToast('Agent deleted');
+  await loadWeekData();
 }
 
 async function saveAgentStatus(agentId) {
@@ -2281,18 +2437,25 @@ async function saveAgentWorkPct(agentId) {
 
 async function addAgent() {
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
-  const first = document.getElementById('new-first-name').value.trim();
-  const last  = document.getElementById('new-last-name').value.trim();
+  var first  = document.getElementById('new-first-name').value.trim();
+  var last   = document.getElementById('new-last-name').value.trim();
+  var status = document.getElementById('new-status').value || 'SA';
+  var pct    = Math.max(10, Math.min(100, parseInt(document.getElementById('new-pct').value) || 100));
   if (!first || !last) { showToast('Enter first and last name', 'error'); return; }
+
   showLoader();
-  const { error } = await sb.from('retail_agents')
-    .insert({ region_id: currentRegionId, first_name: first, last_name: last, is_active: true });
+  var res = await sb.from('retail_agents').insert({
+    region_id: currentRegionId, first_name: first, last_name: last,
+    status: status, work_pct: pct, is_active: true
+  });
   hideLoader();
-  if (error) { showToast('Failed to add agent', 'error'); return; }
+  if (res.error) { showToast('Failed to add agent', 'error'); return; }
+
   document.getElementById('new-first-name').value = '';
   document.getElementById('new-last-name').value  = '';
-  document.getElementById('add-agent-form').style.display = 'none';
-  showToast(first + ' ' + last + ' added');
+  document.getElementById('new-pct').value        = 100;
+  document.getElementById('add-agent-form').classList.remove('open');
+  showToast(first + ' ' + last + ' added \u2713');
   await loadWeekData();
 }
 
@@ -2312,14 +2475,16 @@ async function deleteAgent(id) {
 function exportMonthly() {
   if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
-  var table = document.querySelector('#planning-monthly table');
-  if (!table) { showToast('Nothing to export', 'error'); return; }
+  var tables = document.querySelectorAll('#planning-monthly table');
+  if (!tables.length) { showToast('Nothing to export', 'error'); return; }
+  var table = tables[0];
 
   // Palette export : miroir exact des pastilles a l'ecran (couleurs = clef).
   var SHIFT_XL = {
     'sh-open'  : { bg:'DCFCE7', tx:'14532D' },   // ouverture  - vert
     'sh-mid'   : { bg:'FEF3C7', tx:'713F12' },   // milieu     - ambre
     'sh-close' : { bg:'DBEAFE', tx:'1E3A8A' },   // fermeture  - bleu
+    'sh-late'  : { bg:'EDE9FE', tx:'5B21B6' },   // D          - violet
     'sh-off'   : { bg:'EDEEF1', tx:'A1A1AA' },   // repos      - gris
     'sh-cp'    : { bg:'FEE2E2', tx:'7F1D1D' },   // absence    - rouge
     'sh-none'  : { bg:'F4F5F7', tx:'A1A1AA' }
@@ -2369,7 +2534,7 @@ function exportMonthly() {
       var pill = td.querySelector('.sh, .sh-none');
       if (pill) {
         var key = null;
-        ['sh-open','sh-mid','sh-close','sh-off','sh-cp','sh-none'].forEach(function(k){
+        ['sh-open','sh-mid','sh-late','sh-close','sh-off','sh-cp','sh-none'].forEach(function(k){
           if (pill.classList.contains(k)) key = k;
         });
         var c = SHIFT_XL[key];
@@ -2771,5 +2936,37 @@ function pickWeek(mondayStr) {
 // ── START ─────────────────────────────────────────────────────────────────
 init();
 </script>
+
+<!-- AGENT EDITOR MODAL -->
+<div id="agent-editor" class="modal-overlay" onclick="if(event.target===this)closeAgentEditor()">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="ae-title">Agent</div>
+        <div class="modal-sub">Edit agent configuration</div>
+      </div>
+      <button class="icon-btn" onclick="closeAgentEditor()" aria-label="Close">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fld"><label>First name</label><input type="text" id="ae-first"></div>
+        <div class="fld"><label>Last name</label><input type="text" id="ae-last"></div>
+        <div class="fld"><label>Store</label><input type="text" id="ae-store" disabled></div>
+        <div class="fld"><label>Status</label><select id="ae-status"></select></div>
+        <div class="fld"><label>Work %</label><input type="number" id="ae-pct" min="10" max="100" step="5"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" onclick="deleteAgentFromEditor()">Delete</button>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeAgentEditor()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAgentEditor()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
