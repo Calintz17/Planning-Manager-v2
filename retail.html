@@ -982,13 +982,20 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
 <!-- CALENDAR: day open/close popup (annual) -->
 <div id="dayopen-popup">
-  <div class="sft-title">CSC opening</div>
+  <div class="sft-title">Store opening</div>
   <div class="sft-subtitle" id="dayopen-subtitle"></div>
   <div class="sft-row">
     <span class="sft-side" id="dayopen-closed-label">Closed</span>
     <label class="toggle"><input type="checkbox" id="dayopen-toggle">
       <span class="toggle-slider"></span></label>
     <span class="sft-side" id="dayopen-open-label">Open</span>
+  </div>
+  <div id="dayopen-hours" class="sft-row" style="margin-top:var(--s4);gap:var(--s3);">
+    <span class="sft-side">Hours</span>
+    <select id="dayopen-open-time"></select>
+    <span class="sft-side">to</span>
+    <select id="dayopen-close-time"></select>
+    <button class="btn btn-neutral btn-sm" onclick="clearDayHours()">Reset</button>
   </div>
 </div>
 
@@ -1035,6 +1042,7 @@ function buildDefaultDayHours(open, close) {
 let currentRegionId   = null;
 let currentRegionName = '';
 let currentRegionCity = '';
+let currentCountryIso = '';
 let countries         = [];   // pays de la region courante
 let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
@@ -1047,6 +1055,7 @@ let trafficDaily      = {};   // { 'YYYY-MM-DD': {traffic, is_manual} }
 let currentWeekMonday = getMondayOfCurrentWeek();
 let calHolidays       = {};   // { 'YYYY-MM-DD': 'Holiday name' } for current region/year
 let calOverrides      = {};   // { 'YYYY-MM-DD': true|false } forced open/closed
+let calHours          = {};   // { 'YYYY-MM-DD': {open,close} } exceptional hours
 let agentLeaves       = [];   // [{agent_id,start_date,end_date,type}]
 let calMonth          = new Date(); // month currently shown in Calendar tab
 let currentCalView    = 'annual';
@@ -1143,7 +1152,7 @@ function isToday(date) { return toDateStr(date) === toDateStr(new Date()); }
 function changeWeek(dir) {
   currentWeekMonday.setDate(currentWeekMonday.getDate() + dir * 7);
   updateWeekLabel();
-  if (currentRegionId) loadWeekData();
+  if (currentStoreId) loadWeekData();
 }
 
 function updateWeekLabel() {
@@ -1172,8 +1181,8 @@ function switchTab(name, btn) {
   document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
-  if (name === 'regulations' && currentRegionId) renderRegulations();
-  if (name === 'calendar' && currentRegionId) renderCalendar();
+  if (name === 'regulations' && currentStoreId) renderRegulations();
+  if (name === 'calendar' && currentStoreId) renderCalendar();
   if (name === 'traffic') renderTraffic();
 }
 
@@ -1234,11 +1243,6 @@ async function onRegionChange() {
   }
 
   await loadCountries();
-  await loadRegulations();
-  await loadHolidays(calMonth.getFullYear());
-  await loadCalendarData();
-  await loadWeekData();
-  renderAgents();
 }
 
 // ── INFO-BULLE DE PREMIERE CONNEXION ──────────────────────────────────────
@@ -1339,7 +1343,11 @@ async function onCountryChange() {
   stores = [];
   resetSelect('store-select', '- All stores -', true);
 
+  currentCountryIso = sel && sel.value
+    ? (sel.options[sel.selectedIndex].dataset.iso || '') : '';
+
   if (!currentCountryId) return;
+  await loadHolidays(calMonth.getFullYear());
   await loadStores();
 }
 
@@ -1376,8 +1384,14 @@ async function onStoreChange() {
   currentStoreId = sel ? sel.value : null;
   var st = stores.find(function(s) { return s.id === currentStoreId; });
   currentStoreName = st ? st.name : '';
+
+  if (!currentStoreId) { updateStatusBar(); return; }
+
+  await loadRegulations();
   await loadShiftConfig();
   await loadStoreSettings();
+  await loadCalendarData();
+  await loadWeekData();
   updateStatusBar();
   renderMonthlyPlanning();
   renderAgents();
@@ -1403,7 +1417,7 @@ function updateStatusBar() {
 async function loadRegulations() {
   const { data, error } = await sb
     .from('retail_regulations').select('*')
-    .eq('region_id', currentRegionId);
+    .eq('store_id', currentStoreId);
   if (error) { showToast('Error loading regulations', 'error'); return; }
 
   const def = REGION_DEFAULTS[currentRegionCity] || REGION_DEFAULTS['Paris'];
@@ -1447,22 +1461,22 @@ async function loadRegulations() {
 
 async function seedRegulations() {
   const rows = [
-    { region_id: currentRegionId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
-    { region_id: currentRegionId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
-    { region_id: currentRegionId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
-    { region_id: currentRegionId, rule_key: 'trend_pct',       rule_value: '0' },
-    { region_id: currentRegionId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
-    { region_id: currentRegionId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
-    { region_id: currentRegionId, rule_key: 'closed_dates',    rule_value: '[]' },
-    { region_id: currentRegionId, rule_key: 'public_holidays', rule_value: '[]' },
-    { region_id: currentRegionId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
+    { store_id: currentStoreId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
+    { store_id: currentStoreId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
+    { store_id: currentStoreId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
+    { store_id: currentStoreId, rule_key: 'trend_pct',       rule_value: '0' },
+    { store_id: currentStoreId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
+    { store_id: currentStoreId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
+    { store_id: currentStoreId, rule_key: 'closed_dates',    rule_value: '[]' },
+    { store_id: currentStoreId, rule_key: 'public_holidays', rule_value: '[]' },
+    { store_id: currentStoreId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
   ];
-  await sb.from('retail_regulations').upsert(rows, { onConflict: 'region_id,rule_key' });
+  await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
 }
 
 // ── SAVE REGULATIONS ──────────────────────────────────────────────────────
 async function saveRegulations() {
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
 
   regulations.saturday_rest = document.getElementById('reg-saturday').checked;
   regulations.sunday_rest   = document.getElementById('reg-sunday').checked;
@@ -1517,20 +1531,20 @@ async function saveRegulations() {
   regulations.breaks = newBreaks;
 
   const rows = [
-    { region_id: currentRegionId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
-    { region_id: currentRegionId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
-    { region_id: currentRegionId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
-    { region_id: currentRegionId, rule_key: 'max_daily_hours', rule_value: String(regulations.max_daily_hours) },
-    { region_id: currentRegionId, rule_key: 'trend_pct',       rule_value: String(regulations.trend_pct) },
-    { region_id: currentRegionId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
-    { region_id: currentRegionId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
-    { region_id: currentRegionId, rule_key: 'closed_dates',    rule_value: JSON.stringify(regulations.closed_dates) },
-    { region_id: currentRegionId, rule_key: 'public_holidays', rule_value: JSON.stringify(regulations.public_holidays) },
-    { region_id: currentRegionId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
+    { store_id: currentStoreId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
+    { store_id: currentStoreId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
+    { store_id: currentStoreId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
+    { store_id: currentStoreId, rule_key: 'max_daily_hours', rule_value: String(regulations.max_daily_hours) },
+    { store_id: currentStoreId, rule_key: 'trend_pct',       rule_value: String(regulations.trend_pct) },
+    { store_id: currentStoreId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
+    { store_id: currentStoreId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
+    { store_id: currentStoreId, rule_key: 'closed_dates',    rule_value: JSON.stringify(regulations.closed_dates) },
+    { store_id: currentStoreId, rule_key: 'public_holidays', rule_value: JSON.stringify(regulations.public_holidays) },
+    { store_id: currentStoreId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
   ];
 
   showLoader();
-  const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'region_id,rule_key' });
+  const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
   hideLoader();
   if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
   await saveStoreSettings();
@@ -1798,7 +1812,7 @@ async function saveShiftConfig() {
 }
 
 function renderRegulations() {
-  if (!currentRegionId) return;
+  if (!currentStoreId) return;
 
   let hoursRows = '';
   DAY_KEYS.forEach(function(key, i) {
@@ -1921,14 +1935,14 @@ function renderRegulations() {
 // ── LOAD WEEK DATA ────────────────────────────────────────────────────────
 async function loadWeekData() {
   showLoader();
-  setStatus('Loading ' + currentRegionName + '\u2026');
+  setStatus('Loading ' + currentStoreName + '\u2026');
   const days      = getWeekDays(currentWeekMonday);
   const startDate = toDateStr(days[0]);
   const endDate   = toDateStr(days[6]);
 
   const { data: agentData, error: e1 } = await sb
     .from('retail_agents').select('*')
-    .eq('region_id', currentRegionId).eq('is_active', true).order('last_name');
+    .eq('store_id', currentStoreId).eq('is_active', true).order('last_name');
   if (e1) { hideLoader(); showToast('Error loading agents', 'error'); return; }
   agents = agentData || [];
 
@@ -2856,12 +2870,12 @@ async function clearMonthOverrides() {
 function renderMonthlyPlanning() {
   var container = document.getElementById('planning-monthly');
   if (!container) return;
-  if (!currentRegionId) {
-    container.innerHTML = '<p style="color:#888">Select a region to view the monthly planning.</p>';
+  if (!currentStoreId) {
+    container.innerHTML = '<p style="color:#888">Select a store to view the monthly planning.</p>';
     return;
   }
   if (!agents.length) {
-    container.innerHTML = '<p style="color:#888">No agents for this region. Add agents in the Agents tab.</p>';
+    container.innerHTML = '<p style="color:#888">No agents for this store. Add agents in the Agents tab.</p>';
     return;
   }
 
@@ -3454,7 +3468,7 @@ function renderAgents() {
       '<span class="ag-id">' + av +
         '<span class="ag-txt">' +
           '<span class="ag-name">' + name.trim() + '</span>' +
-          '<span class="ag-sub">' + currentRegionName + '</span>' +
+          '<span class="ag-sub">' + currentStoreName + '</span>' +
         '</span></span>' +
       '<span class="ag-meta">' +
         '<span class="pill pill-neutral">' + stInfo.label + '</span>' +
@@ -3517,7 +3531,7 @@ function openAgentEditor(agentId) {
     ((a.first_name||'') + ' ' + (a.last_name||'')).trim();
   document.getElementById('ae-first').value  = a.first_name || '';
   document.getElementById('ae-last').value   = a.last_name  || '';
-  document.getElementById('ae-store').value  = currentRegionName || '';
+  document.getElementById('ae-store').value  = currentStoreName || '';
   document.getElementById('ae-status').innerHTML =
     statusOptionsHtml((a.status || 'SA').toUpperCase());
   document.getElementById('ae-pct').value = a.work_pct || 100;
@@ -3583,7 +3597,7 @@ async function deleteAgentFromEditor() {
 }
 
 async function addAgent() {
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   var first  = document.getElementById('new-first-name').value.trim();
   var last   = document.getElementById('new-last-name').value.trim();
   var status = document.getElementById('new-status').value || 'SA';
@@ -3592,7 +3606,7 @@ async function addAgent() {
 
   showLoader();
   var res = await sb.from('retail_agents').insert({
-    region_id: currentRegionId, first_name: first, last_name: last,
+    store_id: currentStoreId, first_name: first, last_name: last,
     status: status, work_pct: pct, is_active: true
   });
   hideLoader();
@@ -3611,7 +3625,7 @@ async function addAgent() {
 // serialise en .xlsx style. Garantit que l'export = ce qui est a l'ecran.
 function exportMonthly() {
   if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   var tables = document.querySelectorAll('#planning-monthly table');
   if (!tables.length) { showToast('Nothing to export', 'error'); return; }
   var table = tables[0];
@@ -3703,7 +3717,6 @@ function exportMonthly() {
 }
 
 // ── CALENDAR ──────────────────────────────────────────────────────────────
-var REGION_COUNTRY = { 'Paris':'FR','New York':'US','Shanghai':'CN','Seoul':'KR','Tokyo':'JP','Singapore':'SG' };
 var CAL_DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 function switchCalendarView(v) {
@@ -3724,9 +3737,9 @@ function calChangeMonth(delta) {
   renderCalendar();
 }
 
-// Fetch public holidays for the region's country & year from Nager.Date
+// Public holidays for the selected country & year (Nager.Date)
 async function loadHolidays(year) {
-  var country = REGION_COUNTRY[currentRegionCity] || 'FR';
+  var country = currentCountryIso || 'FR';
   try {
     var res = await fetch('https://date.nager.at/api/v3/PublicHolidays/' + year + '/' + country);
     if (!res.ok) throw new Error('holiday API ' + res.status);
@@ -3741,18 +3754,22 @@ async function loadHolidays(year) {
 }
 
 async function loadCalendarData() {
-  if (!currentRegionId) return;
-  // Leaves
-  var lv = await sb.from('retail_agent_leave').select('*').eq('region_id', currentRegionId);
+  if (!currentStoreId) return;
+  var lv = await sb.from('retail_agent_leave').select('*').eq('store_id', currentStoreId);
   agentLeaves = (lv.data || []);
-  // Overrides
-  var ov = await sb.from('retail_calendar_overrides').select('*').eq('region_id', currentRegionId);
+  var ov = await sb.from('retail_calendar_overrides').select('*').eq('store_id', currentStoreId);
   calOverrides = {};
-  (ov.data || []).forEach(function(r){ calOverrides[r.date] = r.is_open; });
+  calHours = {};
+  (ov.data || []).forEach(function(r){
+    calOverrides[r.date] = r.is_open;
+    if (r.open_time != null && r.close_time != null) {
+      calHours[r.date] = { open: r.open_time, close: r.close_time };
+    }
+  });
 }
 
 async function renderCalendar() {
-  if (!currentRegionId) return;
+  if (!currentStoreId) return;
   var year = calMonth.getFullYear();
   if (calHolidaysYear !== year) await loadHolidays(year);
   document.getElementById('cal-month-label').textContent =
@@ -3813,7 +3830,7 @@ function renderAnnualCalendar() {
   }
   html += '</div>';
   html += '<p style="font-size:11px;color:#9ca3af;margin-top:12px;">Public holidays for '+
-    (REGION_COUNTRY[currentRegionCity]||'FR')+' are highlighted. Click any holiday to force the CSC open (green) or closed.</p>';
+    (currentCountryIso||'FR')+' are highlighted. Click any holiday to force the store open (green) or closed, or set exceptional hours.</p>';
   container.innerHTML = html;
 }
 
@@ -3921,14 +3938,14 @@ async function saveLeave() {
   var type  = document.getElementById('leave-type').value;
   if (!start || !end) { showToast('Pick both dates', 'error'); return; }
   if (end < start) { showToast('End date is before start date', 'error'); return; }
-  var row = { region_id: currentRegionId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: type };
+  var row = { store_id: currentStoreId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: type };
   var { data, error } = await sb.from('retail_agent_leave').insert([row]).select();
   if (error) { showToast('Failed to save: '+error.message, 'error'); return; }
   if (data && data[0]) agentLeaves.push(data[0]);
   closeLeavePopup();
   showToast('Absence saved \u2713');
   renderCalendar();
-  if (currentRegionId) renderPlanning(); // recompute planning with the new leave
+  if (currentStoreId) renderPlanning();
 }
 
 async function deleteLeavePrompt(leaveId, event) {
@@ -3944,6 +3961,13 @@ async function deleteLeavePrompt(leaveId, event) {
 
 // ── Day open/close popup (annual) ──
 var dayOpenPickerDate = null;
+function hourOptionsH(sel){
+  var o = '';
+  for (var h = 0; h <= 23; h++) {
+    o += '<option value="'+h+'"'+(h===sel?' selected':'')+'>'+String(h).padStart(2,'0')+':00</option>';
+  }
+  return o;
+}
 function showDayOpenPicker(ds, event) {
   event.stopPropagation();
   dayOpenPickerDate = ds;
@@ -3955,8 +3979,18 @@ function showDayOpenPicker(ds, event) {
   toggle.onchange = function(){
     document.getElementById('dayopen-closed-label').classList.toggle('active', !toggle.checked);
     document.getElementById('dayopen-open-label').classList.toggle('active', toggle.checked);
+    document.getElementById('dayopen-hours').style.display = toggle.checked ? 'flex' : 'none';
     applyDayOpen(dayOpenPickerDate, toggle.checked);
   };
+
+  var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds).getDay()];
+  var base = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
+  var exc  = calHours[ds] || {};
+  document.getElementById('dayopen-open-time').innerHTML  = hourOptionsH(exc.open  != null ? exc.open  : base.open);
+  document.getElementById('dayopen-close-time').innerHTML = hourOptionsH(exc.close != null ? exc.close : base.close);
+  document.getElementById('dayopen-open-time').onchange  = saveDayHours;
+  document.getElementById('dayopen-close-time').onchange = saveDayHours;
+  document.getElementById('dayopen-hours').style.display = toggle.checked ? 'flex' : 'none';
   var p = document.getElementById('dayopen-popup');
   p.style.display = 'block';
   p.style.left = Math.min(event.clientX+10, window.innerWidth-280) + 'px';
@@ -3972,12 +4006,42 @@ function closeDayOpenPopup(){
   document.removeEventListener('click', closeDayOpenOnOutside);
 }
 async function applyDayOpen(ds, isOpen) {
-  var row = { region_id: currentRegionId, date: ds, is_open: isOpen };
-  var { error } = await sb.from('retail_calendar_overrides').upsert([row], { onConflict: 'region_id,date' });
+  var row = { store_id: currentStoreId, date: ds, is_open: isOpen };
+  if (calHours[ds]) { row.open_time = calHours[ds].open; row.close_time = calHours[ds].close; }
+  var { error } = await sb.from('retail_calendar_overrides').upsert([row], { onConflict: 'store_id,date' });
   if (error) { showToast('Failed: '+error.message, 'error'); return; }
   calOverrides[ds] = isOpen;
   showToast(isOpen ? 'Marked open \u2713' : 'Marked closed \u2713');
   renderCalendar();
+  renderPlanning();
+}
+
+async function saveDayHours() {
+  var ds = dayOpenPickerDate;
+  if (!ds) return;
+  var o = parseInt(document.getElementById('dayopen-open-time').value, 10);
+  var c = parseInt(document.getElementById('dayopen-close-time').value, 10);
+  if (c <= o) { showToast('Closing must be after opening', 'error'); return; }
+  calHours[ds] = { open: o, close: c };
+  var row = { store_id: currentStoreId, date: ds, is_open: (calOverrides[ds] === true), open_time: o, close_time: c };
+  var { error } = await sb.from('retail_calendar_overrides').upsert([row], { onConflict: 'store_id,date' });
+  if (error) { showToast('Failed: '+error.message, 'error'); return; }
+  showToast('Hours saved \u2713');
+  renderPlanning();
+}
+
+async function clearDayHours() {
+  var ds = dayOpenPickerDate;
+  if (!ds) return;
+  delete calHours[ds];
+  var row = { store_id: currentStoreId, date: ds, is_open: (calOverrides[ds] === true), open_time: null, close_time: null };
+  var { error } = await sb.from('retail_calendar_overrides').upsert([row], { onConflict: 'store_id,date' });
+  if (error) { showToast('Failed: '+error.message, 'error'); return; }
+  var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds).getDay()];
+  var base = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
+  document.getElementById('dayopen-open-time').value  = base.open;
+  document.getElementById('dayopen-close-time').value = base.close;
+  showToast('Hours reset \u2713');
   renderPlanning();
 }
 
@@ -4067,7 +4131,7 @@ function pickWeek(mondayStr) {
   currentWeekMonday = newMon;
   updateWeekLabel();
   closeWeekPicker();
-  if (currentRegionId) loadWeekData();
+  if (currentStoreId) loadWeekData();
 }
 
 // ── START ─────────────────────────────────────────────────────────────────
