@@ -137,6 +137,51 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 }
 .nav-item.active .ic { color:var(--nav-active-tx); }
 
+.nav-group { display:flex; flex-direction:column; }
+.nav-item.has-sub { justify-content:space-between; }
+.nav-caret { width:14px; height:14px; margin-left:auto; flex-shrink:0;
+  transition:transform .18s ease; opacity:.8; }
+.nav-item.open .nav-caret { transform:rotate(90deg); }
+.nav-sub { display:none; flex-direction:column; gap:2px; margin:2px 0 4px; padding-left:30px; }
+.nav-sub.open { display:flex; }
+.nav-subitem {
+  display:flex; align-items:center; width:100%; height:32px;
+  padding:0 10px; border:none; border-radius:8px; cursor:pointer;
+  background:transparent; color:var(--tx-2);
+  font-family:var(--font); font-size:12.5px; font-weight:500; text-align:left;
+  transition:background .14s, color .14s;
+}
+.nav-subitem:hover { background:var(--bg-base-3); color:var(--tx-1); }
+.nav-subitem.active { background:var(--bg-base-3); color:var(--nav-active-bg); font-weight:600; }
+
+.it-wrap { padding:18px 20px; }
+.it-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
+.it-title { font-size:15px; font-weight:600; color:var(--tx-1); }
+.it-sub { font-size:12px; color:var(--tx-3); }
+.it-band { display:flex; align-items:flex-end; height:40px; margin-bottom:8px; }
+.it-band-lbl { font-size:10px; color:var(--tx-3); width:128px; flex:0 0 128px; display:flex; align-items:flex-end; padding-bottom:2px; }
+.it-bandfill { flex:1; display:flex; align-items:flex-end; gap:2px; }
+.it-bar { flex:1; background:#1E3A8A; opacity:.16; border-radius:3px 3px 0 0; min-height:3px; }
+.it-row { display:flex; align-items:center; height:50px; }
+.it-row.role-h { height:28px; }
+.it-role { font-size:10.5px; font-weight:600; color:var(--tx-3); letter-spacing:.05em; padding-left:2px; }
+.it-name { width:128px; flex:0 0 128px; font-size:12.5px; font-weight:500; color:var(--tx-2); white-space:nowrap; }
+.it-name small { color:var(--tx-3); font-weight:400; margin-left:2px; }
+.it-track { position:relative; flex:1; height:50px; }
+.it-open-zone { position:absolute; top:6px; bottom:6px; background:var(--bg-base-2); border-radius:4px; }
+.it-shift { position:absolute; top:16px; height:18px; background:#fde68a; border-radius:9px; }
+.it-shift.pre { background:#fdba74; }
+.blk { position:absolute; top:12px; height:26px; border-radius:7px; font-size:10px; font-weight:500;
+  display:flex; align-items:center; justify-content:center; box-sizing:border-box;
+  box-shadow:0 1px 2px rgba(0,0,0,.08); white-space:nowrap; overflow:hidden; }
+.blk-mb  { background:#1a1a2e; color:#fff; }
+.blk-lun { background:#fef08a; color:#854d0e; border:1px solid #fde047; }
+.blk-wel { background:#c7d2fe; color:#3730a3; }
+.blk-5s  { background:#e9d5ff; color:#6b21a8; }
+.blk-vm  { background:#bbf7d0; color:#166534; }
+.it-axis { display:flex; margin-left:128px; margin-top:8px; border-top:0.5px solid var(--line); padding-top:5px; }
+.it-axis span { flex:1; text-align:center; font-size:10px; color:var(--tx-3); }
+
 /* --- Controles dans la sidebar : region + periode --- */
 .sb-field { padding:0 var(--s2); margin-bottom:var(--s2); }
 .sb-field label {
@@ -817,7 +862,13 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
   <div class="sb-sec">Workspace</div>
   <div class="sb-nav">
-    <button class="nav-item active" onclick="switchTab('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Planning</span></button>
+    <div class="nav-group">
+      <button class="nav-item has-sub active open" onclick="toggleNavGroup('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Planning</span><svg class="ic nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="nav-sub open" id="sub-planning">
+        <button class="nav-subitem active" data-view="monthly"  onclick="switchPlanningView('monthly', this)">Monthly</button>
+        <button class="nav-subitem"        data-view="intraday" onclick="switchPlanningView('intraday', this)">Intraday</button>
+      </div>
+    </div>
     <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Agents</span></button>
     <button class="nav-item" onclick="switchTab('traffic', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Traffic</span></button>
     <button class="nav-item" onclick="switchTab('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button>
@@ -880,11 +931,27 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 <!-- PLANNING TAB -->
 <div id="tab-planning" class="tab-content active">
   <div class="wrap">
+
+    <div id="planning-monthly">
     <div class="page-head">
       <h2 class="page-title">Monthly planning</h2>
       <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
     </div>
-    <div id="planning-monthly"><div class="card"><p style="color:var(--tx-3)">Select a region to view the monthly planning.</p></div></div>
+    <div id="planning-monthly-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the monthly planning.</p></div></div>
+    </div>
+
+    <div id="planning-intraday" style="display:none">
+    <div class="page-head">
+      <h2 class="page-title">Intraday planning</h2>
+      <div style="display:flex;align-items:center;gap:var(--s3)">
+        <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(-1)">&lsaquo;</button>
+        <input type="date" id="intraday-date" onchange="intradayPickDate(this.value)" style="height:32px">
+        <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(1)">&rsaquo;</button>
+      </div>
+    </div>
+    <div id="planning-intraday-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div></div>
+    </div>
+
   </div>
 </div>
 
@@ -1043,6 +1110,7 @@ let currentRegionId   = null;
 let currentRegionName = '';
 let currentRegionCity = '';
 let currentCountryIso = '';
+let currentIntradayDate = null;
 let countries         = [];   // pays de la region courante
 let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
@@ -1184,6 +1252,37 @@ function switchTab(name, btn) {
   if (name === 'regulations' && currentStoreId) renderRegulations();
   if (name === 'calendar' && currentStoreId) renderCalendar();
   if (name === 'traffic') renderTraffic();
+}
+
+function toggleNavGroup(name, btn) {
+  var sub = document.getElementById('sub-' + name);
+  var isOpen = btn.classList.contains('open');
+  if (isOpen && document.getElementById('tab-' + name).classList.contains('active')) {
+    btn.classList.remove('open');
+    if (sub) sub.classList.remove('open');
+    return;
+  }
+  btn.classList.add('open');
+  if (sub) sub.classList.add('open');
+  var active = document.querySelector('#sub-' + name + ' .nav-subitem.active');
+  if (name === 'planning') switchPlanningView(active ? active.dataset.view : 'monthly', active);
+}
+
+var currentPlanningView = 'monthly';
+function switchPlanningView(v, btn) {
+  currentPlanningView = v;
+  document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('tab-planning').classList.add('active');
+  var parent = document.querySelector('#sub-planning').previousElementSibling;
+  if (parent) { parent.classList.add('active'); parent.classList.add('open'); }
+  document.querySelector('#sub-planning').classList.add('open');
+  document.querySelectorAll('#sub-planning .nav-subitem').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.view === v);
+  });
+  document.getElementById('planning-monthly').style.display  = (v === 'monthly')  ? '' : 'none';
+  document.getElementById('planning-intraday').style.display = (v === 'intraday') ? '' : 'none';
+  if (v === 'intraday' && currentStoreId) renderIntraday(currentIntradayDate);
 }
 
 function toggleAddAgentForm() {
@@ -1392,6 +1491,7 @@ async function onStoreChange() {
   await loadStoreSettings();
   await loadCalendarData();
   await loadWeekData();
+  if (!currentIntradayDate) currentIntradayDate = toDateStr(new Date());
   updateStatusBar();
   renderMonthlyPlanning();
   renderAgents();
@@ -2671,7 +2771,10 @@ async function renderTraffic() {
   html +=     '<div><h2 class="page-title">Hourly traffic curve</h2>';
   html +=     '<div class="card-sub">Drag any point to reshape the day. ' +
               'The rest adjusts to keep the total at 100%.</div></div>';
-  html +=     '<button class="btn btn-save btn-sm" onclick="saveHourlyCurve()">Save</button>';
+  html +=     '<div style="display:flex;gap:var(--s3)">';
+  html +=       '<button class="btn btn-ghost btn-sm" onclick="resetHourlyCurve()">Reset curve</button>';
+  html +=       '<button class="btn btn-save btn-sm" onclick="saveHourlyCurve()">Save</button>';
+  html +=     '</div>';
   html +=   '</div>';
   html +=   '<div id="curve-host"></div>';
   html += '</div>';
@@ -2702,7 +2805,7 @@ function weekOpenSpan() {
 var curveValues = [];   // one % per open hour, sums to 100
 var curveHours  = [];
 
-function initHourlyCurve() {
+function initHourlyCurve(keepValues) {
   var host = document.getElementById('curve-host');
   if (!host) return;
 
@@ -2711,11 +2814,13 @@ function initHourlyCurve() {
   for (var h = span.open; h <= span.close; h++) curveHours.push(h);
   var N = curveHours.length;
 
-  var saved = storeSettings && storeSettings.hourly_curve;
-  if (saved && Array.isArray(saved) && saved.length === N) {
-    curveValues = saved.slice();
-  } else {
-    curveValues = curveHours.map(function(){ return 100 / N; });
+  if (!keepValues) {
+    var saved = storeSettings && storeSettings.hourly_curve;
+    if (saved && Array.isArray(saved) && saved.length === N) {
+      curveValues = saved.slice();
+    } else {
+      curveValues = curveHours.map(function(){ return 100 / N; });
+    }
   }
 
   var W = 680, H = 300, padL = 34, padR = 18, padT = 30, padB = 34;
@@ -2743,7 +2848,7 @@ function initHourlyCurve() {
   for (var p = 0; p <= maxPct; p += 5) {
     var gy = yAt(p);
     grid += '<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="#f0f0f2"></line>'+
-            '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="8" '+
+            '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="7" '+
             'fill="#9ca3af" font-family="Arial">'+p+'%</text>';
   }
   document.getElementById('cv-grid').innerHTML = grid;
@@ -2770,10 +2875,10 @@ function initHourlyCurve() {
       ph += '<circle data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="6.5" fill="#fff" '+
             'stroke="#1E3A8A" stroke-width="2.5" style="cursor:grab"></circle>';
       var ly = y-14; if (ly < padT-4) ly = y+20;
-      vh += '<text x="'+x+'" y="'+ly+'" text-anchor="middle" font-size="9" '+
+      vh += '<text x="'+x+'" y="'+ly+'" text-anchor="middle" font-size="8" '+
             'font-weight="bold" fill="#1E3A8A" font-family="Arial" style="pointer-events:none">'+
             curveValues[i].toFixed(1)+'%</text>';
-      lh += '<text x="'+x+'" y="'+(H-padB+16)+'" text-anchor="middle" font-size="8" '+
+      lh += '<text x="'+x+'" y="'+(H-padB+16)+'" text-anchor="middle" font-size="7" '+
             'fill="#6b7280" font-family="Arial">'+String(curveHours[i]).padStart(2,'0')+'h</text>';
     }
     document.getElementById('cv-points').innerHTML = ph;
@@ -2815,8 +2920,16 @@ function initHourlyCurve() {
   draw();
 }
 
-async function saveHourlyCurve() {
-  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+function resetHourlyCurve() {
+  if (!curveHours.length) return;
+  if (!confirm('Reset the hourly curve to a flat shape?')) return;
+  var flat = 100 / curveHours.length;
+  curveValues = curveHours.map(function(){ return flat; });
+  initHourlyCurve(true);
+  showToast('Curve reset - remember to Save');
+}
+
+async function saveHourlyCurve() {  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   var rounded = curveValues.map(function(v){ return Math.round(v * 10) / 10; });
   var row = {
     store_id: currentStoreId,
@@ -2831,6 +2944,171 @@ async function saveHourlyCurve() {
   storeSettings = row;
   showToast('Curve saved \u2713');
 }
+
+
+function intradayPickDate(v) {
+  if (!v) return;
+  currentIntradayDate = v;
+  renderIntraday(v);
+}
+function intradayShiftDay(dir) {
+  if (!currentIntradayDate) currentIntradayDate = toDateStr(new Date());
+  var d = new Date(currentIntradayDate + 'T12:00:00');
+  d.setDate(d.getDate() + dir);
+  currentIntradayDate = toDateStr(d);
+  var inp = document.getElementById('intraday-date');
+  if (inp) inp.value = currentIntradayDate;
+  renderIntraday(currentIntradayDate);
+}
+
+function renderIntraday(ds) {
+  var body = document.getElementById('planning-intraday-body');
+  if (!body) return;
+  if (!currentStoreId) { body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div>'; return; }
+
+  if (!ds) ds = toDateStr(new Date());
+  currentIntradayDate = ds;
+  var inp = document.getElementById('intraday-date');
+  if (inp && inp.value !== ds) inp.value = ds;
+
+  var closure = getDayClosureType(ds);
+  if (closure) {
+    var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
+    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">' + formatDateDisplay(ds) + ' - store closed (' + why + ').</p></div>';
+    return;
+  }
+
+  var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
+  var dh = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
+  if (calHours[ds]) dh = calHours[ds];
+  var openH = dh.open, closeH = dh.close;
+
+  var working = agents.filter(function(a) {
+    if (a.is_active === false) return false;
+    if (agentOnLeave(a.id, ds)) return false;
+    return true;
+  });
+
+  if (!working.length) {
+    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">No agents available on ' + formatDateDisplay(ds) + '.</p></div>';
+    return;
+  }
+
+  var shiftInfo = {};
+  working.forEach(function(a, i) {
+    var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(a)].grid] || RETAIL_SHIFTS.sales;
+    var sh = grid[i % grid.length] || grid[0];
+    shiftInfo[a.id] = { code: sh.code, startMin: sh.startMin, endMin: sh.endMin };
+  });
+
+  var T0 = 24, T1 = 0;
+  working.forEach(function(a) {
+    var si = shiftInfo[a.id];
+    if (si.startMin / 60 < T0) T0 = si.startMin / 60;
+    if (si.endMin / 60 > T1) T1 = si.endMin / 60;
+  });
+  T0 = Math.floor(Math.min(T0, openH));
+  T1 = Math.ceil(Math.max(T1, closeH));
+  var span = T1 - T0;
+  function pct(h) { return ((h - T0) / span) * 100; }
+  function wpct(h) { return (h / span) * 100; }
+
+  var curve = (storeSettings && storeSettings.hourly_curve) || null;
+  var nOpen = closeH - openH;
+
+  var leads = working.filter(function(a) { var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
+  var seniors = working.filter(function(a) { return retailStatusOf(a) === 'SENIOR'; });
+  var briefLead = leads[0] || seniors[0] || null;
+
+  var breaks = (regulations.breaks || []);
+  var lunch = breaks.find(function(b) { return /lunch|dej/i.test(b.name); }) || breaks[0] || null;
+
+  function lowestSlot(ws, we, dur) {
+    if (!curve || !curve.length) return ws;
+    var best = ws, bestV = Infinity;
+    for (var h = ws; h + dur / 60 <= we; h += 0.25) {
+      var ci = Math.floor(h) - openH;
+      var v = (ci >= 0 && ci < curve.length) ? curve[ci] : 50;
+      if (v < bestV) { bestV = v; best = h; }
+    }
+    return best;
+  }
+
+  var band = '';
+  if (curve && curve.length) {
+    var maxV = Math.max.apply(null, curve);
+    band = '<div class="it-band"><div class="it-band-lbl">Store traffic</div><div class="it-bandfill" style="margin-left:' + pct(openH) + '%;margin-right:' + (100 - pct(closeH)) + '%">';
+    curve.forEach(function(v) {
+      band += '<div class="it-bar" style="height:' + Math.round(v / maxV * 100) + '%"></div>';
+    });
+    band += '</div></div>';
+  }
+
+  var byBlock = {};
+  RETAIL_BLOCK_ORDER.forEach(function(b) { byBlock[b.key] = []; });
+  working.forEach(function(a) {
+    var blk = RETAIL_STATUS[retailStatusOf(a)].block;
+    if (!byBlock[blk]) byBlock[blk] = [];
+    byBlock[blk].push(a);
+  });
+
+  var rowsHtml = '';
+  var briefCount = 0;
+  RETAIL_BLOCK_ORDER.forEach(function(blockDef) {
+    var list = byBlock[blockDef.key] || [];
+    if (!list.length) return;
+    rowsHtml += '<div class="it-row role-h"><div class="it-role">' + blockDef.title.toUpperCase() + '</div></div>';
+    list.forEach(function(a) {
+      var si = shiftInfo[a.id];
+      var sH = si.startMin / 60, eH = si.endMin / 60;
+      var blocks = [];
+
+      if (briefLead) {
+        var brief = (sH < openH) ? (openH - 0.25) : sH + 0.25;
+        blocks.push([brief, 0.25, 'mb', 'Brief']);
+        briefCount++;
+      }
+      if (lunch) {
+        var ls = lowestSlot(Math.max(lunch.window_start, sH), Math.min(lunch.window_end, eH), lunch.duration);
+        if (ls >= sH && ls + lunch.duration / 60 <= eH) {
+          blocks.push([ls, lunch.duration / 60, 'lun', lunch.name]);
+        }
+      }
+
+      var track = '<div class="it-track">' +
+        '<div class="it-open-zone" style="left:' + pct(openH) + '%;right:' + (100 - pct(closeH)) + '%"></div>';
+      if (sH < openH) {
+        track += '<div class="it-shift pre" style="left:' + pct(sH) + '%;width:' + (pct(openH) - pct(sH)) + '%"></div>';
+        track += '<div class="it-shift" style="left:' + pct(openH) + '%;width:' + (pct(eH) - pct(openH)) + '%"></div>';
+      } else {
+        track += '<div class="it-shift" style="left:' + pct(sH) + '%;width:' + (pct(eH) - pct(sH)) + '%"></div>';
+      }
+      blocks.forEach(function(bl) {
+        track += '<div class="blk blk-' + bl[2] + '" style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + bl[3] + '</div>';
+      });
+      track += '</div>';
+
+      var initials = (a.first_name || '?').charAt(0) + (a.last_name || '').charAt(0);
+      rowsHtml += '<div class="it-row"><div class="it-name">' + a.first_name + ' ' + (a.last_name || '').charAt(0) + '. <small>' + RETAIL_STATUS[retailStatusOf(a)].label + '</small></div>' + track + '</div>';
+    });
+  });
+
+  var axis = '';
+  for (var h = Math.ceil(T0); h <= Math.floor(T1); h++) axis += '<span>' + h + 'h</span>';
+
+  var noBriefNote = briefLead ? '' : '<div class="card" style="margin-bottom:12px;background:var(--warn-soft)"><p style="color:var(--warn-tx);font-size:12px;margin:0">No manager, ASM or senior available - morning brief not assigned.</p></div>';
+
+  body.innerHTML =
+    noBriefNote +
+    '<div class="card it-wrap">' +
+      '<div class="it-head"><div class="it-title">' + formatDateDisplay(ds) + '</div>' +
+        '<div class="it-sub">' + working.length + ' present - open ' + String(openH).padStart(2,'0') + 'h - ' + String(closeH).padStart(2,'0') + 'h</div></div>' +
+      band +
+      '<div class="it-rows">' + rowsHtml + '</div>' +
+      '<div class="it-axis">' + axis + '</div>' +
+    '</div>';
+}
+
 
 async function saveMonthlyTraffic() {
   if (!currentStoreId) return;
@@ -3082,7 +3360,7 @@ async function clearMonthOverrides() {
 }
 
 function renderMonthlyPlanning() {
-  var container = document.getElementById('planning-monthly');
+  var container = document.getElementById('planning-monthly-body');
   if (!container) return;
   if (!currentStoreId) {
     container.innerHTML = '<p style="color:#888">Select a store to view the monthly planning.</p>';
