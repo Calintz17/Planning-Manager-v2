@@ -995,7 +995,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
     <select id="dayopen-open-time"></select>
     <span class="sft-side">to</span>
     <select id="dayopen-close-time"></select>
-    <button class="btn btn-neutral btn-sm" onclick="clearDayHours()">Reset</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearDayHours()">Reset</button>
   </div>
 </div>
 
@@ -1475,6 +1475,25 @@ async function seedRegulations() {
 }
 
 // ── SAVE REGULATIONS ──────────────────────────────────────────────────────
+function addBreakRow() {
+  var body = document.getElementById('breaks-body');
+  if (!body) return;
+  var tr = document.createElement('tr');
+  tr.className = 'break-row';
+  tr.innerHTML =
+    '<td><input type="text" class="break-name" value="Break"></td>' +
+    '<td><input type="number" class="break-dur" value="15" min="5" max="120" style="width:70px"></td>' +
+    '<td>' + hourSelectHtml2('break-ws', 11) + '</td>' +
+    '<td>' + hourSelectHtml2('break-we', 12) + '</td>' +
+    '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>';
+  body.appendChild(tr);
+}
+
+function removeBreakRow(btn) {
+  var tr = btn.closest('tr');
+  if (tr) tr.remove();
+}
+
 async function saveRegulations() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
 
@@ -1587,6 +1606,14 @@ function hourSelectHtml(id, selected) {
     opts += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + lbl + '</option>';
   }
   return '<select id="' + id + '">' + opts + '</select>';
+}
+function hourSelectHtml2(cls, selected) {
+  let opts = '';
+  for (let h = 0; h <= 23; h++) {
+    const lbl = String(h).padStart(2, '0') + ':00';
+    opts += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + lbl + '</option>';
+  }
+  return '<select class="' + cls + '">' + opts + '</select>';
 }
 
 // Palettes proposees a la creation d'un shift
@@ -1833,6 +1860,16 @@ function renderRegulations() {
       '</tr>';
   });
 
+  let breakRows = '';
+  (regulations.breaks || []).forEach(function(b) {
+    breakRows += '<tr class="break-row">' +
+      '<td><input type="text" class="break-name" value="' + (b.name || '') + '"></td>' +
+      '<td><input type="number" class="break-dur" value="' + (b.duration || 0) + '" min="5" max="120" style="width:70px"></td>' +
+      '<td>' + hourSelectHtml2('break-ws', b.window_start) + '</td>' +
+      '<td>' + hourSelectHtml2('break-we', b.window_end) + '</td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>' +
+      '</tr>';
+  });
   const closedTagsHtml = regulations.closed_dates.length
     ? regulations.closed_dates.map(function(d) {
         return '<span class="date-tag">' + formatDateDisplay(d) +
@@ -1898,8 +1935,21 @@ function renderRegulations() {
       '</tr></thead><tbody>' + hoursRows + '</tbody></table>' +
     '</div>' +
 
-    // ── BUBBLE 4 + 5: AHT & Priority, Monthly Targets + Trend (migrated) ──
-    // (Bank Holidays bubble removed - holidays now live in the Calendar tab)
+    // ── BUBBLE 3: Break structure ────────────────────────────────────────
+    '<div class="card">' +
+      '<div class="page-head" style="margin-bottom:var(--s3)">' +
+        '<h2 class="page-title">Break structure</h2>' +
+        '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button></div>' +
+      '<div class="card-sub" style="margin-bottom:var(--s4)">Define breaks per shift. ' +
+        'The engine places each break in the lowest-traffic slot within its window.</div>' +
+      '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
+        '<th>Name</th><th style="width:120px">Duration (min)</th>' +
+        '<th style="width:130px">Window start</th><th style="width:130px">Window end</th>' +
+        '<th style="width:52px"></th></tr></thead>' +
+        '<tbody id="breaks-body">' + breakRows + '</tbody></table>' +
+      '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addBreakRow()">+ Add break</button>' +
+    '</div>' +
+
     settingsExtra;
 
   // Toggle reactivity
@@ -2631,16 +2681,22 @@ async function renderTraffic() {
 }
 
 // Widest opening span across the week (earliest open -> latest close)
+// Store-typical opening span: average open/close across the week,
+// rounded outward (open down, close up) to keep the widest useful amplitude.
 function weekOpenSpan() {
   var dh = regulations.day_hours || {};
-  var minO = 24, maxC = 0;
+  var opens = [], closes = [];
   DAY_KEYS.forEach(function(k){
     var h = dh[k]; if (!h) return;
-    if (h.open  < minO) minO = h.open;
-    if (h.close > maxC) maxC = h.close;
+    opens.push(h.open); closes.push(h.close);
   });
-  if (minO >= maxC) { minO = 10; maxC = 18; }
-  return { open: minO, close: maxC };
+  if (!opens.length) return { open: 10, close: 18 };
+  var avgO = opens.reduce(function(a,b){return a+b;},0) / opens.length;
+  var avgC = closes.reduce(function(a,b){return a+b;},0) / closes.length;
+  var open  = Math.floor(avgO);
+  var close = Math.ceil(avgC);
+  if (open >= close) { open = 10; close = 18; }
+  return { open: open, close: close };
 }
 
 var curveValues = [];   // one % per open hour, sums to 100
@@ -2652,7 +2708,7 @@ function initHourlyCurve() {
 
   var span = weekOpenSpan();
   curveHours = [];
-  for (var h = span.open; h < span.close; h++) curveHours.push(h);
+  for (var h = span.open; h <= span.close; h++) curveHours.push(h);
   var N = curveHours.length;
 
   var saved = storeSettings && storeSettings.hourly_curve;
@@ -2687,7 +2743,7 @@ function initHourlyCurve() {
   for (var p = 0; p <= maxPct; p += 5) {
     var gy = yAt(p);
     grid += '<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="#f0f0f2"></line>'+
-            '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="9" '+
+            '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="8" '+
             'fill="#9ca3af" font-family="Arial">'+p+'%</text>';
   }
   document.getElementById('cv-grid').innerHTML = grid;
@@ -2714,10 +2770,10 @@ function initHourlyCurve() {
       ph += '<circle data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="6.5" fill="#fff" '+
             'stroke="#1E3A8A" stroke-width="2.5" style="cursor:grab"></circle>';
       var ly = y-14; if (ly < padT-4) ly = y+20;
-      vh += '<text x="'+x+'" y="'+ly+'" text-anchor="middle" font-size="10" '+
+      vh += '<text x="'+x+'" y="'+ly+'" text-anchor="middle" font-size="9" '+
             'font-weight="bold" fill="#1E3A8A" font-family="Arial" style="pointer-events:none">'+
             curveValues[i].toFixed(1)+'%</text>';
-      lh += '<text x="'+x+'" y="'+(H-padB+16)+'" text-anchor="middle" font-size="9" '+
+      lh += '<text x="'+x+'" y="'+(H-padB+16)+'" text-anchor="middle" font-size="8" '+
             'fill="#6b7280" font-family="Arial">'+String(curveHours[i]).padStart(2,'0')+'h</text>';
     }
     document.getElementById('cv-points').innerHTML = ph;
