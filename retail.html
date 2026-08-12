@@ -2095,6 +2095,11 @@ async function loadWeekData() {
     .eq('store_id', currentStoreId).eq('is_active', true).order('last_name');
   if (e1) { hideLoader(); showToast('Error loading agents', 'error'); return; }
   agents = agentData || [];
+  agents.sort(function(a, b) {
+    var ra = hierarchyRank(a), rb = hierarchyRank(b);
+    if (ra !== rb) return ra - rb;
+    return (a.last_name || '').localeCompare(b.last_name || '');
+  });
 
 
   // Load availability — read day_status column
@@ -2359,6 +2364,14 @@ async function loadShiftConfig() {
 function retailStatusOf(agent) {
   var st = (agent.status || 'SA').toUpperCase();
   return RETAIL_STATUS[st] ? st : 'SA';
+}
+
+var HIERARCHY_ORDER = ['SM', 'ASM', 'SENIOR', 'SA', 'PART_TIME', 'STOCK'];
+function hierarchyRank(agent) {
+  var st = retailStatusOf(agent);
+  if (st === 'MANAGER') st = 'ASM';
+  var i = HIERARCHY_ORDER.indexOf(st);
+  return i === -1 ? HIERARCHY_ORDER.length : i;
 }
 
 // ── RENDER MONTHLY PLANNING (Retail) — facon Excel Duphot ──────────────────
@@ -3524,7 +3537,11 @@ function renderMonthlyPlanning() {
   // Statuts d'encadrement et de stock
   function isLead(a)  { var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; }
   function isStock(a) { return retailStatusOf(a) === 'STOCK'; }
-  var hasStockTeam = agents.some(isStock);
+  var stockCount = agents.filter(isStock).length;
+  var hasStockTeam = stockCount > 0;
+  // Un seul stockiste : ses repos tombent naturellement sur les jours les plus
+  // creux (byLoad traite les jours charges d'abord, son quota s'y epuise).
+  // Plusieurs stockistes : au moins un present chaque jour ouvert.
 
   // Ordre de traitement : les jours les plus charges servis en premier,
   // pour qu'ils captent l'effectif avant que les quotas ne s'epuisent.
@@ -3569,11 +3586,10 @@ function renderMonthlyPlanning() {
     pick(function(a) { return !isStock(a); });   // ouverture (vente)
     pick(function(a) { return !isStock(a); });   // fermeture (vente)
 
-    // ── COUCHE 2 : ventilation selon le trafic, plancher 50% ──
+    // ── COUCHE 2 : ventilation selon le trafic, plancher dur de 2 ──
     var ratio  = avgVol > 0 ? (d.vol || 0) / avgVol : 1;
     var target = Math.round(agents.length * ratio);
-    var floor  = Math.ceil(agents.length * 0.5);       // jamais moins de 50%
-    target = Math.max(floor, Math.min(agents.length, target));
+    target = Math.max(2, Math.min(agents.length, target));   // jamais moins de 2
 
     while (assignedMap[d.ds].length < target) {
       if (!pick(null)) break;           // plus personne de disponible
@@ -3584,7 +3600,7 @@ function renderMonthlyPlanning() {
   // Si des quotas se sont epuises, certains jours peuvent rester sous le
   // plancher. On repasse pour combler, en assouplissant le quota mensuel
   // (jamais la limite legale des 5 jours par semaine, ni les absences).
-  var minFloor = Math.max(1, Math.ceil(agents.length * 0.5));
+  var minFloor = 2;
   openList.forEach(function(d) {
     if (assignedMap[d.ds].length >= minFloor) return;
     var already = {};
@@ -3626,6 +3642,88 @@ function renderMonthlyPlanning() {
   // Note : les preferences et les temps partiels sont deja pris en compte
   // par le moteur d'affectation ci-dessus (quotas et dette de preference).
 
+  // ── Trafic couvert par chaque shift, via la courbe horaire ──
+  // Pour un shift [startMin,endMin], on somme les % de la courbe des heures
+  // d'ouverture qu'il couvre. Un shift hors heures ouvertes (ex: VM matinal)
+  // pese 0 mais reste disponible pour le plancher de tranche.
+  var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
+  function shiftTrafficWeight(sh, openH, closeH) {
+    if (!curveArr || !curveArr.length) return 1;
+    var w = 0;
+    for (var h = openH; h < closeH; h++) {
+      var ci = h - openH;
+      if (ci < 0 || ci >= curveArr.length) continue;
+      if (sh.startMin <= h * 60 && sh.endMin > h * 60) w += curveArr[ci];
+    }
+    return w;
+  }
+
+  // Plan de shift par jour : ventile les agents presents sur les shifts
+  // disponibles au prorata du trafic de leur tranche. Plancher 1 par shift.
+  var shiftPlanByDay = {};
+  monthDays.forEach(function(d) {
+    if (d.closure) return;
+    var dow2 = d.date.getDay();
+    var dh = (regulations.day_hours && regulations.day_hours[
+      ['sun','mon','tue','wed','thu','fri','sat'][dow2]]) || { open: 10, close: 18 };
+    var present = assignedMap[d.ds].slice();
+    var plan = {};
+
+    // Dimanche : tout le monde en shift D si ce code existe dans la grille vente
+    if (dow2 === 0) {
+      var hasD = (RETAIL_SHIFTS.sales || []).some(function(s){ return s.code === 'D'; });
+      if (hasD) { present.forEach(function(id){ plan[id] = 'D'; }); shiftPlanByDay[d.ds] = plan; return; }
+    }
+
+    // Groupe les agents par grille (vente / stock)
+    var byGrid = { sales: [], stock: [] };
+    present.forEach(function(id) {
+      var a = agents.find(function(x){ return x.id === id; });
+      if (!a) return;
+      var g = RETAIL_STATUS[retailStatusOf(a)].grid;
+      (byGrid[g] || byGrid.sales).push(a);
+    });
+
+    Object.keys(byGrid).forEach(function(g) {
+      var list = byGrid[g];
+      var grid = RETAIL_SHIFTS[g] || [];
+      if (!list.length || !grid.length) return;
+      var weights = grid.map(function(s){ return shiftTrafficWeight(s, dh.open, dh.close); });
+      var wTot = weights.reduce(function(s,w){ return s + w; }, 0) || 1;
+
+      // Quota par shift = plancher 1, puis reste au prorata du trafic
+      var quota = grid.map(function(){ return 0; });
+      var remaining = list.length;
+      grid.forEach(function(s, i){ if (remaining > 0) { quota[i] = 1; remaining--; } });
+      if (remaining > 0) {
+        var frac = weights.map(function(w){ return w / wTot * remaining; });
+        var base = frac.map(function(f){ return Math.floor(f); });
+        var used = base.reduce(function(s,b){ return s + b; }, 0);
+        quota = quota.map(function(q,i){ return q + base[i]; });
+        var leftover = remaining - used;
+        var order = frac.map(function(f,i){ return [i, f - Math.floor(f)]; })
+                        .sort(function(a,b){ return b[1] - a[1]; });
+        for (var k = 0; k < leftover; k++) quota[order[k % order.length][0]]++;
+      }
+
+      // Affecte les agents aux shifts en respectant preference matin/soir
+      var sortedList = list.slice().sort(function(x, y) {
+        var px = (agentPrefs[x.id] || {}).shift_pref, py = (agentPrefs[y.id] || {}).shift_pref;
+        return (px === 'morning' ? -1 : px === 'evening' ? 1 : 0) -
+               (py === 'morning' ? -1 : py === 'evening' ? 1 : 0);
+      });
+      var si = 0;
+      grid.forEach(function(s, i) {
+        for (var q = 0; q < quota[i] && si < sortedList.length; q++) {
+          plan[sortedList[si].id] = s.code; si++;
+        }
+      });
+      while (si < sortedList.length) { plan[sortedList[si].id] = grid[grid.length-1].code; si++; }
+    });
+
+    shiftPlanByDay[d.ds] = plan;
+  });
+
   // ── Determination de la lettre de shift d'un agent un jour donne ──
   // Renvoie {code, cls} ou un statut special.
   function shiftFor(agent, day) {
@@ -3652,37 +3750,11 @@ function renderMonthlyPlanning() {
     if (restMap[agent.id] && restMap[agent.id][day.ds])
       return { code: 'OFF', cls: 'sh-off', special: 'off' };
 
-    // Sinon : l'agent travaille -> choix du shift selon le trafic et la grille
+    // Sinon : l'agent travaille -> shift issu du plan calcule sur le trafic
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid];
-
-    // Charge relative de la soiree. Le retail suit une regle simple et
-    // constatee : le vendredi et le samedi sont plus charges en fin de
-    // journee, on renforce alors les shifts de fermeture.
-    var eveningShare = (day.dow === 5 || day.dow === 6) ? 0.60 : 0.50;
-
-    // On repartit les agents presents : ceux d'index pair tirent vers le matin
-    // (O/M ou OS/MS), les autres vers le soir (C/D ou CS), pondere par le
-    // eveningShare. Stable d'un rendu a l'autre.
-    var idx = agents.indexOf(agent);
-    var dayNum = day.num;
-
-    // Repartition de base : deterministe, et biaisee par la charge du soir.
-    var slot;
-    if (eveningShare >= 0.55)      slot = grid.length - 1 - (idx % grid.length);
-    else if (eveningShare <= 0.45) slot = idx % grid.length;
-    else                           slot = (idx + dayNum) % grid.length;
-
-    // Preference matin / soir : appliquee UN JOUR SUR DEUX seulement.
-    // L'agent obtient son creneau favori plus souvent que les autres, sans
-    // pour autant le monopoliser : la rotation reste assuree.
-    var pref = (agentPrefs[agent.id] || {}).shift_pref;
-    if (pref === 'morning' || pref === 'evening') {
-      var turn = (dayNum + idx) % 2 === 0;      // alternance stable
-      if (turn) slot = (pref === 'morning') ? 0 : grid.length - 1;
-    }
-
-    var sh = grid[slot] || grid[0];
-    return { code: sh.code };
+    var planned = (shiftPlanByDay[day.ds] || {})[agent.id];
+    if (planned) return { code: planned };
+    return { code: (grid[0] || { code: 'O' }).code };
   }
 
   // Pastille HTML pour une lettre de shift
@@ -3768,6 +3840,9 @@ function renderMonthlyPlanning() {
   var issues = [];   // { ds, num, missing: [] }
   monthDays.forEach(function(d) {
     if (d.closure) return;
+    // Dimanche : shift unique D, les controles ouverture/fermeture ne
+    // s'appliquent pas (jour a amplitude unique).
+    var isSunday = d.dow === 0;
     var hasOpen = false, hasClose = false, hasLead = false;
     agents.forEach(function(a) {
       var r = agentRows[a.id].find(function(x) { return x.d.ds === d.ds; });
@@ -3778,8 +3853,8 @@ function renderMonthlyPlanning() {
       if (st === 'SM' || st === 'ASM') hasLead = true;
     });
     var missing = [];
-    if (!hasOpen)  missing.push('opening');
-    if (!hasClose) missing.push('closing');
+    if (!isSunday && !hasOpen)  missing.push('opening');
+    if (!isSunday && !hasClose) missing.push('closing');
     if (!hasLead)  missing.push('SM/ASM');
     if (missing.length) issues.push({ ds: d.ds, num: d.num, missing: missing });
   });
