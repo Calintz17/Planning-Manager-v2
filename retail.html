@@ -2575,12 +2575,14 @@ async function renderTraffic() {
   var keys   = Object.keys(spread).sort();
 
   html += '<div class="card">';
-  html +=   '<div class="card-head"><div>';
-  html +=     '<div class="card-title">Daily breakdown \u00b7 ' + mName + '</div>';
+  html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
+  html +=     '<div><h2 class="page-title">Daily breakdown \u00b7 ' + mName + '</h2>';
   html +=     '<div class="card-sub">Computed from the monthly total. ' +
-              'Edit any day to override it - the rest adjusts around it.</div>';
-  html +=   '</div>';
-  html +=   '<button class="btn btn-ghost btn-sm" onclick="resetDailyOverrides()">Reset daily edits</button>';
+              'Edit any day to override it - the rest adjusts around it.</div></div>';
+  html +=     '<div style="display:flex;gap:var(--s3)">';
+  html +=       '<button class="btn btn-ghost btn-sm" onclick="resetDailyOverrides()">Reset daily edits</button>';
+  html +=       '<button class="btn btn-save btn-sm" onclick="saveDailyTraffic()">Save</button>';
+  html +=     '</div>';
   html +=   '</div>';
 
   if (!keys.length) {
@@ -2610,12 +2612,168 @@ async function renderTraffic() {
         '</div>';
     });
     html += '</div>';
-    html += '<div style="margin-top:12px;display:flex;justify-content:flex-end">' +
-            '<button class="btn btn-save btn-sm" onclick="saveDailyTraffic()">Save daily</button></div>';
   }
   html += '</div>';
 
+  // ── Carte 3 : courbe de trafic horaire ──
+  html += '<div class="card">';
+  html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
+  html +=     '<div><h2 class="page-title">Hourly traffic curve</h2>';
+  html +=     '<div class="card-sub">Drag any point to reshape the day. ' +
+              'The rest adjusts to keep the total at 100%.</div></div>';
+  html +=     '<button class="btn btn-save btn-sm" onclick="saveHourlyCurve()">Save</button>';
+  html +=   '</div>';
+  html +=   '<div id="curve-host"></div>';
+  html += '</div>';
+
   box.innerHTML = html;
+  initHourlyCurve();
+}
+
+// Widest opening span across the week (earliest open -> latest close)
+function weekOpenSpan() {
+  var dh = regulations.day_hours || {};
+  var minO = 24, maxC = 0;
+  DAY_KEYS.forEach(function(k){
+    var h = dh[k]; if (!h) return;
+    if (h.open  < minO) minO = h.open;
+    if (h.close > maxC) maxC = h.close;
+  });
+  if (minO >= maxC) { minO = 10; maxC = 18; }
+  return { open: minO, close: maxC };
+}
+
+var curveValues = [];   // one % per open hour, sums to 100
+var curveHours  = [];
+
+function initHourlyCurve() {
+  var host = document.getElementById('curve-host');
+  if (!host) return;
+
+  var span = weekOpenSpan();
+  curveHours = [];
+  for (var h = span.open; h < span.close; h++) curveHours.push(h);
+  var N = curveHours.length;
+
+  var saved = storeSettings && storeSettings.hourly_curve;
+  if (saved && Array.isArray(saved) && saved.length === N) {
+    curveValues = saved.slice();
+  } else {
+    curveValues = curveHours.map(function(){ return 100 / N; });
+  }
+
+  var W = 680, H = 300, padL = 34, padR = 18, padT = 30, padB = 34;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var maxPct = Math.max(22, Math.ceil(Math.max.apply(null, curveValues) + 4));
+
+  host.innerHTML =
+    '<svg id="curve-svg" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;'+
+      'touch-action:none;user-select:none;">'+
+      '<g id="cv-grid"></g>'+
+      '<path id="cv-area" fill="#1E3A8A" fill-opacity="0.07"></path>'+
+      '<path id="cv-line" fill="none" stroke="#1E3A8A" stroke-width="2.5" '+
+        'stroke-linejoin="round" stroke-linecap="round"></path>'+
+      '<g id="cv-points"></g><g id="cv-values"></g><g id="cv-labels"></g>'+
+    '</svg>'+
+    '<div style="display:flex;justify-content:flex-end;margin-top:10px;">'+
+      '<span style="font-size:12px;color:var(--tx-3)">Total '+
+      '<span id="cv-total" style="color:#166534;font-weight:600">100%</span></span></div>';
+
+  var svg = document.getElementById('curve-svg');
+  function xAt(i){ return padL + (plotW * i / (N - 1)); }
+  function yAt(v){ return padT + plotH - (plotH * (v / maxPct)); }
+
+  var grid = '';
+  for (var p = 0; p <= maxPct; p += 5) {
+    var gy = yAt(p);
+    grid += '<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="#f0f0f2"></line>'+
+            '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="9" '+
+            'fill="#9ca3af" font-family="Arial">'+p+'%</text>';
+  }
+  document.getElementById('cv-grid').innerHTML = grid;
+
+  function smooth(pts, close) {
+    if (pts.length < 2) return '';
+    var d = 'M ' + pts[0][0] + ' ' + pts[0][1];
+    for (var i=0;i<pts.length-1;i++){
+      var p0=pts[i>0?i-1:0], p1=pts[i], p2=pts[i+1], p3=pts[i+2<pts.length?i+2:pts.length-1], t=0.16;
+      d += ' C '+(p1[0]+(p2[0]-p0[0])*t)+' '+(p1[1]+(p2[1]-p0[1])*t)+' '+
+           (p2[0]-(p3[0]-p1[0])*t)+' '+(p2[1]-(p3[1]-p1[1])*t)+' '+p2[0]+' '+p2[1];
+    }
+    if (close) d += ' L '+pts[pts.length-1][0]+' '+(padT+plotH)+' L '+pts[0][0]+' '+(padT+plotH)+' Z';
+    return d;
+  }
+
+  function draw() {
+    var pts = curveValues.map(function(v,i){ return [xAt(i), yAt(v)]; });
+    document.getElementById('cv-line').setAttribute('d', smooth(pts, false));
+    document.getElementById('cv-area').setAttribute('d', smooth(pts, true));
+    var ph='', vh='', lh='';
+    for (var i=0;i<N;i++){
+      var x=xAt(i), y=yAt(curveValues[i]);
+      ph += '<circle data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="6.5" fill="#fff" '+
+            'stroke="#1E3A8A" stroke-width="2.5" style="cursor:grab"></circle>';
+      var ly = y-14; if (ly < padT-4) ly = y+20;
+      vh += '<text x="'+x+'" y="'+ly+'" text-anchor="middle" font-size="10" '+
+            'font-weight="bold" fill="#1E3A8A" font-family="Arial" style="pointer-events:none">'+
+            curveValues[i].toFixed(1)+'%</text>';
+      lh += '<text x="'+x+'" y="'+(H-padB+16)+'" text-anchor="middle" font-size="9" '+
+            'fill="#6b7280" font-family="Arial">'+String(curveHours[i]).padStart(2,'0')+'h</text>';
+    }
+    document.getElementById('cv-points').innerHTML = ph;
+    document.getElementById('cv-values').innerHTML = vh;
+    document.getElementById('cv-labels').innerHTML = lh;
+    document.getElementById('cv-total').textContent =
+      Math.round(curveValues.reduce(function(a,b){return a+b;},0)) + '%';
+    bind();
+  }
+
+  function setValue(idx, nv) {
+    nv = Math.max(0.5, Math.min(maxPct, nv));
+    var others = 0;
+    for (var i=0;i<N;i++) if (i!==idx) others += curveValues[i];
+    var remaining = 100 - nv;
+    if (others <= 0) { var e=remaining/(N-1); for (var j=0;j<N;j++) curveValues[j]=(j===idx)?nv:e; }
+    else { var s=remaining/others; for (var k=0;k<N;k++) curveValues[k]=(k===idx)?nv:curveValues[k]*s; }
+  }
+
+  var dragging = null;
+  function toPct(evt){
+    var r = svg.getBoundingClientRect();
+    var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY);
+    return (padT + plotH - (cy - r.top) * (H / r.height)) / plotH * maxPct;
+  }
+  function bind(){
+    svg.querySelectorAll('#cv-points circle').forEach(function(c){
+      c.addEventListener('mousedown', start); c.addEventListener('touchstart', start, {passive:false});
+    });
+  }
+  function start(e){ e.preventDefault(); dragging = parseInt(e.target.getAttribute('data-i'),10); }
+  function move(e){ if (dragging===null) return; e.preventDefault(); setValue(dragging, toPct(e)); draw(); }
+  function end(){ dragging = null; }
+  window.addEventListener('mousemove', move);
+  window.addEventListener('touchmove', move, {passive:false});
+  window.addEventListener('mouseup', end);
+  window.addEventListener('touchend', end);
+
+  draw();
+}
+
+async function saveHourlyCurve() {
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  var rounded = curveValues.map(function(v){ return Math.round(v * 10) / 10; });
+  var row = {
+    store_id: currentStoreId,
+    saturday_open: storeSettings ? storeSettings.saturday_open : true,
+    sunday_open:   storeSettings ? storeSettings.sunday_open   : false,
+    day_hours:     (storeSettings && storeSettings.day_hours) || regulations.day_hours || {},
+    hourly_curve:  rounded
+  };
+  var res = await sb.from('retail_store_settings')
+    .upsert(row, { onConflict: 'store_id' });
+  if (res.error) { showToast('Failed to save curve: ' + res.error.message, 'error'); return; }
+  storeSettings = row;
+  showToast('Curve saved \u2713');
 }
 
 async function saveMonthlyTraffic() {
