@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.7</title>
+  <title>CORA Retail v1.7.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3592,27 +3592,24 @@ function renderMonthlyPlanning() {
   // pas la moitie du mois. Sans cela le moteur pourrait lui donner deux
   // semaines completes puis deux semaines vides.
   //
-  // Quand le calcul tombe sur un demi-jour (50% de 5 jours = 2,5), on
-  // alterne 3 et 2 d'une semaine a l'autre pour que la moyenne reste juste.
+  // ── Quota de jours travailles par semaine et par agent ──
+  // Regle stricte HEBDOMADAIRE : au moins 2 jours de repos par semaine (hors
+  // feries). Donc jours travailles = (jours ouverts non feries) - 2, plafonne
+  // au maximum legal de 5 jours. Le temps partiel applique son pourcentage sur
+  // ce maximum. Aucun lissage sur le mois : chaque semaine est independante,
+  // pour que la contrainte des 2 repos soit toujours respectee.
   var weekKeys = Object.keys(weeks).sort();
-  var weekQuota = {};      // weekQuota[agentId][weekKey] = nb de jours
-  var monthOpenDays = monthDays.filter(function(d) { return !d.closure; }).length;
+  var weekQuota = {};      // weekQuota[agentId][weekKey] = nb de jours travailles
 
   agents.forEach(function(a) {
     var pct = a.work_pct || 100;
     weekQuota[a.id] = {};
-    var carry = 0;         // reste fractionnaire reporte d'une semaine a l'autre
-
-    weekKeys.forEach(function(wk, wi) {
-      var openW  = weeks[wk].filter(function(d) { return !d.closure; }).length;
-      var legalW = Math.min(openW, 5);            // plafond legal hebdomadaire
-      var exact  = legalW * pct / 100 + carry;    // droit theorique + report
-      var days   = Math.floor(exact);
-      carry      = exact - days;
-      // Si le reste depasse un demi-jour, on arrondit au superieur et on
-      // retire ce demi-jour du report : d'ou l'alternance 3 / 2 / 3 / 2.
-      if (carry >= 0.5) { days += 1; carry -= 1; }
-      weekQuota[a.id][wk] = Math.max(0, Math.min(legalW, days));
+    weekKeys.forEach(function(wk) {
+      var openW = weeks[wk].filter(function(d) { return !d.closure; }).length;
+      // 2 repos garantis par semaine, plafond legal de 5 jours travailles
+      var maxWork = Math.min(5, Math.max(0, openW - 2));
+      var days = Math.round(maxWork * pct / 100);
+      weekQuota[a.id][wk] = Math.max(0, Math.min(maxWork, days));
     });
   });
 
@@ -3696,56 +3693,74 @@ function renderMonthlyPlanning() {
     }).length;
   }
 
-  // Ordre de traitement : jours charges d'abord (captent l'effectif en premier)
+  // Ordre de traitement pour le socle : jours charges d'abord
   var byLoad = openList.slice().sort(function(x, y) { return (y.vol || 0) - (x.vol || 0); });
 
+  // Fabrique de picker pour un jour donne (etat 'taken' propre a chaque jour)
+  var takenByDay = {};
+  openList.forEach(function(d){ takenByDay[d.ds] = {}; });
+  function pickFor(d, filterFn) {
+    var taken = takenByDay[d.ds];
+    var pool = agents.filter(function(a) {
+      return !taken[a.id] && canWork(a, d) && (!filterFn || filterFn(a));
+    });
+    if (!pool.length) return null;
+    pool.sort(function(x, y) {
+      var byLoadDiff = (worked[x.id] / Math.max(1, quota[x.id])) -
+                       (worked[y.id] / Math.max(1, quota[y.id]));
+      if (Math.abs(byLoadDiff) > 0.01) return byLoadDiff;
+      var d1 = prefDebt[x.id] - prefDebt[y.id];
+      if (d1 !== 0) return d1;
+      var p1 = prefScoreFor(y, d) - prefScoreFor(x, d);
+      if (p1 !== 0) return p1;
+      return x.id < y.id ? -1 : 1;
+    });
+    var chosen = pool[0];
+    taken[chosen.id] = true;
+    assign(chosen, d);
+    assignedMap[d.ds].push(chosen.id);
+    prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
+    return chosen;
+  }
+
+  // ── PASSE 1 : socle par jour (management + amplitude + plancher 2) ──
   byLoad.forEach(function(d) {
-    var taken = {};
-
-    function pick(filterFn) {
-      var pool = agents.filter(function(a) {
-        return !taken[a.id] && canWork(a, d) && (!filterFn || filterFn(a));
-      });
-      if (!pool.length) return null;
-      pool.sort(function(x, y) {
-        var byLoadDiff = (worked[x.id] / Math.max(1, quota[x.id])) -
-                         (worked[y.id] / Math.max(1, quota[y.id]));
-        if (Math.abs(byLoadDiff) > 0.01) return byLoadDiff;
-        var d1 = prefDebt[x.id] - prefDebt[y.id];
-        if (d1 !== 0) return d1;
-        var p1 = prefScoreFor(y, d) - prefScoreFor(x, d);
-        if (p1 !== 0) return p1;
-        return x.id < y.id ? -1 : 1;
-      });
-      var chosen = pool[0];
-      taken[chosen.id] = true;
-      assign(chosen, d);
-      assignedMap[d.ds].push(chosen.id);
-      prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
-      return chosen;
+    if (isSpecialDay(d)) {
+      // Jour special : pas de notion ouverture/fermeture, juste la presence
+      if (hasMgmt) pickFor(d, isLead);
+      while (salesCount(d.ds) < 2) { if (!pickFor(d, isSales)) break; }
+      if (hasStockTeam) { while (pickFor(d, isStock)) {} }
+      return;
     }
-
-    // ── POOL MANAGEMENT : au moins 1 present, puis tous ceux disponibles ──
-    // (silote : ils ne comptent pas dans le plancher vendeur). L'alternance
-    // ouverture/fermeture est geree ensuite dans shiftPlanByDay.
-    if (hasMgmt) { pick(isLead); }
-
-    // ── POOL VENDEUR : ouverture + fermeture, puis cible trafic, plancher 2 ──
-    pick(isSales);                                // ouverture (vendeur)
-    pick(isSales);                                // fermeture (vendeur)
-    var target = dayTarget[d.ds] || 2;
-    while (salesCount(d.ds) < target) {
-      if (!pick(isSales)) break;
+    if (hasMgmt) pickFor(d, isLead);              // un manager garanti
+    pickFor(d, isSales);                           // ouverture (vendeur)
+    pickFor(d, isSales);                           // fermeture (vendeur)
+    while (salesCount(d.ds) < 2) {                 // plancher failsafe 2 vendeurs
+      if (!pickFor(d, isSales)) break;
     }
-    while (salesCount(d.ds) < 2) {
-      if (!pick(isSales)) break;
-    }
+  });
 
-    // ── Reste du management dispo (au-dela du premier garanti) ──
-    if (hasMgmt) { while (pick(isLead)) {} }
+  // ── PASSE 2 : complement VENDEUR jusqu'a la cible, en ROUND-ROBIN ──
+  // On ajoute un vendeur a chaque jour a tour de role plutot que de remplir un
+  // jour a fond avant le suivant. Ainsi chaque jour (dont le dimanche) atteint
+  // sa cible proportionnelle avant que les quotas hebdo ne s'epuisent.
+  var progressing = true;
+  while (progressing) {
+    progressing = false;
+    byLoad.forEach(function(d) {
+      if (isSpecialDay(d)) return;
+      var target = dayTarget[d.ds] || 2;
+      if (salesCount(d.ds) < target) {
+        if (pickFor(d, isSales)) progressing = true;
+      }
+    });
+  }
 
-    // ── POOL STOCK : tous les stockistes disponibles ce jour ──
-    if (hasStockTeam) { while (pick(isStock)) {} }
+  // ── PASSE 3 : reste du management et tout le stock disponibles ──
+  byLoad.forEach(function(d) {
+    if (isSpecialDay(d)) return;
+    if (hasMgmt) { while (pickFor(d, isLead)) {} }
+    if (hasStockTeam) { while (pickFor(d, isStock)) {} }
   });
 
   // ── FILET DE SECURITE ──────────────────────────────────────────────────
@@ -3813,6 +3828,10 @@ function renderMonthlyPlanning() {
   // Plan de shift par jour : ventile les agents presents sur les shifts
   // disponibles au prorata du trafic de leur tranche. Plancher 1 par shift.
   var shiftPlanByDay = {};
+  // Jour special = dimanche ou ferie ouvert : amplitude unique, shift "D".
+  function isSpecialDay(d) {
+    return (d.date.getDay() === 0) || !!calHolidays[d.ds];
+  }
   monthDays.forEach(function(d) {
     if (d.closure) return;
     var dow2 = d.date.getDay();
@@ -3823,10 +3842,7 @@ function renderMonthlyPlanning() {
     var plan = {};
 
     // ── Jour special (dimanche ou ferie ouvert) : shift unique "D" ──
-    // Tous les agents planifies passent en D, qui couvre toute l'amplitude
-    // (reduite) du jour, definie dans les horaires de Settings.
-    var isSpecial = (dow2 === 0) || !!calHolidays[d.ds];
-    if (isSpecial) {
+    if (isSpecialDay(d)) {
       present.forEach(function(id){ plan[id] = 'D'; });
       shiftPlanByDay[d.ds] = plan;
       return;
@@ -3929,6 +3945,9 @@ function renderMonthlyPlanning() {
     if (ov) {
       if (ov === 'OFF') return { code: 'OFF', special: 'off' };
       if (ov === 'A')   return { code: 'A',   special: 'leave' };
+      // Jour special (dimanche / ferie) : un seul shift possible = D.
+      // On ignore un override de shift incoherent avec l'amplitude unique.
+      if (isSpecialDay(day) && ov !== 'D') return { code: 'D' };
       return { code: ov };
     }
 
@@ -4045,7 +4064,7 @@ function renderMonthlyPlanning() {
     if (d.closure) return;
     // Jour special (dimanche / ferie ouvert) : tout le monde en D, les controles
     // ouverture/fermeture ne s'appliquent pas (amplitude unique).
-    var isSpecial = (d.date.getDay() === 0) || !!calHolidays[d.ds];
+    var isSpecial = isSpecialDay(d);
     var hasOpen = false, hasClose = false, hasLead = false;
     agents.forEach(function(a) {
       var r = agentRows[a.id].find(function(x) { return x.d.ds === d.ds; });
