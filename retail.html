@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v2.0</title>
+  <title>CORA Retail v1.6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1089,7 +1089,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
 </div><!-- /#main -->
 
-<div id="status-bar"><span id="status-text">Ready - select a region to begin</span><span id="status-sign">© Roman Inc.</span></div>
+<div id="status-bar"><span id="status-text">Ready - select a store to begin</span><span id="status-sign">© Roman Inc.</span></div>
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────────────────────
@@ -3088,31 +3088,34 @@ function renderIntraday(ds) {
 
   // ── Plan des morning briefs, par vague d'arrivee ──
   // Un MB regroupe les agents arrivant a des horaires proches. Chaque vague
-  // est animee par un manager (SM/ASM). Une vague sans manager est rattachee
-  // a la vague suivante qui en a un. Le MB se place a l'arrivee de la vague.
-  var mbPlan = {};       // agentId -> heure du MB
-  var noLeadAtAll = !working.some(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
+  // est animee par un manager (SM/ASM), ou a defaut un senior. Une vague sans
+  // aucun encadrant fusionne avec la suivante. Le MB se place a l'arrivee du
+  // DERNIER membre de la vague, pour que personne ne soit brief avant d'arriver.
+  var mbPlan = {};
+  var noLeadAtAll = !working.some(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM' || s === 'SENIOR'; });
   if (!noLeadAtAll) {
-    // Regroupe par vague : nouvelle vague si l'arrivee saute de plus de 45 min
     var waves = [];
     byArrival.forEach(function(a) {
       var st = shiftInfo[a.id].startMin;
       var last = waves[waves.length - 1];
-      if (last && st - last.start <= 45) last.members.push(a);
-      else waves.push({ start: st, members: [a] });
+      if (last && st - last.start <= 45) { last.members.push(a); last.end = st; }
+      else waves.push({ start: st, end: st, members: [a] });
     });
-    // Chaque vague : trouver un lead present dans la vague. Sinon, fusionner
-    // avec la vague suivante (les gens sans lead briefent avec la suivante).
+    function waveLead(w) {
+      return w.members.find(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; })
+          || w.members.find(function(a){ return retailStatusOf(a) === 'SENIOR'; })
+          || null;
+    }
     for (var wi = 0; wi < waves.length; wi++) {
       var w = waves[wi];
-      var lead = w.members.find(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
-      if (!lead && wi < waves.length - 1) {
+      if (!waveLead(w) && wi < waves.length - 1) {
+        // pas d'encadrant : ces agents briefent avec la vague suivante
         waves[wi + 1].members = w.members.concat(waves[wi + 1].members);
+        if (w.start < waves[wi + 1].start) waves[wi + 1].start = w.start;
         continue;
       }
-      if (!lead) lead = w.members.find(function(a){ return retailStatusOf(a) === 'SENIOR'; }) || w.members[0];
-      var mbAt = Math.max(w.start / 60, openH - 0.25);   // avant l'ouverture si possible
-      mbAt = Math.round(mbAt * 4) / 4;
+      // MB a l'arrivee du dernier membre : personne n'est brief avant d'arriver.
+      var mbAt = Math.round((w.end / 60) * 4) / 4;
       w.members.forEach(function(a){ mbPlan[a.id] = mbAt; });
     }
   }
@@ -3131,9 +3134,15 @@ function renderIntraday(ds) {
   var band = '';
   if (curve && curve.length) {
     var maxV = Math.max.apply(null, curve);
+    var minV = Math.min.apply(null, curve);
+    var rangeV = (maxV - minV) || 1;
     band = '<div class="it-band"><div class="pad">Store traffic</div>' +
       '<div class="fill" style="margin-left:' + pct(openH) + '%;margin-right:' + (100 - pct(closeH)) + '%">';
-    curve.forEach(function(v) { band += '<div class="it-bar" style="height:' + Math.round(v / maxV * 100) + '%"></div>'; });
+    curve.forEach(function(v) {
+      // echelle min-max : accentue les variations pour la lisibilite (30-100%)
+      var hgt = 30 + Math.round((v - minV) / rangeV * 70);
+      band += '<div class="it-bar" style="height:' + hgt + '%"></div>';
+    });
     band += '</div></div>';
   }
 
@@ -3614,25 +3623,22 @@ function renderMonthlyPlanning() {
   // Statuts d'encadrement et de stock
   function isLead(a)  { var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; }
   function isStock(a) { return retailStatusOf(a) === 'STOCK'; }
-  var stockCount = agents.filter(isStock).length;
-  var hasStockTeam = stockCount > 0;
-  // Un seul stockiste : ses repos tombent naturellement sur les jours les plus
-  // creux (byLoad traite les jours charges d'abord, son quota s'y epuise).
-  // Plusieurs stockistes : au moins un present chaque jour ouvert.
+  var salesAgents = agents.filter(function(a){ return !isStock(a); });
+  var stockAgents = agents.filter(isStock);
+  var hasStockTeam = stockAgents.length > 0;
 
-  // ── Cibles de presence par jour, proportionnelles au trafic ──
-  // Capacite = jours-homme reellement travaillables (quota hebdo par agent,
-  // qui a deja retire les repos obligatoires 5j/semaine et les absences).
-  // On repartit cette capacite sur les jours ouverts au prorata du trafic.
+  // ── Cibles de presence VENTE par jour, proportionnelles au trafic ──
+  // Capacite = jours-homme vente travaillables (quota hebdo, repos obligatoires
+  // deja retires). Le stock est ventile a part (voir plus bas). On repartit la
+  // capacite vente sur les jours ouverts au prorata du trafic.
   var dayTarget = {};
   weekKeys.forEach(function(wk) {
     var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
     if (!wkDays.length) return;
-    var cap = agents.reduce(function(s, a) {
+    var cap = salesAgents.reduce(function(s, a) {
       return s + ((weekQuota[a.id] && weekQuota[a.id][wk]) || 0);
     }, 0);
     var volTot = wkDays.reduce(function(s, d) { return s + (d.vol || 0); }, 0) || 1;
-    // Repartition proportionnelle, arrondie, en gardant la somme = capacite
     var raw = wkDays.map(function(d) { return cap * (d.vol || 0) / volTot; });
     var base = raw.map(function(r) { return Math.floor(r); });
     var used = base.reduce(function(s, b) { return s + b; }, 0);
@@ -3641,7 +3647,7 @@ function renderMonthlyPlanning() {
                    .sort(function(a, b) { return b[1] - a[1]; });
     for (var k = 0; k < leftover && k < order.length; k++) base[order[k][0]]++;
     wkDays.forEach(function(d, i) {
-      dayTarget[d.ds] = Math.max(0, Math.min(agents.length, base[i]));
+      dayTarget[d.ds] = Math.max(0, Math.min(salesAgents.length, base[i]));
     });
   });
 
@@ -3683,22 +3689,28 @@ function renderMonthlyPlanning() {
       return chosen;
     }
 
-    // ── SOCLE : encadrement + stock + amplitude vente ──
+    // ── SOCLE encadrement + amplitude vente ──
     pick(isLead);                                 // un SM ou ASM
-    if (hasStockTeam) pick(isStock);              // un stockiste si possible
     pick(function(a) { return !isStock(a); });    // ouverture (vente)
     pick(function(a) { return !isStock(a); });    // fermeture (vente)
 
-    // ── Complement jusqu'a la cible du jour (ventilation trafic) ──
+    // ── Complement VENTE jusqu'a la cible du jour (ventilation trafic) ──
+    // On compte et on ne pioche que des vendeurs : le stock est gere a part.
     var target = dayTarget[d.ds] || 2;
-    while (assignedMap[d.ds].length < target) {
-      if (!pick(null)) break;
+    while (salesCount(d.ds) < target) {
+      if (!pick(function(a) { return !isStock(a); })) break;
     }
 
     // ── Plancher failsafe : au moins 2 agents VENTE (hors stock) ──
     while (salesCount(d.ds) < 2) {
       if (!pick(function(a) { return !isStock(a); })) break;
     }
+
+    // ── Stock : on pose tous les stockistes disponibles ce jour ──
+    // Chacun a son quota hebdo (repos obligatoires deja retires) : les poser
+    // tous epuise leurs jours de facon equilibree, un repos chacun sur un jour
+    // different, au lieu de concentrer la presence sur un seul.
+    if (hasStockTeam) { while (pick(isStock)) {} }
   });
 
   // ── FILET DE SECURITE ──────────────────────────────────────────────────
