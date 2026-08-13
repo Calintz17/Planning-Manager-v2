@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.6</title>
+  <title>CORA Retail v1.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1849,6 +1849,25 @@ function pickTone(btn) {
   btn.classList.add('on');
 }
 
+// Deduit les tags opening / closing d'un shift selon les horaires de la
+// boutique. Commence dans l'heure suivant l'ouverture -> opening. Finit dans
+// l'heure precedant la fermeture -> closing. Sinon middle (ni l'un ni l'autre).
+function deriveShiftTags(startMin, endMin) {
+  var dh = (regulations.day_hours) || {};
+  // Amplitude de reference : min des ouvertures, max des fermetures sur la semaine
+  var opens = [], closes = [];
+  Object.keys(dh).forEach(function(k){
+    if (dh[k] && typeof dh[k].open === 'number')  opens.push(dh[k].open);
+    if (dh[k] && typeof dh[k].close === 'number') closes.push(dh[k].close);
+  });
+  var openMin  = (opens.length  ? Math.min.apply(null, opens)  : 10) * 60;
+  var closeMin = (closes.length ? Math.max.apply(null, closes) : 18) * 60;
+  return {
+    isOpening: startMin <= openMin + 60,    // demarre dans l'heure de l'ouverture
+    isClosing: endMin   >= closeMin - 60     // finit dans l'heure de la fermeture
+  };
+}
+
 function confirmShiftCreation() {
   var code  = (document.getElementById('sc-code').value || '').trim().toUpperCase();
   var start = parseInt(document.getElementById('sc-start').value);
@@ -1870,10 +1889,11 @@ function confirmShiftCreation() {
     return;
   }
 
+  var tags = deriveShiftTags(start, end);
   RETAIL_SHIFTS[shiftCreatorGrid].push({
     code: code, label: minToLabel(start) + ' - ' + minToLabel(end),
     startMin: start, endMin: end, tone: tone,
-    isOpening: false, isClosing: false
+    isOpening: tags.isOpening, isClosing: tags.isClosing
   });
 
   closeShiftCreator();
@@ -2268,17 +2288,19 @@ function renderPlanning() {
 // ── RETAIL MONTHLY : CONSTANTES ───────────────────────────────────────────
 // Statuts (exclusifs) et ordre d'affichage des blocs facon Excel Duphot.
 var RETAIL_STATUS = {
-  SM:        { label: 'SM',         cls: 'st-sm',        block: 'SM_ASM',   grid: 'sales' },
-  ASM:       { label: 'ASM',        cls: 'st-asm',       block: 'SM_ASM',   grid: 'sales' },
-  MANAGER:   { label: 'Manager',    cls: 'st-manager',   block: 'SM_ASM',   grid: 'sales' },
-  STOCK:     { label: 'Stock',      cls: 'st-stock',     block: 'STOCK',    grid: 'stock' },
-  SENIOR:    { label: 'Senior',     cls: 'st-senior',    block: 'SENIOR',   grid: 'sales' },
-  SA:        { label: 'SA',         cls: 'st-sa',        block: 'SA',       grid: 'sales' },
-  PART_TIME: { label: 'Part Time',  cls: 'st-part_time', block: 'PART_TIME',grid: 'sales' },
+  SM:        { label: 'SM',         block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  ASM:       { label: 'ASM',        block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  TM:        { label: 'TM',         block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  MANAGER:   { label: 'Manager',    block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  STOCK:     { label: 'Stock',      block: 'STOCK',    grid: 'stock', pool: 'stock' },
+  SENIOR:    { label: 'Senior',     block: 'SENIOR',   grid: 'sales', pool: 'sales' },
+  SA:        { label: 'SA',         block: 'SA',       grid: 'sales', pool: 'sales' },
+  PART_TIME: { label: 'Part Time',  block: 'PART_TIME',grid: 'sales', pool: 'sales' },
 };
+function poolOf(a) { return (RETAIL_STATUS[retailStatusOf(a)] || {}).pool || 'sales'; }
 // Ordre des blocs dans la grille (comme l'Excel)
 var RETAIL_BLOCK_ORDER = [
-  { key: 'SM_ASM',    title: 'SM / ASM' },
+  { key: 'MGMT',      title: 'Management' },
   { key: 'SENIOR',    title: 'Senior' },
   { key: 'SA',        title: 'SA' },
   { key: 'PART_TIME', title: 'Part Time' },
@@ -2338,7 +2360,8 @@ async function saveStoreSettings() {
     store_id: currentStoreId,
     saturday_open: satEl ? !satEl.checked : true,
     sunday_open:   sunEl ? !sunEl.checked : false,
-    day_hours: regulations.day_hours || {}
+    day_hours: regulations.day_hours || {},
+    hourly_curve: (storeSettings && storeSettings.hourly_curve) || null
   };
   var res = await sb.from('retail_store_settings')
     .upsert(row, { onConflict: 'store_id' });
@@ -2409,6 +2432,7 @@ function shiftCls(code) {
   var base = code.charAt(0);
   var tone = (base === 'O') ? 'sh-open'
            : (base === 'M') ? 'sh-mid'
+           : (base === 'D') ? 'sh-late'
            : 'sh-close';
   return isStock ? ('sh-stock ' + tone) : tone;
 }
@@ -3030,6 +3054,11 @@ function renderIntraday(ds) {
   var shiftInfo = {};
   working.forEach(function(a) {
     var code = dayPlan[a.id].code;
+    if (code === 'D') {
+      // Jour special : shift unique couvrant toute l'amplitude (reduite) du jour
+      shiftInfo[a.id] = { code: 'D', startMin: openH * 60, endMin: closeH * 60, tone: 'late' };
+      return;
+    }
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(a)].grid] || RETAIL_SHIFTS.sales;
     var sh = grid.find(function(s) { return s.code === code; }) || grid[0];
     shiftInfo[a.id] = sh;
@@ -3058,29 +3087,34 @@ function renderIntraday(ds) {
     return shiftInfo[a.id].startMin - shiftInfo[b.id].startMin;
   });
 
-  // ── Plan des pauses dejeuner ──
-  // Ordre = ordre d'arrivee (premier arrive, premier en pause). On etale les
-  // pauses sur toute la plage autorisee au lieu de les entasser sur un creux.
+  // ── Plan des pauses dejeuner (lissage global) ──
+  // Ordre = ordre d'arrivee (premier arrive, premier en pause). On lisse pour
+  // ne jamais avoir trop de monde en pause au meme instant : la plage autorisee
+  // est decoupee en creneaux de la duree d'un lunch ; on repartit les agents
+  // sur ces creneaux de facon egale (concurrence = effectif / nb de creneaux).
   var lunchPlan = {};
   if (lunch) {
+    var durH = lunch.duration / 60;
     var elig = byArrival.filter(function(a) {
       var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
       var ws = Math.max(lunch.window_start, sH + 1);   // pas de lunch des l'arrivee
       var we = Math.min(lunch.window_end, eH);
-      return we - ws >= lunch.duration / 60;
+      return we - ws >= durH;
     });
-    var durH = lunch.duration / 60;
+    // Plage commune de pause et nombre de creneaux sequentiels disponibles
+    var winStart = lunch.window_start, winEnd = lunch.window_end;
+    var slots = Math.max(1, Math.floor((winEnd - winStart) / durH));
+    // Concurrence cible : repartir l'effectif eligible sur les creneaux
+    var perSlot = Math.max(1, Math.ceil(elig.length / slots));
     elig.forEach(function(a, i) {
       var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
-      var ws = Math.max(lunch.window_start, sH + 1);
-      var we = Math.min(lunch.window_end, eH) - durH;
-      var slot;
-      if (elig.length === 1 || we <= ws) {
-        slot = ws;
-      } else {
-        // etalement lineaire sur la plage selon le rang d'arrivee
-        slot = ws + (we - ws) * (i / (elig.length - 1));
-      }
+      var ws = Math.max(winStart, sH + 1);
+      var we = Math.min(winEnd, eH) - durH;
+      // Creneau theorique selon le rang d'arrivee (0..slots-1)
+      var slotIdx = Math.floor(i / perSlot);
+      var ideal = winStart + slotIdx * durH;
+      // Contraint dans la fenetre propre de l'agent
+      var slot = Math.min(Math.max(ideal, ws), Math.max(ws, we));
       slot = Math.round(slot * 4) / 4;   // snap quart d'heure
       lunchPlan[a.id] = slot;
     });
@@ -3092,7 +3126,7 @@ function renderIntraday(ds) {
   // aucun encadrant fusionne avec la suivante. Le MB se place a l'arrivee du
   // DERNIER membre de la vague, pour que personne ne soit brief avant d'arriver.
   var mbPlan = {};
-  var noLeadAtAll = !working.some(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM' || s === 'SENIOR'; });
+  var noLeadAtAll = !working.some(function(a){ return poolOf(a) === 'mgmt' || retailStatusOf(a) === 'SENIOR'; });
   if (!noLeadAtAll) {
     var waves = [];
     byArrival.forEach(function(a) {
@@ -3102,7 +3136,7 @@ function renderIntraday(ds) {
       else waves.push({ start: st, end: st, members: [a] });
     });
     function waveLead(w) {
-      return w.members.find(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; })
+      return w.members.find(function(a){ return poolOf(a) === 'mgmt'; })
           || w.members.find(function(a){ return retailStatusOf(a) === 'SENIOR'; })
           || null;
     }
@@ -3620,12 +3654,15 @@ function renderMonthlyPlanning() {
   // Trafic moyen des jours ouverts, base de la ponderation
   var openList = monthDays.filter(function(d) { return !d.closure; });
 
-  // Statuts d'encadrement et de stock
-  function isLead(a)  { var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; }
-  function isStock(a) { return retailStatusOf(a) === 'STOCK'; }
-  var salesAgents = agents.filter(function(a){ return !isStock(a); });
+  // Trois pools silotes : management, vendeur, stock
+  function isLead(a)  { return poolOf(a) === 'mgmt'; }
+  function isStock(a) { return poolOf(a) === 'stock'; }
+  function isSales(a) { return poolOf(a) === 'sales'; }
+  var mgmtAgents  = agents.filter(isLead);
+  var salesAgents = agents.filter(isSales);
   var stockAgents = agents.filter(isStock);
   var hasStockTeam = stockAgents.length > 0;
+  var hasMgmt = mgmtAgents.length > 0;
 
   // ── Cibles de presence VENTE par jour, proportionnelles au trafic ──
   // Capacite = jours-homme vente travaillables (quota hebdo, repos obligatoires
@@ -3651,11 +3688,11 @@ function renderMonthlyPlanning() {
     });
   });
 
-  // Compte des agents vente (hors stock) deja poses, pour le plancher de 2 SA
+  // Compte du pool VENDEUR deja pose (plancher de 2, cible trafic)
   function salesCount(ds) {
     return assignedMap[ds].filter(function(id) {
       var a = agents.find(function(x) { return x.id === id; });
-      return a && !isStock(a);
+      return a && isSales(a);
     }).length;
   }
 
@@ -3665,7 +3702,6 @@ function renderMonthlyPlanning() {
   byLoad.forEach(function(d) {
     var taken = {};
 
-    // Choisit le meilleur candidat parmi ceux qui remplissent le filtre.
     function pick(filterFn) {
       var pool = agents.filter(function(a) {
         return !taken[a.id] && canWork(a, d) && (!filterFn || filterFn(a));
@@ -3689,27 +3725,26 @@ function renderMonthlyPlanning() {
       return chosen;
     }
 
-    // ── SOCLE encadrement + amplitude vente ──
-    pick(isLead);                                 // un SM ou ASM
-    pick(function(a) { return !isStock(a); });    // ouverture (vente)
-    pick(function(a) { return !isStock(a); });    // fermeture (vente)
+    // ── POOL MANAGEMENT : au moins 1 present, puis tous ceux disponibles ──
+    // (silote : ils ne comptent pas dans le plancher vendeur). L'alternance
+    // ouverture/fermeture est geree ensuite dans shiftPlanByDay.
+    if (hasMgmt) { pick(isLead); }
 
-    // ── Complement VENTE jusqu'a la cible du jour (ventilation trafic) ──
-    // On compte et on ne pioche que des vendeurs : le stock est gere a part.
+    // ── POOL VENDEUR : ouverture + fermeture, puis cible trafic, plancher 2 ──
+    pick(isSales);                                // ouverture (vendeur)
+    pick(isSales);                                // fermeture (vendeur)
     var target = dayTarget[d.ds] || 2;
     while (salesCount(d.ds) < target) {
-      if (!pick(function(a) { return !isStock(a); })) break;
+      if (!pick(isSales)) break;
     }
-
-    // ── Plancher failsafe : au moins 2 agents VENTE (hors stock) ──
     while (salesCount(d.ds) < 2) {
-      if (!pick(function(a) { return !isStock(a); })) break;
+      if (!pick(isSales)) break;
     }
 
-    // ── Stock : on pose tous les stockistes disponibles ce jour ──
-    // Chacun a son quota hebdo (repos obligatoires deja retires) : les poser
-    // tous epuise leurs jours de facon equilibree, un repos chacun sur un jour
-    // different, au lieu de concentrer la presence sur un seul.
+    // ── Reste du management dispo (au-dela du premier garanti) ──
+    if (hasMgmt) { while (pick(isLead)) {} }
+
+    // ── POOL STOCK : tous les stockistes disponibles ce jour ──
     if (hasStockTeam) { while (pick(isStock)) {} }
   });
 
@@ -3783,8 +3818,19 @@ function renderMonthlyPlanning() {
     var dow2 = d.date.getDay();
     var dh = (regulations.day_hours && regulations.day_hours[
       ['sun','mon','tue','wed','thu','fri','sat'][dow2]]) || { open: 10, close: 18 };
+    if (calHours[d.ds]) dh = calHours[d.ds];
     var present = assignedMap[d.ds].slice();
     var plan = {};
+
+    // ── Jour special (dimanche ou ferie ouvert) : shift unique "D" ──
+    // Tous les agents planifies passent en D, qui couvre toute l'amplitude
+    // (reduite) du jour, definie dans les horaires de Settings.
+    var isSpecial = (dow2 === 0) || !!calHolidays[d.ds];
+    if (isSpecial) {
+      present.forEach(function(id){ plan[id] = 'D'; });
+      shiftPlanByDay[d.ds] = plan;
+      return;
+    }
 
     // Groupe les agents par grille (vente / stock)
     var byGrid = { sales: [], stock: [] };
@@ -3807,7 +3853,7 @@ function renderMonthlyPlanning() {
       if (g === 'sales') {
         var openSh  = grid.find(function(s){ return s.isOpening; }) || grid[0];
         var closeSh = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
-        var leadsHere = list.filter(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
+        var leadsHere = list.filter(function(a){ return poolOf(a) === 'mgmt'; });
         if (leadsHere.length >= 2) {
           var flip = d.num % 2 === 0;
           plan[leadsHere[0].id] = (flip ? openSh : closeSh).code;
@@ -3823,12 +3869,22 @@ function renderMonthlyPlanning() {
       }
 
       var weights = grid.map(function(s){ return shiftTrafficWeight(s, dh.open, dh.close); });
+      // Le middle (ni ouverture ni fermeture) est de-priorise : on annule son
+      // poids de base pour que le moteur remplisse d'abord ouverture/fermeture.
+      // Il ne recevra du monde que s'il reste des agents apres O et C.
+      weights = weights.map(function(w, i){
+        var s = grid[i];
+        return (s.isOpening || s.isClosing) ? w : w * 0.001;
+      });
       var wTot = weights.reduce(function(s,w){ return s + w; }, 0) || 1;
 
-      // Quota par shift = plancher 1, puis reste au prorata du trafic
+      // Quota par shift : plancher 1 UNIQUEMENT pour ouverture et fermeture
+      // (le middle n'a pas de plancher), puis reste au prorata du trafic.
       var quota = grid.map(function(){ return 0; });
       var remaining = list.length;
-      grid.forEach(function(s, i){ if (remaining > 0) { quota[i] = 1; remaining--; } });
+      grid.forEach(function(s, i){
+        if (remaining > 0 && (s.isOpening || s.isClosing)) { quota[i] = 1; remaining--; }
+      });
       if (remaining > 0) {
         var frac = weights.map(function(w){ return w / wTot * remaining; });
         var base = frac.map(function(f){ return Math.floor(f); });
@@ -3987,18 +4043,20 @@ function renderMonthlyPlanning() {
   var issues = [];   // { ds, num, missing: [] }
   monthDays.forEach(function(d) {
     if (d.closure) return;
+    // Jour special (dimanche / ferie ouvert) : tout le monde en D, les controles
+    // ouverture/fermeture ne s'appliquent pas (amplitude unique).
+    var isSpecial = (d.date.getDay() === 0) || !!calHolidays[d.ds];
     var hasOpen = false, hasClose = false, hasLead = false;
     agents.forEach(function(a) {
       var r = agentRows[a.id].find(function(x) { return x.d.ds === d.ds; });
       if (!r || r.res.special) return;             // absent, repos ou ferme
       if (openCodes[r.res.code])  hasOpen  = true;
       if (closeCodes[r.res.code]) hasClose = true;
-      var st = retailStatusOf(a);
-      if (st === 'SM' || st === 'ASM') hasLead = true;
+      if (poolOf(a) === 'mgmt') hasLead = true;
     });
     var missing = [];
-    if (!hasOpen)  missing.push('opening');
-    if (!hasClose) missing.push('closing');
+    if (!isSpecial && !hasOpen)  missing.push('opening');
+    if (!isSpecial && !hasClose) missing.push('closing');
     if (!hasLead)  missing.push('SM/ASM');
     if (missing.length) issues.push({ ds: d.ds, num: d.num, missing: missing });
   });
@@ -4106,16 +4164,15 @@ function renderMonthlyPlanning() {
   html += '</tbody></table></div>';
 
   // ══ TABLEAU 2 : RECAP MANAGERIAL (bulle separee) ══
-  // Totaux globaux + effectif present par statut, chaque jour.
-  var statusDayCount = {};   // statusKey -> { ds: n }
-  var statusPresent  = {};   // statusKey -> total
-  Object.keys(RETAIL_STATUS).forEach(function(k){ statusDayCount[k] = {}; statusPresent[k] = 0; });
+  // Totaux globaux + effectif present par POOL, chaque jour.
+  var POOL_LABELS = [['mgmt','Management'],['sales','Vendeur'],['stock','Stock']];
+  var poolDayCount = {};   // pool -> { ds: n }
+  poolDayCount.mgmt = {}; poolDayCount.sales = {}; poolDayCount.stock = {};
   agents.forEach(function(a) {
-    var k = retailStatusOf(a);
+    var p = poolOf(a);
     agentRows[a.id].forEach(function(rc) {
       if (!rc.res.special) {
-        statusDayCount[k][rc.d.ds] = (statusDayCount[k][rc.d.ds] || 0) + 1;
-        statusPresent[k]++;
+        poolDayCount[p][rc.d.ds] = (poolDayCount[p][rc.d.ds] || 0) + 1;
       }
     });
   });
@@ -4144,12 +4201,9 @@ function renderMonthlyPlanning() {
   html2 += sumRow('Closing',       totC,    'tot tot-last');
 
   // Une ligne par statut effectivement present dans l'equipe
-  RETAIL_BLOCK_ORDER.forEach(function(block) {
-    Object.keys(RETAIL_STATUS).forEach(function(k) {
-      if (RETAIL_STATUS[k].block !== block.key) return;
-      if (!agents.some(function(a){ return retailStatusOf(a) === k; })) return;
-      html2 += sumRow(RETAIL_STATUS[k].label, statusDayCount[k], 'st-row');
-    });
+  POOL_LABELS.forEach(function(p) {
+    if (!agents.some(function(a){ return poolOf(a) === p[0]; })) return;
+    html2 += sumRow(p[1], poolDayCount[p[0]], 'st-row');
   });
 
   html2 += '</tbody></table></div>';
@@ -4204,7 +4258,7 @@ function renderAgents() {
 }
 
 // ── EDITEUR D'AGENT (pop-in) ──────────────────────────────────────────────
-var STATUS_OPTS = ['SM','ASM','MANAGER','STOCK','SENIOR','SA','PART_TIME'];
+var STATUS_OPTS = ['SM','ASM','TM','MANAGER','STOCK','SENIOR','SA','PART_TIME'];
 var agentEditorId = null;
 
 function statusOptionsHtml(cur) {
