@@ -167,7 +167,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .it-band { display:flex; align-items:flex-end; height:34px; margin-bottom:10px; }
 .it-band .pad { width:196px; flex:0 0 196px; font-size:10px; color:var(--tx-3); display:flex; align-items:flex-end; padding-bottom:2px; }
 .it-band .fill { flex:1; display:flex; align-items:flex-end; gap:2px; }
-.it-bar { flex:1; background:#1E3A8A; opacity:.14; border-radius:3px 3px 0 0; min-height:3px; }
+.it-bar { flex:1; background:var(--tx-3); opacity:.32; border-radius:3px 3px 0 0; min-height:3px; }
 
 .it-group { border-top:1px solid var(--line); }
 .it-group:first-of-type { border-top:none; }
@@ -395,6 +395,9 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth thead th.is-today .dnum { color:var(--nav-active-bg); }
 .mth thead th.is-today { box-shadow:inset 0 -2px 0 var(--nav-active-bg); }
 .mth thead th.has-issue { box-shadow:inset 0 -3px 0 var(--dang); }
+.mth thead tr.vol-row th { background:var(--bg-base-2); padding:1px 0; font-weight:500;
+  font-size:9px; color:var(--tx-3); border-top:1px solid var(--line); }
+.mth thead tr.vol-row th.c-vol { text-align:center; }
 .mth thead th.has-issue .dnum { color:var(--dang-tx); }
 
 /* --- corps --- */
@@ -3047,22 +3050,71 @@ function renderIntraday(ds) {
 
   var curve = (storeSettings && storeSettings.hourly_curve) || null;
 
-  var leads = working.filter(function(a) { var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
-  var seniors = working.filter(function(a) { return retailStatusOf(a) === 'SENIOR'; });
-  var briefLead = leads[0] || seniors[0] || null;
-
   var breaks = (regulations.breaks || []);
   var lunch = breaks.find(function(b) { return /lunch|dej/i.test(b.name); }) || breaks[0] || null;
 
-  function lowestSlot(ws, we, dur) {
-    if (!curve || !curve.length) return ws;
-    var best = ws, bestV = Infinity;
-    for (var h = ws; h + dur / 60 <= we; h += 0.25) {
-      var ci = Math.floor(h) - openH;
-      var v = (ci >= 0 && ci < curve.length) ? curve[ci] : 50;
-      if (v < bestV) { bestV = v; best = h; }
+  // Agents tries par heure d'arrivee (shift start)
+  var byArrival = working.slice().sort(function(a, b) {
+    return shiftInfo[a.id].startMin - shiftInfo[b.id].startMin;
+  });
+
+  // ── Plan des pauses dejeuner ──
+  // Ordre = ordre d'arrivee (premier arrive, premier en pause). On etale les
+  // pauses sur toute la plage autorisee au lieu de les entasser sur un creux.
+  var lunchPlan = {};
+  if (lunch) {
+    var elig = byArrival.filter(function(a) {
+      var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
+      var ws = Math.max(lunch.window_start, sH + 1);   // pas de lunch des l'arrivee
+      var we = Math.min(lunch.window_end, eH);
+      return we - ws >= lunch.duration / 60;
+    });
+    var durH = lunch.duration / 60;
+    elig.forEach(function(a, i) {
+      var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
+      var ws = Math.max(lunch.window_start, sH + 1);
+      var we = Math.min(lunch.window_end, eH) - durH;
+      var slot;
+      if (elig.length === 1 || we <= ws) {
+        slot = ws;
+      } else {
+        // etalement lineaire sur la plage selon le rang d'arrivee
+        slot = ws + (we - ws) * (i / (elig.length - 1));
+      }
+      slot = Math.round(slot * 4) / 4;   // snap quart d'heure
+      lunchPlan[a.id] = slot;
+    });
+  }
+
+  // ── Plan des morning briefs, par vague d'arrivee ──
+  // Un MB regroupe les agents arrivant a des horaires proches. Chaque vague
+  // est animee par un manager (SM/ASM). Une vague sans manager est rattachee
+  // a la vague suivante qui en a un. Le MB se place a l'arrivee de la vague.
+  var mbPlan = {};       // agentId -> heure du MB
+  var noLeadAtAll = !working.some(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
+  if (!noLeadAtAll) {
+    // Regroupe par vague : nouvelle vague si l'arrivee saute de plus de 45 min
+    var waves = [];
+    byArrival.forEach(function(a) {
+      var st = shiftInfo[a.id].startMin;
+      var last = waves[waves.length - 1];
+      if (last && st - last.start <= 45) last.members.push(a);
+      else waves.push({ start: st, members: [a] });
+    });
+    // Chaque vague : trouver un lead present dans la vague. Sinon, fusionner
+    // avec la vague suivante (les gens sans lead briefent avec la suivante).
+    for (var wi = 0; wi < waves.length; wi++) {
+      var w = waves[wi];
+      var lead = w.members.find(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
+      if (!lead && wi < waves.length - 1) {
+        waves[wi + 1].members = w.members.concat(waves[wi + 1].members);
+        continue;
+      }
+      if (!lead) lead = w.members.find(function(a){ return retailStatusOf(a) === 'SENIOR'; }) || w.members[0];
+      var mbAt = Math.max(w.start / 60, openH - 0.25);   // avant l'ouverture si possible
+      mbAt = Math.round(mbAt * 4) / 4;
+      w.members.forEach(function(a){ mbPlan[a.id] = mbAt; });
     }
-    return best;
   }
 
   function fmtH(m) {
@@ -3105,13 +3157,11 @@ function renderIntraday(ds) {
       var toneCls = 'sh-' + (sh.tone || 'close');
       var blocks = [];
 
-      if (briefLead) {
-        var brief = (sH < openH) ? (openH - 0.25) : sH + 0.25;
-        blocks.push([brief, 0.25, 'mb', 'MB']);
+      if (mbPlan[a.id] != null) {
+        blocks.push([mbPlan[a.id], 0.25, 'mb', 'MB']);
       }
-      if (lunch) {
-        var lo = lowestSlot(Math.max(lunch.window_start, sH), Math.min(lunch.window_end, eH), lunch.duration);
-        if (lo >= sH && lo + lunch.duration / 60 <= eH) blocks.push([lo, lunch.duration / 60, 'lun', lunch.name]);
+      if (lunchPlan[a.id] != null && lunch) {
+        blocks.push([lunchPlan[a.id], lunch.duration / 60, 'lun', lunch.name]);
       }
 
       var grid = '<div class="it-grid">';
@@ -3141,7 +3191,7 @@ function renderIntraday(ds) {
     rowsHtml += '</div>';
   });
 
-  var noBriefNote = briefLead ? '' : '<div class="card" style="margin-bottom:12px;background:var(--warn-soft)"><p style="color:var(--warn-tx);font-size:12px;margin:0">No manager, ASM or senior available - morning brief not assigned.</p></div>';
+  var noBriefNote = !noLeadAtAll ? '' : '<div class="card" style="margin-bottom:12px;background:var(--warn-soft)"><p style="color:var(--warn-tx);font-size:12px;margin:0">No manager or ASM available - morning brief not assigned.</p></div>';
 
   body.innerHTML =
     noBriefNote +
@@ -3560,9 +3610,6 @@ function renderMonthlyPlanning() {
 
   // Trafic moyen des jours ouverts, base de la ponderation
   var openList = monthDays.filter(function(d) { return !d.closure; });
-  var avgVol = openList.length
-    ? openList.reduce(function(s, d) { return s + (d.vol || 0); }, 0) / openList.length
-    : 0;
 
   // Statuts d'encadrement et de stock
   function isLead(a)  { var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; }
@@ -3573,30 +3620,57 @@ function renderMonthlyPlanning() {
   // creux (byLoad traite les jours charges d'abord, son quota s'y epuise).
   // Plusieurs stockistes : au moins un present chaque jour ouvert.
 
-  // Ordre de traitement : les jours les plus charges servis en premier,
-  // pour qu'ils captent l'effectif avant que les quotas ne s'epuisent.
+  // ── Cibles de presence par jour, proportionnelles au trafic ──
+  // Capacite = jours-homme reellement travaillables (quota hebdo par agent,
+  // qui a deja retire les repos obligatoires 5j/semaine et les absences).
+  // On repartit cette capacite sur les jours ouverts au prorata du trafic.
+  var dayTarget = {};
+  weekKeys.forEach(function(wk) {
+    var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
+    if (!wkDays.length) return;
+    var cap = agents.reduce(function(s, a) {
+      return s + ((weekQuota[a.id] && weekQuota[a.id][wk]) || 0);
+    }, 0);
+    var volTot = wkDays.reduce(function(s, d) { return s + (d.vol || 0); }, 0) || 1;
+    // Repartition proportionnelle, arrondie, en gardant la somme = capacite
+    var raw = wkDays.map(function(d) { return cap * (d.vol || 0) / volTot; });
+    var base = raw.map(function(r) { return Math.floor(r); });
+    var used = base.reduce(function(s, b) { return s + b; }, 0);
+    var leftover = cap - used;
+    var order = raw.map(function(r, i) { return [i, r - Math.floor(r)]; })
+                   .sort(function(a, b) { return b[1] - a[1]; });
+    for (var k = 0; k < leftover && k < order.length; k++) base[order[k][0]]++;
+    wkDays.forEach(function(d, i) {
+      dayTarget[d.ds] = Math.max(0, Math.min(agents.length, base[i]));
+    });
+  });
+
+  // Compte des agents vente (hors stock) deja poses, pour le plancher de 2 SA
+  function salesCount(ds) {
+    return assignedMap[ds].filter(function(id) {
+      var a = agents.find(function(x) { return x.id === id; });
+      return a && !isStock(a);
+    }).length;
+  }
+
+  // Ordre de traitement : jours charges d'abord (captent l'effectif en premier)
   var byLoad = openList.slice().sort(function(x, y) { return (y.vol || 0) - (x.vol || 0); });
 
   byLoad.forEach(function(d) {
     var taken = {};
 
     // Choisit le meilleur candidat parmi ceux qui remplissent le filtre.
-    // Depart : moins d'heures deja posees, puis dette de preference,
-    // puis preference du jour. Deterministe.
     function pick(filterFn) {
       var pool = agents.filter(function(a) {
         return !taken[a.id] && canWork(a, d) && (!filterFn || filterFn(a));
       });
       if (!pool.length) return null;
       pool.sort(function(x, y) {
-        // 1. Celui qui a le moins travaille (equite de charge)
         var byLoadDiff = (worked[x.id] / Math.max(1, quota[x.id])) -
                          (worked[y.id] / Math.max(1, quota[y.id]));
         if (Math.abs(byLoadDiff) > 0.01) return byLoadDiff;
-        // 2. Celui dont la preference a le moins ete respectee
         var d1 = prefDebt[x.id] - prefDebt[y.id];
         if (d1 !== 0) return d1;
-        // 3. Celui qui n'a pas de reticence pour ce jour
         var p1 = prefScoreFor(y, d) - prefScoreFor(x, d);
         if (p1 !== 0) return p1;
         return x.id < y.id ? -1 : 1;
@@ -3605,52 +3679,25 @@ function renderMonthlyPlanning() {
       taken[chosen.id] = true;
       assign(chosen, d);
       assignedMap[d.ds].push(chosen.id);
-      // Mise a jour de la dette : travailler un jour non souhaite la baisse
       prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
       return chosen;
     }
 
-    // ── COUCHE 1 : socle incompressible (sur TOUS les jours d'abord) ──
-    pick(isLead);                       // un SM ou ASM
-    if (hasStockTeam) pick(isStock);    // un stockiste
-    pick(function(a) { return !isStock(a); });   // ouverture (vente)
-    pick(function(a) { return !isStock(a); });   // fermeture (vente)
-    // Plancher dur : au moins 2 agents sur chaque jour ouvert
-    while (assignedMap[d.ds].length < 2) {
+    // ── SOCLE : encadrement + stock + amplitude vente ──
+    pick(isLead);                                 // un SM ou ASM
+    if (hasStockTeam) pick(isStock);              // un stockiste si possible
+    pick(function(a) { return !isStock(a); });    // ouverture (vente)
+    pick(function(a) { return !isStock(a); });    // fermeture (vente)
+
+    // ── Complement jusqu'a la cible du jour (ventilation trafic) ──
+    var target = dayTarget[d.ds] || 2;
+    while (assignedMap[d.ds].length < target) {
       if (!pick(null)) break;
     }
-  });
 
-  // ── COUCHE 2 : ventilation du reste au prorata du trafic ──
-  // Passe separee APRES le plancher, pour ne jamais vider un jour faible.
-  byLoad.forEach(function(d) {
-    var taken = {};
-    assignedMap[d.ds].forEach(function(id){ taken[id] = true; });
-    function pick2() {
-      var pool = agents.filter(function(a) { return !taken[a.id] && canWork(a, d); });
-      if (!pool.length) return false;
-      pool.sort(function(x, y) {
-        var byLoadDiff = (worked[x.id] / Math.max(1, quota[x.id])) -
-                         (worked[y.id] / Math.max(1, quota[y.id]));
-        if (Math.abs(byLoadDiff) > 0.01) return byLoadDiff;
-        var d1 = prefDebt[x.id] - prefDebt[y.id];
-        if (d1 !== 0) return d1;
-        var p1 = prefScoreFor(y, d) - prefScoreFor(x, d);
-        if (p1 !== 0) return p1;
-        return x.id < y.id ? -1 : 1;
-      });
-      var chosen = pool[0];
-      taken[chosen.id] = true;
-      assign(chosen, d);
-      assignedMap[d.ds].push(chosen.id);
-      prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
-      return true;
-    }
-    var ratio  = avgVol > 0 ? (d.vol || 0) / avgVol : 1;
-    var target = Math.round(agents.length * ratio);
-    target = Math.max(2, Math.min(agents.length, target));
-    while (assignedMap[d.ds].length < target) {
-      if (!pick2()) break;
+    // ── Plancher failsafe : au moins 2 agents VENTE (hors stock) ──
+    while (salesCount(d.ds) < 2) {
+      if (!pick(function(a) { return !isStock(a); })) break;
     }
   });
 
@@ -3740,6 +3787,29 @@ function renderMonthlyPlanning() {
       var list = byGrid[g];
       var grid = RETAIL_SHIFTS[g] || [];
       if (!list.length || !grid.length) return;
+
+      // Les managers (SM/ASM) sont repartis sur ouverture / fermeture :
+      // le premier sur un shift d'ouverture, le second sur un shift de
+      // fermeture, en alternant selon le jour. Ils sont retires de la
+      // ventilation generale ensuite.
+      if (g === 'sales') {
+        var openSh  = grid.find(function(s){ return s.isOpening; }) || grid[0];
+        var closeSh = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
+        var leadsHere = list.filter(function(a){ var s = retailStatusOf(a); return s === 'SM' || s === 'ASM'; });
+        if (leadsHere.length >= 2) {
+          var flip = d.num % 2 === 0;
+          plan[leadsHere[0].id] = (flip ? openSh : closeSh).code;
+          plan[leadsHere[1].id] = (flip ? closeSh : openSh).code;
+          var leadIds = { };
+          leadIds[leadsHere[0].id] = true; leadIds[leadsHere[1].id] = true;
+          list = list.filter(function(a){ return !leadIds[a.id]; });
+        } else if (leadsHere.length === 1) {
+          plan[leadsHere[0].id] = (d.num % 2 === 0 ? openSh : closeSh).code;
+          list = list.filter(function(a){ return a.id !== leadsHere[0].id; });
+        }
+        if (!list.length) return;
+      }
+
       var weights = grid.map(function(s){ return shiftTrafficWeight(s, dh.open, dh.close); });
       var wTot = weights.reduce(function(s,w){ return s + w; }, 0) || 1;
 
@@ -3970,7 +4040,16 @@ function renderMonthlyPlanning() {
            '<span class="dow">' + dl + '</span><span class="dnum">' + d.num + '</span></th>';
     });
     rhCols.forEach(function(c){ h += '<th class="c-rh">' + c + '</th>'; });
-    return h + '</tr></thead>';
+    h += '</tr>';
+    // Ligne discrete du volume de trafic par jour
+    h += '<tr class="vol-row"><th class="c-agent"></th>';
+    monthDays.forEach(function(d) {
+      var v = d.closure ? '' : (d.vol ? Math.round(d.vol) : '');
+      h += '<th class="c-vol">' + v + '</th>';
+    });
+    rhCols.forEach(function(){ h += '<th class="c-rh"></th>'; });
+    h += '</tr>';
+    return h + '</thead>';
   }
 
   // ══ TABLEAU 1 : PLANNING AGENTS (lignes continues, sans blocs) ══
