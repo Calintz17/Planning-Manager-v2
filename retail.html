@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.9</title>
+  <title>CORA Retail v1.9.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3727,20 +3727,6 @@ function renderMonthlyPlanning() {
   var assignedMap = {};
   monthDays.forEach(function(d) { assignedMap[d.ds] = []; });
 
-  // ── Pre-affectation des part-time FIXES ──
-  // Leur planning contractuel est ecrit directement : presents leurs jours
-  // fixes (comptent dans la presence donc reduisent la cible des autres),
-  // absents les autres jours. Ils ne passent pas par la ventilation.
-  fixedAgents.forEach(function(a) {
-    monthDays.forEach(function(d) {
-      if (d.closure) return;
-      if (fixedWorksOn(a, d)) {
-        assignedMap[d.ds].push(a.id);
-        assign(a, d);
-      }
-    });
-  });
-
   // Trafic moyen des jours ouverts, base de la ponderation
   var openList = monthDays.filter(function(d) { return !d.closure; });
 
@@ -3776,6 +3762,20 @@ function renderMonthlyPlanning() {
   var fixedAgents = agents.filter(isFixed);
   var hasStockTeam = stockAgents.length > 0;
   var hasMgmt = mgmtAgents.length > 0;
+
+  // ── Pre-affectation des part-time FIXES ──
+  // Leur planning contractuel est ecrit directement : presents leurs jours
+  // fixes (comptent dans la presence donc reduisent la cible des autres),
+  // absents les autres jours. Ils ne passent pas par la ventilation.
+  fixedAgents.forEach(function(a) {
+    monthDays.forEach(function(d) {
+      if (d.closure) return;
+      if (fixedWorksOn(a, d)) {
+        assignedMap[d.ds].push(a.id);
+        assign(a, d);
+      }
+    });
+  });
 
   // ── Cibles de presence VENTE par jour, proportionnelles au trafic ──
   // Capacite = jours-homme vente travaillables (quota hebdo, repos obligatoires
