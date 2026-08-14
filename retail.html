@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.8.1</title>
+  <title>CORA Retail v1.8.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3292,13 +3292,17 @@ function initIntradayDrag(root, T0, span, ds) {
 async function saveIntradayOverride(ds, agentId, blockType, startMin) {
   intradayOverrides[agentId + ':' + blockType] = startMin;   // maj cache immediat
   if (!currentStoreId) return;
-  var row = {
+  // Delete puis insert : evite toute dependance a une contrainte composite
+  // nommee cote base (plus robuste que upsert onConflict pour cette table).
+  await sb.from('retail_intraday_overrides')
+    .delete()
+    .eq('store_id', currentStoreId).eq('date', ds)
+    .eq('agent_id', agentId).eq('block_type', blockType);
+  var res = await sb.from('retail_intraday_overrides').insert({
     store_id: currentStoreId, date: ds, agent_id: agentId,
     block_type: blockType, start_min: startMin
-  };
-  var res = await sb.from('retail_intraday_overrides')
-    .upsert(row, { onConflict: 'store_id,date,agent_id,block_type' });
-  if (res.error) { showToast('Move not saved', 'error'); return; }
+  });
+  if (res.error) { console.error('Intraday override save failed:', res.error); showToast('Not saved: ' + (res.error.message || res.error.code || 'unknown'), 'error'); return; }
   showToast('Moved \u2713');
 }
 
@@ -3817,21 +3821,24 @@ function renderMonthlyPlanning() {
     }
   });
 
-  // ── PASSE 2 : complement VENDEUR jusqu'a la cible, en ROUND-ROBIN ──
-  // On ajoute un vendeur a chaque jour a tour de role plutot que de remplir un
-  // jour a fond avant le suivant. Ainsi chaque jour (dont le dimanche) atteint
-  // sa cible proportionnelle avant que les quotas hebdo ne s'epuisent.
-  var progressing = true;
-  while (progressing) {
-    progressing = false;
-    byLoad.forEach(function(d) {
-      if (isSpecialDay(d)) return;
-      var target = dayTarget[d.ds] || 2;
-      if (salesCount(d.ds) < target) {
-        if (pickFor(d, isSales)) progressing = true;
-      }
-    });
-  }
+  // ── PASSE 2 : complement VENDEUR jusqu'a la cible, en ROUND-ROBIN PAR SEMAINE ──
+  // Le round-robin doit cycler A L'INTERIEUR de chaque semaine, sinon les gros
+  // jours de tout le mois captent les quotas hebdo avant que les petits jours
+  // (dimanche) soient servis. On traite donc semaine par semaine : chaque jour
+  // de la semaine atteint sa cible avant que les quotas de la semaine s'epuisent.
+  weekKeys.forEach(function(wk) {
+    var wkDays = byLoad.filter(function(d) { return weekKey(d.date) === wk; });
+    var progressing = true;
+    while (progressing) {
+      progressing = false;
+      wkDays.forEach(function(d) {
+        var target = dayTarget[d.ds] || 2;
+        if (salesCount(d.ds) < target) {
+          if (pickFor(d, isSales)) progressing = true;
+        }
+      });
+    }
+  });
 
   // ── PASSE 3 : management restant et stock, en ROUND-ROBIN ──
   // Round-robin (un par jour a tour de role) pour etaler leur presence sur la
