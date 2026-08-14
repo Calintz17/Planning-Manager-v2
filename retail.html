@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.7.1</title>
+  <title>CORA Retail v1.8.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -40,14 +40,12 @@
   /* ---- Brand = quasi-noir (pas de couleur vive) ---- */
   --brand:         #1F1F1F;
   --brand-hover:   #111111;
-  --brand-soft:    #E8E8E8;
   --brand-on:      #FFFFFF;
 
   /* ---- Texte ---- */
   --tx-1:          #18181B;   /* titres, donnees */
   --tx-2:          #6B7280;   /* labels, secondaire */
   --tx-3:          #A1A1AA;   /* hints, placeholders */
-  --tx-on:         #FFFFFF;
 
   /* ---- Bordures ---- */
   --line:          #E7E8EC;
@@ -55,7 +53,7 @@
 
   /* ---- Semantique : Success / Warning / Danger / Info ---- */
   --ok:            #16A34A;  --ok-soft:   #DCFCE7;  --ok-tx:   #14532D;
-  --warn:          #E0A012;  --warn-soft: #FEF3C7;  --warn-tx: #713F12;
+  --warn-soft: #FEF3C7;  --warn-tx: #713F12;
   --dang:          #DC2626;  --dang-soft: #FEE2E2;  --dang-tx: #7F1D1D;
   --info:          #2563EB;  --info-soft: #DBEAFE;  --info-tx: #1E3A8A;
 
@@ -67,7 +65,7 @@
   --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-pill: 999px;
 
   /* ---- Espacements (echelle 4px) ---- */
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px;
+  --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
 
   /* ---- Ombres : tres subtiles ---- */
   --sh-1: 0 1px 2px rgba(16,24,40,.04);
@@ -185,7 +183,8 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .it-shift.pre + .it-shift { border-radius:0 8px 8px 0; }
 .it-blk { position:absolute; top:7px; height:17px; border-radius:2px; font-size:10px; font-weight:700;
   display:flex; align-items:center; justify-content:center; box-sizing:border-box;
-  white-space:nowrap; overflow:hidden; }
+  white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; transition:box-shadow .12s; }
+.it-blk:hover { box-shadow:0 2px 6px rgba(0,0,0,.22); }
 .b-mb  { background:#1a1a2e; color:#fff; }
 .b-lun { background:#FDE047; color:#713F12; }
 .b-wel { background:#A5B4FC; color:#312E81; }
@@ -670,7 +669,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 }
 .onb-txt { font-size:12.5px; color:var(--tx-1); line-height:1.45; margin-bottom:var(--s3); }
 .onb-btn { width:100%; justify-content:center; }
-@media (max-width:900px) { .onb-tip { display:none !important; } }
+@media (max-width:900px) { .onb-tip, .onb-tip.show { display:none; } }
 
 /* ═══ TABLEAUX DE SETTINGS : alignement identique ════════════════ */
 .set-tbl { table-layout:fixed; width:100%; }
@@ -841,7 +840,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 /* ═══ RESPONSIVE ═════════════════════════════════════════════════ */
 @media (max-width:900px) {
   :root { --sb-w:60px; }
-  .sb-name, .sb-tag, .nav-item span, .sb-sec, .sb-field, .sb-foot span { display:none; }
+  .sb-name, .nav-item span, .sb-sec, .sb-field, .sb-foot span { display:none; }
   .nav-item { justify-content:center; padding:10px 0; }
   .sb-brand { justify-content:center; padding:var(--s2) 0 var(--s5); }
   .tb-search { max-width:none; }
@@ -987,13 +986,10 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
         <button class="btn btn-primary" onclick="addAgent()">Create agent</button>
       </div>
     </div>
-    <div id="agent-list"><p style="color:var(--tx-3)">Select a region to view agents.</p></div>
+    <div id="agent-list"><p style="color:var(--tx-3)">Select a store to view agents.</p></div>
   </div>
   </div>
 </div>
-
-<!-- FORECAST TAB -->
-<!-- (Forecast tab removed: Recap moved into Planning sub-tab; settings moved into Settings tab) -->
 
 <!-- TRAFFIC TAB -->
 <div id="tab-traffic" class="tab-content">
@@ -1029,8 +1025,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
         <button class="cal-nav-btn" onclick="calChangeMonth(1)" aria-label="Next">&#8250;</button>
       </div>
     </div>
-    <div id="calendar-annual"><p style="color:var(--tx-3)">Select a region to view the calendar.</p></div>
-    <div id="calendar-monthly" style="display:none;"><p style="color:var(--tx-3)">Select a region to view the calendar.</p></div>
+    <div id="calendar-annual"><p style="color:var(--tx-3)">Select a store to view the calendar.</p></div>
+    <div id="calendar-monthly" style="display:none;"><p style="color:var(--tx-3)">Select a store to view the calendar.</p></div>
   </div>
   </div>
 </div>
@@ -1082,7 +1078,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 <div id="tab-regulations" class="tab-content">
   <div class="wrap">
   <div id="regulations-content">
-    <div class="card"><p style="color:var(--tx-3)">Select a region to view settings.</p></div>
+    <div class="card"><p style="color:var(--tx-3)">Select a store to view settings.</p></div>
   </div>
   </div>
 </div>
@@ -1123,6 +1119,7 @@ let currentRegionName = '';
 let currentRegionCity = '';
 let currentCountryIso = '';
 let currentIntradayDate = null;
+let intradayOverrides = {};   // { 'agentId:blockType': start_min } pour le jour affiche
 let countries         = [];   // pays de la region courante
 let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
@@ -1174,14 +1171,6 @@ let regulations = {
 // Planning view state
 
 // Default task config (pastel colors, used for seeding and fallback)
-var BREAK_COLORS = {
-  lunch: { bg:'#fef9c3', text:'#a16207' },
-  short: { bg:'#fefce8', text:'#ca8a04' },
-};
-
-// Agent eligibility tags: { agentId: Set(['can_fraud','can_backoffice']) }
-// Monthly BO targets: { year_month: { task: volume } }
-
 // ── DATE HELPERS ──────────────────────────────────────────────────────────
 function getMondayOfCurrentWeek() {
   const today = new Date();
@@ -1295,7 +1284,7 @@ function switchPlanningView(v, btn) {
   });
   document.getElementById('planning-monthly').style.display  = (v === 'monthly')  ? '' : 'none';
   document.getElementById('planning-intraday').style.display = (v === 'intraday') ? '' : 'none';
-  if (v === 'intraday' && currentStoreId) renderIntraday(currentIntradayDate);
+  if (v === 'intraday' && currentStoreId) loadAndRenderIntraday(currentIntradayDate);
 }
 
 function toggleAddAgentForm() {
@@ -1330,7 +1319,7 @@ async function init() {
   if (cSel) cSel.addEventListener('change', onCountryChange);
   var sSel = document.getElementById('store-select');
   if (sSel) sSel.addEventListener('change', onStoreChange);
-  setStatus('Ready - select a region to begin');
+  setStatus('Ready - select a store to begin');
   showOnboardingIfNeeded();
 }
 
@@ -1638,19 +1627,6 @@ async function saveRegulations() {
   });
   if (!valid) { showToast('Each day: closing hour must be after opening hour', 'error'); return; }
 
-  // Read trend % (now in Forecast tab header)
-  const trendEl = document.getElementById('reg-trend-pct') || document.getElementById('fc-trend-pct');
-  if (trendEl) regulations.trend_pct = parseFloat(trendEl.value) || 0;
-
-  // Read AHT per task (from Forecast tab header)
-  var newAht = {};
-  document.querySelectorAll('.aht-task-row').forEach(function(row) {
-    var task = row.dataset.task;
-    var val  = parseFloat(row.querySelector('.aht-val').value) || 0;
-    if (task) newAht[task] = val;
-  });
-  if (Object.keys(newAht).length > 0) regulations.aht_tasks = newAht;
-
   // Read breaks
   var newBreaks = [];
   document.querySelectorAll('.break-row').forEach(function(row) {
@@ -1712,22 +1688,8 @@ function renderDateTags(containerId, dates, type) {
 }
 
 // ── RENDER REGULATIONS ────────────────────────────────────────────────────
-function hourSelectHtml(id, selected) {
-  let opts = '';
-  for (let h = 0; h <= 23; h++) {
-    const lbl = String(h).padStart(2, '0') + ':00';
-    opts += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + lbl + '</option>';
-  }
-  return '<select id="' + id + '">' + opts + '</select>';
-}
-function hourSelectHtml2(cls, selected) {
-  let opts = '';
-  for (let h = 0; h <= 23; h++) {
-    const lbl = String(h).padStart(2, '0') + ':00';
-    opts += '<option value="' + h + '"' + (h === selected ? ' selected' : '') + '>' + lbl + '</option>';
-  }
-  return '<select class="' + cls + '">' + opts + '</select>';
-}
+function hourSelectHtml(id, selected)  { return '<select id="' + id + '">' + hourOptionsH(selected) + '</select>'; }
+function hourSelectHtml2(cls, selected) { return '<select class="' + cls + '">' + hourOptionsH(selected) + '</select>'; }
 
 // Palettes proposees a la creation d'un shift
 var SHIFT_TONES = [
@@ -1742,15 +1704,7 @@ var SHIFT_TONES = [
 
 // Selecteur d'heure identique a celui des horaires d'ouverture (pas de input time)
 function hourSelect(cls, selMin) {
-  var o = '';
-  for (var h = 0; h <= 23; h++) {
-    for (var q = 0; q < 60; q += 15) {
-      var v = h * 60 + q;
-      o += '<option value="' + v + '"' + (v === selMin ? ' selected' : '') + '>' +
-           String(h).padStart(2,'0') + ':' + String(q).padStart(2,'0') + '</option>';
-    }
-  }
-  return '<select class="' + cls + '">' + o + '</select>';
+  return '<select class="' + cls + '">' + hourOptions(selMin) + '</select>';
 }
 
 function durLabel(min) {
@@ -2694,7 +2648,7 @@ async function renderTraffic() {
   if (!box) return;
   if (!currentStoreId) {
     box.innerHTML = '<div class="card"><p style="color:var(--tx-3)">' +
-      'Select a region, a country and a store to manage traffic.</p></div>';
+      'Select a store to manage traffic.</p></div>';
     return;
   }
 
@@ -2996,7 +2950,7 @@ async function saveHourlyCurve() {  if (!currentStoreId) { showToast('Select a s
 function intradayPickDate(v) {
   if (!v) return;
   currentIntradayDate = v;
-  renderIntraday(v);
+  loadAndRenderIntraday(v);
 }
 function intradayShiftDay(dir) {
   if (!currentIntradayDate) currentIntradayDate = toDateStr(new Date());
@@ -3005,7 +2959,24 @@ function intradayShiftDay(dir) {
   currentIntradayDate = toDateStr(d);
   var inp = document.getElementById('intraday-date');
   if (inp) inp.value = currentIntradayDate;
-  renderIntraday(currentIntradayDate);
+  loadAndRenderIntraday(currentIntradayDate);
+}
+
+async function loadAndRenderIntraday(ds) {
+  if (!ds) ds = currentIntradayDate || toDateStr(new Date());
+  currentIntradayDate = ds;
+  intradayOverrides = {};
+  if (currentStoreId) {
+    var res = await sb.from('retail_intraday_overrides')
+      .select('agent_id, block_type, start_min')
+      .eq('store_id', currentStoreId).eq('date', ds);
+    if (!res.error && res.data) {
+      res.data.forEach(function(r) {
+        intradayOverrides[r.agent_id + ':' + r.block_type] = r.start_min;
+      });
+    }
+  }
+  renderIntraday(ds);
 }
 
 function renderIntraday(ds) {
@@ -3200,11 +3171,22 @@ function renderIntraday(ds) {
       var toneCls = 'sh-' + (sh.tone || 'close');
       var blocks = [];
 
+      // Applique un override de position s'il existe ET reste coherent (le bloc
+      // tient dans le shift de l'agent). Sinon on garde la position calculee.
+      function withOverride(agentId, type, calcStart, durH) {
+        var ov = intradayOverrides[agentId + ':' + type];
+        if (ov == null) return calcStart;
+        var ovH = ov / 60;
+        if (ovH >= sH && ovH + durH <= eH) return ovH;   // coherent
+        return calcStart;                                 // garde-fou : ignore
+      }
+
       if (mbPlan[a.id] != null) {
-        blocks.push([mbPlan[a.id], 0.25, 'mb', 'MB']);
+        blocks.push([withOverride(a.id, 'mb', mbPlan[a.id], 0.25), 0.25, 'mb', 'MB']);
       }
       if (lunchPlan[a.id] != null && lunch) {
-        blocks.push([lunchPlan[a.id], lunch.duration / 60, 'lun', lunch.name]);
+        var lunDur = lunch.duration / 60;
+        blocks.push([withOverride(a.id, 'lun', lunchPlan[a.id], lunDur), lunDur, 'lun', lunch.name]);
       }
 
       var grid = '<div class="it-grid">';
@@ -3219,7 +3201,10 @@ function renderIntraday(ds) {
         track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(eH) - pct(sH)) + '%"></div>';
       }
       blocks.forEach(function(bl) {
-        track += '<div class="it-blk b-' + bl[2] + '" style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + bl[3] + '</div>';
+        track += '<div class="it-blk b-' + bl[2] + '" draggable="false"' +
+          ' data-agent="' + a.id + '" data-type="' + bl[2] + '"' +
+          ' data-dur="' + bl[1] + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
+          ' style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + bl[3] + '</div>';
       });
       track += '</div>';
 
@@ -3244,6 +3229,77 @@ function renderIntraday(ds) {
       axis + band +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
+
+  // Active le drag & drop des blocs (MB, lunch, missions)
+  initIntradayDrag(body, T0, span, ds);
+}
+
+// ── Drag & drop des blocs intraday ──
+// Deplacement horizontal d'un bloc sur la ligne de son agent, contraint aux
+// bornes du shift, snap au quart d'heure, persiste en base au relachement.
+function initIntradayDrag(root, T0, span, ds) {
+  var blocks = root.querySelectorAll('.it-blk');
+  blocks.forEach(function(blk) {
+    blk.style.cursor = 'grab';
+    blk.addEventListener('pointerdown', function(e) {
+      e.preventDefault();
+      var track = blk.parentElement;
+      var trackRect = track.getBoundingClientRect();
+      var dur   = parseFloat(blk.dataset.dur);
+      var sMin  = parseInt(blk.dataset.smin);
+      var eMin  = parseInt(blk.dataset.emin);
+      var startX = e.clientX;
+      var startLeftPct = parseFloat(blk.style.left);
+      blk.style.cursor = 'grabbing';
+      blk.style.zIndex = '20';
+      blk.setPointerCapture(e.pointerId);
+
+      function hToPct(h) { return ((h - T0) / span) * 100; }
+      function pctToH(p) { return T0 + (p / 100) * span; }
+
+      function onMove(ev) {
+        var dx = ev.clientX - startX;
+        var dPct = (dx / trackRect.width) * 100;
+        var newLeftPct = startLeftPct + dPct;
+        var newH = pctToH(newLeftPct);
+        // Snap quart d'heure
+        newH = Math.round(newH * 4) / 4;
+        // Contraint aux bornes du shift
+        var minH = sMin / 60, maxH = eMin / 60 - dur;
+        newH = Math.max(minH, Math.min(maxH, newH));
+        blk.style.left = hToPct(newH) + '%';
+        blk.dataset.curH = newH;
+      }
+
+      function onUp(ev) {
+        blk.releasePointerCapture(e.pointerId);
+        blk.removeEventListener('pointermove', onMove);
+        blk.removeEventListener('pointerup', onUp);
+        blk.style.cursor = 'grab';
+        blk.style.zIndex = '';
+        var finalH = parseFloat(blk.dataset.curH);
+        if (!isNaN(finalH)) {
+          saveIntradayOverride(ds, blk.dataset.agent, blk.dataset.type, Math.round(finalH * 60));
+        }
+      }
+
+      blk.addEventListener('pointermove', onMove);
+      blk.addEventListener('pointerup', onUp);
+    });
+  });
+}
+
+async function saveIntradayOverride(ds, agentId, blockType, startMin) {
+  intradayOverrides[agentId + ':' + blockType] = startMin;   // maj cache immediat
+  if (!currentStoreId) return;
+  var row = {
+    store_id: currentStoreId, date: ds, agent_id: agentId,
+    block_type: blockType, start_min: startMin
+  };
+  var res = await sb.from('retail_intraday_overrides')
+    .upsert(row, { onConflict: 'store_id,date,agent_id,block_type' });
+  if (res.error) { showToast('Move not saved', 'error'); return; }
+  showToast('Moved \u2713');
 }
 
 async function saveMonthlyTraffic() {
@@ -3605,7 +3661,16 @@ function renderMonthlyPlanning() {
     var pct = a.work_pct || 100;
     weekQuota[a.id] = {};
     weekKeys.forEach(function(wk) {
-      var openW = weeks[wk].filter(function(d) { return !d.closure; }).length;
+      // Jours ouverts de la SEMAINE COMPLETE (7 jours a partir du lundi wk),
+      // pas seulement les jours visibles dans le mois affiche : sinon les
+      // semaines tronquees au bord du mois donnent un faux quota (trop de repos).
+      var monday = new Date(wk + 'T12:00:00');
+      var openW = 0;
+      for (var i = 0; i < 7; i++) {
+        var dd = new Date(monday);
+        dd.setDate(dd.getDate() + i);
+        if (!getDayClosureType(toDateStr(dd))) openW++;
+      }
       // 2 repos garantis par semaine, plafond legal de 5 jours travailles
       var maxWork = Math.min(5, Math.max(0, openW - 2));
       var days = Math.round(maxWork * pct / 100);
@@ -3672,14 +3737,27 @@ function renderMonthlyPlanning() {
     var cap = salesAgents.reduce(function(s, a) {
       return s + ((weekQuota[a.id] && weekQuota[a.id][wk]) || 0);
     }, 0);
+    // La capacite ne peut pas depasser le nombre de creneaux vendeur reellement
+    // disponibles cette semaine (jours visibles x vendeurs) : sinon des cibles
+    // seraient plafonnees et de la capacite serait perdue (agents sous-employes).
+    cap = Math.min(cap, wkDays.length * salesAgents.length);
     var volTot = wkDays.reduce(function(s, d) { return s + (d.vol || 0); }, 0) || 1;
     var raw = wkDays.map(function(d) { return cap * (d.vol || 0) / volTot; });
     var base = raw.map(function(r) { return Math.floor(r); });
-    var used = base.reduce(function(s, b) { return s + b; }, 0);
-    var leftover = cap - used;
+    // Repartition du reste, en evitant de depasser le nombre de vendeurs par jour
+    var leftover = cap - base.reduce(function(s, b) { return s + b; }, 0);
     var order = raw.map(function(r, i) { return [i, r - Math.floor(r)]; })
                    .sort(function(a, b) { return b[1] - a[1]; });
-    for (var k = 0; k < leftover && k < order.length; k++) base[order[k][0]]++;
+    var guard = 0;
+    while (leftover > 0 && guard < 1000) {
+      var placed = false;
+      for (var k = 0; k < order.length && leftover > 0; k++) {
+        var idx = order[k][0];
+        if (base[idx] < salesAgents.length) { base[idx]++; leftover--; placed = true; }
+      }
+      if (!placed) break;   // tous les jours au max : capacite residuelle ignoree
+      guard++;
+    }
     wkDays.forEach(function(d, i) {
       dayTarget[d.ds] = Math.max(0, Math.min(salesAgents.length, base[i]));
     });
@@ -3729,7 +3807,6 @@ function renderMonthlyPlanning() {
       // Jour special : pas de notion ouverture/fermeture, juste la presence
       if (hasMgmt) pickFor(d, isLead);
       while (salesCount(d.ds) < 2) { if (!pickFor(d, isSales)) break; }
-      if (hasStockTeam) { while (pickFor(d, isStock)) {} }
       return;
     }
     if (hasMgmt) pickFor(d, isLead);              // un manager garanti
@@ -3756,12 +3833,24 @@ function renderMonthlyPlanning() {
     });
   }
 
-  // ── PASSE 3 : reste du management et tout le stock disponibles ──
-  byLoad.forEach(function(d) {
-    if (isSpecialDay(d)) return;
-    if (hasMgmt) { while (pickFor(d, isLead)) {} }
-    if (hasStockTeam) { while (pickFor(d, isStock)) {} }
-  });
+  // ── PASSE 3 : management restant et stock, en ROUND-ROBIN ──
+  // Round-robin (un par jour a tour de role) pour etaler leur presence sur la
+  // semaine et decorreler leurs jours de repos : evite que deux stockistes
+  // reposent le meme jour tout en travaillant ensemble un autre jour.
+  var mgmtProg = hasMgmt;
+  while (mgmtProg) {
+    mgmtProg = false;
+    byLoad.forEach(function(d) {
+      if (pickFor(d, isLead)) mgmtProg = true;
+    });
+  }
+  var stockProg = hasStockTeam;
+  while (stockProg) {
+    stockProg = false;
+    byLoad.forEach(function(d) {
+      if (pickFor(d, isStock)) stockProg = true;
+    });
+  }
 
   // ── FILET DE SECURITE ──────────────────────────────────────────────────
   // Si des quotas se sont epuises, certains jours peuvent rester sous le
@@ -3780,7 +3869,7 @@ function renderMonthlyPlanning() {
       var done = workedInWeek[a.id][wk] || 0;
       if (done >= 5) return false;                   // la loi reste intouchable
       // On peut depasser le quota mensuel pour tenir le plancher de couverture,
-      // mais jamais le quota hebdomadaire d'un temps partiel.
+      // mais jamais le quota hebdomadaire (qui garantit deja les 2 repos/semaine).
       var wq = (weekQuota[a.id] && weekQuota[a.id][wk] != null)
         ? weekQuota[a.id][wk] : 5;
       return done < wq;
@@ -3814,19 +3903,20 @@ function renderMonthlyPlanning() {
   // d'ouverture qu'il couvre. Un shift hors heures ouvertes (ex: VM matinal)
   // pese 0 mais reste disponible pour le plancher de tranche.
   var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
-  function shiftTrafficWeight(sh, openH, closeH) {
-    if (!curveArr || !curveArr.length) return 1;
-    var w = 0;
-    for (var h = openH; h < closeH; h++) {
-      var ci = h - openH;
-      if (ci < 0 || ci >= curveArr.length) continue;
-      if (sh.startMin <= h * 60 && sh.endMin > h * 60) w += curveArr[ci];
-    }
-    return w;
+
+  // Repartit un total d'agents entre plusieurs shifts (indices) a parts egales,
+  // le premier prenant le reste eventuel. Utilise quand une grille a plusieurs
+  // shifts d'ouverture ou de fermeture.
+  function spreadQuota(quota, idxs, total) {
+    idxs.forEach(function(i){ quota[i] = 0; });
+    var per = Math.floor(total / idxs.length);
+    var rem = total - per * idxs.length;
+    idxs.forEach(function(i, k){ quota[i] = per + (k < rem ? 1 : 0); });
   }
 
-  // Plan de shift par jour : ventile les agents presents sur les shifts
-  // disponibles au prorata du trafic de leur tranche. Plancher 1 par shift.
+  // Plan de shift par jour : repartit les agents entre ouverture et fermeture
+  // selon la balance trafic matin / soir (voir avgCurve plus bas), avec un
+  // biais structurel vers le soir. Le middle n'est jamais propose par defaut.
   var shiftPlanByDay = {};
   // Jour special = dimanche ou ferie ouvert : amplitude unique, shift "D".
   function isSpecialDay(d) {
@@ -3884,33 +3974,50 @@ function renderMonthlyPlanning() {
         if (!list.length) return;
       }
 
-      var weights = grid.map(function(s){ return shiftTrafficWeight(s, dh.open, dh.close); });
-      // Le middle (ni ouverture ni fermeture) est de-priorise : on annule son
-      // poids de base pour que le moteur remplisse d'abord ouverture/fermeture.
-      // Il ne recevra du monde que s'il reste des agents apres O et C.
-      weights = weights.map(function(w, i){
-        var s = grid[i];
-        return (s.isOpening || s.isClosing) ? w : w * 0.001;
-      });
-      var wTot = weights.reduce(function(s,w){ return s + w; }, 0) || 1;
-
-      // Quota par shift : plancher 1 UNIQUEMENT pour ouverture et fermeture
-      // (le middle n'a pas de plancher), puis reste au prorata du trafic.
-      var quota = grid.map(function(){ return 0; });
-      var remaining = list.length;
-      grid.forEach(function(s, i){
-        if (remaining > 0 && (s.isOpening || s.isClosing)) { quota[i] = 1; remaining--; }
-      });
-      if (remaining > 0) {
-        var frac = weights.map(function(w){ return w / wTot * remaining; });
-        var base = frac.map(function(f){ return Math.floor(f); });
-        var used = base.reduce(function(s,b){ return s + b; }, 0);
-        quota = quota.map(function(q,i){ return q + base[i]; });
-        var leftover = remaining - used;
-        var order = frac.map(function(f,i){ return [i, f - Math.floor(f)]; })
-                        .sort(function(a,b){ return b[1] - a[1]; });
-        for (var k = 0; k < leftover; k++) quota[order[k % order.length][0]]++;
+      // ── Repartition ouverture / fermeture sur base matin vs soir ──
+      // Point de bascule = milieu de journee (openH+closeH)/2. On compare la
+      // moyenne de trafic du matin (open->milieu) et du soir (milieu->close).
+      // La part du soir fixe le nombre de closings, le matin les openings.
+      // Biais structurel : l'arrondi penche toujours vers le soir (closing),
+      // car la fermeture cumule le trafic ET les taches (reassort, etc.).
+      var mid = (dh.open + dh.close) / 2;
+      function avgCurve(fromH, toH) {
+        if (!curveArr || !curveArr.length) return 1;
+        var sum = 0, n = 0;
+        for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
+          var ci = h - dh.open;
+          if (ci >= 0 && ci < curveArr.length) { sum += curveArr[ci]; n++; }
+        }
+        return n ? sum / n : 1;
       }
+      var wMorning = avgCurve(dh.open, mid);
+      var wEvening = avgCurve(mid, dh.close);
+      var wSum = (wMorning + wEvening) || 1;
+      var eveningShare = wEvening / wSum;
+
+      // Nombre de closings : part du soir, arrondi vers le HAUT (biais soir).
+      var openSh  = grid.find(function(s){ return s.isOpening; }) || grid[0];
+      var closeSh = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
+      var midShifts = grid.filter(function(s){ return !s.isOpening && !s.isClosing; });
+
+      var nTotal = list.length;
+      var nClose = Math.ceil(nTotal * eveningShare);   // ceil = tilt vers le soir
+      nClose = Math.max(0, Math.min(nTotal, nClose));
+      var nOpen = nTotal - nClose;
+
+      // Quota par shift : openings et closings selon la bascule, middle a 0
+      // (de-priorise ; il n'est utilise que si le manager le force en custom).
+      var quota = grid.map(function(){ return 0; });
+      grid.forEach(function(s, i) {
+        if (s.isOpening) quota[i] = nOpen;
+        else if (s.isClosing) quota[i] = nClose;
+      });
+      // S'il y a plusieurs shifts d'ouverture ou de fermeture, on repartit
+      // le total entre eux a parts egales (le premier prend le reste).
+      var openIdx  = []; var closeIdx = [];
+      grid.forEach(function(s, i){ if (s.isOpening) openIdx.push(i); if (s.isClosing) closeIdx.push(i); });
+      if (openIdx.length > 1) { spreadQuota(quota, openIdx, nOpen); }
+      if (closeIdx.length > 1) { spreadQuota(quota, closeIdx, nClose); }
 
       // Affecte les agents aux shifts en respectant preference matin/soir
       var sortedList = list.slice().sort(function(x, y) {
@@ -3920,7 +4027,7 @@ function renderMonthlyPlanning() {
       });
       // Rotation : on decale le point de depart selon le jour, pour que ce ne
       // soit pas toujours les memes agents en ouverture / fermeture.
-      var rot = d.num % sortedList.length;
+      var rot = sortedList.length ? (d.num % sortedList.length) : 0;
       sortedList = sortedList.slice(rot).concat(sortedList.slice(0, rot));
       var si = 0;
       grid.forEach(function(s, i) {
