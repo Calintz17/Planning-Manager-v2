@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.8.2</title>
+  <title>CORA Retail v1.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -801,6 +801,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   margin:var(--s5) 0 var(--s3); padding-top:var(--s4);
   border-top:1px solid var(--line); }
 .day-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.ae-toggle-row { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--tx-2); }
+.ae-toggle-row input { width:auto; margin:0; cursor:pointer; }
 .day-chip {
   width:38px; height:32px; border:1px solid var(--line-2); border-radius:var(--r-md);
   background:var(--bg-base); color:var(--tx-2); cursor:pointer;
@@ -2375,6 +2377,7 @@ function shiftCls(code) {
   if (!code) return 'sh-none';
   if (code === 'OFF') return 'sh-off';
   if (code === 'A')   return 'sh-cp';
+  if (code === 'PT')  return 'sh-teal';
 
   var def = findShiftDef(code);
   if (def) {
@@ -3025,6 +3028,13 @@ function renderIntraday(ds) {
   var shiftInfo = {};
   working.forEach(function(a) {
     var code = dayPlan[a.id].code;
+    if (code === 'PT') {
+      // Part-time fixe : amplitude = ses heures contractuelles
+      var fx = (agentPrefs[a.id] || {}).fixed_schedule || {};
+      shiftInfo[a.id] = { code: 'PT', startMin: fx.start != null ? fx.start : openH * 60,
+                          endMin: fx.end != null ? fx.end : closeH * 60, tone: 'teal' };
+      return;
+    }
     if (code === 'D') {
       // Jour special : shift unique couvrant toute l'amplitude (reduite) du jour
       shiftInfo[a.id] = { code: 'D', startMin: openH * 60, endMin: closeH * 60, tone: 'late' };
@@ -3717,6 +3727,20 @@ function renderMonthlyPlanning() {
   var assignedMap = {};
   monthDays.forEach(function(d) { assignedMap[d.ds] = []; });
 
+  // ── Pre-affectation des part-time FIXES ──
+  // Leur planning contractuel est ecrit directement : presents leurs jours
+  // fixes (comptent dans la presence donc reduisent la cible des autres),
+  // absents les autres jours. Ils ne passent pas par la ventilation.
+  fixedAgents.forEach(function(a) {
+    monthDays.forEach(function(d) {
+      if (d.closure) return;
+      if (fixedWorksOn(a, d)) {
+        assignedMap[d.ds].push(a.id);
+        assign(a, d);
+      }
+    });
+  });
+
   // Trafic moyen des jours ouverts, base de la ponderation
   var openList = monthDays.filter(function(d) { return !d.closure; });
 
@@ -3724,9 +3748,32 @@ function renderMonthlyPlanning() {
   function isLead(a)  { return poolOf(a) === 'mgmt'; }
   function isStock(a) { return poolOf(a) === 'stock'; }
   function isSales(a) { return poolOf(a) === 'sales'; }
-  var mgmtAgents  = agents.filter(isLead);
-  var salesAgents = agents.filter(isSales);
-  var stockAgents = agents.filter(isStock);
+
+  // ── Part-time a horaires FIXES (contractuel) ──
+  // Renvoie la config {days:[...], start, end} si l'agent est un part-time fixe.
+  function fixedSchedOf(a) {
+    var p = agentPrefs[a.id];
+    var fx = p && p.fixed_schedule;
+    return (fx && fx.enabled && fx.days && fx.days.length) ? fx : null;
+  }
+  function isFixed(a) { return !!fixedSchedOf(a); }
+  // Un part-time fixe travaille-t-il ce jour (selon ses jours contractuels) ?
+  function fixedWorksOn(a, d) {
+    var fx = fixedSchedOf(a);
+    return fx && fx.days.indexOf(d.date.getDay()) !== -1;
+  }
+
+  // Les part-time fixes sont retires des pools de ventilation : leur planning
+  // est ecrit directement (jours et heures contractuels), ils ne passent ni par
+  // les quotas ni par le round-robin. Ils comptent en revanche dans la presence.
+  function isLeadV(a)  { return isLead(a)  && !isFixed(a); }
+  function isStockV(a) { return isStock(a) && !isFixed(a); }
+  function isSalesV(a) { return isSales(a) && !isFixed(a); }
+
+  var mgmtAgents  = agents.filter(isLeadV);
+  var salesAgents = agents.filter(isSalesV);
+  var stockAgents = agents.filter(isStockV);
+  var fixedAgents = agents.filter(isFixed);
   var hasStockTeam = stockAgents.length > 0;
   var hasMgmt = mgmtAgents.length > 0;
 
@@ -3784,7 +3831,7 @@ function renderMonthlyPlanning() {
   function pickFor(d, filterFn) {
     var taken = takenByDay[d.ds];
     var pool = agents.filter(function(a) {
-      return !taken[a.id] && canWork(a, d) && (!filterFn || filterFn(a));
+      return !taken[a.id] && !isFixed(a) && canWork(a, d) && (!filterFn || filterFn(a));
     });
     if (!pool.length) return null;
     pool.sort(function(x, y) {
@@ -3871,6 +3918,7 @@ function renderMonthlyPlanning() {
 
     var pool = agents.filter(function(a) {
       if (already[a.id]) return false;
+      if (isFixed(a)) return false;                  // les fixes ne sont jamais ventiles
       if (isBlocked(a, d)) return false;
       var wk = weekKey(d.date);
       var done = workedInWeek[a.id][wk] || 0;
@@ -3937,6 +3985,15 @@ function renderMonthlyPlanning() {
     if (calHours[d.ds]) dh = calHours[d.ds];
     var present = assignedMap[d.ds].slice();
     var plan = {};
+
+    // ── Part-time fixes : shift a leurs heures contractuelles, prioritaire ──
+    // Meme les jours speciaux (dimanche/ferie), leurs heures fixes priment sur
+    // le shift D. On leur donne un code 'PT' dont l'amplitude est lue ailleurs.
+    present = present.filter(function(id) {
+      var a = agents.find(function(x){ return x.id === id; });
+      if (a && isFixed(a)) { plan[id] = 'PT'; return false; }
+      return true;
+    });
 
     // ── Jour special (dimanche ou ferie ouvert) : shift unique "D" ──
     if (isSpecialDay(d)) {
@@ -4412,8 +4469,8 @@ async function loadAgentPrefs() {
   res.data.forEach(function(p) { agentPrefs[p.agent_id] = p; });
 }
 
-function renderDayChips(selected) {
-  var box = document.getElementById('ae-avoid');
+function renderDayChips(selected, boxId) {
+  var box = document.getElementById(boxId || 'ae-avoid');
   if (!box) return;
   box.innerHTML = DAY_CHIPS.map(function(d) {
     var on = selected.indexOf(parseInt(d[0])) !== -1;
@@ -4424,9 +4481,22 @@ function renderDayChips(selected) {
 
 function toggleDayChip(btn) { btn.classList.toggle('on'); }
 
-function readDayChips() {
+// Affiche la section "Fixed schedule" seulement pour un Part Time.
+function updateFixedSectionVisibility() {
+  var status = document.getElementById('ae-status').value;
+  var sec = document.getElementById('ae-fixed-sec');
+  if (sec) sec.style.display = (status === 'PART_TIME') ? 'block' : 'none';
+}
+
+// Affiche le detail (jours + heures) quand le toggle horaires fixes est actif.
+function toggleFixedSchedule() {
+  var on = document.getElementById('ae-fixed-on').checked;
+  document.getElementById('ae-fixed-detail').style.display = on ? 'block' : 'none';
+}
+
+function readDayChips(boxId) {
   return Array.prototype.slice
-    .call(document.querySelectorAll('#ae-avoid .day-chip.on'))
+    .call(document.querySelectorAll('#' + (boxId || 'ae-avoid') + ' .day-chip.on'))
     .map(function(b) { return parseInt(b.dataset.day); });
 }
 
@@ -4446,7 +4516,18 @@ function openAgentEditor(agentId) {
   var p = agentPrefs[agentId] || {};
   document.getElementById('ae-shiftpref').value = p.shift_pref || 'none';
   document.getElementById('ae-weekend').value   = (p.weekend_ok === false) ? 'false' : 'true';
-  renderDayChips(p.avoid_days || []);
+  renderDayChips(p.avoid_days || [], 'ae-avoid');
+
+  // Fixed schedule (part-time contractuel)
+  document.getElementById('ae-fixed-start').innerHTML = hourOptionsH(10);
+  document.getElementById('ae-fixed-end').innerHTML   = hourOptionsH(18);
+  var fx = p.fixed_schedule || null;
+  document.getElementById('ae-fixed-on').checked = !!(fx && fx.enabled);
+  renderDayChips((fx && fx.days) || [], 'ae-fixed-days');
+  if (fx && fx.start != null) document.getElementById('ae-fixed-start').value = Math.floor(fx.start / 60);
+  if (fx && fx.end != null)   document.getElementById('ae-fixed-end').value   = Math.floor(fx.end / 60);
+  updateFixedSectionVisibility();
+  toggleFixedSchedule();
 
   document.getElementById('agent-editor').classList.add('open');
 }
@@ -4472,11 +4553,22 @@ async function saveAgentEditor() {
   if (res.error) { showToast('Save failed', 'error'); return; }
 
   // Preferences (table separee)
+  var fixedOn = document.getElementById('ae-fixed-on').checked;
+  var fixedSchedule = null;
+  if (status === 'PART_TIME' && fixedOn) {
+    var fdays = readDayChips('ae-fixed-days');
+    var fstart = parseInt(document.getElementById('ae-fixed-start').value) * 60;
+    var fend   = parseInt(document.getElementById('ae-fixed-end').value) * 60;
+    if (!fdays.length) { showToast('Select at least one fixed working day', 'error'); return; }
+    if (fend <= fstart) { showToast('Fixed end must be after start', 'error'); return; }
+    fixedSchedule = { enabled: true, days: fdays, start: fstart, end: fend };
+  }
   var prefRow = {
     agent_id:   agentEditorId,
     shift_pref: document.getElementById('ae-shiftpref').value,
     weekend_ok: document.getElementById('ae-weekend').value === 'true',
-    avoid_days: readDayChips()
+    avoid_days: readDayChips('ae-avoid'),
+    fixed_schedule: fixedSchedule
   };
   var pres = await sb.from('retail_agent_prefs')
     .upsert(prefRow, { onConflict: 'agent_id' });
@@ -5063,7 +5155,7 @@ init();
         <div class="fld"><label>First name</label><input type="text" id="ae-first"></div>
         <div class="fld"><label>Last name</label><input type="text" id="ae-last"></div>
         <div class="fld"><label>Store</label><input type="text" id="ae-store" disabled></div>
-        <div class="fld"><label>Status</label><select id="ae-status"></select></div>
+        <div class="fld"><label>Status</label><select id="ae-status" onchange="updateFixedSectionVisibility()"></select></div>
         <div class="fld"><label>Work %</label><input type="number" id="ae-pct" min="10" max="100" step="5"></div>
       </div>
       <div class="modal-sec">Preferences</div>
@@ -5087,6 +5179,26 @@ init();
       <div class="fld" style="margin-top:12px;">
         <label>Days to avoid</label>
         <div class="day-chips" id="ae-avoid"></div>
+      </div>
+      <div id="ae-fixed-sec" style="display:none;">
+        <div class="modal-sec">Fixed schedule (contractual)</div>
+        <div class="fld">
+          <label class="ae-toggle-row">
+            <input type="checkbox" id="ae-fixed-on" onchange="toggleFixedSchedule()">
+            <span>This part-timer works fixed days and hours</span>
+          </label>
+        </div>
+        <div id="ae-fixed-detail" style="display:none;">
+          <div class="fld" style="margin-top:10px;">
+            <label>Working days</label>
+            <div class="day-chips" id="ae-fixed-days"></div>
+          </div>
+          <div class="form-grid" style="margin-top:10px;">
+            <div class="fld"><label>Start</label><select id="ae-fixed-start" class="ae-fixed-hour"></select></div>
+            <div class="fld"><label>End</label><select id="ae-fixed-end" class="ae-fixed-hour"></select></div>
+          </div>
+          <p class="set-note" style="margin-top:8px;">These days and hours override all scheduling rules. The agent is placed exactly here, every week.</p>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
