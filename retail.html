@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.9.2</title>
+  <title>CORA Retail v1.10</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -259,6 +259,64 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .card { background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg);
         box-shadow:var(--sh-1); padding:var(--s4) var(--s5); margin-bottom:var(--s3); }
 .card:last-child { margin-bottom:0; }
+
+/* ═══ DASHBOARD ═══ */
+.dash-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:var(--s6); }
+.dash-eyebrow { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--tx-3); margin-bottom:6px; }
+.dash-title { font-size:28px; font-weight:700; letter-spacing:-.02em; color:var(--tx-1); }
+.dash-sub { font-size:14px; color:var(--tx-2); margin-top:4px; }
+.dash-store { text-align:right; }
+.dash-store .nm { font-size:15px; font-weight:600; }
+.dash-store .loc { font-size:12px; color:var(--tx-3); }
+.dash-grid { display:grid; grid-template-columns:2fr 1fr; gap:var(--s5); align-items:start; }
+.dash-col { display:flex; flex-direction:column; gap:var(--s5); min-width:0; }
+.hero { background:var(--nav-active-bg); color:#fff; border-radius:var(--r-xl); padding:var(--s8); position:relative; overflow:hidden; }
+.hero::after { content:''; position:absolute; right:-60px; top:-60px; width:240px; height:240px;
+  background:radial-gradient(circle, rgba(30,58,138,.55), transparent 70%); }
+.hero-eyebrow { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.55); margin-bottom:var(--s4); position:relative; }
+.hero-num { font-size:64px; font-weight:700; letter-spacing:-.03em; line-height:1; position:relative; }
+.hero-num .unit { font-size:22px; font-weight:500; color:rgba(255,255,255,.6); margin-left:8px; }
+.hero-caption { font-size:14px; color:rgba(255,255,255,.7); margin-top:var(--s3); position:relative; }
+.hero-spark { display:flex; align-items:flex-end; height:120px; margin-top:var(--s8); position:relative; }
+.hero-days { display:flex; gap:8px; width:100%; align-items:flex-end; }
+.hero-days > div { flex:1; display:flex; flex-direction:column; justify-content:flex-end; }
+.hero-days .bar { width:100%; background:rgba(255,255,255,.22); border-radius:5px 5px 0 0; min-height:4px; }
+.hero-days .bar.today { background:#fff; }
+.hero-days .lbl { text-align:center; font-size:11px; color:rgba(255,255,255,.5); margin-top:8px; }
+.dash-card-label { font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tx-3); margin-bottom:var(--s4); }
+.pool-row { display:flex; align-items:center; justify-content:space-between; padding:var(--s3) 0; border-bottom:1px solid var(--line); }
+.pool-row:last-child { border-bottom:none; }
+.pool-name { font-size:14px; font-weight:500; color:var(--tx-1); }
+.pool-count { font-size:20px; font-weight:700; color:var(--nav-active-bg); }
+.pool-count .of { font-size:13px; font-weight:500; color:var(--tx-3); }
+.hl-list { display:flex; flex-direction:column; gap:var(--s3); }
+.hl-item { display:flex; align-items:center; gap:var(--s4); padding:var(--s4); border-radius:var(--r-md); background:var(--bg-base-2); border-left:3px solid var(--nav-active-bg); }
+.hl-item.week { border-left-color:var(--info); }
+.hl-item.day { border-left-color:var(--warn-tx); }
+.hl-when { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--tx-3); min-width:90px; flex-shrink:0; }
+.hl-text { font-size:14px; font-weight:500; color:var(--tx-1); flex:1; }
+.hl-del { background:none; border:none; color:var(--tx-3); cursor:pointer; padding:2px 6px; font-size:16px; line-height:1; }
+.hl-del:hover { color:var(--dang); }
+.hl-add { display:flex; gap:var(--s3); margin-top:var(--s4); padding-top:var(--s4); border-top:1px dashed var(--line-2); flex-wrap:wrap; }
+.hl-add select, .hl-add input[type=date] { font-family:var(--font); font-size:13px; padding:8px 10px; border:1px solid var(--line-2); border-radius:var(--r-md); color:var(--tx-1); background:var(--bg-base); }
+.hl-add input[type=text] { flex:1; min-width:160px; font-family:var(--font); font-size:13px; padding:8px 10px; border:1px solid var(--line-2); border-radius:var(--r-md); color:var(--tx-1); }
+.hl-add button { background:var(--nav-active-bg); color:#fff; border:none; border-radius:var(--r-md); padding:8px 16px; font-size:13px; font-weight:500; cursor:pointer; }
+.mini-item { display:flex; align-items:center; gap:var(--s3); padding:var(--s2) 0; font-size:13px; color:var(--tx-2); }
+.mini-item .dot { width:6px; height:6px; border-radius:50%; background:var(--tx-3); flex-shrink:0; }
+.mini-item .dot.abs { background:var(--dang); }
+.mini-item .dot.hol { background:var(--warn-tx); }
+.mini-item .nm { color:var(--tx-1); font-weight:500; }
+.mini-empty { font-size:13px; color:var(--tx-3); font-style:italic; padding:var(--s2) 0; }
+@media (max-width:860px) {
+  .dash-grid { grid-template-columns:1fr; }
+  .dash-head { flex-direction:column; align-items:flex-start; gap:var(--s3); }
+  .dash-store { text-align:left; }
+  .hero { padding:var(--s6); }
+  .hero-num { font-size:48px; }
+  .hero-spark { height:90px; }
+  .hl-add { flex-direction:column; }
+  .hl-add input[type=text] { width:100%; }
+}
 .card-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
              margin-bottom:var(--s3); flex-wrap:wrap; }
 .card-title { font-size:15px; font-weight:600; }
@@ -875,9 +933,10 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
   <div class="sb-sec">Workspace</div>
   <div class="sb-nav">
+    <button class="nav-item active" onclick="switchTab('dashboard', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>Dashboard</span></button>
     <div class="nav-group">
-      <button class="nav-item has-sub active open" onclick="toggleNavGroup('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Planning</span><svg class="ic nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-      <div class="nav-sub open" id="sub-planning">
+      <button class="nav-item has-sub" onclick="toggleNavGroup('planning', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg><span>Planning</span><svg class="ic nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="nav-sub" id="sub-planning">
         <button class="nav-subitem active" data-view="monthly"  onclick="switchPlanningView('monthly', this)">Monthly</button>
         <button class="nav-subitem"        data-view="intraday" onclick="switchPlanningView('intraday', this)">Intraday</button>
       </div>
@@ -941,8 +1000,17 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
     </div>
   </header>
 
+<!-- DASHBOARD TAB -->
+<div id="tab-dashboard" class="tab-content active">
+  <div class="wrap">
+    <div id="dashboard-body">
+      <div class="card"><p style="color:var(--tx-3)">Select a store to view the dashboard.</p></div>
+    </div>
+  </div>
+</div>
+
 <!-- PLANNING TAB -->
-<div id="tab-planning" class="tab-content active">
+<div id="tab-planning" class="tab-content">
   <div class="wrap">
 
     <div id="planning-monthly">
@@ -1127,6 +1195,8 @@ let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
 let currentStoreId    = null;
 let currentStoreName  = '';
+let currentStoreCity  = '';
+let storeHighlights   = [];   // [{id, start_date, end_date, text}]
 let planningOverrides = {};   // { agentId: { 'YYYY-MM-DD': 'O' | 'OFF' | 'A' ... } }
 let monthlyResult = {};       // { 'YYYY-MM-DD': { agentId: {code, special} } } - partage monthly -> intraday
 let agentPrefs        = {};   // { agentId: {shift_pref, weekend_ok, avoid_days[]} }
@@ -1253,6 +1323,7 @@ function switchTab(name, btn) {
   document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+  if (name === 'dashboard' && currentStoreId) renderDashboard();
   if (name === 'regulations' && currentStoreId) renderRegulations();
   if (name === 'calendar' && currentStoreId) renderCalendar();
   if (name === 'traffic') renderTraffic();
@@ -1487,6 +1558,7 @@ async function onStoreChange() {
   currentStoreId = sel ? sel.value : null;
   var st = stores.find(function(s) { return s.id === currentStoreId; });
   currentStoreName = st ? st.name : '';
+  currentStoreCity = st ? (st.city || st.location || '') : '';
 
   if (!currentStoreId) { updateStatusBar(); return; }
 
@@ -1494,11 +1566,13 @@ async function onStoreChange() {
   await loadShiftConfig();
   await loadStoreSettings();
   await loadCalendarData();
+  await loadHighlights();
   await loadWeekData();
   if (!currentIntradayDate) currentIntradayDate = toDateStr(new Date());
   updateStatusBar();
   renderMonthlyPlanning();
   renderAgents();
+  renderDashboard();
 }
 
 // Libelle complet du perimetre courant, utilise dans la barre d'etat
@@ -3576,6 +3650,198 @@ async function clearMonthOverrides() {
   });
   showToast('Manual changes cleared \u2713');
   renderMonthlyPlanning();
+}
+
+// Echappement HTML minimal pour les textes utilisateur.
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function loadHighlights() {
+  storeHighlights = [];
+  if (!currentStoreId) return;
+  var res = await sb.from('retail_highlights')
+    .select('*').eq('store_id', currentStoreId);
+  if (!res.error && res.data) storeHighlights = res.data;
+}
+
+async function addHighlight() {
+  var start = document.getElementById('hl-start').value;
+  var end   = document.getElementById('hl-end').value;
+  var text  = (document.getElementById('hl-text').value || '').trim();
+  if (!text) { showToast('Enter a highlight text', 'error'); return; }
+  if (!start) start = end;
+  if (!end) end = start;
+  if (end < start) { var t = start; start = end; end = t; }
+  var res = await sb.from('retail_highlights').insert({
+    store_id: currentStoreId, start_date: start, end_date: end, text: text
+  }).select();
+  if (res.error) { showToast('Highlight not saved: ' + (res.error.message || ''), 'error'); return; }
+  if (res.data && res.data[0]) storeHighlights.push(res.data[0]);
+  showToast('Highlight added \u2713');
+  renderDashboard();
+}
+
+async function deleteHighlight(id) {
+  var res = await sb.from('retail_highlights').delete().eq('id', id);
+  if (res.error) { showToast('Not removed: ' + (res.error.message || ''), 'error'); return; }
+  storeHighlights = storeHighlights.filter(function(h){ return h.id !== id; });
+  renderDashboard();
+}
+
+// Trafic prevu pour un jour donne (meme logique que le planning : ventilation
+// du total mensuel sur les jours ouverts, avec les valeurs manuelles preservees).
+function dailyTrafficFor(ds) {
+  if (getDayClosureType(ds)) return 0;
+  var rec = trafficDaily[ds];
+  if (rec && rec.is_manual) return rec.traffic || 0;
+  var dt = new Date(ds + 'T12:00:00');
+  var y = dt.getFullYear(), m = dt.getMonth() + 1;
+  var mRec = trafficMonthly[monthKey(y, m)];
+  var total = mRec && mRec.current_year != null ? mRec.current_year : 0;
+  var spread = spreadMonthToDays(y, m, total);
+  return spread[ds] || 0;
+}
+
+// ── DASHBOARD hebdomadaire (landing) ──
+function renderDashboard() {
+  var body = document.getElementById('dashboard-body');
+  if (!body) return;
+  if (!currentStoreId) {
+    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Select a store to view the dashboard.</p></div>';
+    return;
+  }
+
+  var days = getWeekDays(currentWeekMonday);
+  var wn = getWeekNumber(currentWeekMonday);
+  var todayStr = toDateStr(new Date());
+  var DOW3 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Trafic par jour + total semaine
+  var vols = days.map(function(d){ return dailyTrafficFor(toDateStr(d)); });
+  var weekTotal = vols.reduce(function(s,v){ return s+v; }, 0);
+  var maxVol = Math.max.apply(null, vols.concat([1]));
+  var peakIdx = vols.indexOf(Math.max.apply(null, vols));
+
+  // Barres du sparkline
+  var spark = '';
+  days.forEach(function(d, i) {
+    var ds = toDateStr(d);
+    var h = maxVol > 0 ? Math.round(vols[i] / maxVol * 112) : 4;
+    var isToday = (ds === todayStr);
+    spark += '<div><div class="bar' + (isToday ? ' today' : '') + '" style="height:' + Math.max(4,h) + 'px"></div>' +
+             '<div class="lbl">' + DOW3[d.getDay()] + '</div></div>';
+  });
+
+  // Presence par pool aujourd'hui (si aujourd'hui est dans la semaine affichee)
+  var poolToday = { mgmt:0, sales:0, stock:0 };
+  var todayInWeek = days.some(function(d){ return toDateStr(d) === todayStr; });
+  var presDs = todayInWeek ? todayStr : toDateStr(days[0]);
+  var presLabel = todayInWeek ? 'today' : DOW3[days[0].getDay()];
+  var res = monthlyResult[presDs];
+  if (res) {
+    agents.forEach(function(a) {
+      var r = res[a.id];
+      if (r && !r.special) poolToday[poolOf(a)]++;
+    });
+  }
+
+  // Absences de la semaine
+  var absences = [];
+  agents.forEach(function(a) {
+    var offDays = [];
+    days.forEach(function(d) {
+      var ds = toDateStr(d);
+      if (agentOnLeave(a.id, ds)) offDays.push(d);
+    });
+    if (offDays.length) {
+      var range = offDays.length === 1 ? DOW3[offDays[0].getDay()]
+        : DOW3[offDays[0].getDay()] + '-' + DOW3[offDays[offDays.length-1].getDay()];
+      absences.push({ name: (a.first_name || '') + ' ' + (a.last_name || '').charAt(0) + '.', range: range });
+    }
+  });
+
+  // Feries de la semaine
+  var holidays = [];
+  days.forEach(function(d) {
+    var ds = toDateStr(d);
+    if (calHolidays[ds]) holidays.push({ name: calHolidays[ds], day: DOW3[d.getDay()] + ' ' + formatDate(d) });
+  });
+
+  // Highlights actifs cette semaine
+  var weekStart = toDateStr(days[0]), weekEnd = toDateStr(days[6]);
+  var hls = (storeHighlights || []).filter(function(h) {
+    return h.start_date <= weekEnd && h.end_date >= weekStart;
+  }).sort(function(a,b){ return a.start_date < b.start_date ? -1 : 1; });
+
+  body.innerHTML =
+    '<div class="dash-head">' +
+      '<div>' +
+        '<div class="dash-eyebrow">Week ' + wn + ' \u00b7 ' + formatDate(days[0]) + ' - ' + formatDate(days[6]) + '</div>' +
+        '<div class="dash-title">This week at a glance</div>' +
+        '<div class="dash-sub">Monday to Sunday overview</div>' +
+      '</div>' +
+      '<div class="dash-store"><div class="nm">' + esc(currentStoreName || 'Store') + '</div>' +
+        '<div class="loc">' + esc(currentStoreCity || '') + '</div></div>' +
+    '</div>' +
+    '<div class="dash-grid">' +
+      '<div class="dash-col">' +
+        '<div class="hero">' +
+          '<div class="hero-eyebrow">Forecast traffic \u00b7 this week</div>' +
+          '<div class="hero-num">' + weekTotal.toLocaleString() + '<span class="unit">visits</span></div>' +
+          '<div class="hero-caption">' + (weekTotal > 0 ? 'Peak on ' + DOW3[days[peakIdx].getDay()] : 'No traffic data entered yet') + '</div>' +
+          '<div class="hero-spark"><div class="hero-days">' + spark + '</div></div>' +
+        '</div>' +
+        '<div class="card">' +
+          '<div class="dash-card-label">Highlights &amp; reminders</div>' +
+          '<div class="hl-list">' + (hls.length ? hls.map(hlItemHtml).join('') :
+            '<div class="mini-empty">No highlights for this week yet.</div>') + '</div>' +
+          hlAddFormHtml(weekStart, weekEnd) +
+        '</div>' +
+      '</div>' +
+      '<div class="dash-col">' +
+        '<div class="card">' +
+          '<div class="dash-card-label">On the floor ' + presLabel + '</div>' +
+          '<div class="pool-row"><span class="pool-name">Management</span><span class="pool-count">' + poolToday.mgmt + '<span class="of"> present</span></span></div>' +
+          '<div class="pool-row"><span class="pool-name">Sales</span><span class="pool-count">' + poolToday.sales + '<span class="of"> present</span></span></div>' +
+          '<div class="pool-row"><span class="pool-name">Stock</span><span class="pool-count">' + poolToday.stock + '<span class="of"> present</span></span></div>' +
+          '<div class="dash-card-label" style="margin-top:var(--s6)">Absences this week</div>' +
+          (absences.length ? absences.map(function(a){
+            return '<div class="mini-item"><span class="dot abs"></span><span class="nm">' + esc(a.name) + '</span>&nbsp;- ' + a.range + '</div>';
+          }).join('') : '<div class="mini-empty">None</div>') +
+          '<div class="dash-card-label" style="margin-top:var(--s6)">Public holidays</div>' +
+          (holidays.length ? holidays.map(function(h){
+            return '<div class="mini-item"><span class="dot hol"></span><span class="nm">' + esc(h.name) + '</span>&nbsp;- ' + h.day + '</div>';
+          }).join('') : '<div class="mini-empty">None</div>') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function hlItemHtml(h) {
+  var cls = h.start_date === h.end_date ? 'day' : 'week';
+  var when;
+  if (h.start_date === h.end_date) {
+    when = formatDate(new Date(h.start_date + 'T12:00:00'));
+  } else {
+    when = formatDate(new Date(h.start_date + 'T12:00:00')) + ' - ' + formatDate(new Date(h.end_date + 'T12:00:00'));
+  }
+  return '<div class="hl-item ' + cls + '">' +
+    '<span class="hl-when">' + when + '</span>' +
+    '<span class="hl-text">' + esc(h.text) + '</span>' +
+    '<button class="hl-del" title="Remove" onclick="deleteHighlight(\'' + h.id + '\')">\u00d7</button>' +
+    '</div>';
+}
+
+function hlAddFormHtml(weekStart, weekEnd) {
+  return '<div class="hl-add">' +
+    '<input type="date" id="hl-start" value="' + weekStart + '">' +
+    '<input type="date" id="hl-end" value="' + weekEnd + '">' +
+    '<input type="text" id="hl-text" placeholder="Add a highlight or reminder...">' +
+    '<button onclick="addHighlight()">Add</button>' +
+    '</div>';
 }
 
 function renderMonthlyPlanning() {
