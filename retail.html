@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.9.1</title>
+  <title>CORA Retail v1.9.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2287,6 +2287,19 @@ function minToLabel(m) {
   return String(h).padStart(2, '0') + 'H' + String(mn).padStart(2, '0');
 }
 
+// Minutes depuis minuit <-> valeur d'un <input type="time"> ("HH:MM").
+function minToTimeInput(m) {
+  var h = Math.floor(m / 60), mn = m % 60;
+  return String(h).padStart(2, '0') + ':' + String(mn).padStart(2, '0');
+}
+function timeInputToMin(v) {
+  if (!v || v.indexOf(':') === -1) return null;
+  var parts = v.split(':');
+  var h = parseInt(parts[0]), mn = parseInt(parts[1]);
+  if (isNaN(h) || isNaN(mn)) return null;
+  return h * 60 + mn;
+}
+
 // Charge les shifts de la boutique courante. Repli sur les valeurs par defaut.
 // Reglages propres a la boutique (ouverture samedi / dimanche).
 // Les regles de droit du travail restent au niveau du pays.
@@ -3852,39 +3865,61 @@ function renderMonthlyPlanning() {
     return chosen;
   }
 
-  // ── PASSE 1 : socle par jour (management + amplitude + plancher 2) ──
+  // ── VENTILATION VENDEUR : remplir chaque jour jusqu'a sa cible ──
+  // Principe (valide avec le terrain) : la capacite = agents x (jours ouverts
+  // - 2 repos) est ventilee sur le trafic pour donner une cible par jour. On
+  // remplit ensuite chaque jour jusqu'a SA cible en choisissant a chaque fois
+  // l'agent qui a le PLUS de quota restant. Ainsi aucun agent ne finit sous son
+  // quota : chacun a exactement ses 2 repos, et la somme des presences egale la
+  // capacite. On traite les jours par cible decroissante pour que les gros
+  // jours soient servis en premier, sans jamais affamer les petits (dimanche).
+  function fillSalesDay(d, target) {
+    var wk = weekKey(d.date);
+    while (salesCount(d.ds) < target) {
+      var pool = agents.filter(function(a) {
+        if (isFixed(a) || !isSales(a)) return false;
+        if (assignedMap[d.ds].indexOf(a.id) !== -1) return false;
+        return canWork(a, d);
+      });
+      if (!pool.length) break;
+      // Priorise le plus de quota HEBDO restant (evite de laisser un agent
+      // sous son quota), puis la dette de preference, puis la preference du jour.
+      pool.sort(function(x, y) {
+        var wqx = (weekQuota[x.id] && weekQuota[x.id][wk]) || 0;
+        var wqy = (weekQuota[y.id] && weekQuota[y.id][wk]) || 0;
+        var remX = wqx - (workedInWeek[x.id][wk] || 0);
+        var remY = wqy - (workedInWeek[y.id][wk] || 0);
+        if (remX !== remY) return remY - remX;                 // plus de marge d'abord
+        var dd = prefDebt[x.id] - prefDebt[y.id];
+        if (dd !== 0) return dd;
+        var pp = prefScoreFor(y, d) - prefScoreFor(x, d);
+        if (pp !== 0) return pp;
+        return x.id < y.id ? -1 : 1;
+      });
+      var chosen = pool[0];
+      assign(chosen, d);
+      assignedMap[d.ds].push(chosen.id);
+      prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
+    }
+  }
+
+  // Un manager garanti par jour (silote, hors compte vendeur)
   byLoad.forEach(function(d) {
-    if (isSpecialDay(d)) {
-      // Jour special : pas de notion ouverture/fermeture, juste la presence
-      if (hasMgmt) pickFor(d, isLead);
-      while (salesCount(d.ds) < 2) { if (!pickFor(d, isSales)) break; }
-      return;
-    }
-    if (hasMgmt) pickFor(d, isLead);              // un manager garanti
-    pickFor(d, isSales);                           // ouverture (vendeur)
-    pickFor(d, isSales);                           // fermeture (vendeur)
-    while (salesCount(d.ds) < 2) {                 // plancher failsafe 2 vendeurs
-      if (!pickFor(d, isSales)) break;
-    }
+    if (hasMgmt) pickFor(d, isLead);
   });
 
-  // ── PASSE 2 : complement VENDEUR jusqu'a la cible, en ROUND-ROBIN PAR SEMAINE ──
-  // Le round-robin doit cycler A L'INTERIEUR de chaque semaine, sinon les gros
-  // jours de tout le mois captent les quotas hebdo avant que les petits jours
-  // (dimanche) soient servis. On traite donc semaine par semaine : chaque jour
-  // de la semaine atteint sa cible avant que les quotas de la semaine s'epuisent.
+  // Remplir les jours vendeur par cible decroissante, semaine par semaine
   weekKeys.forEach(function(wk) {
-    var wkDays = byLoad.filter(function(d) { return weekKey(d.date) === wk; });
-    var progressing = true;
-    while (progressing) {
-      progressing = false;
-      wkDays.forEach(function(d) {
-        var target = dayTarget[d.ds] || 2;
-        if (salesCount(d.ds) < target) {
-          if (pickFor(d, isSales)) progressing = true;
-        }
-      });
-    }
+    var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; })
+      .sort(function(x, y) { return (dayTarget[y.ds] || 0) - (dayTarget[x.ds] || 0); });
+    wkDays.forEach(function(d) {
+      fillSalesDay(d, dayTarget[d.ds] || 2);
+    });
+    // Filet : si de la capacite reste (agents sous quota) et des jours sous
+    // leur cible n'ont pas ete combles faute d'ordre, on repasse une fois.
+    wkDays.forEach(function(d) {
+      fillSalesDay(d, dayTarget[d.ds] || 2);
+    });
   });
 
   // ── PASSE 3 : management restant et stock, en ROUND-ROBIN ──
@@ -4519,13 +4554,11 @@ function openAgentEditor(agentId) {
   renderDayChips(p.avoid_days || [], 'ae-avoid');
 
   // Fixed schedule (part-time contractuel)
-  document.getElementById('ae-fixed-start').innerHTML = hourOptionsH(10);
-  document.getElementById('ae-fixed-end').innerHTML   = hourOptionsH(18);
   var fx = p.fixed_schedule || null;
   document.getElementById('ae-fixed-on').checked = !!(fx && fx.enabled);
   renderDayChips((fx && fx.days) || [], 'ae-fixed-days');
-  if (fx && fx.start != null) document.getElementById('ae-fixed-start').value = Math.floor(fx.start / 60);
-  if (fx && fx.end != null)   document.getElementById('ae-fixed-end').value   = Math.floor(fx.end / 60);
+  document.getElementById('ae-fixed-start').value = minToTimeInput((fx && fx.start != null) ? fx.start : 600);
+  document.getElementById('ae-fixed-end').value   = minToTimeInput((fx && fx.end != null) ? fx.end : 1080);
   updateFixedSectionVisibility();
   toggleFixedSchedule();
 
@@ -4557,9 +4590,10 @@ async function saveAgentEditor() {
   var fixedSchedule = null;
   if (status === 'PART_TIME' && fixedOn) {
     var fdays = readDayChips('ae-fixed-days');
-    var fstart = parseInt(document.getElementById('ae-fixed-start').value) * 60;
-    var fend   = parseInt(document.getElementById('ae-fixed-end').value) * 60;
+    var fstart = timeInputToMin(document.getElementById('ae-fixed-start').value);
+    var fend   = timeInputToMin(document.getElementById('ae-fixed-end').value);
     if (!fdays.length) { showToast('Select at least one fixed working day', 'error'); return; }
+    if (fstart == null || fend == null) { showToast('Enter valid start and end times', 'error'); return; }
     if (fend <= fstart) { showToast('Fixed end must be after start', 'error'); return; }
     fixedSchedule = { enabled: true, days: fdays, start: fstart, end: fend };
   }
@@ -5194,8 +5228,8 @@ init();
             <div class="day-chips" id="ae-fixed-days"></div>
           </div>
           <div class="form-grid" style="margin-top:10px;">
-            <div class="fld"><label>Start</label><select id="ae-fixed-start" class="ae-fixed-hour"></select></div>
-            <div class="fld"><label>End</label><select id="ae-fixed-end" class="ae-fixed-hour"></select></div>
+            <div class="fld"><label>Start</label><input type="time" id="ae-fixed-start" class="ae-fixed-hour" step="900"></div>
+            <div class="fld"><label>End</label><input type="time" id="ae-fixed-end" class="ae-fixed-hour" step="900"></div>
           </div>
           <p class="set-note" style="margin-top:8px;">These days and hours override all scheduling rules. The agent is placed exactly here, every week.</p>
         </div>
