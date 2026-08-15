@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.12.2</title>
+  <title>CORA Retail v1.13.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1277,7 +1277,7 @@ function getWeekDays(monday) {
   });
 }
 
-// CRITICAL: never use toISOString() — converts to UTC, shifts date in UTC+ timezones.
+// Ne pas utiliser toISOString() : conversion UTC, decale la date en UTC+.
 function toDateStr(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -2205,11 +2205,6 @@ async function loadWeekData() {
   await loadAgentPrefs();
   await loadTraffic(currentWeekMonday.getFullYear());
 
-  // Les jours de repos sont desormais calcules integralement par le moteur
-  // hebdomadaire dans renderMonthlyPlanning (2 repos/semaine, feries neutres,
-  // absences deduites). L'ancienne rotation auto (computeAndSaveRotation) a ete
-  // retiree : elle persistait des repos concurrents qui entraient en conflit
-  // avec le moteur et provoquaient des jours OFF en trop les semaines a ferie.
 
   updateStatusBar();
   renderPlanning();
@@ -2245,14 +2240,7 @@ function agentOnLeave(agentId, dayStr) {
   return null;
 }
 
-// computeAndSaveRotation() a ete SUPPRIMEE (v1.12.2).
-// Cette ancienne rotation calculait les repos avec (openDays - 5) et les
-// persistait en base (rest_scheduled), ce qui entrait en conflit avec le
-// moteur hebdomadaire de renderMonthlyPlanning et provoquait des OFF en trop
-// les semaines a ferie. Les repos sont desormais geres uniquement par le moteur.
-
 // ── PLANNING ENGINE ───────────────────────────────────────────────────────
-// ── SCHEDULE OVERRIDES (drag & drop persistence) ──────────────────────────
 function renderPlanning() {
   renderMonthlyPlanning();
 }
@@ -2463,6 +2451,9 @@ function attachCrossHighlight() {
 // Poids mesures sur la serie reelle Duphot (365 jours) :
 // vendredi et samedi sont les pics, dimanche et mercredi les creux.
 var DOW_WEIGHT = { 1: 0.982, 2: 0.959, 3: 0.915, 4: 0.959, 5: 1.080, 6: 1.221, 0: 0.885 };
+
+// Biais fermeture : pousse le ratio ouverture/fermeture vers ~30/70.
+var CLOSING_BIAS = 2.3;
 
 function monthKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
 
@@ -3163,6 +3154,40 @@ function renderIntraday(ds) {
     }
   }
 
+  // Missions Welcome : un agent a l'accueil par tranche d'1h sur les heures de
+  // pic (trafic > moyenne du jour), sans chevaucher un MB ou un lunch.
+  var welcomePlan = {};
+  if (curve && curve.length) {
+    var avgCurveVal = curve.reduce(function(s, v){ return s + v; }, 0) / curve.length;
+    function overlapsMission(missionH, missionDur, h) {
+      if (missionH == null) return false;
+      return missionH < h + 1 && (missionH + missionDur) > h;
+    }
+    for (var ph = Math.floor(openH); ph < Math.ceil(closeH); ph++) {
+      var ci = ph - openH;
+      if (ci < 0 || ci >= curve.length) continue;
+      if (curve[ci] <= avgCurveVal) continue;
+      var lunDurH = lunch ? (lunch.duration / 60) : 0;
+      var cand = working.filter(function(a) {
+        var si = shiftInfo[a.id];
+        if (!si) return false;
+        var sH = si.startMin / 60, eH = si.endMin / 60;
+        if (sH > ph || eH < ph + 1) return false;
+        if (overlapsMission(mbPlan[a.id], 0.25, ph)) return false;
+        if (overlapsMission(lunchPlan[a.id], lunDurH, ph)) return false;
+        return true;
+      });
+      if (!cand.length) continue;
+      cand.sort(function(x, y) {
+        return (welcomePlan[x.id] ? welcomePlan[x.id].length : 0) -
+               (welcomePlan[y.id] ? welcomePlan[y.id].length : 0);
+      });
+      var chosen = cand[0];
+      if (!welcomePlan[chosen.id]) welcomePlan[chosen.id] = [];
+      welcomePlan[chosen.id].push(ph);
+    }
+  }
+
   function fmtH(m) {
     var h = Math.floor(m / 60), mn = m % 60;
     return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
@@ -3226,6 +3251,11 @@ function renderIntraday(ds) {
         var lunDur = lunch.duration / 60;
         blocks.push([withOverride(a.id, 'lun', lunchPlan[a.id], lunDur), lunDur, 'lun', lunch.name]);
       }
+      if (welcomePlan[a.id] && welcomePlan[a.id].length) {
+        welcomePlan[a.id].forEach(function(wh, wi) {
+          blocks.push([withOverride(a.id, 'wel' + wi, wh, 1), 1, 'wel' + wi, 'Welcome']);
+        });
+      }
 
       var grid = '<div class="it-grid">';
       for (var k = Math.floor(T0); k < Math.ceil(T1); k++) grid += '<i></i>';
@@ -3239,7 +3269,8 @@ function renderIntraday(ds) {
         track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(eH) - pct(sH)) + '%"></div>';
       }
       blocks.forEach(function(bl) {
-        track += '<div class="it-blk b-' + bl[2] + '" draggable="false"' +
+        var visualCls = 'b-' + String(bl[2]).replace(/[0-9]+$/, '');
+        track += '<div class="it-blk ' + visualCls + '" draggable="false"' +
           ' data-agent="' + a.id + '" data-type="' + bl[2] + '"' +
           ' data-dur="' + bl[1] + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
           ' style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + bl[3] + '</div>';
@@ -3632,8 +3663,7 @@ async function deleteHighlight(id) {
   renderDashboard();
 }
 
-// Trafic prevu pour un jour donne (meme logique que le planning : ventilation
-// du total mensuel sur les jours ouverts, avec les valeurs manuelles preservees).
+// Trafic prevu pour un jour (valeurs manuelles preservees, sinon ventilation).
 function dailyTrafficFor(ds) {
   if (getDayClosureType(ds)) return 0;
   var rec = trafficDaily[ds];
@@ -3768,8 +3798,7 @@ function renderDashboard() {
     '</div>';
 }
 
-// Bloc d'un pool sur le dashboard : titre + compte + liste des agents presents
-// avec leur role et leur shift, propre et lisible.
+// Bloc d'un pool sur le dashboard : compteur + liste des agents (role, shift).
 function poolBlockHtml(title, list) {
   var head = '<div class="pool-row"><span class="pool-name">' + title + '</span>' +
     '<span class="pool-count">' + list.length + '<span class="of"> present</span></span></div>';
@@ -3901,27 +3930,16 @@ function renderMonthlyPlanning() {
   }
 
   // Quota individuel de jours travailles sur le mois (temps partiel inclus)
-  // ── QUOTAS : calcules SEMAINE PAR SEMAINE ─────────────────────────────
-  // Un temps partiel a 50% doit travailler la moitie de CHAQUE semaine,
-  // pas la moitie du mois. Sans cela le moteur pourrait lui donner deux
-  // semaines completes puis deux semaines vides.
-  //
-  // ── Quota de jours travailles par semaine et par agent ──
-  // Regle stricte HEBDOMADAIRE : au moins 2 jours de repos par semaine (hors
-  // feries). Donc jours travailles = (jours ouverts non feries) - 2, plafonne
-  // au maximum legal de 5 jours. Le temps partiel applique son pourcentage sur
-  // ce maximum. Aucun lissage sur le mois : chaque semaine est independante,
-  // pour que la contrainte des 2 repos soit toujours respectee.
+  // Quota de jours travailles par semaine : (jours ouverts non feries) - 2 repos
+  // - absences, plafonne a 5, au prorata du temps partiel. Chaque semaine est
+  // independante (pas de lissage mensuel).
   var weekKeys = Object.keys(weeks).sort();
-  var weekQuota = {};      // weekQuota[agentId][weekKey] = nb de jours travailles
+  var weekQuota = {};
 
   agents.forEach(function(a) {
     var pct = a.work_pct || 100;
     weekQuota[a.id] = {};
     weekKeys.forEach(function(wk) {
-      // Jours ouverts de la SEMAINE COMPLETE (7 jours a partir du lundi wk),
-      // pas seulement les jours visibles dans le mois affiche : sinon les
-      // semaines tronquees au bord du mois donnent un faux quota (trop de repos).
       var monday = new Date(wk + 'T12:00:00');
       var openW = 0;
       var absW = 0;
@@ -3929,23 +3947,18 @@ function renderMonthlyPlanning() {
         var dd = new Date(monday);
         dd.setDate(dd.getDate() + i);
         var dds = toDateStr(dd);
-        if (getDayClosureType(dds)) continue;               // jour ferme : neutre
+        if (getDayClosureType(dds)) continue;
         openW++;
-        // Absence (conge pose ou indispo) : jour chome qui remplace un jour
-        // TRAVAILLE, pas un repos. On le deduit du quota pour preserver les 2 repos.
         var stAv = (availability[a.id] && availability[a.id][dds]) || null;
         if (agentOnLeave(a.id, dds) || stAv === 'absent') absW++;
       }
-      // 2 repos garantis + absences retirees des jours travailles, plafond legal 5
       var maxWork = Math.min(5, Math.max(0, openW - 2 - absW));
       var days = Math.round(maxWork * pct / 100);
       weekQuota[a.id][wk] = Math.max(0, Math.min(maxWork, days));
     });
   });
 
-  // Somme des quotas hebdo : sert UNIQUEMENT a normaliser le tri par charge
-  // relative (l'agent le moins charge en proportion passe en premier). Ce n'est
-  // PAS une contrainte bloquante - la seule contrainte est le quota hebdomadaire.
+  // Somme des quotas hebdo, pour normaliser le tri par charge (pas une contrainte).
   var quota = {};
   agents.forEach(function(a) {
     quota[a.id] = weekKeys.reduce(function(s, wk) {
@@ -3953,15 +3966,11 @@ function renderMonthlyPlanning() {
     }, 0);
   });
 
-  var worked = {};                                  // jours deja affectes (info/tri)
+  var worked = {};
   agents.forEach(function(a) { worked[a.id] = 0; });
-  var workedInWeek = {};                            // compteur HEBDOMADAIRE (seule contrainte)
+  var workedInWeek = {};
   agents.forEach(function(a) { workedInWeek[a.id] = {}; });
 
-  // Tout le calcul est HEBDOMADAIRE : jours travailles, 2 repos, ventilation.
-  // Le "mois" n'est qu'un agregat d'affichage des semaines. La seule contrainte
-  // de capacite est donc le quota de la semaine (jamais un cumul mensuel, qui
-  // bloquerait a tort un agent en fin de mois alors que sa semaine n'est pas pleine).
   function canWork(a, d) {
     if (isBlocked(a, d)) return false;
     var wk = weekKey(d.date);
@@ -4005,9 +4014,7 @@ function renderMonthlyPlanning() {
     return fx && fx.days.indexOf(d.date.getDay()) !== -1;
   }
 
-  // Les part-time fixes sont retires des pools de ventilation : leur planning
-  // est ecrit directement (jours et heures contractuels), ils ne passent ni par
-  // les quotas ni par le round-robin. Ils comptent en revanche dans la presence.
+  // Les part-time fixes sont exclus de la ventilation (planning contractuel).
   function isLeadV(a)  { return isLead(a)  && !isFixed(a); }
   function isStockV(a) { return isStock(a) && !isFixed(a); }
   function isSalesV(a) { return isSales(a) && !isFixed(a); }
@@ -4019,10 +4026,7 @@ function renderMonthlyPlanning() {
   var hasStockTeam = stockAgents.length > 0;
   var hasMgmt = mgmtAgents.length > 0;
 
-  // ── Pre-affectation des part-time FIXES ──
-  // Leur planning contractuel est ecrit directement : presents leurs jours
-  // fixes (comptent dans la presence donc reduisent la cible des autres),
-  // absents les autres jours. Ils ne passent pas par la ventilation.
+  // Pre-affectation des part-time fixes sur leurs jours contractuels.
   fixedAgents.forEach(function(a) {
     monthDays.forEach(function(d) {
       if (d.closure) return;
@@ -4033,10 +4037,7 @@ function renderMonthlyPlanning() {
     });
   });
 
-  // ── Cibles de presence VENTE par jour, proportionnelles au trafic ──
-  // Capacite = jours-homme vente travaillables (quota hebdo, repos obligatoires
-  // deja retires). Le stock est ventile a part (voir plus bas). On repartit la
-  // capacite vente sur les jours ouverts au prorata du trafic.
+  // Cibles de presence vente par jour, au prorata du trafic.
   var dayTarget = {};
   weekKeys.forEach(function(wk) {
     var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
@@ -4044,11 +4045,8 @@ function renderMonthlyPlanning() {
     var cap = salesAgents.reduce(function(s, a) {
       return s + ((weekQuota[a.id] && weekQuota[a.id][wk]) || 0);
     }, 0);
-    // Les part-time FIXES sont deja pre-affectes a leurs jours : ils comptent
-    // dans la presence. On ajoute donc leurs jours travailles a la capacite,
-    // sinon les cibles seraient trop basses et les vrais vendeurs finiraient
-    // avec des repos en trop (le PT "prend la place" d'une presence sans que la
-    // cible ne monte). Le total des cibles doit refleter TOUTE la presence.
+    // Les part-time fixes comptent dans la presence : on ajoute leurs jours a
+    // la capacite pour que les cibles refletent toute la presence effective.
     var fixedManDays = 0;
     fixedAgents.forEach(function(a) {
       wkDays.forEach(function(d) {
@@ -4056,13 +4054,11 @@ function renderMonthlyPlanning() {
       });
     });
     cap += fixedManDays;
-    // Plafond : nombre total de vendeurs par jour (fixes inclus, car presents).
     var perDayCap = salesAgents.length + fixedAgents.length;
     cap = Math.min(cap, wkDays.length * perDayCap);
     var volTot = wkDays.reduce(function(s, d) { return s + (d.vol || 0); }, 0) || 1;
     var raw = wkDays.map(function(d) { return cap * (d.vol || 0) / volTot; });
     var base = raw.map(function(r) { return Math.floor(r); });
-    // Repartition du reste, en evitant de depasser le nombre de vendeurs par jour
     var leftover = cap - base.reduce(function(s, b) { return s + b; }, 0);
     var order = raw.map(function(r, i) { return [i, r - Math.floor(r)]; })
                    .sort(function(a, b) { return b[1] - a[1]; });
@@ -4073,7 +4069,7 @@ function renderMonthlyPlanning() {
         var idx = order[k][0];
         if (base[idx] < perDayCap) { base[idx]++; leftover--; placed = true; }
       }
-      if (!placed) break;   // tous les jours au max : capacite residuelle ignoree
+      if (!placed) break;
       guard++;
     }
     wkDays.forEach(function(d, i) {
@@ -4119,14 +4115,8 @@ function renderMonthlyPlanning() {
     return chosen;
   }
 
-  // ── VENTILATION VENDEUR : remplir chaque jour jusqu'a sa cible ──
-  // Principe (valide avec le terrain) : la capacite = agents x (jours ouverts
-  // - 2 repos) est ventilee sur le trafic pour donner une cible par jour. On
-  // remplit ensuite chaque jour jusqu'a SA cible en choisissant a chaque fois
-  // l'agent qui a le PLUS de quota restant. Ainsi aucun agent ne finit sous son
-  // quota : chacun a exactement ses 2 repos, et la somme des presences egale la
-  // capacite. On traite les jours par cible decroissante pour que les gros
-  // jours soient servis en premier, sans jamais affamer les petits (dimanche).
+  // Remplit chaque jour jusqu'a sa cible en prenant l'agent avec le plus de
+  // quota hebdo restant (garantit 2 repos et une somme de presences = capacite).
   function fillSalesDay(d, target) {
     var wk = weekKey(d.date);
     while (salesCount(d.ds) < target) {
@@ -4136,14 +4126,12 @@ function renderMonthlyPlanning() {
         return canWork(a, d);
       });
       if (!pool.length) break;
-      // Priorise le plus de quota HEBDO restant (evite de laisser un agent
-      // sous son quota), puis la dette de preference, puis la preference du jour.
       pool.sort(function(x, y) {
         var wqx = (weekQuota[x.id] && weekQuota[x.id][wk]) || 0;
         var wqy = (weekQuota[y.id] && weekQuota[y.id][wk]) || 0;
         var remX = wqx - (workedInWeek[x.id][wk] || 0);
         var remY = wqy - (workedInWeek[y.id][wk] || 0);
-        if (remX !== remY) return remY - remX;                 // plus de marge d'abord
+        if (remX !== remY) return remY - remX;
         var dd = prefDebt[x.id] - prefDebt[y.id];
         if (dd !== 0) return dd;
         var pp = prefScoreFor(y, d) - prefScoreFor(x, d);
@@ -4162,26 +4150,20 @@ function renderMonthlyPlanning() {
     if (hasMgmt) pickFor(d, isLead);
   });
 
-  // Remplir les jours vendeur par cible decroissante, semaine par semaine
+  // Remplissage vendeur par cible decroissante, semaine par semaine (double
+  // passe pour combler les jours restes sous leur cible).
   weekKeys.forEach(function(wk) {
     var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; })
       .sort(function(x, y) { return (dayTarget[y.ds] || 0) - (dayTarget[x.ds] || 0); });
     wkDays.forEach(function(d) {
       fillSalesDay(d, dayTarget[d.ds] || 2);
     });
-    // Filet : si de la capacite reste (agents sous quota) et des jours sous
-    // leur cible n'ont pas ete combles faute d'ordre, on repasse une fois.
     wkDays.forEach(function(d) {
       fillSalesDay(d, dayTarget[d.ds] || 2);
     });
   });
 
-  // ── PASSE 3 : MANAGEMENT par semaine (2 repos garantis, comme les vendeurs) ──
-  // Le management etait ventile en round-robin sur tout le mois (byLoad), ce qui
-  // epuisait les quotas hebdo sur les gros jours et laissait certaines semaines
-  // sous-staffees (managers avec 3 repos). On ventile desormais SEMAINE PAR
-  // SEMAINE : chaque manager doit atteindre son quota hebdo, donc exactement
-  // 2 repos. On repartit leur presence sur les jours en round-robin interne.
+  // Management, semaine par semaine : chaque manager atteint son quota hebdo.
   if (hasMgmt) {
     weekKeys.forEach(function(wk) {
       var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
@@ -4189,8 +4171,6 @@ function renderMonthlyPlanning() {
       while (progressing) {
         progressing = false;
         wkDays.forEach(function(d) {
-          // On continue a placer des managers tant qu'il en reste sous leur
-          // quota hebdo cette semaine (ils doivent tous atteindre leur quota).
           var wq = mgmtAgents.some(function(a) {
             var q = (weekQuota[a.id] && weekQuota[a.id][wk]) || 0;
             return (workedInWeek[a.id][wk] || 0) < q &&
@@ -4202,7 +4182,7 @@ function renderMonthlyPlanning() {
     });
   }
 
-  // ── Stock : round-robin par semaine egalement ──
+  // Stock, meme logique par semaine.
   if (hasStockTeam) {
     weekKeys.forEach(function(wk) {
       var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
@@ -4221,10 +4201,8 @@ function renderMonthlyPlanning() {
     });
   }
 
-  // ── FILET DE SECURITE ──────────────────────────────────────────────────
-  // Si des quotas se sont epuises, certains jours peuvent rester sous le
-  // plancher. On repasse pour combler, sans jamais depasser le quota
-  // hebdomadaire (qui garantit deja les 2 repos) ni la limite legale des 5 jours.
+  // Filet de securite : comble les jours restes sous le plancher de 2, sans
+  // depasser le quota hebdo ni la limite legale de 5 jours.
   var minFloor = 2;
   openList.forEach(function(d) {
     if (assignedMap[d.ds].length >= minFloor) return;
@@ -4233,12 +4211,11 @@ function renderMonthlyPlanning() {
 
     var pool = agents.filter(function(a) {
       if (already[a.id]) return false;
-      if (isFixed(a)) return false;                  // les fixes ne sont jamais ventiles
+      if (isFixed(a)) return false;
       if (isBlocked(a, d)) return false;
       var wk = weekKey(d.date);
       var done = workedInWeek[a.id][wk] || 0;
-      if (done >= 5) return false;                   // la loi reste intouchable
-      // Jamais depasser le quota hebdomadaire (il garantit deja les 2 repos/semaine).
+      if (done >= 5) return false;
       var wq = (weekQuota[a.id] && weekQuota[a.id][wk] != null)
         ? weekQuota[a.id][wk] : 5;
       return done < wq;
@@ -4300,9 +4277,7 @@ function renderMonthlyPlanning() {
     var present = assignedMap[d.ds].slice();
     var plan = {};
 
-    // ── Part-time fixes : shift a leurs heures contractuelles, prioritaire ──
-    // Meme les jours speciaux (dimanche/ferie), leurs heures fixes priment sur
-    // le shift D. On leur donne un code 'PT' dont l'amplitude est lue ailleurs.
+    // Part-time fixes : code 'PT' a leurs heures, prioritaire sur le shift D.
     present = present.filter(function(id) {
       var a = agents.find(function(x){ return x.id === id; });
       if (a && isFixed(a)) { plan[id] = 'PT'; return false; }
@@ -4369,7 +4344,7 @@ function renderMonthlyPlanning() {
         return n ? sum / n : 1;
       }
       var wMorning = avgCurve(dh.open, mid);
-      var wEvening = avgCurve(mid, dh.close);
+      var wEvening = avgCurve(mid, dh.close) * CLOSING_BIAS;   // biais fermeture
       var wSum = (wMorning + wEvening) || 1;
       var eveningShare = wEvening / wSum;
 
@@ -4379,8 +4354,9 @@ function renderMonthlyPlanning() {
       var midShifts = grid.filter(function(s){ return !s.isOpening && !s.isClosing; });
 
       var nTotal = list.length;
-      var nClose = Math.ceil(nTotal * eveningShare);   // ceil = tilt vers le soir
+      var nClose = Math.round(nTotal * eveningShare);
       nClose = Math.max(0, Math.min(nTotal, nClose));
+      if (nTotal >= 2 && nClose >= nTotal) nClose = nTotal - 1;   // au moins 1 open
       var nOpen = nTotal - nClose;
 
       // Quota par shift : openings et closings selon la bascule, middle a 0
@@ -4424,9 +4400,7 @@ function renderMonthlyPlanning() {
   function shiftFor(agent, day) {
     if (day.closure) return { code: '', cls: 'sh-closed', special: 'closed' };
 
-    // PART-TIME FIXE : regle absolue. Son planning est 100% contractuel et
-    // prime sur TOUT (y compris un ancien override 'C' persiste en base). Sur
-    // ses jours il porte 'PT' a ses heures, sinon il est OFF. Jamais autre chose.
+    // Part-time fixe : 'PT' ses jours contractuels, OFF sinon. Prime sur tout.
     if (isFixed(agent)) {
       return fixedWorksOn(agent, day)
         ? { code: 'PT' }
@@ -4447,10 +4421,7 @@ function renderMonthlyPlanning() {
 
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
 
-    // Overrides individuels d'absence/repos MANUELS (priorite sur le calcul).
-    // NB : 'rest_scheduled' (ancienne rotation auto) est volontairement ignore
-    // ici - le moteur hebdomadaire (restMap) est desormais seul maitre des repos
-    // automatiques. Seuls les repos MANUELS du manager priment.
+    // Repos et absences manuels (rest_scheduled auto est ignore, gere par restMap).
     var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
     if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
     if (st === 'rest_override' || st === 'rest_parttime')
