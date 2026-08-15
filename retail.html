@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.11</title>
+  <title>CORA Retail v1.12.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -4017,7 +4017,9 @@ function renderMonthlyPlanning() {
     });
   });
 
-  // Quota mensuel = somme des quotas hebdomadaires (coherence garantie)
+  // Somme des quotas hebdo : sert UNIQUEMENT a normaliser le tri par charge
+  // relative (l'agent le moins charge en proportion passe en premier). Ce n'est
+  // PAS une contrainte bloquante - la seule contrainte est le quota hebdomadaire.
   var quota = {};
   agents.forEach(function(a) {
     quota[a.id] = weekKeys.reduce(function(s, wk) {
@@ -4025,17 +4027,20 @@ function renderMonthlyPlanning() {
     }, 0);
   });
 
-  var worked = {};                                  // jours deja affectes
+  var worked = {};                                  // jours deja affectes (info/tri)
   agents.forEach(function(a) { worked[a.id] = 0; });
-  var workedInWeek = {};                            // par semaine, pour les 5j
+  var workedInWeek = {};                            // compteur HEBDOMADAIRE (seule contrainte)
   agents.forEach(function(a) { workedInWeek[a.id] = {}; });
 
+  // Tout le calcul est HEBDOMADAIRE : jours travailles, 2 repos, ventilation.
+  // Le "mois" n'est qu'un agregat d'affichage des semaines. La seule contrainte
+  // de capacite est donc le quota de la semaine (jamais un cumul mensuel, qui
+  // bloquerait a tort un agent en fin de mois alors que sa semaine n'est pas pleine).
   function canWork(a, d) {
     if (isBlocked(a, d)) return false;
-    if (worked[a.id] >= quota[a.id]) return false;
     var wk = weekKey(d.date);
     var doneThisWeek = workedInWeek[a.id][wk] || 0;
-    if (doneThisWeek >= 5) return false;                       // plafond legal
+    if (doneThisWeek >= 5) return false;                       // plafond legal hebdo
     var wq = (weekQuota[a.id] && weekQuota[a.id][wk] != null)
       ? weekQuota[a.id][wk] : 5;
     if (doneThisWeek >= wq) return false;                      // quota de la semaine
@@ -4245,29 +4250,55 @@ function renderMonthlyPlanning() {
     });
   });
 
-  // ── PASSE 3 : management restant et stock, en ROUND-ROBIN ──
-  // Round-robin (un par jour a tour de role) pour etaler leur presence sur la
-  // semaine et decorreler leurs jours de repos : evite que deux stockistes
-  // reposent le meme jour tout en travaillant ensemble un autre jour.
-  var mgmtProg = hasMgmt;
-  while (mgmtProg) {
-    mgmtProg = false;
-    byLoad.forEach(function(d) {
-      if (pickFor(d, isLead)) mgmtProg = true;
+  // ── PASSE 3 : MANAGEMENT par semaine (2 repos garantis, comme les vendeurs) ──
+  // Le management etait ventile en round-robin sur tout le mois (byLoad), ce qui
+  // epuisait les quotas hebdo sur les gros jours et laissait certaines semaines
+  // sous-staffees (managers avec 3 repos). On ventile desormais SEMAINE PAR
+  // SEMAINE : chaque manager doit atteindre son quota hebdo, donc exactement
+  // 2 repos. On repartit leur presence sur les jours en round-robin interne.
+  if (hasMgmt) {
+    weekKeys.forEach(function(wk) {
+      var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
+      var progressing = true;
+      while (progressing) {
+        progressing = false;
+        wkDays.forEach(function(d) {
+          // On continue a placer des managers tant qu'il en reste sous leur
+          // quota hebdo cette semaine (ils doivent tous atteindre leur quota).
+          var wq = mgmtAgents.some(function(a) {
+            var q = (weekQuota[a.id] && weekQuota[a.id][wk]) || 0;
+            return (workedInWeek[a.id][wk] || 0) < q &&
+                   assignedMap[d.ds].indexOf(a.id) === -1 && canWork(a, d);
+          });
+          if (wq && pickFor(d, isLead)) progressing = true;
+        });
+      }
     });
   }
-  var stockProg = hasStockTeam;
-  while (stockProg) {
-    stockProg = false;
-    byLoad.forEach(function(d) {
-      if (pickFor(d, isStock)) stockProg = true;
+
+  // ── Stock : round-robin par semaine egalement ──
+  if (hasStockTeam) {
+    weekKeys.forEach(function(wk) {
+      var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
+      var progressing = true;
+      while (progressing) {
+        progressing = false;
+        wkDays.forEach(function(d) {
+          var wq = stockAgents.some(function(a) {
+            var q = (weekQuota[a.id] && weekQuota[a.id][wk]) || 0;
+            return (workedInWeek[a.id][wk] || 0) < q &&
+                   assignedMap[d.ds].indexOf(a.id) === -1 && canWork(a, d);
+          });
+          if (wq && pickFor(d, isStock)) progressing = true;
+        });
+      }
     });
   }
 
   // ── FILET DE SECURITE ──────────────────────────────────────────────────
   // Si des quotas se sont epuises, certains jours peuvent rester sous le
-  // plancher. On repasse pour combler, en assouplissant le quota mensuel
-  // (jamais la limite legale des 5 jours par semaine, ni les absences).
+  // plancher. On repasse pour combler, sans jamais depasser le quota
+  // hebdomadaire (qui garantit deja les 2 repos) ni la limite legale des 5 jours.
   var minFloor = 2;
   openList.forEach(function(d) {
     if (assignedMap[d.ds].length >= minFloor) return;
@@ -4281,8 +4312,7 @@ function renderMonthlyPlanning() {
       var wk = weekKey(d.date);
       var done = workedInWeek[a.id][wk] || 0;
       if (done >= 5) return false;                   // la loi reste intouchable
-      // On peut depasser le quota mensuel pour tenir le plancher de couverture,
-      // mais jamais le quota hebdomadaire (qui garantit deja les 2 repos/semaine).
+      // Jamais depasser le quota hebdomadaire (il garantit deja les 2 repos/semaine).
       var wq = (weekQuota[a.id] && weekQuota[a.id][wk] != null)
         ? weekQuota[a.id][wk] : 5;
       return done < wq;
@@ -4467,6 +4497,15 @@ function renderMonthlyPlanning() {
   // Renvoie {code, cls} ou un statut special.
   function shiftFor(agent, day) {
     if (day.closure) return { code: '', cls: 'sh-closed', special: 'closed' };
+
+    // PART-TIME FIXE : regle absolue. Son planning est 100% contractuel et
+    // prime sur TOUT (y compris un ancien override 'C' persiste en base). Sur
+    // ses jours il porte 'PT' a ses heures, sinon il est OFF. Jamais autre chose.
+    if (isFixed(agent)) {
+      return fixedWorksOn(agent, day)
+        ? { code: 'PT' }
+        : { code: 'OFF', cls: 'sh-off', special: 'off' };
+    }
 
     // PRIORITE ABSOLUE : modification manuelle du manager.
     // Le moteur ne recalcule jamais une cellule forcee.
