@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.12.1</title>
+  <title>CORA Retail v1.12.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2205,8 +2205,11 @@ async function loadWeekData() {
   await loadAgentPrefs();
   await loadTraffic(currentWeekMonday.getFullYear());
 
-  // Run rotation engine BEFORE rendering
-  await computeAndSaveRotation();
+  // Les jours de repos sont desormais calcules integralement par le moteur
+  // hebdomadaire dans renderMonthlyPlanning (2 repos/semaine, feries neutres,
+  // absences deduites). L'ancienne rotation auto (computeAndSaveRotation) a ete
+  // retiree : elle persistait des repos concurrents qui entraient en conflit
+  // avec le moteur et provoquaient des jours OFF en trop les semaines a ferie.
 
   updateStatusBar();
   renderPlanning();
@@ -2242,88 +2245,11 @@ function agentOnLeave(agentId, dayStr) {
   return null;
 }
 
-async function computeAndSaveRotation() {
-  const days     = getWeekDays(currentWeekMonday);
-  const openDays = days.filter(function(day) { return !getDayClosureType(toDateStr(day)); });
-  const restDaysNeeded = Math.max(0, openDays.length - 5);
-
-  if (agents.length === 0) return;
-
-  // Rank open days by workload ascending — lowest workload = preferred rest day
-  var ranked = openDays.map(function(day) {
-    var ds = toDateStr(day);
-    var t  = trafficDaily[ds];
-    return { ds: ds, workload: t ? (t.traffic || 0) : 0 };
-  });
-  ranked.sort(function(a, b) { return a.workload - b.workload; });
-
-  var upserts = [];
-
-  agents.forEach(function(agent, i) {
-    var agentAv = availability[agent.id] || {};
-
-    // Count manual overrides on open days — engine respects these and reduces auto quota
-    var overrideDays = openDays
-      .map(function(d) { return toDateStr(d); })
-      .filter(function(ds) { return agentAv[ds] === 'rest_override'; });
-
-    var remainingRestNeeded = Math.max(0, restDaysNeeded - overrideDays.length);
-
-    // Candidates for auto rest: open days that are not already manually overridden or absent
-    var candidates = ranked.filter(function(r) {
-      return !overrideDays.includes(r.ds) && agentAv[r.ds] !== 'absent';
-    });
-
-    // Assign auto rest days using sliding window across agents
-    var autoRestDays = [];
-    for (var r = 0; r < remainingRestNeeded; r++) {
-      var idx       = (i + r) % Math.max(1, candidates.length);
-      var candidate = candidates[idx] ? candidates[idx].ds : null;
-      if (candidate && !autoRestDays.includes(candidate)) {
-        autoRestDays.push(candidate);
-      } else {
-        // Find next available candidate not already picked
-        for (var alt = 1; alt <= candidates.length; alt++) {
-          var altDs = candidates[(idx + alt) % candidates.length]
-            ? candidates[(idx + alt) % candidates.length].ds : null;
-          if (altDs && !autoRestDays.includes(altDs)) {
-            autoRestDays.push(altDs);
-            break;
-          }
-        }
-      }
-    }
-
-    // Build upserts for all open days — skip only absent and manual overrides
-    openDays.forEach(function(day) {
-      var ds             = toDateStr(day);
-      var existingStatus = agentAv[ds];
-
-      // Preserve manager decisions — never overwrite
-      if (existingStatus === 'absent' || existingStatus === 'rest_override') return;
-
-      upserts.push({
-        agent_id:   agent.id,
-        week_date:  ds,
-        day_status: autoRestDays.includes(ds) ? 'rest_scheduled' : 'working'
-      });
-    });
-  });
-
-  // Les temps partiels sont geres par le moteur d'affectation mensuel.
-  var allUpserts = upserts;
-  if (allUpserts.length === 0) return;
-
-  var { error } = await sb.from('retail_agent_availability')
-    .upsert(allUpserts, { onConflict: 'agent_id,week_date' });
-
-  if (!error) {
-    allUpserts.forEach(function(u) {
-      if (!availability[u.agent_id]) availability[u.agent_id] = {};
-      availability[u.agent_id][u.week_date] = u.day_status;
-    });
-  }
-}
+// computeAndSaveRotation() a ete SUPPRIMEE (v1.12.2).
+// Cette ancienne rotation calculait les repos avec (openDays - 5) et les
+// persistait en base (rest_scheduled), ce qui entrait en conflit avec le
+// moteur hebdomadaire de renderMonthlyPlanning et provoquait des OFF en trop
+// les semaines a ferie. Les repos sont desormais geres uniquement par le moteur.
 
 // ── PLANNING ENGINE ───────────────────────────────────────────────────────
 // ── SCHEDULE OVERRIDES (drag & drop persistence) ──────────────────────────
@@ -4521,10 +4447,13 @@ function renderMonthlyPlanning() {
 
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
 
-    // Overrides individuels d'absence/repos (priorite sur le repos collectif)
+    // Overrides individuels d'absence/repos MANUELS (priorite sur le calcul).
+    // NB : 'rest_scheduled' (ancienne rotation auto) est volontairement ignore
+    // ici - le moteur hebdomadaire (restMap) est desormais seul maitre des repos
+    // automatiques. Seuls les repos MANUELS du manager priment.
     var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
     if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
-    if (st === 'rest_scheduled' || st === 'rest_override' || st === 'rest_parttime')
+    if (st === 'rest_override' || st === 'rest_parttime')
       return { code: 'OFF', cls: 'sh-off', special: 'off' };
 
     // Repos collectif (jours faible trafic)
