@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v2.6</title>
+  <title>CORA Retail v2.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -4325,10 +4325,33 @@ function renderMonthlyPlanning() {
       var grid = RETAIL_SHIFTS[g] || [];
       if (!list.length || !grid.length) return;
 
-      // Les managers (SM/ASM) sont repartis sur ouverture / fermeture :
-      // le premier sur un shift d'ouverture, le second sur un shift de
-      // fermeture, en alternant selon le jour. Ils sont retires de la
-      // ventilation generale ensuite.
+      // Stock : 1 ouverture / 1 fermeture minimum, jamais tout en fermeture,
+      // pas de 70-30 (repartition equilibree), middles evites.
+      if (g === 'stock') {
+        var osS = grid.find(function(s){ return s.isOpening; }) || grid[0];
+        var csS = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
+        var nS = list.length;
+        var sorted = list.slice().sort(function(x, y) {
+          var px = (agentPrefs[x.id] || {}).shift_pref, py = (agentPrefs[y.id] || {}).shift_pref;
+          return (px === 'morning' ? -1 : px === 'evening' ? 1 : 0) -
+                 (py === 'morning' ? -1 : py === 'evening' ? 1 : 0);
+        });
+        var rotS = nS ? (d.num % nS) : 0;
+        sorted = sorted.slice(rotS).concat(sorted.slice(0, rotS));
+        if (nS === 1) {
+          plan[sorted[0].id] = osS.code;                 // seul : ouverture
+        } else {
+          // Moitie ouverture / moitie fermeture, au moins 1 de chaque.
+          var nClo = Math.round(nS / 2);
+          nClo = Math.max(1, Math.min(nS - 1, nClo));
+          sorted.forEach(function(a, i) {
+            plan[a.id] = (i < nS - nClo) ? osS.code : csS.code;
+          });
+        }
+        return;
+      }
+
+      // Les managers (SM/ASM) sont repartis sur ouverture / fermeture.
       if (g === 'sales') {
         var openSh  = grid.find(function(s){ return s.isOpening; }) || grid[0];
         var closeSh = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
@@ -4347,12 +4370,7 @@ function renderMonthlyPlanning() {
         if (!list.length) return;
       }
 
-      // ── Repartition ouverture / fermeture sur base matin vs soir ──
-      // Point de bascule = milieu de journee (openH+closeH)/2. On compare la
-      // moyenne de trafic du matin (open->milieu) et du soir (milieu->close).
-      // La part du soir fixe le nombre de closings, le matin les openings.
-      // Biais structurel : l'arrondi penche toujours vers le soir (closing),
-      // car la fermeture cumule le trafic ET les taches (reassort, etc.).
+      // Repartition ouverture / fermeture selon matin vs soir (biais fermeture).
       var mid = (dh.open + dh.close) / 2;
       function avgCurve(fromH, toH) {
         if (!curveArr || !curveArr.length) return 1;
@@ -4502,8 +4520,9 @@ function renderMonthlyPlanning() {
     agents.forEach(function(a) {
       var res = agentRows[a.id].find(function(r){return r.d.ds===d.ds;}).res;
       if (!res.special) totPres[d.ds]++;
-      if (res.code === 'O' || res.code === 'OS') totO[d.ds]++;
-      if (res.code === 'C' || res.code === 'CS') totC[d.ds]++;
+      // Le stock (OS/CS) ne compte pas dans le 70-30 de la boutique.
+      if (res.code === 'O') totO[d.ds]++;
+      if (res.code === 'C') totC[d.ds]++;
     });
   });
 
