@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v1.13.1</title>
+  <title>CORA Retail v2.6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -272,6 +272,13 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .dash-col { display:flex; flex-direction:column; gap:var(--s5); min-width:0; }
 .dash-col-right .card { height:100%; }
 .hero { background:var(--nav-active-bg); color:#fff; border-radius:var(--r-xl); padding:var(--s8); position:relative; overflow:hidden; }
+.hero-trend { position:absolute; top:var(--s6); right:var(--s6); z-index:2; display:inline-flex;
+  align-items:baseline; gap:6px; padding:7px 13px; border-radius:var(--r-pill);
+  font-size:16px; font-weight:700; letter-spacing:-.01em; backdrop-filter:blur(2px); }
+.hero-trend.up   { background:rgba(134,239,172,.22); color:#4ADE80; }
+.hero-trend.down { background:rgba(252,165,165,.20); color:#F87171; }
+.hero-trend .trend-lbl { font-size:10px; font-weight:600; letter-spacing:.04em;
+  text-transform:uppercase; opacity:.75; }
 .hero::after { content:''; position:absolute; right:-60px; top:-60px; width:240px; height:240px;
   background:radial-gradient(circle, rgba(30,58,138,.55), transparent 70%); }
 .hero-eyebrow { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.55); margin-bottom:var(--s4); position:relative; }
@@ -444,7 +451,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 /* --- colonne agent : auto-fit, pas de wrap --- */
 .mth th.c-agent, .mth td.c-agent {
   position:sticky; left:0; z-index:3; background:var(--bg-base);
-  text-align:left; white-space:nowrap; width:1%;
+  text-align:left; white-space:nowrap; width:160px; min-width:160px; max-width:160px;
+  overflow:hidden; text-overflow:ellipsis;
   padding:8px var(--s4); border-right:1px solid var(--line-2);
 }
 .mth thead th.c-agent { background:var(--bg-base-2); z-index:5; }
@@ -722,27 +730,27 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   padding-top:var(--s4); border-top:1px solid var(--line); }
 
 /* ═══ INFO-BULLE DE PREMIERE CONNEXION ═══════════════════════════ */
-.onb-tip {
-  display:none;
-  position:fixed;              /* sort du flux : passe au-dessus de tout */
-  width:240px; z-index:9999;
+#store-gate {
+  display:none; position:fixed; inset:0; z-index:9999;
+  align-items:center; justify-content:center;
+  background:rgba(16,24,40,.28); backdrop-filter:blur(6px);
+}
+#store-gate.show { display:flex; animation:gateFade .2s ease-out; }
+@keyframes gateFade { from { opacity:0; } to { opacity:1; } }
+.gate-card {
+  width:400px; max-width:calc(100vw - 32px);
   background:var(--bg-base); border:1px solid var(--line);
-  border-radius:var(--r-lg); box-shadow:0 16px 40px rgba(16,24,40,.22);
-  padding:var(--s4);
+  border-radius:var(--r-xl); box-shadow:0 24px 60px rgba(16,24,40,.28);
+  padding:var(--s8); text-align:center; animation:gateRise .24s ease-out;
 }
-.onb-tip.show { display:block; animation:onbIn .22s ease-out; }
-@keyframes onbIn {
-  from { opacity:0; transform:translateX(-6px); }
-  to   { opacity:1; transform:none; }
-}
-.onb-arrow {
-  position:absolute; left:-7px; top:22px; width:12px; height:12px;
-  background:var(--bg-base); border-left:1px solid var(--line);
-  border-bottom:1px solid var(--line); transform:rotate(45deg);
-}
-.onb-txt { font-size:12.5px; color:var(--tx-1); line-height:1.45; margin-bottom:var(--s3); }
-.onb-btn { width:100%; justify-content:center; }
-@media (max-width:900px) { .onb-tip, .onb-tip.show { display:none; } }
+@keyframes gateRise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+.gate-logo { font-size:22px; font-weight:800; letter-spacing:-.02em; color:var(--nav-active-bg); margin-bottom:var(--s5); }
+.gate-title { font-size:18px; font-weight:700; color:var(--tx-1); margin-bottom:var(--s2); }
+.gate-sub { font-size:13px; color:var(--tx-3); line-height:1.5; margin-bottom:var(--s6); }
+#scope-modal-slot { text-align:left; display:flex; flex-direction:column; gap:var(--s4); }
+#scope-modal-slot .sb-field label { color:var(--tx-2); }
+#scope-modal-slot select { width:100%; }
+body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events:none; user-select:none; }
 
 /* ═══ TABLEAUX DE SETTINGS : alignement identique ════════════════ */
 .set-tbl { table-layout:fixed; width:100%; }
@@ -928,6 +936,15 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 <div id="loader">Loading…</div>
 <div id="toast"></div>
 
+<div id="store-gate">
+  <div class="gate-card">
+    <div class="gate-logo">CORA</div>
+    <div class="gate-title">Select your store</div>
+    <div class="gate-sub">To navigate your workspace, please choose a region, a country and a store.</div>
+    <div id="scope-modal-slot"></div>
+  </div>
+</div>
+
 <!-- WEEK PICKER POPUP -->
 <div id="week-picker-popup">
   <div class="wkp-header">
@@ -963,11 +980,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   </div>
 
   <div class="sb-scope" id="sb-scope">
-    <div class="onb-tip" id="onb-tip">
-      <div class="onb-arrow"></div>
-      <div class="onb-txt">To start, select a region, a country and a store.</div>
-      <button class="btn btn-primary btn-sm onb-btn" onclick="dismissOnboarding()">Got it!</button>
-    </div>
 <div class="sb-field">
     <label for="week-label">Period</label>
     <div class="sb-period">
@@ -976,6 +988,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
       <button onclick="changeWeek(+1)" aria-label="Next">&#8250;</button>
     </div>
   </div>
+  <div id="scope-fields">
   <div class="sb-field">
     <label for="region-select">Region</label>
     <select id="region-select"><option value="">- Select region -</option></select>
@@ -987,6 +1000,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   <div class="sb-field">
     <label for="store-select">Store</label>
     <select id="store-select" disabled><option value="">- All stores -</option></select>
+  </div>
   </div>
   </div>
 
@@ -1408,11 +1422,10 @@ async function init() {
   var sSel = document.getElementById('store-select');
   if (sSel) sSel.addEventListener('change', onStoreChange);
   setStatus('Ready - select a store to begin');
-  showOnboardingIfNeeded();
+  openStoreGate();
 }
 
 async function onRegionChange() {
-  dismissOnboarding();
   var sel = document.getElementById('region-select');
   currentRegionId   = sel.value;
   currentRegionName = sel.value ? sel.options[sel.selectedIndex].text : '';
@@ -1438,38 +1451,28 @@ async function onRegionChange() {
 // Meme mecanique qu'un bandeau cookies : on memorise dans le navigateur
 // que l'utilisateur a vu le message. Si le stockage est vide (nouvelle
 // machine, cache efface, navigation privee), la bulle reapparait.
-var ONB_KEY = 'cora_retail_onboarding_seen';
-
-function onboardingSeen() {
-  try { return window.localStorage.getItem(ONB_KEY) === '1'; }
-  catch (e) { return false; }   // stockage indisponible : on affiche
+// ── GATE DE SELECTION DE BOUTIQUE (obligatoire au demarrage) ──────────────
+// Les 3 selects (region/country/store) sont physiquement deplaces dans la
+// modale tant qu'aucun store n'est choisi, puis remis dans la sidebar. Un seul
+// jeu de selects : la cascade existante reste intacte, pas de synchro.
+function openStoreGate() {
+  var gate = document.getElementById('store-gate');
+  var slot = document.getElementById('scope-modal-slot');
+  var fields = document.getElementById('scope-fields');
+  if (!gate || !slot || !fields) return;
+  slot.appendChild(fields);
+  gate.classList.add('show');
+  document.body.classList.add('gate-open');
 }
 
-function showOnboardingIfNeeded() {
-  var tip = document.getElementById('onb-tip');
-  if (!tip) return;
-  if (onboardingSeen()) return;
-  if (currentRegionId) return;          // deja en train de travailler
-  tip.classList.add('show');
-  positionOnboarding();
-}
-
-// Place la bulle juste a droite du selecteur de region, au-dessus de tout.
-function positionOnboarding() {
-  var tip = document.getElementById('onb-tip');
-  var anchor = document.getElementById('region-select');
-  if (!tip || !anchor || !tip.classList.contains('show')) return;
-  var r = anchor.getBoundingClientRect();
-  tip.style.left = (r.right + 14) + 'px';
-  tip.style.top  = Math.max(8, r.top - 14) + 'px';
-}
-window.addEventListener('resize', positionOnboarding);
-window.addEventListener('scroll', positionOnboarding, true);
-
-function dismissOnboarding() {
-  var tip = document.getElementById('onb-tip');
-  if (tip) tip.classList.remove('show');
-  try { window.localStorage.setItem(ONB_KEY, '1'); } catch (e) {}
+function closeStoreGate() {
+  var gate = document.getElementById('store-gate');
+  var scope = document.getElementById('sb-scope');
+  var fields = document.getElementById('scope-fields');
+  if (!gate || !scope || !fields) return;
+  scope.appendChild(fields);
+  gate.classList.remove('show');
+  document.body.classList.remove('gate-open');
 }
 
 // ── CASCADE REGION > COUNTRY > STORE ──────────────────────────────────────
@@ -1577,6 +1580,7 @@ async function onStoreChange() {
 
   if (!currentStoreId) { updateStatusBar(); return; }
 
+  closeStoreGate();
   await loadRegulations();
   await loadShiftConfig();
   await loadStoreSettings();
@@ -3696,6 +3700,19 @@ function renderDashboard() {
   var maxVol = Math.max.apply(null, vols.concat([1]));
   var peakIdx = vols.indexOf(Math.max.apply(null, vols));
 
+  var trendPct = null;
+  var prevTotals = [];
+  for (var tw = 1; tw <= 6; tw++) {
+    var pMon = new Date(currentWeekMonday);
+    pMon.setDate(pMon.getDate() - 7 * tw);
+    var pTot = getWeekDays(pMon).reduce(function(s,d){ return s + dailyTrafficFor(toDateStr(d)); }, 0);
+    if (pTot > 0) prevTotals.push(pTot);
+  }
+  if (prevTotals.length && weekTotal > 0) {
+    var avgPrev = prevTotals.reduce(function(s,v){ return s+v; }, 0) / prevTotals.length;
+    if (avgPrev > 0) trendPct = Math.round((weekTotal - avgPrev) / avgPrev * 100);
+  }
+
   // Barres du sparkline
   var spark = '';
   days.forEach(function(d, i) {
@@ -3767,6 +3784,9 @@ function renderDashboard() {
     '<div class="dash-grid">' +
       '<div class="dash-col">' +
         '<div class="hero">' +
+          (trendPct !== null ? '<div class="hero-trend ' + (trendPct >= 0 ? 'up' : 'down') + '">' +
+            (trendPct >= 0 ? '\u25B2 +' : '\u25BC ') + trendPct + '%' +
+            '<span class="trend-lbl">vs 6-wk avg</span></div>' : '') +
           '<div class="hero-eyebrow">Forecast traffic \u00b7 this week</div>' +
           '<div class="hero-num">' + weekTotal.toLocaleString() + '<span class="unit">visits forecasted</span></div>' +
           '<div class="hero-caption">' + (weekTotal > 0 ? 'Peak on ' + DOW3[days[peakIdx].getDay()] : 'No traffic data entered yet') + '</div>' +
