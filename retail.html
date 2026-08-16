@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v2.8</title>
+  <title>CORA Retail v2.8.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -5013,11 +5013,23 @@ function exportMonthly() {
     var c = { v:(v==null?'':(num?Number(v):v)), t:num?'n':'s' };
     var s = {
       alignment:{ horizontal:o.align||'center', vertical:'center', wrapText:false },
-      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, color:{rgb:o.tx||'18181B'} },
-      border:{ top:{style:'thin',color:{rgb:'E7E8EC'}}, bottom:{style:o.bBottom||'thin',color:{rgb:o.bBottomColor||'E7E8EC'}},
-               left:{style:'thin',color:{rgb:'E7E8EC'}}, right:{style:'thin',color:{rgb:'E7E8EC'}} }
+      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, italic:!!o.italic, color:{rgb:o.tx||'18181B'},
+             underline:!!o.underline }
     };
-    if (o.bg) s.fill = { patternType:'solid', fgColor:{rgb:o.bg} };
+    // Bordures seulement a l'interieur du planning (o.grid). Ailleurs : aucune.
+    if (o.grid) {
+      s.border = {
+        top:{style:'thin',color:{rgb:'ECEDEF'}},
+        bottom:{style:o.bBottom||'thin',color:{rgb:o.bBottomColor||'ECEDEF'}},
+        left:{style:'thin',color:{rgb:'ECEDEF'}},
+        right:{style:'thin',color:{rgb:'ECEDEF'}}
+      };
+    } else if (o.underline === 'rule') {
+      s.border = { bottom:{style:'medium',color:{rgb:'1E3A8A'}} };
+    }
+    // Fond flat systematique : meme les cases vides ont une couleur (jamais de
+    // blanc "transparent" a bordure). Defaut = blanc plein.
+    s.fill = { patternType:'solid', fgColor:{rgb:o.bg || 'FFFFFF'} };
     c.s = s;
     return c;
   }
@@ -5031,8 +5043,8 @@ function exportMonthly() {
   var titleRow = [ cell('CORA  -  Retail Planning', { align:'left', bold:true, sz:16, tx:'1E3A8A' }) ];
   for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
   rows.push(titleRow);
-  var metaRow = [ cell(currentStoreName + '   ' + monthName, { align:'left', bold:true, sz:11, tx:'6B7280' }) ];
-  for (var i=1;i<totalCols;i++) metaRow.push(cell(''));
+  var metaRow = [ cell(currentStoreName + '   ' + monthName, { align:'left', bold:true, sz:11, tx:'6B7280', underline:'rule' }) ];
+  for (var i=1;i<totalCols;i++) metaRow.push(cell('', { underline:'rule' }));
   rows.push(metaRow);
   rows.push([]); // ligne vide
 
@@ -5040,17 +5052,17 @@ function exportMonthly() {
   var hRow = [ cell('Agent',{bg:HEAD.bg,tx:HEAD.tx,bold:true,align:'left'}),
                cell('Role',{bg:HEAD.bg,tx:HEAD.tx,bold:true,align:'left'}) ];
   days.forEach(function(d){
-    hRow.push(cell(DOWL[d.dow] + ' ' + d.num, { bg:(d.dow===0||d.dow===6)?'FAFAFB':HEAD.bg, tx:HEAD.tx, bold:true, sz:9 }));
+    hRow.push(cell(DOWL[d.dow] + ' ' + d.num, { bg:(d.dow===0||d.dow===6)?'F1F2F4':HEAD.bg, tx:HEAD.tx, bold:true, sz:9, grid:true }));
   });
-  hRow.push(cell('O',{bg:RH.bg,tx:RH.tx,bold:true}));
-  hRow.push(cell('C',{bg:RH.bg,tx:RH.tx,bold:true}));
-  hRow.push(cell('OFF',{bg:RH.bg,tx:RH.tx,bold:true}));
+  hRow.push(cell('O',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+  hRow.push(cell('C',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+  hRow.push(cell('OFF',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
   rows.push(hRow);
 
   // Ligne volume
-  var vRow = [ cell('',{}), cell('Traffic',{align:'left',tx:'A1A1AA',sz:8}) ];
-  days.forEach(function(d){ vRow.push(cell(d.closure?'':(d.vol||''),{tx:'A1A1AA',sz:8})); });
-  vRow.push(cell('')); vRow.push(cell('')); vRow.push(cell(''));
+  var vRow = [ cell('',{}), cell('Traffic',{align:'left',tx:'A1A1AA',sz:8,italic:true}) ];
+  days.forEach(function(d){ vRow.push(cell(d.closure?'':(d.vol||''),{tx:'A1A1AA',sz:8,italic:true,grid:true})); });
+  vRow.push(cell('',{grid:true})); vRow.push(cell('',{grid:true})); vRow.push(cell('',{grid:true}));
   rows.push(vRow);
 
   // Agents groupes par bloc
@@ -5073,17 +5085,17 @@ function exportMonthly() {
       days.forEach(function(d){
         var res = (monthlyResult[d.ds] || {})[a.id];
         var code = res ? res.code : '';
-        if (d.closure && !code) { r.push(cell('\u00b7',{bg:'FAFAFB',tx:'A1A1AA'})); return; }
+        if (d.closure && !code) { r.push(cell('\u00b7',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
         var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
-        r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true}));
+        r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true,grid:true}));
         if (code==='O'||code==='OS'){ cntO++; if(code==='O')perDay.open[d.ds]++; }
         if (code==='C'||code==='CS'){ cntC++; if(code==='C')perDay.close[d.ds]++; }
         if (code==='OFF') cntOff++;
         if (code && code!=='OFF' && code!=='A') perDay[bl[0]][d.ds]++;
       });
-      r.push(cell(cntO||'-',{bg:RH.bg,tx:RH.tx,bold:true}));
-      r.push(cell(cntC||'-',{bg:RH.bg,tx:RH.tx,bold:true}));
-      r.push(cell(cntOff||'-',{bg:RH.bg,tx:RH.tx,bold:true}));
+      r.push(cell(cntO||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+      r.push(cell(cntC||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+      r.push(cell(cntOff||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
       rows.push(r);
     });
   });
@@ -5097,8 +5109,8 @@ function exportMonthly() {
     var r = [ cell(label,{align:'left',bold:true,tx:opt.tx||'6B7280',sz:9,bg:opt.bg||'FCFCFD'}),
               cell('',{bg:opt.bg||'FCFCFD'}) ];
     days.forEach(function(d){
-      r.push(cell(d.closure?'':(map[d.ds]||0),{bold:true,sz:9,tx:opt.tx||'3F3F46',bg:opt.bg||'FCFCFD',
-        bBottom:opt.last?'medium':'thin', bBottomColor:opt.last?'1E3A8A':'E7E8EC'}));
+      r.push(cell(d.closure?'':(map[d.ds]||0),{bold:true,sz:9,tx:opt.tx||'3F3F46',bg:opt.bg||'FCFCFD',grid:true,
+        bBottom:opt.last?'medium':'thin', bBottomColor:opt.last?'1E3A8A':'ECEDEF'}));
     });
     r.push(cell('',{bg:opt.bg||'FCFCFD'})); r.push(cell('',{bg:opt.bg||'FCFCFD'})); r.push(cell('',{bg:opt.bg||'FCFCFD'}));
     return r;
@@ -5135,6 +5147,13 @@ function exportMonthly() {
   for (var c=0;c<nDays;c++) cols.push({wch:4.2});
   cols.push({wch:5}); cols.push({wch:5}); cols.push({wch:6});
   ws['!cols'] = cols;
+  var rowHeights = rows.map(function(r, i) {
+    if (i === 0) return { hpx: 30 };
+    if (i === 1) return { hpx: 20 };
+    if (i === 2) return { hpx: 6 };
+    return { hpx: 32 };
+  });
+  ws['!rows'] = rowHeights;
   ws['!freeze'] = { xSplit:2, ySplit:5, topLeftCell:'C6', activePane:'bottomRight', state:'frozen' };
   ws['!panes']  = [{ xSplit:2, ySplit:5, topLeftCell:'C6', activePane:'bottomRight', state:'frozen' }];
   ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:0 };
@@ -5161,90 +5180,108 @@ function exportIntraday() {
   var nQ = Math.round((closeH - openH) * 4);       // nombre de quarts d'heure
 
   var TONE_XL = {
-    open:{bar:'22C55E'}, close:{bar:'3B82F6'}, mid:{bar:'F59E0B'},
-    late:{bar:'8B5CF6'}, open_stock:{bar:'22C55E'}
+    open:{bar:'BBF7D0'}, close:{bar:'BFDBFE'}, mid:{bar:'FDE68A'},
+    late:{bar:'DDD6FE'}, open_stock:{bar:'BBF7D0'}
   };
   var MISSION_XL = {
-    mb:{bg:'1A1A2E',tx:'FFFFFF',short:'MB'},
-    lun:{bg:'FDE047',tx:'713F12',short:'Lun'},
-    wel:{bg:'A5B4FC',tx:'312E81',short:'Wel'}
+    mb:{bg:'1A1A2E',tx:'FFFFFF',full:'MB'},
+    lun:{bg:'FDE047',tx:'713F12',full:'Lunch'},
+    wel:{bg:'A5B4FC',tx:'312E81',full:'Welcome'}
   };
   var SHIFT_HEAD = {
     open:{bg:'DCFCE7',tx:'14532D'}, close:{bg:'DBEAFE',tx:'1E3A8A'},
     mid:{bg:'FEF3C7',tx:'713F12'}, late:{bg:'EDE9FE',tx:'5B21B6'}
   };
+  var EMPTY = 'F4F5F8';   // fond flat des quarts hors shift
 
   function cell(v, o) {
     o = o || {};
     var c = { v:(v==null?'':v), t:'s' };
     var s = {
       alignment:{ horizontal:o.align||'center', vertical:'center' },
-      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, color:{rgb:o.tx||'18181B'} },
-      border:{ top:{style:'thin',color:{rgb:'ECEDEF'}}, bottom:{style:'thin',color:{rgb:'ECEDEF'}},
-               left:{style:o.lHour?'thin':'hair',color:{rgb:o.lHour?'D8DADE':'F1F2F4'}}, right:{style:'hair',color:{rgb:'F1F2F4'}} }
+      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, color:{rgb:o.tx||'18181B'}, underline:!!o.underline }
     };
-    if (o.bg) s.fill = { patternType:'solid', fgColor:{rgb:o.bg} };
+    // Bordures : seulement les separateurs d'heure a l'interieur de la grille.
+    if (o.grid) {
+      s.border = { left:{ style:o.lHour?'thin':'hair', color:{rgb:o.lHour?'D8DADE':'ECEDEF'} } };
+    } else if (o.rule) {
+      s.border = { bottom:{style:'medium',color:{rgb:'1E3A8A'}} };
+    }
+    s.fill = { patternType:'solid', fgColor:{rgb:o.bg || 'FFFFFF'} };
     c.s = s;
     return c;
   }
 
   var rows = [];
+  var merges = [];
   var totalCols = 3 + nQ;
 
   var titleRow = [ cell('CORA  -  Intraday Planning', {align:'left',bold:true,sz:16,tx:'1E3A8A'}) ];
   for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
   rows.push(titleRow);
-  var metaRow = [ cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280'}) ];
-  for (var i=1;i<totalCols;i++) metaRow.push(cell(''));
+  var metaRow = [ cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280',rule:true}) ];
+  for (var i=1;i<totalCols;i++) metaRow.push(cell('',{rule:true}));
   rows.push(metaRow);
   rows.push([]);
 
-  // En-tete heures : Agent | Role | Shift | H...
+  // En-tete heures
   var hRow = [ cell('Agent',{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell('Role',{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell('Shift',{bg:'FAFAFB',tx:'6B7280',bold:true}) ];
   for (var q=0; q<nQ; q++) {
     var isHour = (q % 4 === 0);
-    hRow.push(cell(isHour ? String(openH + q/4) + 'H' : '', { bg:'FAFAFB', tx:'6B7280', bold:true, sz:8, lHour:isHour }));
+    hRow.push(cell(isHour ? String(openH + q/4) + 'H' : '', { bg:'FAFAFB', tx:'6B7280', bold:true, sz:8, grid:true, lHour:isHour }));
   }
   rows.push(hRow);
 
-  intradayExport.rows.forEach(function(r) {
+  var spacerIdx = [];   // lignes d'interligne fin entre agents
+
+  intradayExport.rows.forEach(function(r, ri) {
     var head = SHIFT_HEAD[r.tone] || SHIFT_HEAD.close;
+    var rowIndex = rows.length;
     var row = [ cell(r.name,{align:'left',bold:true}),
                 cell(r.role,{align:'left',tx:'6B7280',sz:9}),
                 cell(r.code,{bg:head.bg,tx:head.tx,bold:true}) ];
-    // Pre-remplit chaque quart : barre de shift si dans l'amplitude
     var tone = TONE_XL[r.tone] || TONE_XL.close;
+
+    // Etat de chaque quart : barre de shift, ou mission
     var qcells = [];
     for (var q=0; q<nQ; q++) {
       var hAt = openH + q/4;
       var inShift = (hAt >= r.startH - 0.001 && hAt < r.endH - 0.001);
-      var isHour = (q % 4 === 0);
-      qcells.push({ v:'', bar: inShift, lHour:isHour });
+      qcells.push({ bg: inShift ? tone.bar : EMPTY, mission:null });
     }
-    // Pose les missions par-dessus (ecrasent la barre)
+    // Missions : on marque les quarts et on prepare les fusions
     r.blocks.forEach(function(b) {
       var mx = MISSION_XL[String(b.type).replace(/[0-9]+$/,'')];
       if (!mx) return;
-      var qStart = Math.round((b.start - openH) * 4);
-      var qEnd = Math.round((b.start + b.dur - openH) * 4);
-      for (var q=qStart; q<qEnd && q<nQ; q++) {
-        if (q < 0) continue;
-        qcells[q].mission = mx;
-        qcells[q].label = (q === qStart) ? mx.short : '';
+      var qStart = Math.max(0, Math.round((b.start - openH) * 4));
+      var qEnd = Math.min(nQ, Math.round((b.start + b.dur - openH) * 4));
+      if (qEnd <= qStart) qEnd = qStart + 1;
+      for (var q=qStart; q<qEnd; q++) { qcells[q].mission = mx; qcells[q].first = (q===qStart); }
+      if (qEnd - qStart > 1) {
+        merges.push({ s:{r:rowIndex, c:3+qStart}, e:{r:rowIndex, c:3+qEnd-1} });
       }
     });
-    qcells.forEach(function(qc) {
+
+    for (var q=0; q<nQ; q++) {
+      var qc = qcells[q];
+      var isHour = (q % 4 === 0);
       if (qc.mission) {
-        row.push(cell(qc.label || '', { bg:qc.mission.bg, tx:qc.mission.tx, bold:true, sz:8, lHour:qc.lHour }));
-      } else if (qc.bar) {
-        row.push(cell('', { bg:tone.bar, lHour:qc.lHour }));
+        row.push(cell(qc.first ? qc.mission.full : '', { bg:qc.mission.bg, tx:qc.mission.tx, bold:true, sz:9, grid:true, lHour:isHour }));
       } else {
-        row.push(cell('', { lHour:qc.lHour }));
+        row.push(cell('', { bg:qc.bg, grid:true, lHour:isHour }));
       }
-    });
+    }
     rows.push(row);
+
+    // Interligne fin entre agents (sauf apres le dernier)
+    if (ri < intradayExport.rows.length - 1) {
+      spacerIdx.push(rows.length);
+      var sp = [];
+      for (var i=0;i<totalCols;i++) sp.push(cell('',{}));
+      rows.push(sp);
+    }
   });
 
   // Legende
@@ -5254,8 +5291,8 @@ function exportIntraday() {
   rows.push(legRow);
   var legends = [
     ['MB','Morning brief','1A1A2E','FFFFFF'],
-    ['Lun','Lunch break','FDE047','713F12'],
-    ['Wel','Welcome mission','A5B4FC','312E81']
+    ['Lunch','Lunch break','FDE047','713F12'],
+    ['Welcome','Welcome mission','A5B4FC','312E81']
   ];
   legends.forEach(function(lg){
     var lr = [ cell(lg[0],{bg:lg[2],tx:lg[3],bold:true}), cell(lg[1],{align:'left',tx:'6B7280',sz:9}) ];
@@ -5267,10 +5304,21 @@ function exportIntraday() {
   ws['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:Math.min(10,totalCols-1)} },
     { s:{r:1,c:0}, e:{r:1,c:Math.min(10,totalCols-1)} }
-  ];
+  ].concat(merges);
   var cols = [{wch:18},{wch:11},{wch:7}];
   for (var q=0;q<nQ;q++) cols.push({wch:2.4});
   ws['!cols'] = cols;
+  // Hauteurs : agents 43px, interlignes 7px, titre/meta/entete adaptees.
+  var spacerSet = {};
+  spacerIdx.forEach(function(i){ spacerSet[i] = true; });
+  ws['!rows'] = rows.map(function(r, i) {
+    if (i === 0) return { hpx: 30 };
+    if (i === 1) return { hpx: 20 };
+    if (i === 2) return { hpx: 6 };
+    if (i === 3) return { hpx: 22 };            // entete heures
+    if (spacerSet[i]) return { hpx: 7 };        // interligne fin
+    return { hpx: 43 };                         // ligne agent
+  });
   ws['!freeze'] = { xSplit:3, ySplit:4, topLeftCell:'D5', activePane:'bottomRight', state:'frozen' };
   ws['!panes']  = [{ xSplit:3, ySplit:4, topLeftCell:'D5', activePane:'bottomRight', state:'frozen' }];
   ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:1 };
