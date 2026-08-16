@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v2.9</title>
+  <title>CORA Retail v3.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -189,6 +189,25 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .b-lun { background:#FDE047; color:#713F12; }
 .b-wel { background:#A5B4FC; color:#312E81; }
 .b-vm  { background:#86EFAC; color:#14532D; }
+
+/* Bouton [+] d'ajout de mission : visible au survol de la piste */
+.it-add { position:absolute; top:6px; right:4px; width:18px; height:18px; border:none;
+  border-radius:var(--r-pill); background:var(--nav-active-bg); color:#fff; font-size:14px;
+  line-height:1; cursor:pointer; opacity:0; transition:opacity .12s; z-index:4; padding:0;
+  display:flex; align-items:center; justify-content:center; }
+.it-track:hover .it-add { opacity:.9; }
+.it-add:hover { opacity:1; }
+/* Croix de retrait sur une mission ajoutee a la main */
+.it-blk-x { display:none; margin-left:4px; font-size:12px; cursor:pointer; opacity:.8; }
+.it-blk-added:hover .it-blk-x { display:inline; }
+.it-blk-x:hover { opacity:1; }
+/* Menu de choix de mission */
+.mission-menu { position:fixed; z-index:9999; background:var(--bg-base); border:1px solid var(--line);
+  border-radius:var(--r-lg); box-shadow:0 12px 32px rgba(16,24,40,.20); padding:5px; min-width:170px; }
+.mission-menu-item { display:flex; align-items:center; gap:9px; padding:8px 10px; font-size:13px;
+  border-radius:var(--r-md); cursor:pointer; color:var(--tx-1); }
+.mission-menu-item:hover { background:var(--bg-base-3); }
+.mm-chip { font-size:10px; font-weight:700; padding:2px 7px; border-radius:var(--r-pill); }
 
 /* --- Controles dans la sidebar : region + periode --- */
 .sb-field { padding:0 var(--s2); margin-bottom:var(--s2); }
@@ -1231,6 +1250,7 @@ let currentRegionCity = '';
 let currentCountryIso = '';
 let currentIntradayDate = null;
 let intradayOverrides = {};   // { 'agentId:blockType': start_min } pour le jour affiche
+let addedMissions = {};       // { agentId: [{id, type, start}] } missions ajoutees a la main
 let countries         = [];   // pays de la region courante
 let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
@@ -2284,6 +2304,14 @@ function renderPlanning() {
 }
 // ── RETAIL MONTHLY : CONSTANTES ───────────────────────────────────────────
 // Statuts (exclusifs) et ordre d'affichage des blocs facon Excel Duphot.
+// Missions ajoutables a la main dans l'intraday (hors lunch, gere par le moteur).
+var MISSION_CATALOG = [
+  { type:'mb',  label:'Morning brief' },
+  { type:'wel', label:'Welcome' }
+];
+var MISSION_LABELS = { mb:'MB', wel:'Welcome', lun:'Lunch' };
+var MISSION_DUR = { mb:0.25, wel:1, lun:1 };
+
 var RETAIL_STATUS = {
   SM:        { label: 'SM',         block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
   ASM:       { label: 'ASM',        block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
@@ -3026,6 +3054,7 @@ async function loadAndRenderIntraday(ds) {
   if (!ds) ds = currentIntradayDate || toDateStr(new Date());
   currentIntradayDate = ds;
   intradayOverrides = {};
+  addedMissions = {};
   if (currentStoreId) {
     var res = await sb.from('retail_intraday_overrides')
       .select('agent_id, block_type, start_min')
@@ -3033,6 +3062,15 @@ async function loadAndRenderIntraday(ds) {
     if (!res.error && res.data) {
       res.data.forEach(function(r) {
         intradayOverrides[r.agent_id + ':' + r.block_type] = r.start_min;
+      });
+    }
+    var mis = await sb.from('retail_intraday_missions')
+      .select('id, agent_id, mission_type, start_min')
+      .eq('store_id', currentStoreId).eq('date', ds);
+    if (!mis.error && mis.data) {
+      mis.data.forEach(function(r) {
+        if (!addedMissions[r.agent_id]) addedMissions[r.agent_id] = [];
+        addedMissions[r.agent_id].push({ id:r.id, type:r.mission_type, start:r.start_min/60 });
       });
     }
   }
@@ -3296,11 +3334,15 @@ function renderIntraday(ds) {
         });
       }
 
+      var exportBlocks = blocks.map(function(b){ return { start:b[0], dur:b[1], type:b[2], label:b[3] }; });
+      (addedMissions[a.id] || []).forEach(function(m) {
+        exportBlocks.push({ start:m.start, dur:(MISSION_DUR[m.type]||1), type:m.type, label:(MISSION_LABELS[m.type]||m.type) });
+      });
       intradayExportRows.push({
         name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
         role: (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '',
         code: sh.code, tone: sh.tone || 'close', startH: sH, endH: eH,
-        blocks: blocks.map(function(b){ return { start:b[0], dur:b[1], type:b[2], label:b[3] }; })
+        blocks: exportBlocks
       });
 
       var grid = '<div class="it-grid">';
@@ -3321,6 +3363,21 @@ function renderIntraday(ds) {
           ' data-dur="' + bl[1] + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
           ' style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + bl[3] + '</div>';
       });
+      // Missions ajoutees a la main : memes blocs draggables, avec un [x] de retrait.
+      (addedMissions[a.id] || []).forEach(function(m) {
+        var visualCls = 'b-' + m.type;
+        var label = MISSION_LABELS[m.type] || m.type.toUpperCase();
+        var durH = MISSION_DUR[m.type] || 1;
+        track += '<div class="it-blk ' + visualCls + ' it-blk-added" draggable="false"' +
+          ' data-agent="' + a.id + '" data-type="' + m.type + '" data-mid="' + m.id + '"' +
+          ' data-dur="' + durH + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
+          ' style="left:' + pct(m.start) + '%;width:' + wpct(durH) + '%">' + label +
+          '<span class="it-blk-x" onclick="removeAddedMission(event,\'' + m.id + '\')">&times;</span></div>';
+      });
+      // Bouton [+] pour ajouter une mission (visible au survol de la barre).
+      track += '<button class="it-add" data-agent="' + a.id +
+        '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin +
+        '" onclick="openMissionMenu(event,\'' + a.id + '\')">+</button>';
       track += '</div>';
 
       var nm = a.first_name + ' ' + (a.last_name || '').charAt(0) + '.';
@@ -3396,7 +3453,11 @@ function initIntradayDrag(root, T0, span, ds) {
         blk.style.zIndex = '';
         var finalH = parseFloat(blk.dataset.curH);
         if (!isNaN(finalH)) {
-          saveIntradayOverride(ds, blk.dataset.agent, blk.dataset.type, Math.round(finalH * 60));
+          if (blk.dataset.mid) {
+            saveAddedMissionPos(blk.dataset.mid, Math.round(finalH * 60));
+          } else {
+            saveIntradayOverride(ds, blk.dataset.agent, blk.dataset.type, Math.round(finalH * 60));
+          }
         }
       }
 
@@ -3404,6 +3465,87 @@ function initIntradayDrag(root, T0, span, ds) {
       blk.addEventListener('pointerup', onUp);
     });
   });
+}
+
+// Ouvre un petit menu de choix de mission a l'endroit du clic sur [+].
+function openMissionMenu(ev, agentId) {
+  ev.stopPropagation();
+  closeMissionMenu();
+  var btn = ev.currentTarget;
+  var track = btn.parentNode;
+  var rect = track.getBoundingClientRect();
+  // Heure du clic = position du bouton dans la piste.
+  var relX = (btn.getBoundingClientRect().left + btn.offsetWidth / 2 - rect.left) / rect.width;
+  var smin = parseInt(btn.dataset.smin), emin = parseInt(btn.dataset.emin);
+
+  var menu = document.createElement('div');
+  menu.className = 'mission-menu';
+  menu.id = 'mission-menu';
+  MISSION_CATALOG.forEach(function(m) {
+    var item = document.createElement('div');
+    item.className = 'mission-menu-item';
+    item.innerHTML = '<span class="mm-chip b-' + m.type + '">' + (MISSION_LABELS[m.type] || '') + '</span>' + m.label;
+    item.onclick = function(e) {
+      e.stopPropagation();
+      addMissionAt(agentId, m.type, relX, smin, emin);
+      closeMissionMenu();
+    };
+    menu.appendChild(item);
+  });
+  document.body.appendChild(menu);
+  var bl = btn.getBoundingClientRect();
+  menu.style.left = Math.min(bl.left, window.innerWidth - 190) + 'px';
+  menu.style.top  = (bl.bottom + 4) + 'px';
+  setTimeout(function(){ document.addEventListener('click', closeMissionMenu); }, 0);
+}
+
+function closeMissionMenu() {
+  var m = document.getElementById('mission-menu');
+  if (m) m.remove();
+  document.removeEventListener('click', closeMissionMenu);
+}
+
+// Ajoute la mission a l'heure cliquee, calee dans l'amplitude du shift.
+async function addMissionAt(agentId, type, relX, smin, emin) {
+  var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(currentIntradayDate + 'T12:00:00').getDay()];
+  var dh = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
+  if (calHours[currentIntradayDate]) dh = calHours[currentIntradayDate];
+  var openH = dh.open, closeH = dh.close;
+  var durH = MISSION_DUR[type] || 1;
+  var startH = openH + relX * (closeH - openH);
+  // Garde-fou : la mission tient dans le shift de l'agent.
+  var sH = smin / 60, eH = emin / 60;
+  startH = Math.max(sH, Math.min(startH, eH - durH));
+  var startMin = Math.round(startH * 60);
+
+  if (!currentStoreId) return;
+  var res = await sb.from('retail_intraday_missions').insert({
+    store_id: currentStoreId, date: currentIntradayDate, agent_id: agentId,
+    mission_type: type, start_min: startMin
+  }).select();
+  if (res.error) { showToast('Not saved: ' + (res.error.message || 'error'), 'error'); return; }
+  showToast('Mission added \u2713');
+  loadAndRenderIntraday(currentIntradayDate);
+}
+
+async function removeAddedMission(ev, missionId) {
+  ev.stopPropagation();
+  if (!currentStoreId) return;
+  var res = await sb.from('retail_intraday_missions').delete().eq('id', missionId);
+  if (res.error) { showToast('Not removed: ' + (res.error.message || 'error'), 'error'); return; }
+  showToast('Mission removed \u2713');
+  loadAndRenderIntraday(currentIntradayDate);
+}
+
+// Deplacement d'une mission ajoutee (drag) : on met a jour sa position.
+async function saveAddedMissionPos(missionId, startMin) {
+  (Object.keys(addedMissions)).forEach(function(aid) {
+    (addedMissions[aid] || []).forEach(function(m) { if (m.id === missionId) m.start = startMin / 60; });
+  });
+  if (!currentStoreId) return;
+  var res = await sb.from('retail_intraday_missions').update({ start_min: startMin }).eq('id', missionId);
+  if (res.error) { showToast('Not saved: ' + (res.error.message || 'error'), 'error'); return; }
+  showToast('Moved \u2713');
 }
 
 async function saveIntradayOverride(ds, agentId, blockType, startMin) {
