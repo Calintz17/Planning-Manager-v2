@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v2.7.1</title>
+  <title>CORA Retail v2.8</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1057,6 +1057,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(-1)">&lsaquo;</button>
         <input type="date" id="intraday-date" onchange="intradayPickDate(this.value)" style="height:32px">
         <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(1)">&rsaquo;</button>
+        <button class="btn btn-ghost" onclick="exportIntraday()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
       </div>
     </div>
     <div id="planning-intraday-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div></div>
@@ -1228,6 +1229,7 @@ let currentStoreCity  = '';
 let storeHighlights   = [];   // [{id, start_date, end_date, text}]
 let planningOverrides = {};   // { agentId: { 'YYYY-MM-DD': 'O' | 'OFF' | 'A' ... } }
 let monthlyResult = {};       // { 'YYYY-MM-DD': { agentId: {code, special} } } - partage monthly -> intraday
+let intradayExport = null;    // snapshot du dernier intraday rendu, pour l'export Excel
 let agentPrefs        = {};   // { agentId: {shift_pref, weekend_ok, avoid_days[]} }
 let trafficMonthly    = {};   // { 'YYYY-MM': {last_year, current_year, source} }
 let trafficDaily      = {};   // { 'YYYY-MM-DD': {traffic, is_manual} }
@@ -3228,6 +3230,7 @@ function renderIntraday(ds) {
   });
 
   var rowsHtml = '';
+  var intradayExportRows = [];
   RETAIL_BLOCK_ORDER.forEach(function(blockDef) {
     var list = byBlock[blockDef.key] || [];
     if (!list.length) return;
@@ -3260,6 +3263,13 @@ function renderIntraday(ds) {
           blocks.push([withOverride(a.id, 'wel' + wi, wh, 1), 1, 'wel' + wi, 'Welcome']);
         });
       }
+
+      intradayExportRows.push({
+        name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
+        role: (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '',
+        code: sh.code, tone: sh.tone || 'close', startH: sH, endH: eH,
+        blocks: blocks.map(function(b){ return { start:b[0], dur:b[1], type:b[2], label:b[3] }; })
+      });
 
       var grid = '<div class="it-grid">';
       for (var k = Math.floor(T0); k < Math.ceil(T1); k++) grid += '<i></i>';
@@ -3302,6 +3312,8 @@ function renderIntraday(ds) {
       axis + band +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
+
+  intradayExport = { ds: ds, openH: openH, closeH: closeH, rows: intradayExportRows };
 
   // Active le drag & drop des blocs (MB, lunch, missions)
   initIntradayDrag(body, T0, span, ds);
@@ -4958,98 +4970,315 @@ async function addAgent() {
 }
 
 // ── EXPORT MONTHLY (Excel) ────────────────────────────────────────────────
-// Lit directement la table Monthly affichee (#planning-monthly table) et la
-// serialise en .xlsx style. Garantit que l'export = ce qui est a l'ecran.
+// Export Excel du planning mensuel : construit a partir du modele (monthlyResult),
+// avec colonne role, synthese par jour, et recap des shifts.
 function exportMonthly() {
   if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
-  var tables = document.querySelectorAll('#planning-monthly table');
-  if (!tables.length) { showToast('Nothing to export', 'error'); return; }
-  var table = tables[0];
+  if (!monthlyResult || !Object.keys(monthlyResult).length) renderMonthlyPlanning();
 
-  // Palette export : miroir exact des pastilles a l'ecran (couleurs = clef).
-  var SHIFT_XL = {
-    'sh-open'  : { bg:'DCFCE7', tx:'14532D' },   // ouverture  - vert
-    'sh-mid'   : { bg:'FEF3C7', tx:'713F12' },   // milieu     - ambre
-    'sh-close' : { bg:'DBEAFE', tx:'1E3A8A' },   // fermeture  - bleu
-    'sh-late'  : { bg:'EDE9FE', tx:'5B21B6' },   // D          - violet
-    'sh-off'   : { bg:'EDEEF1', tx:'A1A1AA' },   // repos      - gris
-    'sh-cp'    : { bg:'FEE2E2', tx:'7F1D1D' },   // absence    - rouge
-    'sh-none'  : { bg:'F4F5F7', tx:'A1A1AA' }
-  };
-  var HEAD = { bg:'FAFAFB', tx:'6B7280' };
-  var BLK  = { bg:'F1F2F4', tx:'6B7280' };
-  var RH   = { bg:'FAFAFB', tx:'18181B' };
+  var ref = new Date(currentWeekMonday);
+  var year = ref.getFullYear(), monthIdx = ref.getMonth();
+  var nDays = new Date(year, monthIdx + 1, 0).getDate();
+  var monthName = new Date(year, monthIdx, 1).toLocaleDateString('en-GB', { month:'long', year:'numeric' });
 
-  function mc(value, o) {
-    o = o || {};
-    var num = (value !== '' && value != null && !isNaN(value) && String(value).trim() !== '');
-    var cell = { v: (value == null ? '' : (num ? Number(value) : value)), t: num ? 'n' : 's' };
-    var s = {
-      alignment:{ horizontal:o.align||'center', vertical:'center', wrapText:false },
-      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, color:{ rgb:(o.tx||'18181B') } },
-      border:{ top:{style:'thin',color:{rgb:'E7E8EC'}}, bottom:{style:'thin',color:{rgb:'E7E8EC'}},
-               left:{style:'thin',color:{rgb:'E7E8EC'}}, right:{style:'thin',color:{rgb:'E7E8EC'}} }
-    };
-    if (o.bg) s.fill = { patternType:'solid', fgColor:{ rgb:o.bg } };
-    cell.s = s;
-    return cell;
+  var days = [];
+  for (var dn = 1; dn <= nDays; dn++) {
+    var dObj = new Date(year, monthIdx, dn);
+    var ds = toDateStr(dObj);
+    days.push({ num:dn, ds:ds, dow:dObj.getDay(), closure:getDayClosureType(ds),
+                vol:(trafficDaily[ds] && trafficDaily[ds].traffic!=null)?trafficDaily[ds].traffic:0 });
   }
 
-  var rows = [], maxCols = 0;
-  Array.prototype.forEach.call(table.querySelectorAll('tr'), function(tr) {
-    var row = [];
-    Array.prototype.forEach.call(tr.querySelectorAll('th,td'), function(td) {
-      var txt = (td.textContent || '').trim();
-      var o = { sz:9 };
+  var SHIFT_XL = {
+    'sh-open':{bg:'DCFCE7',tx:'14532D'}, 'sh-mid':{bg:'FEF3C7',tx:'713F12'},
+    'sh-close':{bg:'DBEAFE',tx:'1E3A8A'}, 'sh-late':{bg:'EDE9FE',tx:'5B21B6'},
+    'sh-off':{bg:'F1F2F4',tx:'A1A1AA'}, 'sh-cp':{bg:'FEE2E2',tx:'7F1D1D'},
+    'sh-pt':{bg:'FEF9C3',tx:'854D0E'}, 'sh-none':{bg:'FAFAFB',tx:'A1A1AA'}
+  };
+  function toneClass(code) {
+    if (code === 'OFF') return 'sh-off';
+    if (code === 'A')   return 'sh-cp';
+    if (code === 'PT')  return 'sh-pt';
+    if (code === 'D')   return 'sh-late';
+    if (code === 'O' || code === 'OS') return 'sh-open';
+    if (code === 'M' || code === 'MS') return 'sh-mid';
+    if (code === 'C' || code === 'CS') return 'sh-close';
+    return 'sh-none';
+  }
 
-      if (td.tagName === 'TH') {
-        o.bg = HEAD.bg; o.tx = HEAD.tx; o.bold = true;
-        if (td.classList.contains('c-agent')) o.align = 'left';
-      } else if (td.classList.contains('c-rh')) {
-        o.bg = RH.bg; o.tx = RH.tx; o.bold = true;
-      } else if (tr.classList.contains('blk') || tr.classList.contains('sub') || tr.classList.contains('tot')) {
-        o.bg = BLK.bg; o.tx = BLK.tx; o.bold = true;
-        if (td.classList.contains('c-agent')) o.align = 'left';
-      } else if (td.classList.contains('c-agent')) {
-        o.align = 'left'; o.bold = true; o.sz = 10;
-        // nom seul (retirer le sous-titre statut colle par textContent)
-        var nm = td.querySelector('span span span');
-        if (nm) txt = nm.textContent.trim();
-      }
+  function cell(v, o) {
+    o = o || {};
+    var num = (v !== '' && v != null && !isNaN(v) && String(v).trim() !== '');
+    var c = { v:(v==null?'':(num?Number(v):v)), t:num?'n':'s' };
+    var s = {
+      alignment:{ horizontal:o.align||'center', vertical:'center', wrapText:false },
+      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, color:{rgb:o.tx||'18181B'} },
+      border:{ top:{style:'thin',color:{rgb:'E7E8EC'}}, bottom:{style:o.bBottom||'thin',color:{rgb:o.bBottomColor||'E7E8EC'}},
+               left:{style:'thin',color:{rgb:'E7E8EC'}}, right:{style:'thin',color:{rgb:'E7E8EC'}} }
+    };
+    if (o.bg) s.fill = { patternType:'solid', fgColor:{rgb:o.bg} };
+    c.s = s;
+    return c;
+  }
 
-      // Couleur de la pastille de shift : on lit la classe reelle du DOM
-      var pill = td.querySelector('.sh, .sh-none');
-      if (pill) {
-        var key = null;
-        ['sh-open','sh-mid','sh-late','sh-close','sh-off','sh-cp','sh-none'].forEach(function(k){
-          if (pill.classList.contains(k)) key = k;
-        });
-        var c = SHIFT_XL[key];
-        if (c) { o.bg = c.bg; o.tx = c.tx; o.bold = true; }
-      }
+  var HEAD={bg:'FAFAFB',tx:'6B7280'}, BLK={bg:'F4F5F7',tx:'52525B'}, RH={bg:'FAFAFB',tx:'18181B'};
+  var rows = [];
+  var DOWL = ['S','M','T','W','T','F','S'];
 
-      row.push(mc(txt, o));
-    });
-    if (row.length > maxCols) maxCols = row.length;
-    rows.push(row);
+  // Titre (fusion) + meta
+  var totalCols = 2 + nDays + 3;
+  var titleRow = [ cell('CORA  -  Retail Planning', { align:'left', bold:true, sz:16, tx:'1E3A8A' }) ];
+  for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
+  rows.push(titleRow);
+  var metaRow = [ cell(currentStoreName + '   ' + monthName, { align:'left', bold:true, sz:11, tx:'6B7280' }) ];
+  for (var i=1;i<totalCols;i++) metaRow.push(cell(''));
+  rows.push(metaRow);
+  rows.push([]); // ligne vide
+
+  // En-tete : Agent | Role | jours... | O | C | OFF
+  var hRow = [ cell('Agent',{bg:HEAD.bg,tx:HEAD.tx,bold:true,align:'left'}),
+               cell('Role',{bg:HEAD.bg,tx:HEAD.tx,bold:true,align:'left'}) ];
+  days.forEach(function(d){
+    hRow.push(cell(DOWL[d.dow] + ' ' + d.num, { bg:(d.dow===0||d.dow===6)?'FAFAFB':HEAD.bg, tx:HEAD.tx, bold:true, sz:9 }));
   });
-  rows.forEach(function(r){ while (r.length < maxCols) r.push(mc('')); });
+  hRow.push(cell('O',{bg:RH.bg,tx:RH.tx,bold:true}));
+  hRow.push(cell('C',{bg:RH.bg,tx:RH.tx,bold:true}));
+  hRow.push(cell('OFF',{bg:RH.bg,tx:RH.tx,bold:true}));
+  rows.push(hRow);
+
+  // Ligne volume
+  var vRow = [ cell('',{}), cell('Traffic',{align:'left',tx:'A1A1AA',sz:8}) ];
+  days.forEach(function(d){ vRow.push(cell(d.closure?'':(d.vol||''),{tx:'A1A1AA',sz:8})); });
+  vRow.push(cell('')); vRow.push(cell('')); vRow.push(cell(''));
+  rows.push(vRow);
+
+  // Agents groupes par bloc
+  var BLOCKS = [ ['mgmt','Management'], ['sales','Sales'], ['stock','Stock'] ];
+  var perDay = { mgmt:{}, sales:{}, stock:{}, open:{}, close:{} };
+  days.forEach(function(d){ ['mgmt','sales','stock','open','close'].forEach(function(k){ perDay[k][d.ds]=0; }); });
+
+  BLOCKS.forEach(function(bl){
+    var inBlock = agents.filter(function(a){ return poolOf(a) === bl[0]; });
+    if (!inBlock.length) return;
+    var blkRow = [ cell(bl[1], {bg:BLK.bg,tx:BLK.tx,bold:true,align:'left'}) ];
+    for (var i=1;i<totalCols;i++) blkRow.push(cell('',{bg:BLK.bg}));
+    rows.push(blkRow);
+
+    inBlock.forEach(function(a){
+      var role = (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '';
+      var nm = a.first_name + ' ' + (a.last_name||'').charAt(0) + '.';
+      var r = [ cell(nm,{align:'left',bold:true}), cell(role,{align:'left',tx:'6B7280',sz:9}) ];
+      var cntO=0,cntC=0,cntOff=0;
+      days.forEach(function(d){
+        var res = (monthlyResult[d.ds] || {})[a.id];
+        var code = res ? res.code : '';
+        if (d.closure && !code) { r.push(cell('\u00b7',{bg:'FAFAFB',tx:'A1A1AA'})); return; }
+        var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
+        r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true}));
+        if (code==='O'||code==='OS'){ cntO++; if(code==='O')perDay.open[d.ds]++; }
+        if (code==='C'||code==='CS'){ cntC++; if(code==='C')perDay.close[d.ds]++; }
+        if (code==='OFF') cntOff++;
+        if (code && code!=='OFF' && code!=='A') perDay[bl[0]][d.ds]++;
+      });
+      r.push(cell(cntO||'-',{bg:RH.bg,tx:RH.tx,bold:true}));
+      r.push(cell(cntC||'-',{bg:RH.bg,tx:RH.tx,bold:true}));
+      r.push(cell(cntOff||'-',{bg:RH.bg,tx:RH.tx,bold:true}));
+      rows.push(r);
+    });
+  });
+
+  // Deux lignes vides + barre de separation avant la synthese
+  rows.push([]);
+  rows.push([]);
+
+  function sumRow(label, map, opt) {
+    opt = opt || {};
+    var r = [ cell(label,{align:'left',bold:true,tx:opt.tx||'6B7280',sz:9,bg:opt.bg||'FCFCFD'}),
+              cell('',{bg:opt.bg||'FCFCFD'}) ];
+    days.forEach(function(d){
+      r.push(cell(d.closure?'':(map[d.ds]||0),{bold:true,sz:9,tx:opt.tx||'3F3F46',bg:opt.bg||'FCFCFD',
+        bBottom:opt.last?'medium':'thin', bBottomColor:opt.last?'1E3A8A':'E7E8EC'}));
+    });
+    r.push(cell('',{bg:opt.bg||'FCFCFD'})); r.push(cell('',{bg:opt.bg||'FCFCFD'})); r.push(cell('',{bg:opt.bg||'FCFCFD'}));
+    return r;
+  }
+  rows.push(sumRow('Management', perDay.mgmt));
+  rows.push(sumRow('Sales', perDay.sales));
+  rows.push(sumRow('Stock', perDay.stock));
+  rows.push(sumRow('Opening', perDay.open, {bg:'F3F6FB',tx:'1E3A8A'}));
+  rows.push(sumRow('Closing', perDay.close, {bg:'F3F6FB',tx:'1E3A8A',last:true}));
+
+  // Deux lignes vides puis legende des shifts
+  rows.push([]);
+  rows.push([]);
+  var legHead = [ cell('Shift legend',{align:'left',bold:true,tx:'6B7280',sz:10}) ];
+  for (var i=1;i<totalCols;i++) legHead.push(cell(''));
+  rows.push(legHead);
+  ['sales','stock'].forEach(function(g){
+    (RETAIL_SHIFTS[g]||[]).forEach(function(s){
+      var t = SHIFT_XL[toneClass(s.code)] || SHIFT_XL['sh-none'];
+      var lr = [ cell(s.code,{bg:t.bg,tx:t.tx,bold:true,align:'center'}),
+                 cell(s.label||'',{align:'left',tx:'6B7280',sz:9}) ];
+      for (var i=2;i<totalCols;i++) lr.push(cell(''));
+      rows.push(lr);
+    });
+  });
 
   var ws = XLSX.utils.aoa_to_sheet(rows);
-  var cols = [{ wch: 26 }];
-  for (var c = 1; c < maxCols; c++) cols.push({ wch: 4.5 });
+  // Fusions du header et meta
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:Math.min(6,totalCols-1)} },
+    { s:{r:1,c:0}, e:{r:1,c:Math.min(6,totalCols-1)} }
+  ];
+  var cols = [{wch:20},{wch:11}];
+  for (var c=0;c<nDays;c++) cols.push({wch:4.2});
+  cols.push({wch:5}); cols.push({wch:5}); cols.push({wch:6});
   ws['!cols'] = cols;
-  ws['!freeze'] = { xSplit:1, ySplit:1, topLeftCell:'B2', activePane:'bottomRight', state:'frozen' };
-  ws['!panes']  = [{ xSplit:1, ySplit:1, topLeftCell:'B2', activePane:'bottomRight', state:'frozen' }];
-  ws['!pageSetup'] = { orientation:'landscape', paperSize:9, fitToWidth:1, fitToHeight:0 };
-  ws['!margins'] = { left:0.3, right:0.3, top:0.4, bottom:0.4, header:0.2, footer:0.2 };
+  ws['!freeze'] = { xSplit:2, ySplit:5, topLeftCell:'C6', activePane:'bottomRight', state:'frozen' };
+  ws['!panes']  = [{ xSplit:2, ySplit:5, topLeftCell:'C6', activePane:'bottomRight', state:'frozen' }];
+  ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:0 };
+  ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
 
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Monthly');
-  var ref = new Date(currentWeekMonday);
-  var tag = ref.getFullYear() + '-' + String(ref.getMonth()+1).padStart(2,'0');
+  var tag = year + '-' + String(monthIdx+1).padStart(2,'0');
   XLSX.writeFile(wb, 'CORA_Retail_Monthly_' + tag + '.xlsx');
+  showToast('Export termin\u00e9 \u2713');
+}
+
+// Export Excel de l'intraday : une colonne par quart d'heure, barre de shift
+// (amplitude) et missions (MB / lunch / Welcome) posees dessus.
+function exportIntraday() {
+  if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  if (!intradayExport || !intradayExport.rows.length) {
+    renderIntraday(currentIntradayDate);
+  }
+  if (!intradayExport || !intradayExport.rows.length) { showToast('Nothing to export', 'error'); return; }
+
+  var openH = intradayExport.openH, closeH = intradayExport.closeH;
+  var nQ = Math.round((closeH - openH) * 4);       // nombre de quarts d'heure
+
+  var TONE_XL = {
+    open:{bar:'22C55E'}, close:{bar:'3B82F6'}, mid:{bar:'F59E0B'},
+    late:{bar:'8B5CF6'}, open_stock:{bar:'22C55E'}
+  };
+  var MISSION_XL = {
+    mb:{bg:'1A1A2E',tx:'FFFFFF',short:'MB'},
+    lun:{bg:'FDE047',tx:'713F12',short:'Lun'},
+    wel:{bg:'A5B4FC',tx:'312E81',short:'Wel'}
+  };
+  var SHIFT_HEAD = {
+    open:{bg:'DCFCE7',tx:'14532D'}, close:{bg:'DBEAFE',tx:'1E3A8A'},
+    mid:{bg:'FEF3C7',tx:'713F12'}, late:{bg:'EDE9FE',tx:'5B21B6'}
+  };
+
+  function cell(v, o) {
+    o = o || {};
+    var c = { v:(v==null?'':v), t:'s' };
+    var s = {
+      alignment:{ horizontal:o.align||'center', vertical:'center' },
+      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, color:{rgb:o.tx||'18181B'} },
+      border:{ top:{style:'thin',color:{rgb:'ECEDEF'}}, bottom:{style:'thin',color:{rgb:'ECEDEF'}},
+               left:{style:o.lHour?'thin':'hair',color:{rgb:o.lHour?'D8DADE':'F1F2F4'}}, right:{style:'hair',color:{rgb:'F1F2F4'}} }
+    };
+    if (o.bg) s.fill = { patternType:'solid', fgColor:{rgb:o.bg} };
+    c.s = s;
+    return c;
+  }
+
+  var rows = [];
+  var totalCols = 3 + nQ;
+
+  var titleRow = [ cell('CORA  -  Intraday Planning', {align:'left',bold:true,sz:16,tx:'1E3A8A'}) ];
+  for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
+  rows.push(titleRow);
+  var metaRow = [ cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280'}) ];
+  for (var i=1;i<totalCols;i++) metaRow.push(cell(''));
+  rows.push(metaRow);
+  rows.push([]);
+
+  // En-tete heures : Agent | Role | Shift | H...
+  var hRow = [ cell('Agent',{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
+               cell('Role',{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
+               cell('Shift',{bg:'FAFAFB',tx:'6B7280',bold:true}) ];
+  for (var q=0; q<nQ; q++) {
+    var isHour = (q % 4 === 0);
+    hRow.push(cell(isHour ? String(openH + q/4) + 'H' : '', { bg:'FAFAFB', tx:'6B7280', bold:true, sz:8, lHour:isHour }));
+  }
+  rows.push(hRow);
+
+  intradayExport.rows.forEach(function(r) {
+    var head = SHIFT_HEAD[r.tone] || SHIFT_HEAD.close;
+    var row = [ cell(r.name,{align:'left',bold:true}),
+                cell(r.role,{align:'left',tx:'6B7280',sz:9}),
+                cell(r.code,{bg:head.bg,tx:head.tx,bold:true}) ];
+    // Pre-remplit chaque quart : barre de shift si dans l'amplitude
+    var tone = TONE_XL[r.tone] || TONE_XL.close;
+    var qcells = [];
+    for (var q=0; q<nQ; q++) {
+      var hAt = openH + q/4;
+      var inShift = (hAt >= r.startH - 0.001 && hAt < r.endH - 0.001);
+      var isHour = (q % 4 === 0);
+      qcells.push({ v:'', bar: inShift, lHour:isHour });
+    }
+    // Pose les missions par-dessus (ecrasent la barre)
+    r.blocks.forEach(function(b) {
+      var mx = MISSION_XL[String(b.type).replace(/[0-9]+$/,'')];
+      if (!mx) return;
+      var qStart = Math.round((b.start - openH) * 4);
+      var qEnd = Math.round((b.start + b.dur - openH) * 4);
+      for (var q=qStart; q<qEnd && q<nQ; q++) {
+        if (q < 0) continue;
+        qcells[q].mission = mx;
+        qcells[q].label = (q === qStart) ? mx.short : '';
+      }
+    });
+    qcells.forEach(function(qc) {
+      if (qc.mission) {
+        row.push(cell(qc.label || '', { bg:qc.mission.bg, tx:qc.mission.tx, bold:true, sz:8, lHour:qc.lHour }));
+      } else if (qc.bar) {
+        row.push(cell('', { bg:tone.bar, lHour:qc.lHour }));
+      } else {
+        row.push(cell('', { lHour:qc.lHour }));
+      }
+    });
+    rows.push(row);
+  });
+
+  // Legende
+  rows.push([]);
+  var legRow = [ cell('Legend',{align:'left',bold:true,tx:'6B7280',sz:10}) ];
+  for (var i=1;i<totalCols;i++) legRow.push(cell(''));
+  rows.push(legRow);
+  var legends = [
+    ['MB','Morning brief','1A1A2E','FFFFFF'],
+    ['Lun','Lunch break','FDE047','713F12'],
+    ['Wel','Welcome mission','A5B4FC','312E81']
+  ];
+  legends.forEach(function(lg){
+    var lr = [ cell(lg[0],{bg:lg[2],tx:lg[3],bold:true}), cell(lg[1],{align:'left',tx:'6B7280',sz:9}) ];
+    for (var i=2;i<totalCols;i++) lr.push(cell(''));
+    rows.push(lr);
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!merges'] = [
+    { s:{r:0,c:0}, e:{r:0,c:Math.min(10,totalCols-1)} },
+    { s:{r:1,c:0}, e:{r:1,c:Math.min(10,totalCols-1)} }
+  ];
+  var cols = [{wch:18},{wch:11},{wch:7}];
+  for (var q=0;q<nQ;q++) cols.push({wch:2.4});
+  ws['!cols'] = cols;
+  ws['!freeze'] = { xSplit:3, ySplit:4, topLeftCell:'D5', activePane:'bottomRight', state:'frozen' };
+  ws['!panes']  = [{ xSplit:3, ySplit:4, topLeftCell:'D5', activePane:'bottomRight', state:'frozen' }];
+  ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:1 };
+  ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Intraday');
+  XLSX.writeFile(wb, 'CORA_Retail_Intraday_' + intradayExport.ds + '.xlsx');
   showToast('Export termin\u00e9 \u2713');
 }
 
