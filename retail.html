@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v2.7</title>
+  <title>CORA Retail v2.7.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -4330,6 +4330,9 @@ function renderMonthlyPlanning() {
       if (g === 'stock') {
         var osS = grid.find(function(s){ return s.isOpening; }) || grid[0];
         var csS = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
+        // Shift stock le plus matinal (par horaire, pas par nom) : c'est lui
+        // qu'un stockiste seul assure, quelle que soit la config des shifts.
+        var earliest = grid.reduce(function(a, b){ return b.startMin < a.startMin ? b : a; });
         var nS = list.length;
         var sorted = list.slice().sort(function(x, y) {
           var px = (agentPrefs[x.id] || {}).shift_pref, py = (agentPrefs[y.id] || {}).shift_pref;
@@ -4339,7 +4342,7 @@ function renderMonthlyPlanning() {
         var rotS = nS ? (d.num % nS) : 0;
         sorted = sorted.slice(rotS).concat(sorted.slice(0, rotS));
         if (nS === 1) {
-          plan[sorted[0].id] = osS.code;                 // seul : ouverture
+          plan[sorted[0].id] = earliest.code;            // seul : le plus tot
         } else {
           // Moitie ouverture / moitie fermeture, au moins 1 de chaque.
           var nClo = Math.round(nS / 2);
