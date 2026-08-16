@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v2.8.1</title>
+  <title>CORA Retail v2.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -681,6 +681,10 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 /* En-tete de page (hors carte) */
 .page-head { display:flex; align-items:center; justify-content:space-between;
   gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap; }
+.month-nav { display:inline-flex; align-items:center; gap:2px; }
+.month-lbl { font-size:13px; font-weight:600; color:var(--tx-1); padding:5px 12px;
+  border-radius:var(--r-md); cursor:pointer; min-width:120px; text-align:center; user-select:none; }
+.month-lbl:hover { background:var(--bg-base-3); }
 .page-title { font-size:17px; font-weight:600; color:var(--tx-1); }
 /* Un en-tete place DANS une carte annule le padding lateral pour rester
    aligne sur le bord de la carte, comme les en-tetes hors carte. */
@@ -1045,7 +1049,14 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
     <div id="planning-monthly">
     <div class="page-head">
       <h2 class="page-title">Monthly planning</h2>
-      <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
+      <div style="display:flex;align-items:center;gap:var(--s3)">
+        <div class="month-nav">
+          <button class="btn btn-ghost btn-sm" onclick="monthlyShift(-1)" aria-label="Previous month">&lsaquo;</button>
+          <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
+          <button class="btn btn-ghost btn-sm" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
+        </div>
+        <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
+      </div>
     </div>
     <div id="planning-monthly-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the monthly planning.</p></div></div>
     </div>
@@ -1234,6 +1245,7 @@ let agentPrefs        = {};   // { agentId: {shift_pref, weekend_ok, avoid_days[
 let trafficMonthly    = {};   // { 'YYYY-MM': {last_year, current_year, source} }
 let trafficDaily      = {};   // { 'YYYY-MM-DD': {traffic, is_manual} }
 let currentWeekMonday = getMondayOfCurrentWeek();
+let monthlyRef = new Date();   // mois affiche dans le Monthly, independant de la semaine
 let calHolidays       = {};   // { 'YYYY-MM-DD': 'Holiday name' } for current region/year
 let calOverrides      = {};   // { 'YYYY-MM-DD': true|false } forced open/closed
 let calHours          = {};   // { 'YYYY-MM-DD': {open,close} } exceptional hours
@@ -1328,6 +1340,25 @@ function changeWeek(dir) {
   if (currentStoreId) loadWeekData();
 }
 
+// Navigation du mois affiche dans le Monthly (independante de la semaine).
+function monthlyShift(dir) {
+  monthlyRef.setDate(1);
+  monthlyRef.setMonth(monthlyRef.getMonth() + dir);
+  updateMonthlyLabel();
+  if (currentStoreId) renderMonthlyPlanning();
+}
+
+function monthlyToday() {
+  monthlyRef = new Date();
+  updateMonthlyLabel();
+  if (currentStoreId) renderMonthlyPlanning();
+}
+
+function updateMonthlyLabel() {
+  var el = document.getElementById('monthly-label');
+  if (el) el.textContent = monthlyRef.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+}
+
 function updateWeekLabel() {
   const days = getWeekDays(currentWeekMonday);
   const wn   = getWeekNumber(currentWeekMonday);
@@ -1404,6 +1435,7 @@ function toggleAddAgentForm() {
 // ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
   updateWeekLabel();
+  updateMonthlyLabel();
   showLoader();
   const { data, error } = await sb.from('retail_regions').select('*').order('name');
   hideLoader();
@@ -3614,7 +3646,7 @@ async function applyCellOverride(value) {
 // Efface toutes les modifications manuelles du mois affiche
 async function clearMonthOverrides() {
   if (!agents.length) return;
-  var ref   = new Date(currentWeekMonday);
+  var ref   = new Date(monthlyRef);
   var year  = ref.getFullYear(), mIdx = ref.getMonth();
   var first = toDateStr(new Date(year, mIdx, 1));
   var last  = toDateStr(new Date(year, mIdx + 1, 0));
@@ -3882,8 +3914,8 @@ function renderMonthlyPlanning() {
     return;
   }
 
-  // Mois affiche = mois de la semaine courante (les fleches font defiler)
-  var ref      = new Date(currentWeekMonday);
+  // Mois affiche par le Monthly (navigable independamment de la semaine)
+  var ref      = new Date(monthlyRef);
   var year     = ref.getFullYear();
   var monthIdx = ref.getMonth();
   var lastDay  = new Date(year, monthIdx + 1, 0);
@@ -4977,7 +5009,7 @@ function exportMonthly() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   if (!monthlyResult || !Object.keys(monthlyResult).length) renderMonthlyPlanning();
 
-  var ref = new Date(currentWeekMonday);
+  var ref = new Date(monthlyRef);
   var year = ref.getFullYear(), monthIdx = ref.getMonth();
   var nDays = new Date(year, monthIdx + 1, 0).getDate();
   var monthName = new Date(year, monthIdx, 1).toLocaleDateString('en-GB', { month:'long', year:'numeric' });
