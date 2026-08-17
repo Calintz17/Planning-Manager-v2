@@ -23,14 +23,14 @@ Tabs : Planning (Dashboard + Weekly + Intraday), Agents, Calendar, Settings, Reg
 
 ## Tech stack
 
-Dead simple on purpose. No build step, no framework, no npm.
+no framework
 
-- **Front** : one single HTML file per module. All the HTML, CSS and JS inside. That's it.
-- **Back** : Supabase (Postgres + auto API). Retail tables are prefixed `retail_`, CSC tables aren't. Same project.
-- **Hosting** : GitHub Pages, straight from the repo.
-- **Libs** (CDN, nothing installed) : `supabase-js` to talk to the DB, `xlsx-js-style` for the Excel exports, Nager.Date for public holidays.
+- **Front** : one single HTML file per module. 
+- **Back** : Supabase (Postgres + auto API). Retail tables are prefixed `retail_`
+- **Hosting** : GitHub Pages
+- **Libs** (CDN, nothing installed) : `supabase-js` to talk to the DB, `xlsx-js-style` for the Excel exports, Nager.
 
-Everything is edited through the GitHub web UI. No terminal, no local setup. Locked-down corporate laptop, can't install anything, so a single file served by GitHub Pages is the only thing that works end to end. Plug and play. Can't do better with the tools I have, and honestly I don't want more complicated.
+Everything is edited through the GitHub web UI. No terminal, no local setup. 
 
 Anon public key only. `service_role` never touches the front.
 
@@ -43,9 +43,9 @@ Anon public key only. `service_role` never touches the front.
 
 ---
 
-## Rules that matter
+## Rules
 
-The non-obvious stuff baked into the engine. Touch the code, keep these true.
+The non-obvious stuff baked into the engine.
 
 - **Never blocks.** Needs 4, has 3 ? Schedules 3, raises an alert, moves on.
 - **Strict skills / pills.** An agent only ever does tasks they're tagged for. No silent switching. Unmet work carries to the next day.
@@ -77,12 +77,3 @@ All in Supabase, RLS on every table with an allow-all policy (single trusted int
 
 Core tables : regions / countries / stores (the hierarchy), agents (with `work_pct`), agent skills, availability, leave, traffic (daily + monthly), tasks, regulations, calendar overrides, planning overrides, shift config, store settings, intraday overrides, intraday missions, highlights.
 
----
-
-## Still on the horizon
-
-- Data seeding : all regions, stores, and traffic loaded for real.
-- Accounts system : Supabase auth, per-manager scopes, RLS isolation. Waiting on IT certification (touches data and accounts).
-- Auto-email the weekly + intraday plan to each agent. Depends on accounts.
-- Multi-store / multi-corner (think Galeries Lafayette : one store, several corners sharing stock but with dedicated agents). Next big chantier.
-- A dead-code / cleanup pass, and a design refresh on the date and time pop-ups.
