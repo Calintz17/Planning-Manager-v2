@@ -1,34 +1,20 @@
 <!DOCTYPE html>
 <!--
-  ════════════════════════════════════════════════════════════════════════
-  CORA RETAIL - v2.0
-  Client Operations Rostering Assistant - module Retail
-
-  Perimetre     : hierarchie Region > Country > Store, planning mensuel,
-                  moteur d'affectation 4 couches, trafic et prevision,
-                  gestion des agents, calendrier des absences, parametrage.
-  Design system : voir CORA_DESIGN_SYSTEM.txt (tokens, composants, regles).
-  Base          : Supabase, tables retail_*.
-
-  Regle de maintenance : un selecteur CSS = une seule definition,
-  zero !important, zero code mort. Auditer avant chaque livraison.
-  ════════════════════════════════════════════════════════════════════════
+  CORA Retail - Client Operations Rostering Assistant
+  Planning mensuel et intraday pour boutiques. Base Supabase (tables retail_*).
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v3.5</title>
+  <title>CORA Retail v3.5.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
-/* ═══════════════════════════════════════════════════════════════════
-   CORA — DESIGN TOKENS (source unique de verite)
-   Derives du kit "Minimalist UI" : neutre-first, couleur = sens.
-   ═══════════════════════════════════════════════════════════════════ */
+/* ═══ DESIGN TOKENS ═══════════════════════════════════════════════ */
 :root {
   /* ---- Surfaces ---- */
   --bg-app:        #F4F5F7;   /* canvas gris : fait ressortir les bulles */
@@ -190,8 +176,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .b-wel { background:#A5B4FC; color:#312E81; }
 .b-vm  { background:#86EFAC; color:#14532D; }
 
-/* Bouton [+] d'ajout de mission : visible au survol de la piste */
-/* Croix de retrait style iOS : pastille ronde en haut a gauche, au survol */
+/* Missions ajoutees a la main : bulle + croix de retrait */
 .it-blk-added { overflow:visible; }
 .it-blk-x { position:absolute; top:-6px; left:-6px; width:15px; height:15px;
   border-radius:var(--r-pill); background:#fff; color:#374151; border:1px solid var(--line);
@@ -247,7 +232,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   padding:12px var(--s6); background:var(--bg-base);
   border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;
 }
-/* Aligne le contenu du topbar sur la colonne de contenu (meme largeur max) */
+/* Topbar */
 #topbar > .tb-inner {
   display:flex; align-items:center; gap:var(--s3);
   width:100%; max-width:var(--content-max); margin:0 auto;
@@ -552,12 +537,11 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh-half { position:relative; display:inline-flex; align-items:center; justify-content:center;
       min-width:26px; height:22px; border-radius:var(--r-sm); overflow:hidden;
       font-size:11px; font-weight:600; z-index:0; }
-/* Triangle gris repos qui recouvre la moitie non travaillee. */
+/* Demi-case : moitie grise en repos, l'autre coloree par le shift. */
 .sh-half::after { content:""; position:absolute; inset:0; z-index:0;
       background:repeating-linear-gradient(135deg,#E9EAEE 0 4px,#F3F4F6 4px 8px); }
-/* Travaille l'apres-midi (soir) : triangle haut-droit colore, gris en bas-gauche. */
+/* C (fermeture) : coloré en haut. O (ouverture) : coloré en bas. */
 .sh-half-pm::after { clip-path:polygon(0 0, 0 100%, 100% 100%); }
-/* Travaille le matin : triangle bas-gauche colore, gris en haut-droit. */
 .sh-half-am::after { clip-path:polygon(0 0, 100% 0, 100% 100%); }
 .sh-half-lbl { position:relative; z-index:1; }
 /* Ouverture = vert | Fermeture = bleu | Milieu = ambre | Stock = contour */
@@ -769,7 +753,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sb-scope { position:relative; margin-top:var(--s5);
   padding-top:var(--s4); border-top:1px solid var(--line); }
 
-/* ═══ INFO-BULLE DE PREMIERE CONNEXION ═══════════════════════════ */
+/* ═══ GATE DE SELECTION BOUTIQUE ═══════════════════════════════════ */
 #store-gate {
   display:none; position:fixed; inset:0; z-index:9999;
   align-items:center; justify-content:center;
@@ -1517,10 +1501,6 @@ async function onRegionChange() {
   await loadCountries();
 }
 
-// ── INFO-BULLE DE PREMIERE CONNEXION ──────────────────────────────────────
-// Meme mecanique qu'un bandeau cookies : on memorise dans le navigateur
-// que l'utilisateur a vu le message. Si le stockage est vide (nouvelle
-// machine, cache efface, navigation privee), la bulle reapparait.
 // ── GATE DE SELECTION DE BOUTIQUE (obligatoire au demarrage) ──────────────
 // Les 3 selects (region/country/store) sont physiquement deplaces dans la
 // modale tant qu'aucun store n'est choisi, puis remis dans la sidebar. Un seul
@@ -4749,11 +4729,12 @@ function renderMonthlyPlanning() {
   // Pastille HTML pour une lettre de shift
   function cell(res) {
     if (res.special === 'closed') return '<span class="sh-none">\u00b7</span>';
-    // Demi-journee volant : case coupee en diagonale. La moitie travaillee est
-    // coloree (haut-droit si apres-midi/soir, bas-gauche si matin), l'autre grise.
+    // Demi-journee volant : case coupee en diagonale, moitie coloree selon O/C.
     if (res.half) {
       var cls = shiftCls(res.code);
-      var pos = (res.half === 'pm') ? 'sh-half-pm' : 'sh-half-am';
+      // Coloré en haut pour une fermeture (C), en bas pour une ouverture (O).
+      var isClose = /^C/.test(res.code);
+      var pos = isClose ? 'sh-half-pm' : 'sh-half-am';
       return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + res.code + '</span></span>';
     }
     return '<span class="sh ' + shiftCls(res.code) + '">' + res.code + '</span>';
