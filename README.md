@@ -1,182 +1,88 @@
-# Planning Manager V1.21
-
 # CORA - Client Operations Rostering Assistant
 
-yo
-CORA is a browser-based workforce planning tool for a customer service operation spread across six global hubs. 
-It replaces the old manual Excel scheduling with an automatic engine that builds a weekly plan from forecasted workload, agent availability, and regional rules.
+Browser-based workforce planning tool. Two modules, same idea : kill the manual Excel scheduling and let an engine build the plan from workload, agent availability, and local rules.
 
-The six hubs are Paris (France), New York (USA), Shanghai (China), Seoul (South Korea), Tokyo (Japan), and Singapore.
+Two flavors :
+- **CSC** (`index.html`) - the call center module. Six global hubs : Paris, New York, Shanghai, Seoul, Tokyo, Singapore. Plans calls, chats, mails, back-office, fraud, clienteling.
+- **Retail** (`retail.html`) - the boutique module. Same engine spirit, but for store floors : sales, management, stock. Navy for retail, red for CSC, an iOS-style toggle in the footer jumps between the two.
 
-Each hub has its own agents, its own forecasts, its own regulations, and its own planning. A region selector at the top of the app filters everything: you only ever see data for the region you have selected.
+Each region / store has its own agents, its own traffic, its own rules, its own planning. You only ever see the scope you selected.
 
 ---
 
-## What CORA does
+## What it does
 
-1. You enter (or auto-generate) a forecast of the contact volume for the week.
-2. CORA looks at which agents are available, their working percentage, their skills, and the local rules.
-3. It produces a weekly schedule and a detailed intraday timeline (who does what, hour by hour).
-4. If there are not enough people, it never crashes. It schedules everyone it has, flags the gap with a production alert, and carries the unmet work to the next day.
+1. You feed it the traffic (call volume for CSC, footfall for Retail), or let it auto-forecast.
+2. It looks at who's available, their working %, their skills, and the local rules.
+3. It spits out a weekly plan and an hour-by-hour intraday timeline.
+4. Not enough people ? It doesn't crash. It schedules what it has, flags the gap, and moves the unmet work to the next day. Always does its best with what's there.
 
-The interface is split into tabs: Planning (with a Recap dashboard and the Weekly / Intraday views), Agents, Calendar, Settings, and Regulations.
+Tabs : Planning (Dashboard + Weekly + Intraday), Agents, Calendar, Settings, Regulations.
 
 ---
 
 ## Tech stack
 
-The whole app is intentionally simple. There is no build step, no framework, no package manager.
+Dead simple on purpose. No build step, no framework, no npm.
 
-- **Frontend**: a single HTML file containing all the HTML, CSS, and JavaScript. The current production file is `CORA_v1_21.html`.
-- **Backend / database**: Supabase (Postgres + auto-generated API).
-- **Hosting**: GitHub Pages, served directly from the repo.
-- **External libraries** (loaded from a CDN, nothing installed):
-  - `@supabase/supabase-js` - to talk to the database
-  - `xlsx-js-style` - to generate the Excel exports
-  - Nager.Date public API - to fetch public holidays per country
+- **Front** : one single HTML file per module. All the HTML, CSS and JS inside. That's it.
+- **Back** : Supabase (Postgres + auto API). Retail tables are prefixed `retail_`, CSC tables aren't. Same project.
+- **Hosting** : GitHub Pages, straight from the repo.
+- **Libs** (CDN, nothing installed) : `supabase-js` to talk to the DB, `xlsx-js-style` for the Excel exports, Nager.Date for public holidays.
 
-Everything is edited through the GitHub web interface. There is no local development setup, no terminal, no npm.
+Everything is edited through the GitHub web UI. No terminal, no local setup. Locked-down corporate laptop, can't install anything, so a single file served by GitHub Pages is the only thing that works end to end. Plug and play. Can't do better with the tools I have, and honestly I don't want more complicated.
 
-### Why a single file?
-
-Deployment happens on a locked-down corporate environment where nothing can be installed. 
-A single HTML file edited in the GitHub web UI and served by GitHub Pages is the only workflow that works end to end without any local tooling. 
-I don't want a complicated thing
-Ideally plug and play
-Can't do better with the tools I have
+Anon public key only. `service_role` never touches the front.
 
 ---
 
-## Project links
+## Links
 
-- **Repository**: https://github.com/Calintz17/Planning-Manager-v2
-- **Supabase project**: https://miawersffeosiovqdokw.supabase.co
-
-The Supabase connection uses the public **anon** key only (it is safe to have it in the frontend, that is what it is designed for). The `service_role` key is never used in this app.
+- Repo : https://github.com/Calintz17/Planning-Manager-v2
+- Supabase : https://miawersffeosiovqdokw.supabase.co
 
 ---
 
-## How the database is organized
+## Rules that matter
 
-All tables live in Supabase. Every table that holds region-specific data has a `region_id` column so the app can filter by the selected hub. Row Level Security is enabled on every table with an "allow all" policy (single trusted internal app, no per-user auth yet).
+The non-obvious stuff baked into the engine. Touch the code, keep these true.
 
-| Table | What it stores |
-|---|---|
-| `regions` | The six hubs (name, city, timezone). The source of truth for the region selector. |
-| `agents` | One row per agent: first name, last name, region, active flag, and `work_pct` (100 = full time, 70 = part time, etc.). |
-| `agent_tags` | Skills / eligibility per agent (`can_call`, `can_chat`, `can_fraud`, `can_backoffice`, etc.). One row per agent-skill pair. |
-| `agent_availability` | Per agent, per day: is the agent working, resting, or absent (`day_status`). |
-| `agent_leave` | Holiday / leave periods per agent (start date, end date, type). |
-| `forecasts` | Per region, per date: the expected contact volume and average handle time. |
-| `historical_volume` | Real past volume per region, per date, per hour, per task. Used to shape the forecast and detect anomalies. |
-| `monthly_bo_targets` | Monthly Back-Office and Fraud volume targets, later spread across hours. |
-| `tasks` | Task configuration per region: name, priority, filler flag, colors, handle time. |
-| `regulations` | Local rules per region stored as key/value pairs (weekly hours, rest days, breaks, etc.). |
-| `calendar_overrides` | Manual "this specific day is open / closed" decisions per region. |
-| `schedule_overrides` | Manual changes a manager makes on the intraday timeline (drag-and-drop task or break moves), so they survive a reload. |
-
-> Note to investigate: a few task fields (`required_tag`, `morning_only`) exist only in memory in the code, never in the database. They live in the `TASK_DEFAULTS` list inside the HTML file.
+- **Never blocks.** Needs 4, has 3 ? Schedules 3, raises an alert, moves on.
+- **Strict skills / pills.** An agent only ever does tasks they're tagged for. No silent switching. Unmet work carries to the next day.
+- **Everything is weekly.** No monthly quota, that was a myth I killed. The month view is just display, the engine thinks in weeks.
+- **Presence, not gaps.** Agents open (morning) or close (afternoon), no mid-day hole. The engine picks morning vs afternoon based on where the traffic is heaviest.
+- **Rest days : exactly 2 a week.** Min and max. Placed on the quiet days.
+- **Holidays are neutral.** They don't eat rest days, they're offered on top.
+- **Absences replace a worked day**, not a rest day.
 
 ---
 
-## Code organisation 
+## Retail specifics
 
-**1. `<style>` Style **
-Grouped in clearly labelled sections (Header, Tabs, Layout, Planning table, Shift badges, Forecast, Recap, Calendar, Intraday timeline, etc.). The visual style is fixed and documented separately in the project rules: Apple-like, navy `#1a1a2e` brand color, white cards, soft borders. New UI must match it.
+The retail module has its own flavor on top of the shared idea.
 
-**2. `<body>` Body**
-The header with the region selector and week navigation, the tab bar, and one block per tab (Planning, Agents, Calendar, Settings, Regulations), plus a few hidden popups (week picker, leave picker, shift switch, day open/close).
-
-**3. `<script>` Script**
-This is the brain of the app. The main groups of functions are:
-
-- **Setup**: Supabase client, constants (`DAY_KEYS`, `REGION_DEFAULTS`), and the in-memory state variables (`agents`, `forecasts`, `availability`, `regulations`, `tasks`, etc.).
-- **Init & region**: `init()` loads regions and boots the app; `onRegionChange()` reloads everything when you switch hub.
-- **Loaders**: `loadTasks()`, `loadAgentTags()`, `loadRegulations()`, `loadCalendarData()`, `loadHistoricalVolume()`, `loadMonthlyBoTargets()` - each pulls its data from Supabase.
-- **Forecast engine**: `buildAutoForecast()` generates the weekly forecast; `buildBoHourlyFromMonthly()` spreads monthly Back-Office/Fraud targets across the hours using the call curve as a shape.
-- **Planning render**: `renderForecast()` and the Recap helpers (`buildRecapSummary()`, `recapSummaryHtml()`, anomaly and production-alert banners) build the weekly view and dashboard.
-- **Intraday**: the timeline view, including drag-and-drop block swapping saved to `schedule_overrides`.
-- **Calendar**: `renderCalendar()`, `loadHolidays()` (Nager.Date), leave management, and per-day open/close overrides.
-- **Agents**: add, delete, change working percentage, toggle skill tags.
-- **Excel export**: `exportWeekly()`, `exportRecap()`, `exportIntraday()` produce three A4-ready Excel views.
-- **Regulations**: load, seed, and save the per-region rules.
+- **Three pools** : management, sales, stock. Each ventilated week by week on the traffic.
+- **Shifts** : Opening (O), Middle (M), Closing (C), Sunday/holiday (D). Stock has its own : OS / MS / CS.
+- **70-30 closing bias.** More people on the close than the open, because that's where the traffic sits.
+- **Part-time, two kinds.** Fixed : works set contractual days and hours. Flexible (volant) : the engine spreads them on the busiest days at their % of a full week. Half a day can land in the mix, shown as a diagonal half-cell.
+- **Intraday missions** : morning brief, lunch, welcome. Drag to move, click the bar to add one, hover to remove.
+- **Excel exports** : monthly and intraday, A4-ready, colors matching the screen.
+- **Half-hour opening times** : stores can close at 19:30, not just on the hour.
 
 ---
 
-## The scheduling rules that matter
+## Database
 
-These are the non-obvious business rules baked into the engine. If you change the code, keep them true.
+All in Supabase, RLS on every table with an allow-all policy (single trusted internal app, no per-user auth yet). CSC tables plain, retail tables prefixed `retail_`.
 
-- **The engine never blocks.** If it needs 4 agents and only has 3, it schedules 3, raises a production alert, and moves on. It always does the best it can with what is available.
-- **Strict skills.** An agent is only ever assigned to tasks they have the skill tag for. The engine never silently switches an agent to a task outside their skills. Unmet work carries to the next day instead.
-- **Agent presence is separate from opening hours.** Agents start at opening (morning shift) or end at closing (afternoon shift), with no mid-day gap. The engine decides morning vs afternoon based on where the hourly volume is heaviest, not at random.
-- **At least one "hot" agent per open hour.** During opening hours, every hour must have at least one Call/Chat agent. Outside opening hours, a lone agent doing "cold" tasks (mail, back office, clienteling) is fine.
-- **Weekly hours are strict per region.** Europe is 37.5h/week, the others 40h. Each scheduled block counts as one worked hour except unpaid Lunch and Break.
+Core tables : regions / countries / stores (the hierarchy), agents (with `work_pct`), agent skills, availability, leave, traffic (daily + monthly), tasks, regulations, calendar overrides, planning overrides, shift config, store settings, intraday overrides, intraday missions, highlights.
 
 ---
 
-## Regional defaults
+## Still on the horizon
 
-Opening hours, rest days, and weekly hours per hub (these are starting defaults; they can be overridden in the Regulations tab).
-
-| Hub | Open | Close | Sat rest | Sun rest | Weekly hours |
-|---|---|---|---|---|---|
-| Paris | 10 | 18 | yes | yes | 37.5 |
-| New York | 10 | 19 | yes | yes | 40 |
-| Shanghai | 10 | 20 | no | no | 40 |
-| Tokyo | 10 | 20 | no | no | 40 |
-| Singapore | 7 | 20 | yes | yes | 40 |
-| Seoul | 10 | 19 | yes | yes | 40 |
-
----
-
-## Tasks
-
-Six task types, in priority order (lower number = handled first when assigning agents). Each has its own color and average handle time in minutes.
-
-| Task | Priority | Filler | Handle time | Skill tag |
-|---|---|---|---|---|
-| FRAUD | 1 | no | 10 min | can_fraud |
-| CALL | 1 | no | 10 min | can_call |
-| CHAT | 2 | no | 8 min | can_chat |
-| MAIL | 3 | no | 5 min | can_mail |
-| BACK-OFFICE | 4 | no | 10 min | can_backoffice |
-| CLIENTELING | 5 | yes | 15 min | can_clienteling |
-
-"Filler" means the task is used to fill spare agent time once the higher-priority work is covered.
-
----
-
-## Version history 
-
-
-| Version | descriptiop |
-|---|---|
-| Build_V1 | First draft : HTML structure, color palette, and Supabase integration. Used to have index.html / app.js / styles.css / config.js files. |
-| Build_V1.1 | Added the Tasks and forecast module. Added Copyright at. Roman Inc. mthfckr|
-| Build_V1.2 | Added the Weekly planning module and a shitty PTO drawer. |
-| Build_V1.3 | Added the Regulations module with validation, (set in stone, see later to upgrade). |
-| Build_V1.4 | header, footer, background and button colors (remove golden layout), and added a task management UI with pills. |
-| Build_V1.5 | Added a forecast test page and refined the layout so it look good. It didn't. |
-| MVP_v1 | Switched to a single index.html file because too many sub-file and i can't bother to have a app.js. Removed styles.css and config.js. |
-| MVP_v1.1 | Added the rotation engine, forecast blocking logic, and reactive opening-hours handling. Didn't work |
-| MVP_v1.2 | Added the auto-forecast and carry-over logic -> Shit's great. To test if it work with OPS tho |
-| MVP_v1.3 | Broke everything, then Intraday view + drag-and-drop schedule overrides. |
-| MVP_v1.4 | Task configuration and defaults, and fixed agent tags. More upsert, less insert |
-| CORA_V1.5 | Added required tags to task defaults (will work with retail) and converted agent tag chips to skill pills. |
-| CORA_V1.6 | Recap card and renamed the weekly forecast title because too many "planning" |
-| CORA_V1.7 | Removed the Forecast tab. Remove "regulation", replaced with Settings tab -> 1 tab to make input only |
-| CORA_V1.8 | Set the default planning view and reworked the view buttons. |
-| CORA_V1.9 | Added the Shifts engine : agent presence handling and Morning / Afternoon scheduling logic. Broke things with China|
-| CORA_V1.10 | Added the iOS-style shift switch popover and its styles. Fixed China. |
-| CORA_V1.11 | Shift badge styling yo, presence logic if FTE is here, and shift hour calculations. |
-| CORA_V1.12 | Added the Excel export button and its core functionality as per AST request. |
-| CORA_V1.13 | Refined the Excel export with extra cell merges and border styles. Still not perfect, but will do for now |
-| CORA_V1.14 | Added the calendar navigation and leave declaration forms. (Only 3 now) |
-| CORA_V1.15 | Perpetual calendar, thanks Rida, view and updated styles. |
-| CORA_V1.16 | Added volum eanomaly detection and updated styling > based on n-1 forecast. |
-| CORA_V1.17 | Refactored the anomaly checks (too heavy), coverage calculations, and production alert logic. |
-| CORA_V1.20 | updated the setup steps. |
-| CORA_V1.21 | My baby is born : Update header to CORA with the logo, and renamed the title. |
-| CORA_V1.21.1 | Added the status bar with status text |
-| CORA_V1.21.2 | Fixed shit with .table-scroll to wrap table so mobile is ok, cause everyone likes fucking mobile dunno why |
+- Data seeding : all regions, stores, and traffic loaded for real.
+- Accounts system : Supabase auth, per-manager scopes, RLS isolation. Waiting on IT certification (touches data and accounts).
+- Auto-email the weekly + intraday plan to each agent. Depends on accounts.
+- Multi-store / multi-corner (think Galeries Lafayette : one store, several corners sharing stock but with dedicated agents). Next big chantier.
+- A dead-code / cleanup pass, and a design refresh on the date and time pop-ups.
