@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v3.4</title>
+  <title>CORA Retail v3.5</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -549,10 +549,17 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh { display:inline-flex; align-items:center; justify-content:center;
       min-width:26px; height:22px; padding:0 6px; border-radius:var(--r-sm);
       font-size:11px; font-weight:600; letter-spacing:.01em; }
-.sh-half { display:inline-flex; flex-direction:column; min-width:26px; height:22px;
-      border-radius:var(--r-sm); overflow:hidden; }
-.sh-half .shh { flex:1; display:flex; align-items:center; justify-content:center;
-      font-size:9px; font-weight:700; line-height:1; }
+.sh-half { position:relative; display:inline-flex; align-items:center; justify-content:center;
+      min-width:26px; height:22px; border-radius:var(--r-sm); overflow:hidden;
+      font-size:11px; font-weight:600; z-index:0; }
+/* Triangle gris repos qui recouvre la moitie non travaillee. */
+.sh-half::after { content:""; position:absolute; inset:0; z-index:0;
+      background:repeating-linear-gradient(135deg,#E9EAEE 0 4px,#F3F4F6 4px 8px); }
+/* Travaille l'apres-midi (soir) : triangle haut-droit colore, gris en bas-gauche. */
+.sh-half-pm::after { clip-path:polygon(0 0, 0 100%, 100% 100%); }
+/* Travaille le matin : triangle bas-gauche colore, gris en haut-droit. */
+.sh-half-am::after { clip-path:polygon(0 0, 100% 0, 100% 100%); }
+.sh-half-lbl { position:relative; z-index:1; }
 /* Ouverture = vert | Fermeture = bleu | Milieu = ambre | Stock = contour */
 .sh-open   { background:var(--ok-soft);   color:var(--ok-tx); }
 .sh-mid    { background:var(--warn-soft); color:var(--warn-tx); }
@@ -1119,7 +1126,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <div class="fld"><label>First name</label><input type="text" id="new-first-name" placeholder="First name"></div>
         <div class="fld"><label>Last name</label><input type="text" id="new-last-name" placeholder="Last name"></div>
         <div class="fld"><label>Status</label><select id="new-status"></select></div>
-        <div class="fld"><label>Work %</label><input type="number" id="new-pct" value="100" min="10" max="100" step="5"></div>
       </div>
       <div class="form-actions">
         <button class="btn btn-ghost" onclick="toggleAddAgentForm()">Cancel</button>
@@ -3147,7 +3153,18 @@ function renderIntraday(ds) {
     }
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(a)].grid] || RETAIL_SHIFTS.sales;
     var sh = grid.find(function(s) { return s.code === code; }) || grid[0];
-    shiftInfo[a.id] = sh;
+    // Part-time volant en demi-journee : amplitude reduite (matin ou apres-midi).
+    var halfInfo = dayPlan[a.id].half;
+    if (halfInfo) {
+      var midMin = Math.round((openH + closeH) / 2 * 60);
+      if (halfInfo === 'am') {
+        shiftInfo[a.id] = { code: sh.code, startMin: sh.startMin, endMin: midMin, tone: sh.tone, half: 'am' };
+      } else {
+        shiftInfo[a.id] = { code: sh.code, startMin: midMin, endMin: sh.endMin, tone: sh.tone, half: 'pm' };
+      }
+    } else {
+      shiftInfo[a.id] = sh;
+    }
   });
 
   // Amplitude : englobe shifts + heures d'ouverture
@@ -4732,14 +4749,12 @@ function renderMonthlyPlanning() {
   // Pastille HTML pour une lettre de shift
   function cell(res) {
     if (res.special === 'closed') return '<span class="sh-none">\u00b7</span>';
-    // Demi-journee volant : case coupee, moitie shift (am = haut, pm = bas).
+    // Demi-journee volant : case coupee en diagonale. La moitie travaillee est
+    // coloree (haut-droit si apres-midi/soir, bas-gauche si matin), l'autre grise.
     if (res.half) {
-      var topCls = res.half === 'am' ? shiftCls(res.code) : 'sh-off';
-      var botCls = res.half === 'am' ? 'sh-off' : shiftCls(res.code);
-      var lbl = res.half === 'am' ? res.code : res.code;
-      return '<span class="sh-half"><span class="shh ' + topCls + '">' +
-             (res.half === 'am' ? lbl : '') + '</span><span class="shh ' + botCls + '">' +
-             (res.half === 'pm' ? lbl : '') + '</span></span>';
+      var cls = shiftCls(res.code);
+      var pos = (res.half === 'pm') ? 'sh-half-pm' : 'sh-half-am';
+      return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + res.code + '</span></span>';
     }
     return '<span class="sh ' + shiftCls(res.code) + '">' + res.code + '</span>';
   }
@@ -5034,7 +5049,7 @@ function renderAgents() {
         '</span></span>' +
       '<span class="ag-meta">' +
         '<span class="pill pill-neutral">' + stInfo.label + '</span>' +
-        '<span class="ag-pct">' + pct + '%</span>' +
+        (pct < 100 ? '<span class="ag-pct">' + pct + '%</span>' : '') +
       '</span>' +
       '<button class="icon-btn" title="Edit agent" onclick="openAgentEditor(\'' + a.id + '\')">' +
         '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
@@ -5205,7 +5220,7 @@ async function addAgent() {
   var first  = document.getElementById('new-first-name').value.trim();
   var last   = document.getElementById('new-last-name').value.trim();
   var status = document.getElementById('new-status').value || 'SA';
-  var pct    = Math.max(10, Math.min(100, parseInt(document.getElementById('new-pct').value) || 100));
+  var pct    = 100;   // full-time par defaut, ajustable ensuite dans l'editeur
   if (!first || !last) { showToast('Enter first and last name', 'error'); return; }
 
   showLoader();
@@ -5218,7 +5233,6 @@ async function addAgent() {
 
   document.getElementById('new-first-name').value = '';
   document.getElementById('new-last-name').value  = '';
-  document.getElementById('new-pct').value        = 100;
   document.getElementById('add-agent-form').classList.remove('open');
   showToast(first + ' ' + last + ' added \u2713');
   await loadWeekData();
@@ -5279,6 +5293,9 @@ function exportMonthly() {
         left:{style:'thin',color:{rgb:'ECEDEF'}},
         right:{style:'thin',color:{rgb:'ECEDEF'}}
       };
+      // Demi-journee : trait diagonal dans la cellule.
+      if (o.diag === 'down') { s.border.diagonal = {style:'thin',color:{rgb:'9CA3AF'}}; s.border.diagonalDown = true; }
+      if (o.diag === 'up')   { s.border.diagonal = {style:'thin',color:{rgb:'9CA3AF'}}; s.border.diagonalUp = true; }
     } else if (o.underline === 'rule') {
       s.border = { bottom:{style:'medium',color:{rgb:'1E3A8A'}} };
     }
@@ -5343,7 +5360,12 @@ function exportMonthly() {
         var code = res ? res.code : '';
         if (d.closure && !code) { r.push(cell('\u00b7',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
         var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
-        r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true,grid:true}));
+        if (res && res.half) {
+          // Demi-journee : cellule coupee par une diagonale.
+          r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true,grid:true,diag:(res.half==='pm')?'up':'down'}));
+        } else {
+          r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true,grid:true}));
+        }
         if (code==='O'||code==='OS'){ cntO++; if(code==='O')perDay.open[d.ds]++; }
         if (code==='C'||code==='CS'){ cntC++; if(code==='C')perDay.close[d.ds]++; }
         if (code==='OFF') cntOff++;
@@ -6071,7 +6093,6 @@ init();
             <div class="fld"><label>Start</label><input type="time" id="ae-fixed-start" class="ae-fixed-hour" step="900"></div>
             <div class="fld"><label>End</label><input type="time" id="ae-fixed-end" class="ae-fixed-hour" step="900"></div>
           </div>
-          <p class="set-note" style="margin-top:8px;">These days and hours override all scheduling rules. The agent is placed exactly here, every week.</p>
         </div>
         <div id="ae-pt-volant" style="margin-top:12px;display:none;">
           <div class="fld">
@@ -6084,7 +6105,6 @@ init();
               <option value="90">90%</option>
             </select>
           </div>
-          <p class="set-note" style="margin-top:8px;">The engine schedules this agent on full days spread across the busiest days, at the chosen share of a full-time week. A half day may fall on one day when the count lands on a half.</p>
         </div>
       </div>
     </div>
