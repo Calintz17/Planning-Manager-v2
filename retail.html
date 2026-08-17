@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v3.2</title>
+  <title>CORA Retail v3.3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1769,8 +1769,8 @@ async function saveRegulations() {
     const openEl  = document.getElementById('reg-open-' + k);
     const closeEl = document.getElementById('reg-close-' + k);
     if (openEl && closeEl) {
-      const o = parseInt(openEl.value);
-      const c = parseInt(closeEl.value);
+      const o = parseFloat(openEl.value);
+      const c = parseFloat(closeEl.value);
       if (c <= o) valid = false;
       regulations.day_hours[k] = { open: o, close: c };
     }
@@ -5749,10 +5749,16 @@ async function deleteLeavePrompt(leaveId, event) {
 
 // ── Day open/close popup (annual) ──
 var dayOpenPickerDate = null;
+// Options d'horaires de boutique par demi-heure. La value est en heures decimales
+// (9.5 = 09:30) pour le moteur, le libelle reste lisible (09:30) pour l'utilisateur.
 function hourOptionsH(sel){
   var o = '';
   for (var h = 0; h <= 23; h++) {
-    o += '<option value="'+h+'"'+(h===sel?' selected':'')+'>'+String(h).padStart(2,'0')+':00</option>';
+    for (var m = 0; m < 60; m += 30) {
+      var dec = h + m / 60;
+      var lbl = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+      o += '<option value="'+dec+'"'+(dec===sel?' selected':'')+'>'+lbl+'</option>';
+    }
   }
   return o;
 }
@@ -5807,8 +5813,8 @@ async function applyDayOpen(ds, isOpen) {
 async function saveDayHours() {
   var ds = dayOpenPickerDate;
   if (!ds) return;
-  var o = parseInt(document.getElementById('dayopen-open-time').value, 10);
-  var c = parseInt(document.getElementById('dayopen-close-time').value, 10);
+  var o = parseFloat(document.getElementById('dayopen-open-time').value);
+  var c = parseFloat(document.getElementById('dayopen-close-time').value);
   if (c <= o) { showToast('Closing must be after opening', 'error'); return; }
   calHours[ds] = { open: o, close: c };
   var row = { store_id: currentStoreId, date: ds, is_open: (calOverrides[ds] === true), open_time: o, close_time: c };
