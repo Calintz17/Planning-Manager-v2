@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail v3.5.1</title>
+  <title>CORA Retail V4.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2739,9 +2739,10 @@ async function renderTraffic() {
   var year = currentWeekMonday.getFullYear();
   await loadTraffic(year);
 
-  var totalLY = 0, totalCY = 0;
+  var totalN2 = 0, totalLY = 0, totalCY = 0;
   for (var m = 1; m <= 12; m++) {
     var r = trafficMonthly[monthKey(year, m)] || {};
+    totalN2 += (r.n_2 || 0);
     totalLY += (r.last_year || 0);
     totalCY += (r.current_year || 0);
   }
@@ -2774,11 +2775,14 @@ async function renderTraffic() {
   }
 
   html += '<table class="tbl tbl-framed"><thead><tr>' +
-          '<th>Month</th><th style="text-align:right">Last year</th>' +
+          '<th>Month</th>' +
+          '<th style="text-align:right">N-2</th>' +
+          '<th style="text-align:right">N-1</th>' +
           '<th style="text-align:right">This year</th>' +
           '<th style="text-align:right">Variation</th></tr></thead><tbody>';
   for (var mm = 1; mm <= 12; mm++) {
     var rec = trafficMonthly[monthKey(year, mm)] || {};
+    var n2  = rec.n_2 || 0;
     var ly  = rec.last_year || 0;
     var cy  = (rec.current_year != null) ? rec.current_year : '';
     var vr  = (ly > 0 && cy !== '') ? Math.round(((cy - ly) / ly) * 100) : null;
@@ -2787,6 +2791,7 @@ async function renderTraffic() {
         (vr > 0 ? '+' : '') + vr + '%</span>';
     html += '<tr>' +
       '<td>' + MONTH_NAMES[mm - 1] + '</td>' +
+      '<td style="text-align:right;color:var(--tx-3)">' + (n2 ? n2.toLocaleString('en-US') : '-') + '</td>' +
       '<td style="text-align:right;color:var(--tx-2)">' + (ly ? ly.toLocaleString('en-US') : '-') + '</td>' +
       '<td style="text-align:right">' +
         '<input type="number" class="tr-cy" data-month="' + mm + '" value="' + cy +
@@ -2796,6 +2801,7 @@ async function renderTraffic() {
   }
   html += '<tr style="background:var(--bg-base-2);font-weight:600">' +
     '<td>Total</td>' +
+    '<td style="text-align:right;color:var(--tx-3)">' + totalN2.toLocaleString('en-US') + '</td>' +
     '<td style="text-align:right">' + totalLY.toLocaleString('en-US') + '</td>' +
     '<td style="text-align:right">' + totalCY.toLocaleString('en-US') + '</td>' +
     '<td style="text-align:right">' + (totalCY ? ((delta > 0 ? '+' : '') + delta + '%') : '-') + '</td>' +
@@ -3580,6 +3586,7 @@ async function saveMonthlyTraffic() {
     var ex = trafficMonthly[monthKey(year, m)] || {};
     rows.push({
       store_id: currentStoreId, year: year, month: m,
+      n_2: ex.n_2 || 0,
       last_year: ex.last_year || 0,
       current_year: v,
       source: v == null ? 'empty' : 'manual'
@@ -3676,6 +3683,7 @@ async function runForecast() {
     var ex = trafficMonthly[monthKey(year, m)] || {};
     rows.push({
       store_id: currentStoreId, year: year, month: m,
+      n_2: ex.n_2 || 0,
       last_year: ex.last_year || 0,
       current_year: proj[m],
       source: 'forecast'
