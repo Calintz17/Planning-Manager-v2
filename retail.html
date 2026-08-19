@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V4.7</title>
+  <title>CORA Retail V4.8</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -297,6 +297,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .hero-days .bar-val { text-align:center; font-size:11px; font-style:italic; color:rgba(255,255,255,.75); margin-bottom:6px; height:14px; }
 .hero-days .bar.today { background:#fff; }
 .hero-days .lbl { text-align:center; font-size:11px; color:rgba(255,255,255,.5); margin-top:8px; }
+.hero-days .lbl-date { display:block; font-size:10px; color:rgba(255,255,255,.35); margin-top:1px; }
 .dash-card-label { font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tx-3); margin-bottom:var(--s4); }
 .pool-row { display:flex; align-items:center; justify-content:space-between; padding:var(--s3) 0; border-bottom:1px solid var(--line); }
 .pool-row:last-child { border-bottom:none; }
@@ -3176,37 +3177,49 @@ function renderIntraday(ds) {
     return shiftInfo[a.id].startMin - shiftInfo[b.id].startMin;
   });
 
-  // ── Plan des pauses dejeuner (lissage global) ──
-  // Ordre = ordre d'arrivee (premier arrive, premier en pause). On lisse pour
-  // ne jamais avoir trop de monde en pause au meme instant : la plage autorisee
-  // est decoupee en creneaux de la duree d'un lunch ; on repartit les agents
-  // sur ces creneaux de facon egale (concurrence = effectif / nb de creneaux).
+  // ── Plan des pauses dejeuner (lissage par pool, presence floor garantie) ──
+  // Regle terrain : stock et management peuvent partir ensemble, mais les
+  // vendeurs (floor) doivent toujours garder une presence en boutique. On lisse
+  // donc les vendeurs a part, en limitant le nombre en pause simultanee a la
+  // moitie de l'effectif floor, pour ne jamais vider le floor a midi.
   var lunchPlan = {};
   if (lunch) {
     var durH = lunch.duration / 60;
-    var elig = byArrival.filter(function(a) {
-      var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
-      var ws = Math.max(lunch.window_start, sH + 1);   // pas de lunch des l'arrivee
-      var we = Math.min(lunch.window_end, eH);
-      return we - ws >= durH;
-    });
-    // Plage commune de pause et nombre de creneaux sequentiels disponibles
     var winStart = lunch.window_start, winEnd = lunch.window_end;
     var slots = Math.max(1, Math.floor((winEnd - winStart) / durH));
-    // Concurrence cible : repartir l'effectif eligible sur les creneaux
-    var perSlot = Math.max(1, Math.ceil(elig.length / slots));
-    elig.forEach(function(a, i) {
+
+    function planLunch(list, maxConcurrent) {
+      list.forEach(function(a, i) {
+        var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
+        var ws = Math.max(winStart, sH + 1);
+        var we = Math.min(winEnd, eH) - durH;
+        if (we - ws < 0) return;   // pas de place pour une pause
+        var slotIdx = Math.floor(i / maxConcurrent);
+        var ideal = winStart + (slotIdx % slots) * durH;
+        var slot = Math.min(Math.max(ideal, ws), Math.max(ws, we));
+        slot = Math.round(slot * 4) / 4;
+        lunchPlan[a.id] = slot;
+      });
+    }
+
+    // Vendeurs eligibles = floor. On garde au moins la moitie presente.
+    var floorElig = byArrival.filter(function(a) {
+      if (poolOf(a) !== 'sales') return false;
       var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
-      var ws = Math.max(winStart, sH + 1);
-      var we = Math.min(winEnd, eH) - durH;
-      // Creneau theorique selon le rang d'arrivee (0..slots-1)
-      var slotIdx = Math.floor(i / perSlot);
-      var ideal = winStart + slotIdx * durH;
-      // Contraint dans la fenetre propre de l'agent
-      var slot = Math.min(Math.max(ideal, ws), Math.max(ws, we));
-      slot = Math.round(slot * 4) / 4;   // snap quart d'heure
-      lunchPlan[a.id] = slot;
+      return Math.min(winEnd, eH) - Math.max(winStart, sH + 1) >= durH;
     });
+    var otherElig = byArrival.filter(function(a) {
+      if (poolOf(a) === 'sales') return false;
+      var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
+      return Math.min(winEnd, eH) - Math.max(winStart, sH + 1) >= durH;
+    });
+
+    // Floor : au plus la moitie en pause a la fois (au moins 1 present s'il en reste).
+    var floorMax = Math.max(1, Math.floor(floorElig.length / 2));
+    planLunch(floorElig, floorMax);
+    // Stock + management : lissage simple, ils peuvent partir groupes.
+    var otherMax = Math.max(1, Math.ceil(otherElig.length / slots));
+    planLunch(otherElig, otherMax);
   }
 
   // ── Plan des morning briefs, par vague d'arrivee ──
@@ -3892,6 +3905,7 @@ function renderDashboard() {
   var wn = getWeekNumber(currentWeekMonday);
   var todayStr = toDateStr(new Date());
   var DOW3 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
   // Trafic par jour + total semaine
   var vols = days.map(function(d){ return dailyTrafficFor(toDateStr(d)); });
@@ -3920,7 +3934,7 @@ function renderDashboard() {
     var isToday = (ds === todayStr);
     spark += '<div><div class="bar-val">' + (vols[i] > 0 ? vols[i] : '') + '</div>' +
              '<div class="bar' + (isToday ? ' today' : '') + '" style="height:' + Math.max(4,h) + 'px"></div>' +
-             '<div class="lbl">' + DOW3[d.getDay()] + '</div></div>';
+             '<div class="lbl">' + DOW3[d.getDay()] + '<span class="lbl-date">' + d.getDate() + '</span></div></div>';
   });
 
   // Presence par pool aujourd'hui (si aujourd'hui est dans la semaine affichee)
@@ -3975,7 +3989,7 @@ function renderDashboard() {
       '<div>' +
         '<div class="dash-eyebrow">Week ' + wn + ' \u00b7 ' + formatDate(days[0]) + ' - ' + formatDate(days[6]) + '</div>' +
         '<div class="dash-title">This week at a glance</div>' +
-        '<div class="dash-sub">Monday to Sunday overview</div>' +
+        '<div class="dash-sub">' + (todayInWeek ? 'Today \u00b7 ' + DOW_FULL[new Date(todayStr+'T12:00:00').getDay()] + ' ' + formatDate(new Date(todayStr+'T12:00:00')) : 'Monday to Sunday overview') + '</div>' +
       '</div>' +
       '<div class="dash-store"><div class="nm">' + esc(currentStoreName || 'Store') + '</div>' +
         '<div class="loc">' + esc(currentStoreCity || '') + '</div></div>' +
@@ -4606,12 +4620,39 @@ function renderMonthlyPlanning() {
         return;
       }
 
-      // Les managers (SM/ASM) sont repartis sur ouverture / fermeture.
+      // Les managers (SM/ASM) sont repartis ouverture / fermeture, silotes des
+      // vendeurs : on vise le meme biais fermeture qu'eux quand l'effectif le
+      // permet (3+ managers), sinon on retombe sur 50-50 (au moins 1 de chaque).
       if (g === 'sales') {
         var openSh  = grid.find(function(s){ return s.isOpening; }) || grid[0];
         var closeSh = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
         var leadsHere = list.filter(function(a){ return poolOf(a) === 'mgmt'; });
-        if (leadsHere.length >= 2) {
+        if (leadsHere.length >= 3) {
+          // Assez de managers pour un vrai biais fermeture (70-30).
+          var midM = (dh.open + dh.close) / 2;
+          function avgCurveM(fromH, toH) {
+            if (!curveArr || !curveArr.length) return 1;
+            var sum = 0, n = 0;
+            for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
+              var ci = h - dh.open;
+              if (ci >= 0 && ci < curveArr.length) { sum += curveArr[ci]; n++; }
+            }
+            return n ? sum / n : 1;
+          }
+          var wMornM = avgCurveM(dh.open, midM);
+          var wEveM  = avgCurveM(midM, dh.close) * CLOSING_BIAS;
+          var shareM = wEveM / ((wMornM + wEveM) || 1);
+          var nCloM = Math.round(leadsHere.length * shareM);
+          nCloM = Math.max(1, Math.min(leadsHere.length - 1, nCloM));   // au moins 1 de chaque
+          var rotM = d.num % leadsHere.length;
+          var leadsRot = leadsHere.slice(rotM).concat(leadsHere.slice(0, rotM));
+          leadsRot.forEach(function(a, i) {
+            plan[a.id] = (i < leadsHere.length - nCloM) ? openSh.code : closeSh.code;
+          });
+          var leadIds3 = {};
+          leadsHere.forEach(function(a){ leadIds3[a.id] = true; });
+          list = list.filter(function(a){ return !leadIds3[a.id]; });
+        } else if (leadsHere.length === 2) {
           var flip = d.num % 2 === 0;
           plan[leadsHere[0].id] = (flip ? openSh : closeSh).code;
           plan[leadsHere[1].id] = (flip ? closeSh : openSh).code;
@@ -5826,7 +5867,7 @@ async function saveLeave() {
   closeLeavePopup();
   showToast('Absence saved \u2713');
   renderCalendar();
-  if (currentStoreId) renderPlanning();
+  if (currentStoreId) { renderPlanning(); renderDashboard(); }
 }
 
 async function deleteLeavePrompt(leaveId, event) {
@@ -5838,6 +5879,7 @@ async function deleteLeavePrompt(leaveId, event) {
   showToast('Absence removed \u2713');
   renderCalendar();
   renderPlanning();
+  if (currentStoreId) renderDashboard();
 }
 
 // ── Day open/close popup (annual) ──
