@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V4.9</title>
+  <title>CORA Retail V5.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1258,6 +1258,8 @@ let countries         = [];   // pays de la region courante
 let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
 let currentStoreId    = null;
+let storeCorners         = [];   // corners du store courant
+let cornerTrafficMonthly = {};   // 'cornerId|year|month' -> ligne trafic corner
 let currentStoreName  = '';
 let currentStoreCity  = '';
 let storeHighlights   = [];   // [{id, start_date, end_date, text}]
@@ -2235,6 +2237,21 @@ async function loadWeekData() {
     if (ra !== rb) return ra - rb;
     return (a.last_name || '').localeCompare(b.last_name || '');
   });
+
+  // Corners du store (multi-corner) + leur trafic mensuel.
+  storeCorners = [];
+  cornerTrafficMonthly = {};
+  var { data: cnrData } = await sb.from('retail_corners')
+    .select('*').eq('store_id', currentStoreId).order('sort_order');
+  storeCorners = cnrData || [];
+  if (storeCorners.length) {
+    var cids = storeCorners.map(function(c){ return c.id; });
+    var { data: ctData } = await sb.from('retail_corner_traffic_monthly')
+      .select('*').in('corner_id', cids);
+    (ctData || []).forEach(function(r) {
+      cornerTrafficMonthly[r.corner_id + '|' + r.year + '|' + r.month] = r;
+    });
+  }
 
 
   // Load availability — read day_status column
@@ -4731,6 +4748,76 @@ function renderMonthlyPlanning() {
     shiftPlanByDay[d.ds] = plan;
   });
 
+  // ── MOTEUR 2 : ventilation des vendeurs sur les corners (multi-corner) ──
+  // Ne tourne que si le store a des corners. Cascade apres le moteur 1 :
+  // chaque jour, on prend les vendeurs presents et on les repartit sur les
+  // corners au prorata du trafic corner. Priorite : corner d'attache d'abord,
+  // puis competence pour les renforts. cornerAssign[agentId][ds] = cornerId.
+  var cornerAssign = {};
+  if (storeCorners.length > 1) {
+    var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
+    // Poids trafic de chaque corner (n-1 en base, sinon n-2).
+    var cornerWeight = {};
+    storeCorners.forEach(function(c) {
+      var t = cornerTrafficMonthly[c.id + '|' + refY + '|' + refM];
+      cornerWeight[c.id] = t ? (t.last_year || t.n_2 || 0) : 0;
+    });
+    monthDays.forEach(function(d) {
+      if (d.closure) return;
+      // Vendeurs presents ce jour (hors management/stock, hors part-time fixe).
+      var present = agents.filter(function(a) {
+        return poolOf(a) === 'sales' &&
+               assignedMap[d.ds].indexOf(a.id) !== -1;
+      });
+      if (!present.length) return;
+      // 1) chaque vendeur va sur son corner d'attache par defaut.
+      var perCorner = {};
+      storeCorners.forEach(function(c){ perCorner[c.id] = []; });
+      var floating = [];
+      present.forEach(function(a) {
+        if (a.home_corner_id && perCorner[a.home_corner_id]) {
+          perCorner[a.home_corner_id].push(a);
+        } else {
+          floating.push(a);   // pas de corner d'attache -> renfort
+        }
+      });
+      // 2) besoin cible par corner = prorata trafic (au moins 1 si trafic > 0).
+      var totW = 0; storeCorners.forEach(function(c){ totW += cornerWeight[c.id]; });
+      var need = {};
+      storeCorners.forEach(function(c) {
+        need[c.id] = totW > 0 ? Math.max(1, Math.round(present.length * cornerWeight[c.id] / totW)) : 1;
+      });
+      // 3) renforts : corners sous leur cible piochent dans les flottants,
+      //    en priorisant les agents competents pour ce corner.
+      storeCorners.forEach(function(c) {
+        while (perCorner[c.id].length < need[c.id] && floating.length) {
+          var idx = floating.findIndex(function(a) {
+            return (a.corner_skills || []).indexOf(c.code) !== -1;
+          });
+          if (idx === -1) idx = 0;
+          perCorner[c.id].push(floating.splice(idx, 1)[0]);
+        }
+      });
+      // 4) flottants restants -> corner au trafic le plus fort.
+      if (floating.length) {
+        var big = storeCorners.slice().sort(function(x,y){ return cornerWeight[y.id]-cornerWeight[x.id]; })[0];
+        if (big) floating.forEach(function(a){ perCorner[big.id].push(a); });
+      }
+      // 5) ecrire l'affectation.
+      storeCorners.forEach(function(c) {
+        perCorner[c.id].forEach(function(a) {
+          (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = c.id;
+        });
+      });
+    });
+  }
+
+  // Code court d'un corner par id.
+  function cornerCodeOf(cid) {
+    for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === cid) return storeCorners[i].code;
+    return null;
+  }
+
   // ── Determination de la lettre de shift d'un agent un jour donne ──
   // Renvoie {code, cls} ou un statut special.
   function shiftFor(agent, day) {
@@ -4774,6 +4861,12 @@ function renderMonthlyPlanning() {
     // Demi-journee d'un part-time volant : moitie travaillee (am/pm).
     var half = (volantHalfDay[agent.id] || {})[day.ds];
     if (half) return { code: baseCode, half: half };
+    // Multi-corner : prefixe si l'agent depanne un corner != son corner d'attache.
+    var cid = (cornerAssign[agent.id] || {})[day.ds];
+    if (cid && cid !== agent.home_corner_id) {
+      var cc = cornerCodeOf(cid);
+      if (cc) return { code: baseCode, corner: cc };
+    }
     return { code: baseCode };
   }
 
@@ -4823,7 +4916,7 @@ function renderMonthlyPlanning() {
   agents.forEach(function(a) {
     agentRows[a.id].forEach(function(row) {
       if (!monthlyResult[row.d.ds]) monthlyResult[row.d.ds] = {};
-      monthlyResult[row.d.ds][a.id] = { code: row.res.code, special: row.res.special, half: row.res.half };
+      monthlyResult[row.d.ds][a.id] = { code: row.res.code, special: row.res.special, half: row.res.half, corner: row.res.corner };
     });
   });
 
@@ -5129,6 +5222,22 @@ function renderDayChips(selected, boxId) {
   }).join('');
 }
 
+var CORNER_SKILLS = ['PRF', 'LG', 'RTW', 'MEN', 'WOMEN'];
+function renderSkillChips(selected) {
+  var box = document.getElementById('ae-skills');
+  if (!box) return;
+  box.innerHTML = CORNER_SKILLS.map(function(s) {
+    var on = (selected || []).indexOf(s) !== -1;
+    return '<button type="button" class="day-chip' + (on ? ' on' : '') +
+           '" data-skill="' + s + '" onclick="toggleDayChip(this)">' + s + '</button>';
+  }).join('');
+}
+function readSkillChips() {
+  return Array.prototype.slice
+    .call(document.querySelectorAll('#ae-skills .day-chip.on'))
+    .map(function(b) { return b.dataset.skill; });
+}
+
 function toggleDayChip(btn) { btn.classList.toggle('on'); }
 
 // Affiche la section "Fixed schedule" seulement pour un Part Time.
@@ -5164,6 +5273,20 @@ function openAgentEditor(agentId) {
   document.getElementById('ae-store').value  = currentStoreName || '';
   document.getElementById('ae-status').innerHTML =
     statusOptionsHtml((a.status || 'SA').toUpperCase());
+
+  // Multi-corner : dropdown home corner + pills skills (visible si store a des corners).
+  var cSec = document.getElementById('ae-corner-sec');
+  if (storeCorners.length > 1) {
+    cSec.style.display = 'block';
+    var opts = '<option value="">- none -</option>';
+    storeCorners.forEach(function(c) {
+      opts += '<option value="' + c.id + '"' + (a.home_corner_id === c.id ? ' selected' : '') + '>' + c.code + '</option>';
+    });
+    document.getElementById('ae-home-corner').innerHTML = opts;
+    renderSkillChips(a.corner_skills || []);
+  } else {
+    cSec.style.display = 'none';
+  }
 
   var p = agentPrefs[agentId] || {};
   document.getElementById('ae-shiftpref').value = p.shift_pref || 'none';
@@ -5202,9 +5325,16 @@ async function saveAgentEditor() {
   var pct = 100;
   if (ptVolant) pct = parseInt(document.getElementById('ae-pct-vol').value) || 50;
 
+  // Multi-corner : corner d'attache + competences (si store multi-corner).
+  var upd = { first_name: first, last_name: last, status: status, work_pct: pct };
+  if (storeCorners.length > 1) {
+    upd.home_corner_id = document.getElementById('ae-home-corner').value || null;
+    upd.corner_skills = readSkillChips();
+  }
+
   showLoader();
   var res = await sb.from('retail_agents')
-    .update({ first_name: first, last_name: last, status: status, work_pct: pct })
+    .update(upd)
     .eq('id', agentEditorId);
   hideLoader();
   if (res.error) { showToast('Save failed', 'error'); return; }
@@ -6093,6 +6223,19 @@ init();
         <div class="fld"><label>Last name</label><input type="text" id="ae-last"></div>
         <div class="fld"><label>Store</label><input type="text" id="ae-store" disabled></div>
         <div class="fld"><label>Status</label><select id="ae-status" onchange="updateFixedSectionVisibility()"></select></div>
+      </div>
+      <div id="ae-corner-sec" style="display:none;">
+        <div class="modal-sec">Corner</div>
+        <div class="form-grid">
+          <div class="fld">
+            <label>Home corner</label>
+            <select id="ae-home-corner"></select>
+          </div>
+        </div>
+        <div class="fld" style="margin-top:12px;">
+          <label>Skills</label>
+          <div class="day-chips" id="ae-skills"></div>
+        </div>
       </div>
       <div class="modal-sec">Preferences</div>
       <div class="form-grid">
