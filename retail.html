@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V4.8</title>
+  <title>CORA Retail V4.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -535,6 +535,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh { display:inline-flex; align-items:center; justify-content:center;
       min-width:26px; height:22px; padding:0 6px; border-radius:var(--r-sm);
       font-size:11px; font-weight:600; letter-spacing:.01em; }
+.sh-cnr { display:inline-flex; flex-direction:column; align-items:center; line-height:1; gap:1px; }
+.sh-cnr-tag { font-size:7.5px; font-weight:700; color:var(--accent-strong); letter-spacing:.02em; }
 .sh-half { position:relative; display:inline-flex; align-items:center; justify-content:center;
       min-width:26px; height:22px; border-radius:var(--r-sm); overflow:hidden;
       font-size:11px; font-weight:600; z-index:0; }
@@ -4785,6 +4787,11 @@ function renderMonthlyPlanning() {
       var isClose = /^C/.test(res.code);
       var pos = isClose ? 'sh-half-pm' : 'sh-half-am';
       return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + res.code + '</span></span>';
+    }
+    // Depannage sur un autre corner : tag corner en petit au-dessus, pastille shift dessous.
+    if (res.corner) {
+      return '<span class="sh-cnr"><span class="sh-cnr-tag">' + res.corner + '</span>' +
+             '<span class="sh ' + shiftCls(res.code) + '">' + res.code + '</span></span>';
     }
     return '<span class="sh ' + shiftCls(res.code) + '">' + res.code + '</span>';
   }
