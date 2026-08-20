@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V5.0</title>
+  <title>CORA Retail V5.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -535,8 +535,16 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh { display:inline-flex; align-items:center; justify-content:center;
       min-width:26px; height:22px; padding:0 6px; border-radius:var(--r-sm);
       font-size:11px; font-weight:600; letter-spacing:.01em; }
-.sh-cnr { display:inline-flex; flex-direction:column; align-items:center; line-height:1; gap:1px; }
-.sh-cnr-tag { font-size:7.5px; font-weight:700; color:var(--accent-strong); letter-spacing:.02em; }
+.sh-cnr { position:relative; display:inline-flex; align-items:center; justify-content:center; }.sh-cnr-tag { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:1px;
+  font-size:7.5px; font-weight:700; color:var(--accent-strong); letter-spacing:.02em; line-height:1; white-space:nowrap; }
+.mth-group td { background:var(--bg-base-2); border-bottom:1px solid var(--line); padding:0; }
+.mth-group td.mth-group-lbl { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase;
+  letter-spacing:.04em; padding:6px 12px; }
+.cnr-breakdown { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 2px; padding-left:2px; }
+.cnr-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:var(--r-sm);
+  background:var(--bg-base-2); border:1px solid var(--line); font-size:11px; }
+.cnr-chip-code { font-weight:600; color:var(--tx-2); }
+.cnr-chip-n { font-weight:700; color:var(--accent-strong); }
 .sh-half { position:relative; display:inline-flex; align-items:center; justify-content:center;
       min-width:26px; height:22px; border-radius:var(--r-sm); overflow:hidden;
       font-size:11px; font-weight:600; z-index:0; }
@@ -2455,6 +2463,15 @@ function retailStatusOf(agent) {
 }
 
 var HIERARCHY_ORDER = ['SM', 'ASM', 'SENIOR', 'SA', 'PART_TIME', 'STOCK'];
+function agentSubLabel(a) {
+  // Multi-corner : afficher le code du corner d'attache. Sinon le nom du store.
+  if (storeCorners.length > 1 && a.home_corner_id) {
+    for (var i = 0; i < storeCorners.length; i++)
+      if (storeCorners[i].id === a.home_corner_id) return storeCorners[i].code;
+  }
+  return currentStoreName;
+}
+
 function hierarchyRank(agent) {
   var st = retailStatusOf(agent);
   if (st === 'MANAGER') st = 'ASM';
@@ -3962,6 +3979,7 @@ function renderDashboard() {
   var presDs = todayInWeek ? todayStr : toDateStr(days[0]);
   var presLabel = todayInWeek ? 'today' : DOW3[days[0].getDay()];
   var res = monthlyResult[presDs];
+  var cornerPresence = {};   // code corner -> count (vendeurs presents, corner effectif du jour)
   if (res) {
     agents.forEach(function(a) {
       var r = res[a.id];
@@ -3971,6 +3989,15 @@ function renderDashboard() {
           role: retailStatusOf(a),
           shift: r.code
         });
+        // Multi-corner : corner effectif = prefixe s'il depanne, sinon corner d'attache.
+        if (storeCorners.length > 1 && poolOf(a) === 'sales') {
+          var code = r.corner;
+          if (!code && a.home_corner_id) {
+            for (var i = 0; i < storeCorners.length; i++)
+              if (storeCorners[i].id === a.home_corner_id) { code = storeCorners[i].code; break; }
+          }
+          if (code) cornerPresence[code] = (cornerPresence[code] || 0) + 1;
+        }
       }
     });
   }
@@ -4036,6 +4063,7 @@ function renderDashboard() {
           '<div class="dash-card-label">On the floor ' + presLabel + '</div>' +
           poolBlockHtml('Management', poolAgents.mgmt) +
           poolBlockHtml('Sales', poolAgents.sales) +
+          (storeCorners.length > 1 ? cornerBreakdownHtml(cornerPresence) : '') +
           poolBlockHtml('Stock', poolAgents.stock) +
           '<div class="dash-card-label" style="margin-top:var(--s6)">Absences this week</div>' +
           (absences.length ? absences.map(function(a){
@@ -4051,6 +4079,18 @@ function renderDashboard() {
 }
 
 // Bloc d'un pool sur le dashboard : compteur + liste des agents (role, shift).
+function cornerBreakdownHtml(cornerPresence) {
+  var codes = Object.keys(cornerPresence);
+  if (!codes.length) return '';
+  // Tri par effectif descendant.
+  codes.sort(function(a, b){ return cornerPresence[b] - cornerPresence[a]; });
+  var chips = codes.map(function(code){
+    return '<span class="cnr-chip"><span class="cnr-chip-code">' + esc(code) +
+           '</span><span class="cnr-chip-n">' + cornerPresence[code] + '</span></span>';
+  }).join('');
+  return '<div class="cnr-breakdown">' + chips + '</div>';
+}
+
 function poolBlockHtml(title, list) {
   var head = '<div class="pool-row"><span class="pool-name">' + title + '</span>' +
     '<span class="pool-count">' + list.length + '<span class="of"> present</span></span></div>';
@@ -4748,64 +4788,120 @@ function renderMonthlyPlanning() {
     shiftPlanByDay[d.ds] = plan;
   });
 
-  // ── MOTEUR 2 : ventilation des vendeurs sur les corners (multi-corner) ──
-  // Ne tourne que si le store a des corners. Cascade apres le moteur 1 :
-  // chaque jour, on prend les vendeurs presents et on les repartit sur les
-  // corners au prorata du trafic corner. Priorite : corner d'attache d'abord,
-  // puis competence pour les renforts. cornerAssign[agentId][ds] = cornerId.
+  // ── MOTEUR 2 : rééquilibrage des vendeurs entre corners (multi-corner) ──
+  // Cascade apres le moteur 1. Logique : cible = repartition prorata du trafic
+  // META-STORE ; plan = corners d'attache poses par le manager ; on transfere le
+  // minimum d'agents pour rapprocher le plan de la cible, en respectant le shift
+  // (un O manquant se comble par un O), avec garde-fou couverture (min 1 O + 1 C
+  // par corner) et tiebreaker competence. Un transfert = prefixe (dépannage).
   var cornerAssign = {};
   if (storeCorners.length > 1) {
     var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
-    // Poids trafic de chaque corner (n-1 en base, sinon n-2).
     var cornerWeight = {};
     storeCorners.forEach(function(c) {
       var t = cornerTrafficMonthly[c.id + '|' + refY + '|' + refM];
       cornerWeight[c.id] = t ? (t.last_year || t.n_2 || 0) : 0;
     });
+    var totW = 0; storeCorners.forEach(function(c){ totW += cornerWeight[c.id]; });
+
+    function isOpenCode(code){ return /^O/.test(code); }
+    function isCloseCode(code){ return /^C/.test(code); }
+
     monthDays.forEach(function(d) {
       if (d.closure) return;
-      // Vendeurs presents ce jour (hors management/stock, hors part-time fixe).
       var present = agents.filter(function(a) {
-        return poolOf(a) === 'sales' &&
-               assignedMap[d.ds].indexOf(a.id) !== -1;
+        return poolOf(a) === 'sales' && assignedMap[d.ds].indexOf(a.id) !== -1;
       });
       if (!present.length) return;
-      // 1) chaque vendeur va sur son corner d'attache par defaut.
-      var perCorner = {};
-      storeCorners.forEach(function(c){ perCorner[c.id] = []; });
-      var floating = [];
+
+      // Plan manager : agents groupes par corner d'attache.
+      var byCorner = {};
+      storeCorners.forEach(function(c){ byCorner[c.id] = []; });
+      var noHome = [];
       present.forEach(function(a) {
-        if (a.home_corner_id && perCorner[a.home_corner_id]) {
-          perCorner[a.home_corner_id].push(a);
-        } else {
-          floating.push(a);   // pas de corner d'attache -> renfort
-        }
+        if (a.home_corner_id && byCorner[a.home_corner_id]) byCorner[a.home_corner_id].push(a);
+        else noHome.push(a);
       });
-      // 2) besoin cible par corner = prorata trafic (au moins 1 si trafic > 0).
-      var totW = 0; storeCorners.forEach(function(c){ totW += cornerWeight[c.id]; });
-      var need = {};
+
+      // Cible prorata trafic meta-store (souple, arrondie).
+      var target = {};
       storeCorners.forEach(function(c) {
-        need[c.id] = totW > 0 ? Math.max(1, Math.round(present.length * cornerWeight[c.id] / totW)) : 1;
+        target[c.id] = totW > 0 ? Math.round(present.length * cornerWeight[c.id] / totW) : 0;
       });
-      // 3) renforts : corners sous leur cible piochent dans les flottants,
-      //    en priorisant les agents competents pour ce corner.
-      storeCorners.forEach(function(c) {
-        while (perCorner[c.id].length < need[c.id] && floating.length) {
-          var idx = floating.findIndex(function(a) {
-            return (a.corner_skills || []).indexOf(c.code) !== -1;
-          });
-          if (idx === -1) idx = 0;
-          perCorner[c.id].push(floating.splice(idx, 1)[0]);
-        }
+
+      // Affectation initiale = plan manager. Les sans-corner comblent d'abord
+      // les corners sous leur cible (prioritairement les plus deficitaires).
+      var assign = {};
+      storeCorners.forEach(function(c){ assign[c.id] = byCorner[c.id].slice(); });
+      noHome.forEach(function(a) {
+        var short = storeCorners.slice().sort(function(x,y){
+          return (target[y.id]-assign[y.id].length) - (target[x.id]-assign[x.id].length);
+        })[0];
+        assign[short.id].push(a);
       });
-      // 4) flottants restants -> corner au trafic le plus fort.
-      if (floating.length) {
-        var big = storeCorners.slice().sort(function(x,y){ return cornerWeight[y.id]-cornerWeight[x.id]; })[0];
-        if (big) floating.forEach(function(a){ perCorner[big.id].push(a); });
+
+      // Shift d'un agent ce jour (O/C/...) via le plan du moteur 1.
+      function shiftCode(a){
+        return (shiftPlanByDay[d.ds] || {})[a.id] || 'O';
       }
-      // 5) ecrire l'affectation.
+      // Un corner a-t-il au moins 1 open et 1 close ? (garde-fou couverture)
+      function coverGap(cid){
+        var hasO=false, hasC=false;
+        assign[cid].forEach(function(a){ var s=shiftCode(a); if(isOpenCode(s))hasO=true; if(isCloseCode(s))hasC=true; });
+        return { needO: !hasO, needC: !hasC };
+      }
+
+      // Choisir un donneur dans un corner sur-dote, du bon shift, en preservant
+      // sa propre couverture. Tiebreaker : competence pour le corner cible.
+      function pickDonor(fromId, wantOpen, toCode){
+        var pool = assign[fromId].filter(function(a){
+          var s = shiftCode(a);
+          return wantOpen ? isOpenCode(s) : isCloseCode(s);
+        });
+        if (pool.length <= 1) return null;   // ne pas casser la couverture du donneur
+        // priorite competence pour le corner cible
+        var skilled = pool.filter(function(a){ return (a.corner_skills||[]).indexOf(toCode) !== -1; });
+        var cand = skilled.length ? skilled : pool;
+        return cand[Math.floor(Math.random()*cand.length)];
+      }
+
+      // 1) Garde-fou couverture : chaque corner doit avoir 1 O + 1 C.
       storeCorners.forEach(function(c) {
-        perCorner[c.id].forEach(function(a) {
+        var gap = coverGap(c.id);
+        [['O',gap.needO],['C',gap.needC]].forEach(function(g){
+          if (!g[1]) return;
+          var wantOpen = g[0]==='O';
+          // chercher un donneur dans un autre corner
+          for (var i=0;i<storeCorners.length;i++){
+            var src = storeCorners[i]; if (src.id===c.id) continue;
+            var donor = pickDonor(src.id, wantOpen, c.code);
+            if (donor){
+              assign[src.id] = assign[src.id].filter(function(x){return x.id!==donor.id;});
+              assign[c.id].push(donor); break;
+            }
+          }
+        });
+      });
+
+      // 2) Rapprocher de la cible : transferts minimaux des sur-dotes vers les
+      //    deficitaires (ecart >= 1 agent entier).
+      var guard = 0;
+      while (guard++ < 20) {
+        var over = storeCorners.filter(function(c){ return assign[c.id].length - target[c.id] >= 1; });
+        var under = storeCorners.filter(function(c){ return target[c.id] - assign[c.id].length >= 1; });
+        if (!over.length || !under.length) break;
+        var to = under.sort(function(x,y){ return (target[y.id]-assign[y.id].length)-(target[x.id]-assign[x.id].length); })[0];
+        var from = over.sort(function(x,y){ return (assign[y.id].length-target[y.id])-(assign[x.id].length-target[x.id]); })[0];
+        // preferer deplacer un agent dont le shift ne casse pas la couverture du donneur
+        var donor = pickDonor(from.id, true, to.code) || pickDonor(from.id, false, to.code);
+        if (!donor) break;
+        assign[from.id] = assign[from.id].filter(function(x){return x.id!==donor.id;});
+        assign[to.id].push(donor);
+      }
+
+      // 3) Ecrire l'affectation finale.
+      storeCorners.forEach(function(c) {
+        assign[c.id].forEach(function(a) {
           (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = c.id;
         });
       });
@@ -5060,15 +5156,50 @@ function renderMonthlyPlanning() {
   html += headRow('Agent');
   html += '<tbody>';
 
-  // Agents tries par bloc de statut, mais SANS ligne d'en-tete ni sous-total
+  // Agents ordonnes. Mono-corner : par bloc de statut (comme avant). Multi-corner :
+  // Management en haut, puis une bulle par corner (tri trafic desc), Stock en bas.
+  // Les marqueurs {group:label} produisent une ligne d'en-tete de bulle.
   var ordered = [];
-  RETAIL_BLOCK_ORDER.forEach(function(block) {
-    agents.filter(function(a) {
-      return RETAIL_STATUS[retailStatusOf(a)].block === block.key;
-    }).forEach(function(a) { ordered.push(a); });
-  });
+  if (storeCorners.length > 1) {
+    var refYb = monthlyRef.getFullYear(), refMb = monthlyRef.getMonth() + 1;
+    function cWeight(cid){
+      var t = cornerTrafficMonthly[cid + '|' + refYb + '|' + refMb];
+      return t ? (t.last_year || t.n_2 || 0) : 0;
+    }
+    // Management (mgmt) en haut
+    var mgmt = agents.filter(function(a){ return poolOf(a) === 'mgmt'; });
+    if (mgmt.length) { ordered.push({ group: 'Management' }); mgmt.forEach(function(a){ ordered.push(a); }); }
+    // Bulles corner (vendeurs), triees par trafic descendant
+    var cornersSorted = storeCorners.slice().sort(function(x,y){ return cWeight(y.id) - cWeight(x.id); });
+    var placed = {};
+    cornersSorted.forEach(function(c) {
+      var here = agents.filter(function(a){ return poolOf(a) === 'sales' && a.home_corner_id === c.id; });
+      ordered.push({ group: c.code });
+      here.forEach(function(a){ ordered.push(a); placed[a.id] = true; });
+    });
+    // Vendeurs sans corner d'attache : bulle "Unassigned"
+    var noHome = agents.filter(function(a){ return poolOf(a) === 'sales' && !placed[a.id]; });
+    if (noHome.length) { ordered.push({ group: 'Unassigned' }); noHome.forEach(function(a){ ordered.push(a); }); }
+    // Stock en bas
+    var stock = agents.filter(function(a){ return poolOf(a) === 'stock'; });
+    if (stock.length) { ordered.push({ group: 'Stock' }); stock.forEach(function(a){ ordered.push(a); }); }
+  } else {
+    RETAIL_BLOCK_ORDER.forEach(function(block) {
+      agents.filter(function(a) {
+        return RETAIL_STATUS[retailStatusOf(a)].block === block.key;
+      }).forEach(function(a) { ordered.push(a); });
+    });
+  }
+
+  var totalCols = agentRows[agents[0] ? agents[0].id : Object.keys(agentRows)[0]];
+  var nDayCols = totalCols ? totalCols.length : 0;
 
   ordered.forEach(function(a) {
+    if (a.group) {
+      html += '<tr class="mth-group"><td class="c-agent mth-group-lbl">' + a.group +
+              '</td><td colspan="' + (nDayCols + 6) + '"></td></tr>';
+      return;
+    }
     var name   = ((a.first_name || '') + ' ' + (a.last_name || '')).trim() || 'Agent';
     var stInfo = RETAIL_STATUS[retailStatusOf(a)];
     var pct    = a.work_pct || 100;
@@ -5175,7 +5306,7 @@ function renderAgents() {
       '<span class="ag-id">' + av +
         '<span class="ag-txt">' +
           '<span class="ag-name">' + name.trim() + '</span>' +
-          '<span class="ag-sub">' + currentStoreName + '</span>' +
+          '<span class="ag-sub">' + agentSubLabel(a) + '</span>' +
         '</span></span>' +
       '<span class="ag-meta">' +
         '<span class="pill pill-neutral">' + stInfo.label + '</span>' +
