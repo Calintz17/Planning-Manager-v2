@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <!--
   CORA Retail - Client Operations Rostering Assistant
-  Planning mensuel et intraday pour boutiques. Base Supabase (tables retail_*).
+ .
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V5.2</title>
+  <title>CORA Retail V5.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
   --bg-base-3:     #F1F2F4;   /* hover neutre */
   --bg-disabled:   #E8E9EB;
 
-  /* ---- Brand = quasi-noir (pas de couleur vive) ---- */
+  /* ---- Brand  ---- */
   --brand:         #1F1F1F;
   --brand-hover:   #111111;
   --brand-on:      #FFFFFF;
@@ -37,13 +37,13 @@
   --line:          #E7E8EC;
   --line-2:        #DCDEE3;
 
-  /* ---- Semantique : Success / Warning / Danger / Info ---- */
+  /* ---- Semantique :  */
   --ok:            #16A34A;  --ok-soft:   #DCFCE7;  --ok-tx:   #14532D;
   --warn-soft: #FEF3C7;  --warn-tx: #713F12;
   --dang:          #DC2626;  --dang-soft: #FEE2E2;  --dang-tx: #7F1D1D;
   --info:          #2563EB;  --info-soft: #DBEAFE;  --info-tx: #1E3A8A;
 
-  /* ---- Sidebar : active = bleu fonce (demande) ---- */
+  /* ---- Sidebar :  ---- */
   --nav-active-bg: #1E3A8A;
   --nav-active-tx: #FFFFFF;
 
@@ -53,11 +53,11 @@
   /* ---- Espacements (echelle 4px) ---- */
   --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
 
-  /* ---- Ombres : tres subtiles ---- */
+  /* ---- Ombres  ---- */
   --sh-1: 0 1px 2px rgba(16,24,40,.04);
   --sh-2: 0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
 
-  /* ---- Typo : une seule famille ---- */
+  /* ---- Typo  ---- */
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* ---- Layout ---- */
@@ -584,14 +584,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .legend-item { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--tx-2); }
 .legend-item b { color:var(--tx-1); font-weight:600; }
 
-/* ═══ SEGMENTED CONTROL ══════════════════════════════════════════ */
-.segmented { display:inline-flex; gap:2px; background:var(--bg-base-3); padding:3px; border-radius:var(--r-md); }
-.segmented button { border:none; background:transparent; cursor:pointer; font-family:var(--font);
-  font-size:13px; font-weight:500; color:var(--tx-2); padding:6px 14px; border-radius:var(--r-sm);
-  transition:background .15s, color .15s; }
-.segmented button:hover { color:var(--tx-1); }
-.segmented button.active { background:var(--bg-base); color:var(--tx-1); font-weight:600; box-shadow:var(--sh-1); }
-
 /* ═══ CALENDRIER ═════════════════════════════════════════════════ */
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
 .cal-dow { text-align:center; font-size:10.5px; font-weight:600; color:var(--tx-3);
@@ -1019,7 +1011,13 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
     </div>
     <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Sales Advisors</span></button>
     <button class="nav-item" onclick="switchTab('traffic', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Traffic</span></button>
-    <button class="nav-item" onclick="switchTab('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button>
+    <div class="nav-group">
+      <button class="nav-item has-sub" onclick="toggleNavGroup('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span><svg class="ic nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <div class="nav-sub" id="sub-calendar" data-group="calendar">
+        <button class="nav-subitem active" data-calview="annual"  onclick="switchCalendarNav('annual', this)">Annual</button>
+        <button class="nav-subitem"        data-calview="monthly" onclick="switchCalendarNav('monthly', this)">Monthly</button>
+      </div>
+    </div>
     <button class="nav-item" onclick="switchTab('regulations', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
   </div>
 
@@ -1064,7 +1062,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
     <div class="tb-inner">
     <div class="tb-search">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><line x1="20" y1="20" x2="16.7" y2="16.7"/></svg>
-      <input type="text" placeholder="Search agents…" disabled>
+      <input type="text" placeholder="Search sales advisors…" disabled>
     </div>
     <div class="tb-right">
       <button class="icon-btn" disabled title="Notifications (coming soon)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
@@ -1123,7 +1121,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <h2 class="page-title">Sales Advisors</h2>
-      <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()">+ Add agent</button>
+      <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()">+ Add SA</button>
     </div>
     <div id="add-agent-form">
       <div class="form-grid">
@@ -1165,10 +1163,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   <div class="wrap">
   <div class="card">
     <div class="card-head">
-      <div class="segmented">
-        <button id="btn-cal-annual" class="active" onclick="switchCalendarView('annual')">Annual</button>
-        <button id="btn-cal-monthly" onclick="switchCalendarView('monthly')">Monthly</button>
-      </div>
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="calChangeMonth(-1)" aria-label="Previous">&#8249;</button>
         <span class="cal-month-label" id="cal-month-label"></span>
@@ -1185,12 +1179,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 <div id="leave-popup">
   <div class="sft-title">Declare absence</div>
   <div class="sft-subtitle" id="leave-subtitle"></div>
-  <div class="leave-field">
-    <label class="leave-label">Type</label>
-    <select id="leave-type" class="leave-input">
-      <option value="absence">⛔ Absence</option>
-    </select>
-  </div>
   <div class="leave-field">
     <label class="leave-label">From</label>
     <input type="date" id="leave-start" class="leave-input">
@@ -1284,7 +1272,7 @@ let planningOverrides = {};   // { agentId: { 'YYYY-MM-DD': 'O' | 'OFF' | 'A' ..
 let cornerOverrides   = {};   // { agentId: { 'YYYY-MM-DD': cornerId } } (override manuel corner)
 let monthlyResult = {};       // { 'YYYY-MM-DD': { agentId: {code, special} } } - partage monthly -> intraday
 let intradayExport = null;    // snapshot du dernier intraday rendu, pour l'export Excel
-let agentPrefs        = {};   // { agentId: {shift_pref, weekend_ok, avoid_days[]} }
+let agentPrefs        = {};   // { agentId: {avoid_days[], fixed_schedule} }
 let trafficMonthly    = {};   // { 'YYYY-MM': {last_year, current_year, source} }
 let trafficDaily      = {};   // { 'YYYY-MM-DD': {traffic, is_manual} }
 let currentWeekMonday = getMondayOfCurrentWeek();
@@ -1446,6 +1434,7 @@ function toggleNavGroup(name, btn) {
   if (sub) sub.classList.add('open');
   var active = document.querySelector('#sub-' + name + ' .nav-subitem.active');
   if (name === 'planning') switchPlanningView(active ? active.dataset.view : 'monthly', active);
+  if (name === 'calendar') switchCalendarNav(active ? active.dataset.calview : 'annual', active);
 }
 
 var currentPlanningView = 'monthly';
@@ -3193,7 +3182,7 @@ function renderIntraday(ds) {
     return mr && !mr.special;   // present = a un shift, pas off/leave/closed
   });
   if (!working.length) {
-    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">No agents scheduled on ' + formatDateDisplay(ds) + '.</p></div>';
+    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">No sales advisors scheduled on ' + formatDateDisplay(ds) + '.</p></div>';
     return;
   }
 
@@ -3391,21 +3380,50 @@ function renderIntraday(ds) {
     band += '</div></div>';
   }
 
-  // Groupes par role (ordre hierarchique)
-  var byBlock = {};
-  RETAIL_BLOCK_ORDER.forEach(function(b) { byBlock[b.key] = []; });
-  working.forEach(function(a) {
-    var blk = RETAIL_STATUS[retailStatusOf(a)].block;
-    if (!byBlock[blk]) byBlock[blk] = [];
-    byBlock[blk].push(a);
-  });
+  // Groupes : par corner si multi-corner (Management, corners tri trafic, Stock),
+  // sinon par role hierarchique.
+  var groups = [];   // { title, list }
+  if (storeCorners.length > 1) {
+    var refYi = monthlyRef.getFullYear(), refMi = monthlyRef.getMonth() + 1;
+    function cWi(cid){ var t = cornerTrafficMonthly[cid+'|'+refYi+'|'+refMi]; return t ? (t.last_year||t.n_2||0) : 0; }
+    function effCorner(a){
+      var r = (monthlyResult[ds] || {})[a.id];
+      if (r && r.corner) {
+        for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id;
+      }
+      return a.home_corner_id || null;
+    }
+    var mgmt = working.filter(function(a){ return poolOf(a)==='mgmt'; });
+    if (mgmt.length) groups.push({ title:'MANAGEMENT', list:mgmt });
+    storeCorners.slice().sort(function(x,y){ return cWi(y.id)-cWi(x.id); }).forEach(function(c){
+      var here = working.filter(function(a){ return poolOf(a)==='sales' && effCorner(a)===c.id; });
+      if (here.length) groups.push({ title:c.code.toUpperCase(), list:here });
+    });
+    var placedI = {};
+    groups.forEach(function(g){ g.list.forEach(function(a){ placedI[a.id]=true; }); });
+    var noH = working.filter(function(a){ return poolOf(a)==='sales' && !placedI[a.id]; });
+    if (noH.length) groups.push({ title:'UNASSIGNED', list:noH });
+    var stk = working.filter(function(a){ return poolOf(a)==='stock'; });
+    if (stk.length) groups.push({ title:'STOCK', list:stk });
+  } else {
+    var byBlock = {};
+    RETAIL_BLOCK_ORDER.forEach(function(b) { byBlock[b.key] = []; });
+    working.forEach(function(a) {
+      var blk = RETAIL_STATUS[retailStatusOf(a)].block;
+      if (!byBlock[blk]) byBlock[blk] = [];
+      byBlock[blk].push(a);
+    });
+    RETAIL_BLOCK_ORDER.forEach(function(blockDef) {
+      var list = byBlock[blockDef.key] || [];
+      if (list.length) groups.push({ title: blockDef.title.toUpperCase(), list: list });
+    });
+  }
 
   var rowsHtml = '';
   var intradayExportRows = [];
-  RETAIL_BLOCK_ORDER.forEach(function(blockDef) {
-    var list = byBlock[blockDef.key] || [];
-    if (!list.length) return;
-    rowsHtml += '<div class="it-group"><div class="it-role">' + blockDef.title.toUpperCase() + '</div>';
+  groups.forEach(function(grp) {
+    var list = grp.list;
+    rowsHtml += '<div class="it-group"><div class="it-role">' + grp.title + '</div>';
     list.forEach(function(a) {
       var sh = shiftInfo[a.id];
       var sH = sh.startMin / 60, eH = sh.endMin / 60;
@@ -3442,6 +3460,7 @@ function renderIntraday(ds) {
       intradayExportRows.push({
         name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
         role: (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '',
+        group: grp.title,
         code: sh.code, tone: sh.tone || 'close', startH: sH, endH: eH,
         blocks: exportBlocks
       });
@@ -3799,15 +3818,21 @@ async function loadPlanningOverrides() {
   if (!agents.length) return;
   var ids = agents.map(function(a) { return a.id; });
   var res = await sb.from('retail_planning_overrides').select('*').in('agent_id', ids);
-  if (res.error || !res.data) return;
-  res.data.forEach(function(r) {
-    if (!planningOverrides[r.agent_id]) planningOverrides[r.agent_id] = {};
-    planningOverrides[r.agent_id][r.date] = r.value;
-    if (r.corner_id) {
-      if (!cornerOverrides[r.agent_id]) cornerOverrides[r.agent_id] = {};
-      cornerOverrides[r.agent_id][r.date] = r.corner_id;
-    }
-  });
+  if (!res.error && res.data) {
+    res.data.forEach(function(r) {
+      if (!planningOverrides[r.agent_id]) planningOverrides[r.agent_id] = {};
+      planningOverrides[r.agent_id][r.date] = r.value;
+    });
+  }
+  var cor = await sb.from('retail_corner_overrides').select('*').in('agent_id', ids);
+  if (!cor.error && cor.data) {
+    cor.data.forEach(function(r) {
+      if (r.corner_id) {
+        if (!cornerOverrides[r.agent_id]) cornerOverrides[r.agent_id] = {};
+        cornerOverrides[r.agent_id][r.date] = r.corner_id;
+      }
+    });
+  }
 }
 
 // Ouvre le selecteur de shift au clic sur une cellule
@@ -3909,16 +3934,19 @@ async function applyCornerOverride(cornerId) {
   var st = cellEditorState;
   if (!st.agentId || !st.ds) return;
   closeCellEditor();
-  // On upsert la ligne override en ne touchant que corner_id (garde value existant).
-  var existing = (planningOverrides[st.agentId] || {})[st.ds] || null;
-  var row = { agent_id: st.agentId, date: st.ds, corner_id: cornerId };
-  if (existing) row.value = existing;
-  var up = await sb.from('retail_planning_overrides')
-    .upsert(row, { onConflict: 'agent_id,date' });
-  if (up.error) { showToast('Failed to save corner', 'error'); return; }
-  if (!cornerOverrides[st.agentId]) cornerOverrides[st.agentId] = {};
-  if (cornerId) cornerOverrides[st.agentId][st.ds] = cornerId;
-  else delete cornerOverrides[st.agentId][st.ds];
+  if (cornerId) {
+    var up = await sb.from('retail_corner_overrides')
+      .upsert({ agent_id: st.agentId, date: st.ds, corner_id: cornerId },
+              { onConflict: 'agent_id,date' });
+    if (up.error) { showToast('Failed to save corner', 'error'); return; }
+    if (!cornerOverrides[st.agentId]) cornerOverrides[st.agentId] = {};
+    cornerOverrides[st.agentId][st.ds] = cornerId;
+  } else {
+    var del = await sb.from('retail_corner_overrides')
+      .delete().eq('agent_id', st.agentId).eq('date', st.ds);
+    if (del.error) { showToast('Failed to reset corner', 'error'); return; }
+    if (cornerOverrides[st.agentId]) delete cornerOverrides[st.agentId][st.ds];
+  }
   showToast('Corner updated \u2713');
   renderMonthlyPlanning();
 }
@@ -4212,7 +4240,7 @@ function renderMonthlyPlanning() {
     return;
   }
   if (!agents.length) {
-    container.innerHTML = '<p style="color:#888">No agents for this store. Add agents in the Agents tab.</p>';
+    container.innerHTML = '<p style="color:#888">No sales advisors for this store. Add them in the Sales Advisors tab.</p>';
     return;
   }
 
@@ -4291,7 +4319,6 @@ function renderMonthlyPlanning() {
     var p = agentPrefs[a.id] || {};
     var s = 0;
     if ((p.avoid_days || []).indexOf(d.dow) !== -1) s -= 2;      // veut eviter
-    if (p.weekend_ok === false && (d.dow === 0 || d.dow === 6)) s -= 2;
     return s;
   }
 
@@ -4733,11 +4760,7 @@ function renderMonthlyPlanning() {
         // qu'un stockiste seul assure, quelle que soit la config des shifts.
         var earliest = grid.reduce(function(a, b){ return b.startMin < a.startMin ? b : a; });
         var nS = list.length;
-        var sorted = list.slice().sort(function(x, y) {
-          var px = (agentPrefs[x.id] || {}).shift_pref, py = (agentPrefs[y.id] || {}).shift_pref;
-          return (px === 'morning' ? -1 : px === 'evening' ? 1 : 0) -
-                 (py === 'morning' ? -1 : py === 'evening' ? 1 : 0);
-        });
+        var sorted = list.slice();
         var rotS = nS ? (d.num % nS) : 0;
         sorted = sorted.slice(rotS).concat(sorted.slice(0, rotS));
         if (nS === 1) {
@@ -4840,12 +4863,8 @@ function renderMonthlyPlanning() {
       if (openIdx.length > 1) { spreadQuota(quota, openIdx, nOpen); }
       if (closeIdx.length > 1) { spreadQuota(quota, closeIdx, nClose); }
 
-      // Affecte les agents aux shifts en respectant preference matin/soir
-      var sortedList = list.slice().sort(function(x, y) {
-        var px = (agentPrefs[x.id] || {}).shift_pref, py = (agentPrefs[y.id] || {}).shift_pref;
-        return (px === 'morning' ? -1 : px === 'evening' ? 1 : 0) -
-               (py === 'morning' ? -1 : py === 'evening' ? 1 : 0);
-      });
+      // Affecte les agents aux shifts (rotation seule, plus de preference matin/soir)
+      var sortedList = list.slice();
       // Rotation : on decale le point de depart selon le jour, pour que ce ne
       // soit pas toujours les memes agents en ouverture / fermeture.
       var rot = sortedList.length ? (d.num % sortedList.length) : 0;
@@ -5371,7 +5390,7 @@ function retailInitials(f, l) {
 function renderAgents() {
   var container = document.getElementById('agent-list');
   if (!agents.length) {
-    container.innerHTML = '<p style="color:var(--tx-3)">No agents yet. Click Add Agent above.</p>';
+    container.innerHTML = '<p style="color:var(--tx-3)">No sales advisors yet. Click Add SA above.</p>';
     return;
   }
   container.innerHTML = agents.map(function(a) {
@@ -5391,7 +5410,7 @@ function renderAgents() {
         '<span class="pill pill-neutral">' + stInfo.label + '</span>' +
         (pct < 100 ? '<span class="ag-pct">' + pct + '%</span>' : '') +
       '</span>' +
-      '<button class="icon-btn" title="Edit agent" onclick="openAgentEditor(\'' + a.id + '\')">' +
+      '<button class="icon-btn" title="Edit sales advisor" onclick="openAgentEditor(\'' + a.id + '\')">' +
         '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
         'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/>' +
         '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' +
@@ -5499,8 +5518,6 @@ function openAgentEditor(agentId) {
   }
 
   var p = agentPrefs[agentId] || {};
-  document.getElementById('ae-shiftpref').value = p.shift_pref || 'none';
-  document.getElementById('ae-weekend').value   = (p.weekend_ok === false) ? 'false' : 'true';
   renderDayChips(p.avoid_days || [], 'ae-avoid');
 
   // Part-time : fixe (schedule) ou volant (work_pct < 100).
@@ -5562,8 +5579,6 @@ async function saveAgentEditor() {
   }
   var prefRow = {
     agent_id:   agentEditorId,
-    shift_pref: document.getElementById('ae-shiftpref').value,
-    weekend_ok: document.getElementById('ae-weekend').value === 'true',
     avoid_days: readDayChips('ae-avoid'),
     fixed_schedule: fixedSchedule
   };
@@ -5715,15 +5730,36 @@ function exportMonthly() {
   vRow.push(cell('',{grid:true})); vRow.push(cell('',{grid:true})); vRow.push(cell('',{grid:true}));
   rows.push(vRow);
 
-  // Agents groupes par bloc
+  // Agents groupes par bloc (mono-corner) ou par corner (multi-corner)
   var BLOCKS = [ ['mgmt','Management'], ['sales','Sales'], ['stock','Stock'] ];
   var perDay = { mgmt:{}, sales:{}, stock:{}, open:{}, close:{} };
   days.forEach(function(d){ ['mgmt','sales','stock','open','close'].forEach(function(k){ perDay[k][d.ds]=0; }); });
 
-  BLOCKS.forEach(function(bl){
-    var inBlock = agents.filter(function(a){ return poolOf(a) === bl[0]; });
-    if (!inBlock.length) return;
-    var blkRow = [ cell(bl[1], {bg:BLK.bg,tx:BLK.tx,bold:true,align:'left'}) ];
+  var xlGroups = [];
+  if (storeCorners.length > 1) {
+    var refYx = monthlyRef.getFullYear(), refMx = monthlyRef.getMonth() + 1;
+    var cWx = function(cid){ var t=cornerTrafficMonthly[cid+'|'+refYx+'|'+refMx]; return t?(t.last_year||t.n_2||0):0; };
+    var mgmtL = agents.filter(function(a){ return poolOf(a)==='mgmt'; });
+    if (mgmtL.length) xlGroups.push({ label:'Management', pool:'mgmt', list:mgmtL });
+    var placedX = {};
+    storeCorners.slice().sort(function(x,y){ return cWx(y.id)-cWx(x.id); }).forEach(function(c){
+      var here = agents.filter(function(a){ return poolOf(a)==='sales' && a.home_corner_id===c.id; });
+      if (here.length) { xlGroups.push({ label:c.code, pool:'sales', list:here }); here.forEach(function(a){ placedX[a.id]=true; }); }
+    });
+    var noHx = agents.filter(function(a){ return poolOf(a)==='sales' && !placedX[a.id]; });
+    if (noHx.length) xlGroups.push({ label:'Unassigned', pool:'sales', list:noHx });
+    var stkL = agents.filter(function(a){ return poolOf(a)==='stock'; });
+    if (stkL.length) xlGroups.push({ label:'Stock', pool:'stock', list:stkL });
+  } else {
+    BLOCKS.forEach(function(bl){
+      var inB = agents.filter(function(a){ return poolOf(a)===bl[0]; });
+      if (inB.length) xlGroups.push({ label:bl[1], pool:bl[0], list:inB });
+    });
+  }
+
+  xlGroups.forEach(function(grp){
+    var inBlock = grp.list;
+    var blkRow = [ cell(grp.label, {bg:BLK.bg,tx:BLK.tx,bold:true,align:'left'}) ];
     for (var i=1;i<totalCols;i++) blkRow.push(cell('',{bg:BLK.bg}));
     rows.push(blkRow);
 
@@ -5735,18 +5771,18 @@ function exportMonthly() {
       days.forEach(function(d){
         var res = (monthlyResult[d.ds] || {})[a.id];
         var code = res ? res.code : '';
+        var disp = (res && res.corner) ? (res.corner + '\u00b7' + code) : code;
         if (d.closure && !code) { r.push(cell('\u00b7',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
         var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
         if (res && res.half) {
-          // Demi-journee : cellule coupee par une diagonale.
-          r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true,grid:true,diag:(res.half==='pm')?'up':'down'}));
+          r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,diag:(res.half==='pm')?'up':'down'}));
         } else {
-          r.push(cell(code,{bg:t.bg,tx:t.tx,bold:true,grid:true}));
+          r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,sz:(res&&res.corner)?8:10}));
         }
         if (code==='O'||code==='OS'){ cntO++; if(code==='O')perDay.open[d.ds]++; }
         if (code==='C'||code==='CS'){ cntC++; if(code==='C')perDay.close[d.ds]++; }
         if (code==='OFF') cntOff++;
-        if (code && code!=='OFF' && code!=='A') perDay[bl[0]][d.ds]++;
+        if (code && code!=='OFF' && code!=='A') perDay[grp.pool][d.ds]++;
       });
       r.push(cell(cntO||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
       r.push(cell(cntC||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
@@ -5892,7 +5928,14 @@ function exportIntraday() {
 
   var spacerIdx = [];   // lignes d'interligne fin entre agents
 
+  var lastGroup = null;
   intradayExport.rows.forEach(function(r, ri) {
+    if (r.group && r.group !== lastGroup) {
+      lastGroup = r.group;
+      var gr = [ cell(r.group, {bg:'F4F5F7',tx:'52525B',bold:true,align:'left'}) ];
+      for (var gi=1; gi<totalCols; gi++) gr.push(cell('',{bg:'F4F5F7'}));
+      rows.push(gr);
+    }
     var head = SHIFT_HEAD[r.tone] || SHIFT_HEAD.close;
     var rowIndex = rows.length;
     var row = [ cell(r.name,{align:'left',bold:true}),
@@ -5990,11 +6033,23 @@ var CAL_DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 function switchCalendarView(v) {
   currentCalView = v;
-  document.getElementById('btn-cal-annual').classList.toggle('active', v==='annual');
-  document.getElementById('btn-cal-monthly').classList.toggle('active', v==='monthly');
   document.getElementById('calendar-annual').style.display  = v==='annual'  ? 'block' : 'none';
   document.getElementById('calendar-monthly').style.display = v==='monthly' ? 'block' : 'none';
   renderCalendar();
+}
+
+function switchCalendarNav(v, btn) {
+  document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('tab-calendar').classList.add('active');
+  var parent = document.querySelector('#sub-calendar').previousElementSibling;
+  if (parent) { parent.classList.add('active'); parent.classList.add('open'); }
+  document.querySelector('#sub-calendar').classList.add('open');
+  document.querySelectorAll('#sub-calendar .nav-subitem').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.calview === v);
+  });
+  if (currentStoreId) renderCalendar();
+  switchCalendarView(v);
 }
 
 function calChangeMonth(delta) {
@@ -6173,7 +6228,7 @@ function renderMonthlyCalendar() {
 
   // Agent list (right)
   var list = '<div class="cal-agent-list"><h4>Declare absence</h4>';
-  if (!agents.length) list += '<p style="font-size:12px;color:#9ca3af;">No agents.</p>';
+  if (!agents.length) list += '<p style="font-size:12px;color:#9ca3af;">No sales advisors.</p>';
   agents.forEach(function(a){
     list += '<div class="cal-agent-item" onclick="showLeavePicker(\''+a.id+'\',event)">'+
       a.first_name+' '+a.last_name+'</div>';
@@ -6193,7 +6248,6 @@ function showLeavePicker(agentId, event) {
   var firstOfMonth = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth(), 1));
   document.getElementById('leave-start').value = firstOfMonth;
   document.getElementById('leave-end').value = firstOfMonth;
-  document.getElementById('leave-type').value = 'absence';
   var p = document.getElementById('leave-popup');
   p.style.display = 'block';
   p.style.left = Math.min(event.clientX+10, window.innerWidth-280) + 'px';
@@ -6204,10 +6258,9 @@ function closeLeavePopup(){ document.getElementById('leave-popup').style.display
 async function saveLeave() {
   var start = document.getElementById('leave-start').value;
   var end   = document.getElementById('leave-end').value;
-  var type  = document.getElementById('leave-type').value;
   if (!start || !end) { showToast('Pick both dates', 'error'); return; }
   if (end < start) { showToast('End date is before start date', 'error'); return; }
-  var row = { store_id: currentStoreId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: type };
+  var row = { store_id: currentStoreId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: 'absence' };
   var { data, error } = await sb.from('retail_agent_leave').insert([row]).select();
   if (error) { showToast('Failed to save: '+error.message, 'error'); return; }
   if (data && data[0]) agentLeaves.push(data[0]);
@@ -6419,7 +6472,7 @@ init();
   <div class="modal">
     <div class="modal-head">
       <div>
-        <div class="modal-title" id="ae-title">Agent</div>
+        <div class="modal-title" id="ae-title">Sales Advisor</div>
         <div class="modal-sub">Edit agent configuration</div>
       </div>
       <button class="icon-btn" onclick="closeAgentEditor()" aria-label="Close">
@@ -6448,23 +6501,6 @@ init();
         </div>
       </div>
       <div class="modal-sec">Preferences</div>
-      <div class="form-grid">
-        <div class="fld">
-          <label>Shift preference</label>
-          <select id="ae-shiftpref">
-            <option value="none">No preference</option>
-            <option value="morning">Prefers mornings</option>
-            <option value="evening">Prefers evenings</option>
-          </select>
-        </div>
-        <div class="fld">
-          <label>Weekend</label>
-          <select id="ae-weekend">
-            <option value="true">Available</option>
-            <option value="false">Prefers to avoid</option>
-          </select>
-        </div>
-      </div>
       <div class="fld" style="margin-top:12px;">
         <label>Days to avoid</label>
         <div class="day-chips" id="ae-avoid"></div>
