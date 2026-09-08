@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V5.1</title>
+  <title>CORA Retail V5.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -954,6 +954,15 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-lbl { font-size:12.5px; color:var(--tx-2); }
 .ce-reset .ce-lbl { color:var(--tx-3); font-style:italic; }
 .ce-sep { height:1px; background:var(--line); margin:var(--s2) 0; }
+.ce-cnr-lbl { font-size:11px; font-weight:600; color:var(--tx-3); text-transform:uppercase;
+  letter-spacing:.03em; padding:0 var(--s2) 4px; }
+.ce-cnr { display:flex; flex-wrap:wrap; gap:5px; padding:0 var(--s2) 2px; }
+.ce-cnr-opt { padding:4px 10px; border:1px solid var(--line); background:var(--bg-base);
+  border-radius:var(--r-sm); font-family:var(--font); font-size:11.5px; font-weight:600;
+  color:var(--tx-2); cursor:pointer; transition:background .12s; }
+.ce-cnr-opt:hover { background:var(--bg-base-3); }
+.ce-cnr-opt.is-current { background:var(--info-soft); color:var(--accent-strong); border-color:var(--accent-strong); }
+.ce-cnr-opt.ce-reset { color:var(--tx-3); font-style:italic; font-weight:400; }
 
 /* ═══ RESPONSIVE ═════════════════════════════════════════════════ */
 @media (max-width:900px) {
@@ -1008,7 +1017,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <button class="nav-subitem"        data-view="intraday" onclick="switchPlanningView('intraday', this)">Intraday</button>
       </div>
     </div>
-    <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Agents</span></button>
+    <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Sales Advisors</span></button>
     <button class="nav-item" onclick="switchTab('traffic', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Traffic</span></button>
     <button class="nav-item" onclick="switchTab('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></button>
     <button class="nav-item" onclick="switchTab('regulations', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
@@ -1113,7 +1122,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   <div class="wrap">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 class="page-title">Agents</h2>
+      <h2 class="page-title">Sales Advisors</h2>
       <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()">+ Add agent</button>
     </div>
     <div id="add-agent-form">
@@ -1272,6 +1281,7 @@ let currentStoreName  = '';
 let currentStoreCity  = '';
 let storeHighlights   = [];   // [{id, start_date, end_date, text}]
 let planningOverrides = {};   // { agentId: { 'YYYY-MM-DD': 'O' | 'OFF' | 'A' ... } }
+let cornerOverrides   = {};   // { agentId: { 'YYYY-MM-DD': cornerId } } (override manuel corner)
 let monthlyResult = {};       // { 'YYYY-MM-DD': { agentId: {code, special} } } - partage monthly -> intraday
 let intradayExport = null;    // snapshot du dernier intraday rendu, pour l'export Excel
 let agentPrefs        = {};   // { agentId: {shift_pref, weekend_ok, avoid_days[]} }
@@ -1489,7 +1499,33 @@ async function init() {
   var sSel = document.getElementById('store-select');
   if (sSel) sSel.addEventListener('change', onStoreChange);
   setStatus('Ready - select a store to begin');
+  if (await restoreScope()) return;
   openStoreGate();
+}
+
+// Persistance de la selection (evite de re-choisir la boutique apres un F5).
+function saveScope() {
+  try {
+    localStorage.setItem('cora_scope', JSON.stringify({
+      region: currentRegionId, country: currentCountryId, store: currentStoreId
+    }));
+  } catch (e) {}
+}
+async function restoreScope() {
+  var raw; try { raw = localStorage.getItem('cora_scope'); } catch (e) { return false; }
+  if (!raw) return false;
+  var sc; try { sc = JSON.parse(raw); } catch (e) { return false; }
+  if (!sc || !sc.region || !sc.store) return false;
+  var rSel = document.getElementById('region-select');
+  if (!rSel) return false;
+  rSel.value = sc.region;
+  if (rSel.value !== sc.region) return false;
+  await onRegionChange();
+  var cSel = document.getElementById('country-select');
+  if (sc.country && cSel) { cSel.value = sc.country; if (cSel.value === sc.country) await onCountryChange(); }
+  var sSel = document.getElementById('store-select');
+  if (sSel) { sSel.value = sc.store; if (sSel.value === sc.store) { await onStoreChange(); return true; } }
+  return false;
 }
 
 async function onRegionChange() {
@@ -1555,6 +1591,7 @@ async function loadCountries() {
     .eq('region_id', currentRegionId).order('sort_order');
   if (res.error) { showToast('Could not load countries', 'error'); return; }
   countries = res.data || [];
+  countries.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
 
   sel.innerHTML = '<option value="">- All countries -</option>';
   countries.forEach(function(c) {
@@ -1615,6 +1652,7 @@ async function loadStores() {
     .eq('country_id', currentCountryId).order('sort_order');
   if (res.error) { showToast('Could not load stores', 'error'); return; }
   stores = (res.data || []).filter(function(s) { return s.is_active !== false; });
+  stores.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
 
   sel.innerHTML = stores.length
     ? '<option value="">- All stores -</option>'
@@ -1643,6 +1681,7 @@ async function onStoreChange() {
 
   if (!currentStoreId) { updateStatusBar(); return; }
 
+  saveScope();
   closeStoreGate();
   await loadRegulations();
   await loadShiftConfig();
@@ -3756,6 +3795,7 @@ async function runForecast() {
 
 async function loadPlanningOverrides() {
   planningOverrides = {};
+  cornerOverrides = {};
   if (!agents.length) return;
   var ids = agents.map(function(a) { return a.id; });
   var res = await sb.from('retail_planning_overrides').select('*').in('agent_id', ids);
@@ -3763,6 +3803,10 @@ async function loadPlanningOverrides() {
   res.data.forEach(function(r) {
     if (!planningOverrides[r.agent_id]) planningOverrides[r.agent_id] = {};
     planningOverrides[r.agent_id][r.date] = r.value;
+    if (r.corner_id) {
+      if (!cornerOverrides[r.agent_id]) cornerOverrides[r.agent_id] = {};
+      cornerOverrides[r.agent_id][r.date] = r.corner_id;
+    }
   });
 }
 
@@ -3796,6 +3840,20 @@ function openCellEditor(agentId, ds, evt) {
     html += '<div class="ce-sep"></div>' +
             '<button class="ce-opt ce-reset" onclick="applyCellOverride(null)">' +
             '<span class="ce-lbl">Revenir au calcul automatique</span></button>';
+  }
+
+  // Multi-corner : choix manuel du corner pour ce jour.
+  if (storeCorners.length > 1) {
+    var curCnr = (cornerOverrides[agentId] || {})[ds] || '';
+    html += '<div class="ce-sep"></div><div class="ce-cnr-lbl">Corner</div><div class="ce-cnr">';
+    storeCorners.forEach(function(c) {
+      html += '<button class="ce-cnr-opt' + (curCnr === c.id ? ' is-current' : '') +
+              '" onclick="applyCornerOverride(\'' + c.id + '\')">' + esc(c.code) + '</button>';
+    });
+    if (curCnr) {
+      html += '<button class="ce-cnr-opt ce-reset" onclick="applyCornerOverride(null)">Auto</button>';
+    }
+    html += '</div>';
   }
 
   document.getElementById('ce-title').textContent =
@@ -3847,7 +3905,23 @@ async function applyCellOverride(value) {
   renderMonthlyPlanning();
 }
 
-// Efface toutes les modifications manuelles du mois affiche
+async function applyCornerOverride(cornerId) {
+  var st = cellEditorState;
+  if (!st.agentId || !st.ds) return;
+  closeCellEditor();
+  // On upsert la ligne override en ne touchant que corner_id (garde value existant).
+  var existing = (planningOverrides[st.agentId] || {})[st.ds] || null;
+  var row = { agent_id: st.agentId, date: st.ds, corner_id: cornerId };
+  if (existing) row.value = existing;
+  var up = await sb.from('retail_planning_overrides')
+    .upsert(row, { onConflict: 'agent_id,date' });
+  if (up.error) { showToast('Failed to save corner', 'error'); return; }
+  if (!cornerOverrides[st.agentId]) cornerOverrides[st.agentId] = {};
+  if (cornerId) cornerOverrides[st.agentId][st.ds] = cornerId;
+  else delete cornerOverrides[st.agentId][st.ds];
+  showToast('Corner updated \u2713');
+  renderMonthlyPlanning();
+}
 async function clearMonthOverrides() {
   if (!agents.length) return;
   var ref   = new Date(monthlyRef);
@@ -4904,6 +4978,11 @@ function renderMonthlyPlanning() {
         assign[c.id].forEach(function(a) {
           (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = c.id;
         });
+      });
+      // 4) Override manuel du manager : prime sur le calcul.
+      present.forEach(function(a) {
+        var ov = (cornerOverrides[a.id] || {})[d.ds];
+        if (ov) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = ov;
       });
     });
   }
@@ -6477,3 +6556,4 @@ init();
 </div>
 </body>
 </html>
+
