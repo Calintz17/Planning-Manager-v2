@@ -6,8 +6,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V5.8</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CORA Retail V5.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -174,7 +174,6 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .b-mb  { background:#1a1a2e; color:#fff; }
 .b-lun { background:#FDE047; color:#713F12; }
 .b-wel { background:#A5B4FC; color:#312E81; }
-.b-vm  { background:#86EFAC; color:#14532D; }
 
 /* Missions ajoutees a la main : bulle + croix de retrait */
 .it-blk-added { overflow:visible; }
@@ -413,9 +412,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
         padding:3px 9px; border-radius:var(--r-pill); line-height:1.5; }
 .pill-neutral { background:var(--bg-base-3); color:var(--tx-2); }
 .pill-ok      { background:var(--ok-soft);   color:var(--ok-tx); }
-.pill-warn    { background:var(--warn-soft); color:var(--warn-tx); }
 .pill-dang    { background:var(--dang-soft); color:var(--dang-tx); }
-.pill-info    { background:var(--info-soft); color:var(--info-tx); }
 
 /* Avatar */
 .avatar { width:32px; height:32px; min-width:32px; height:32px; border-radius:var(--r-pill);
@@ -775,6 +772,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 #scope-modal-slot .sb-field label { color:var(--tx-2); }
 #scope-modal-slot select { width:100%; }
 body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events:none; user-select:none; }
+.sb-store-btn { display:none; }
 
 /* tableaux de settings, tous alignes pareil */
 .set-tbl { table-layout:fixed; width:100%; }
@@ -963,6 +961,31 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   .tb-search { max-width:none; }
 }
 
+/* iOS / mobile : la pop up de selection de boutique doit rester utilisable.
+   On enleve le backdrop-filter (lourd et parfois bloquant sur Safari iOS),
+   on rend la carte scrollable et bien dimensionnee, et on garantit que les
+   selects sont cliquables. Aucun impact desktop. */
+@media (max-width:700px) {
+  #store-gate { background:rgba(16,24,40,.45); backdrop-filter:none; -webkit-backdrop-filter:none;
+    align-items:flex-start; padding:max(16px,env(safe-area-inset-top)) 16px 16px; overflow-y:auto; }
+  .gate-card { width:100%; max-width:none; padding:var(--s6); margin-top:8vh;
+    max-height:calc(100vh - 16vh); overflow-y:auto; box-shadow:0 12px 40px rgba(16,24,40,.3); }
+  #scope-modal-slot select { height:44px; font-size:16px; }
+  body.gate-open #sidebar, body.gate-open #main { filter:none; }
+}
+@media (max-width:900px) {
+  .sb-store-btn { display:flex; align-items:center; justify-content:center; width:100%;
+    background:none; border:none; cursor:pointer; color:var(--tx-2); padding:10px 0; }
+  .sb-store-btn .ic { width:22px; height:22px; }
+  .sb-store-btn-lbl { display:none; }
+}
+@media (max-width:700px) {
+  .tab-content { padding:var(--s4) var(--s3) var(--s6); }
+  #main { max-width:100vw; overflow-x:hidden; }
+  .card-head { gap:var(--s2); }
+  .tb-inner { flex-wrap:wrap; gap:var(--s2); }
+}
+
   </style>
 </head>
 <body>
@@ -1020,6 +1043,10 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   </div>
 
   <div class="sb-scope" id="sb-scope">
+  <button class="sb-store-btn" onclick="openStoreGate()" title="Change store">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg>
+    <span class="sb-store-btn-lbl" id="sb-store-btn-lbl">Store</span>
+  </button>
 <div class="sb-field">
     <label for="week-label">Period</label>
     <div class="sb-period">
