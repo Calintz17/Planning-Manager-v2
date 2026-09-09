@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <!--
   CORA Retail - Client Operations Rostering Assistant
- .
+  Planning mensuel et intraday pour boutiques. Base Supabase (tables retail_*).
 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V5.4</title>
+  <title>CORA Retail V5.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
-/* ═══ DESIGN TOKENS ═══════════════════════════════════════════════ */
+/* les variables de base (couleurs, espacements, etc) */
 :root {
   /* ---- Surfaces ---- */
   --bg-app:        #F4F5F7;   /* canvas gris : fait ressortir les bulles */
@@ -23,7 +23,7 @@
   --bg-base-3:     #F1F2F4;   /* hover neutre */
   --bg-disabled:   #E8E9EB;
 
-  /* ---- Brand  ---- */
+  /* ---- Brand = quasi-noir (pas de couleur vive) ---- */
   --brand:         #1F1F1F;
   --brand-hover:   #111111;
   --brand-on:      #FFFFFF;
@@ -37,13 +37,13 @@
   --line:          #E7E8EC;
   --line-2:        #DCDEE3;
 
-  /* ---- Semantique :  */
+  /* ---- Semantique : Success / Warning / Danger / Info ---- */
   --ok:            #16A34A;  --ok-soft:   #DCFCE7;  --ok-tx:   #14532D;
   --warn-soft: #FEF3C7;  --warn-tx: #713F12;
   --dang:          #DC2626;  --dang-soft: #FEE2E2;  --dang-tx: #7F1D1D;
   --info:          #2563EB;  --info-soft: #DBEAFE;  --info-tx: #1E3A8A;
 
-  /* ---- Sidebar :  ---- */
+  /* ---- Sidebar : active = bleu fonce (demande) ---- */
   --nav-active-bg: #1E3A8A;
   --nav-active-tx: #FFFFFF;
 
@@ -53,19 +53,19 @@
   /* ---- Espacements (echelle 4px) ---- */
   --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
 
-  /* ---- Ombres  ---- */
+  /* ---- Ombres : tres subtiles ---- */
   --sh-1: 0 1px 2px rgba(16,24,40,.04);
   --sh-2: 0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
 
-  /* ---- Typo  ---- */
+  /* ---- Typo : une seule famille ---- */
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* ---- Layout ---- */
   --sb-w: 250px;
-  --content-max: 1280px;   /* evite le "trop large" */
+  --content-max: 1280px;   /* au dela ca fait trop etale */
 }
 
-/* ═══ RESET & BASE ═══════════════════════════════════════════════ */
+/* reset + base */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
@@ -75,14 +75,14 @@ body {
 h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 ::placeholder { color: var(--tx-3); }
 
-/* ═══ ICONES : taille unique partout (fix loupe geante) ══════════ */
+/* icones : taille fixe partout, sinon la loupe part en cacahuete */
 .ic { width:18px; height:18px; flex-shrink:0; display:block; }
 
-/* ═══ ONGLETS : un seul visible a la fois ════════════════════════ */
+/* onglets : un seul affiche a la fois */
 .tab-content { display:none; padding: var(--s5) var(--s6) var(--s8); }
 .tab-content.active { display:block; }
 
-/* ═══ LAYOUT ═════════════════════════════════════════════════════ */
+/* layout general */
 #sidebar {
   position: fixed; inset: 0 auto 0 0; width: var(--sb-w);
   background: var(--bg-base); border-right: 1px solid var(--line);
@@ -226,7 +226,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .sb-mode span { font-size:11.5px; color:var(--tx-2); }
 .sb-mode span.on { color:var(--tx-1); font-weight:600; }
 
-/* ═══ TOPBAR : recherche compacte + compte ═══════════════════════ */
+/* la barre du haut : recherche + compteur */
 #topbar {
   display:flex; align-items:center; gap:var(--s3);
   padding:12px var(--s6); background:var(--bg-base);
@@ -257,7 +257,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   font-size:12px; font-weight:600; cursor:pointer; flex-shrink:0;
 }
 
-/* ═══ CONTENU ════════════════════════════════════════════════════ */
+/* le contenu */
 .wrap { max-width: var(--content-max); margin: 0 auto; }
 
 /* Cartes : espacement resserre */
@@ -265,7 +265,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
         box-shadow:var(--sh-1); padding:var(--s4) var(--s5); margin-bottom:var(--s3); }
 .card:last-child { margin-bottom:0; }
 
-/* ═══ DASHBOARD ═══ */
+/* dashboard */
 .dash-head { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:var(--s6); }
 .dash-eyebrow { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--tx-3); margin-bottom:6px; }
 .dash-title { font-size:28px; font-weight:700; letter-spacing:-.02em; color:var(--tx-1); }
@@ -352,7 +352,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .sec-title { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
              color:var(--tx-2); margin-bottom:var(--s3); }
 
-/* ═══ CONTROLES : hauteur unique 36px partout ════════════════════ */
+/* tous les controles a 36px de haut, pour que ce soit aligne */
 select, input[type=text], input[type=number], input[type=date] {
   font-family:var(--font); font-size:13px; color:var(--tx-1); height:36px;
   padding:0 10px; border:1px solid var(--line-2); border-radius:9px;
@@ -449,13 +449,10 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 #toast.success { background:var(--ok); }
 #toast.error   { background:var(--dang); }
 
-/* ═══ MONTHLY GRID ═══════════════════════════════════════════════
-   Priorite absolue : lisibilite pour les equipes.
-   - colonnes de jours STRICTEMENT egales (largeur fixe)
-   - colonne agent auto (s'adapte au nom le plus long, jamais de retour ligne)
-   - surbrillance croisee ligne+colonne au survol
-   - bloc RH visuellement detache
-   ════════════════════════════════════════════════════════════════ */
+/* la grille du monthly. le truc le plus important a lire pour les equipes,
+   donc : colonnes de jours toutes pareilles (largeur fixe), colonne agent qui
+   s adapte au nom le plus long sans passer a la ligne, surbrillance ligne+colonne
+   au survol, et le bloc RH bien detache du reste. */
 .mth-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:var(--r-md); background:var(--bg-base); }
 .mth { border-collapse:separate; border-spacing:0; font-size:12.5px; width:max-content; min-width:100%; }
 
@@ -584,7 +581,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .legend-item { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--tx-2); }
 .legend-item b { color:var(--tx-1); font-weight:600; }
 
-/* ═══ CALENDRIER ═════════════════════════════════════════════════ */
+/* calendrier */
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
 .cal-dow { text-align:center; font-size:10.5px; font-weight:600; color:var(--tx-3);
   text-transform:uppercase; letter-spacing:.05em; padding-bottom:var(--s2); }
@@ -624,7 +621,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .cal-mini-cell.holiday { background:var(--warn-soft); color:var(--warn-tx); font-weight:600; cursor:pointer; }
 .cal-mini-cell.holiday.forced-open { background:var(--ok-soft); color:var(--ok-tx); }
 
-/* ═══ POPUPS ═════════════════════════════════════════════════════ */
+/* popups */
 #leave-popup, #dayopen-popup, #week-picker-popup {
   display:none; position:fixed; background:var(--bg-base); border:1px solid var(--line);
   border-radius:var(--r-lg); padding:var(--s5); box-shadow:0 12px 32px rgba(16,24,40,.14);
@@ -655,7 +652,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .wkp-day.today { font-weight:700; }
 .wkp-day.in-selected-week { background:var(--info-soft); color:var(--info-tx); }
 
-/* ═══ SETTINGS ═══════════════════════════════════════════════════ */
+/* settings */
 .set-rules { display:flex; flex-direction:column; gap:0; }
 .set-rule {
   display:grid; grid-template-columns:260px 120px 1fr;
@@ -684,12 +681,12 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   padding:2px 8px; font-size:10.5px; margin-left:var(--s2); }
 .toggle-label { font-size:12.5px; color:var(--tx-2); }
 
-/* ═══ SETTINGS : en-tete de carte + tables encadrees ═════════════ */
+/* settings : entete de carte + tables */
 
 /* Tables encadrees (contour fin) */
 .tbl-framed { border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; }
 
-/* ═══ NAV MOIS (calendrier) : coherent avec la charte ════════════ */
+/* nav des mois dans le calendrier */
 .cal-nav { display:inline-flex; align-items:center; gap:var(--s2); }
 .cal-nav-btn {
   width:32px; height:32px; border:1px solid var(--line-2); border-radius:var(--r-md);
@@ -713,7 +710,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
    aligne sur le bord de la carte, comme les en-tetes hors carte. */
 .card > .page-head:first-child { margin-bottom:var(--s4); }
 
-/* ═══ AGENT ROW (lecture seule + edit) ═══════════════════════════ */
+/* ligne agent (lecture + edition) */
 .agent-row { display:flex; align-items:center; gap:var(--s4);
   padding:11px var(--s4); border-bottom:1px solid var(--line); transition:background .12s; }
 .agent-row:hover { background:var(--bg-base-2); }
@@ -726,7 +723,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .ag-pct { font-size:12.5px; font-weight:600; color:var(--tx-2);
   min-width:44px; text-align:right; font-variant-numeric:tabular-nums; }
 
-/* ═══ FORMULAIRES ════════════════════════════════════════════════ */
+/* formulaires */
 #add-agent-form { display:none; background:var(--bg-base-2); border:1px solid var(--line);
   border-radius:var(--r-md); padding:var(--s4); margin-bottom:var(--s4); }
 #add-agent-form.open { display:block; }
@@ -738,7 +735,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .fld input:disabled { background:var(--bg-base-3); color:var(--tx-3); cursor:not-allowed; }
 .form-actions { display:flex; justify-content:flex-end; gap:var(--s2); margin-top:var(--s4); }
 
-/* ═══ MODALE ═════════════════════════════════════════════════════ */
+/* modale */
 .modal-overlay { display:none; position:fixed; inset:0; z-index:800;
   background:rgba(16,24,40,.34); align-items:center; justify-content:center; padding:var(--s5); }
 .modal-overlay.open { display:flex; }
@@ -752,11 +749,11 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .modal-foot { display:flex; align-items:center; gap:var(--s2);
   padding:var(--s4) var(--s5); background:var(--bg-base-2); border-top:1px solid var(--line); }
 
-/* ═══ BLOC SCOPE (periode / region / pays / boutique) ════════════ */
+/* le bloc de selection periode/region/pays/boutique */
 .sb-scope { position:relative; margin-top:var(--s5);
   padding-top:var(--s4); border-top:1px solid var(--line); }
 
-/* ═══ GATE DE SELECTION BOUTIQUE ═══════════════════════════════════ */
+/* l ecran qui force a choisir sa boutique avant de commencer */
 #store-gate {
   display:none; position:fixed; inset:0; z-index:9999;
   align-items:center; justify-content:center;
@@ -779,7 +776,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 #scope-modal-slot select { width:100%; }
 body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events:none; user-select:none; }
 
-/* ═══ TABLEAUX DE SETTINGS : alignement identique ════════════════ */
+/* tableaux de settings, tous alignes pareil */
 .set-tbl { table-layout:fixed; width:100%; }
 .set-tbl th { font-weight:600; }
 .set-tbl td { vertical-align:middle; }
@@ -788,7 +785,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .set-tbl tr.rest-day td { opacity:.5; }
 .set-tbl tr.rest-day td:first-child { opacity:1; }
 
-/* ═══ BOUTON IA : lueur rotative facon Arc Raiders ═══════════════ */
+/* le bouton IA avec la lueur qui tourne facon Arc Raiders */
 /* Un halo conique tourne autour du bord du bouton. Discret au repos,
    il s'intensifie au survol. Le fond du bouton masque le centre pour ne
    laisser que le liseré lumineux. */
@@ -885,7 +882,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tone-chip:hover { transform:translateY(-1px); }
 .tone-chip.on { border-color:var(--tx-1); }
 
-/* ═══ TRAFFIC ════════════════════════════════════════════════════ */
+/* traffic */
 .tr-days { display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:var(--s2); }
 .tr-day { border:1px solid var(--line); border-radius:var(--r-md);
   padding:var(--s2); background:var(--bg-base); }
@@ -903,7 +900,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   animation:spinner .7s linear infinite; display:inline-block; }
 @keyframes spinner { to { transform:rotate(360deg); } }
 
-/* ═══ PREFERENCES AGENT ══════════════════════════════════════════ */
+/* preferences agent */
 .modal-sec { font-size:10.5px; font-weight:600; letter-spacing:.06em;
   text-transform:uppercase; color:var(--tx-3);
   margin:var(--s5) 0 var(--s3); padding-top:var(--s4);
@@ -922,7 +919,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .day-chip.on { background:var(--dang-soft); color:var(--dang-tx);
   border-color:#FCA5A5; font-weight:600; }
 
-/* ═══ EDITEUR DE CELLULE (planning) ══════════════════════════════ */
+/* editeur de cellule dans le planning */
 .mth td.is-editable { cursor:pointer; }
 .mth td.is-editable:hover { box-shadow:inset 0 0 0 2px var(--nav-active-bg); }
 
@@ -955,8 +952,9 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-cnr-opt:hover { background:var(--bg-base-3); }
 .ce-cnr-opt.is-current { background:var(--info-soft); color:var(--accent-strong); border-color:var(--accent-strong); }
 .ce-cnr-opt.ce-reset { color:var(--tx-3); font-style:italic; font-weight:400; }
+.ae-fixed-note { font-size:11px; color:var(--tx-3); line-height:1.4; display:block; }
 
-/* ═══ RESPONSIVE ═════════════════════════════════════════════════ */
+/* responsive */
 @media (max-width:900px) {
   :root { --sb-w:60px; }
   .sb-name, .nav-item span, .sb-sec, .sb-field, .sb-foot span { display:none; }
@@ -1014,8 +1012,8 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
     <div class="nav-group">
       <button class="nav-item has-sub" onclick="toggleNavGroup('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span><svg class="ic nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
       <div class="nav-sub" id="sub-calendar" data-group="calendar">
-        <button class="nav-subitem active" data-calview="annual"  onclick="switchCalendarNav('annual', this)">Annual</button>
-        <button class="nav-subitem"        data-calview="monthly" onclick="switchCalendarNav('monthly', this)">Monthly</button>
+        <button class="nav-subitem active" data-calview="annual"  onclick="switchCalendarNav('annual', this)">Bank Holidays</button>
+        <button class="nav-subitem"        data-calview="monthly" onclick="switchCalendarNav('monthly', this)">Absence</button>
       </div>
     </div>
     <button class="nav-item" onclick="switchTab('regulations', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
@@ -1963,11 +1961,16 @@ function closeShiftCreator() {
 
 function hourOptions(selMin) {
   var o = '';
-  for (var h = 0; h <= 23; h++) {
+  // 00:00 -> 23:45 normal, puis 24:00 -> 05:45 pour les shifts qui passent
+  // minuit (ex Dubai ferme a 2h). On considere que ces heures restent sur la
+  // meme journee de planning, donc pas d'impact "lendemain".
+  for (var h = 0; h <= 29; h++) {
     for (var q = 0; q < 60; q += 15) {
       var v = h * 60 + q;
-      o += '<option value="' + v + '"' + (v === selMin ? ' selected' : '') + '>' +
-           String(h).padStart(2,'0') + ':' + String(q).padStart(2,'0') + '</option>';
+      var disp = (h >= 24)
+        ? String(h - 24).padStart(2,'0') + ':' + String(q).padStart(2,'0') + ' (+1)'
+        : String(h).padStart(2,'0') + ':' + String(q).padStart(2,'0');
+      o += '<option value="' + v + '"' + (v === selMin ? ' selected' : '') + '>' + disp + '</option>';
     }
   }
   return o;
@@ -2186,14 +2189,14 @@ function renderRegulations() {
           '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8) + '" min="1" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
         '<div class="set-rule"><span class="set-rule-lbl">Max hours / week</span>' +
           '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5"><span class="set-rule-unit">h</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Saturday is a rest day</span>' +
+        '<div class="set-rule"><span class="set-rule-lbl">SATURDAY</span>' +
           '<label class="toggle"><input type="checkbox" id="reg-saturday"' + (regulations.saturday_rest ? ' checked' : '') + '>' +
           '<span class="toggle-slider"></span></label>' +
-          '<span class="toggle-label" id="sat-label">' + (regulations.saturday_rest ? 'Yes - rest day' : 'No - working day') + '</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Sunday is a rest day</span>' +
+          '<span class="toggle-label" id="sat-label">' + (regulations.saturday_rest ? 'Store is closed' : 'Store is open') + '</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">SUNDAY</span>' +
           '<label class="toggle"><input type="checkbox" id="reg-sunday"' + (regulations.sunday_rest ? ' checked' : '') + '>' +
           '<span class="toggle-slider"></span></label>' +
-          '<span class="toggle-label" id="sun-label">' + (regulations.sunday_rest ? 'Yes - rest day' : 'No - working day') + '</span></div>' +
+          '<span class="toggle-label" id="sun-label">' + (regulations.sunday_rest ? 'Store is closed' : 'Store is open') + '</span></div>' +
       '</div>' +
     '</div>' +
 
@@ -2245,12 +2248,12 @@ function renderRegulations() {
 
   document.getElementById('reg-saturday').addEventListener('change', function() {
     document.getElementById('sat-label').textContent = this.checked
-      ? 'Yes - rest day' : 'No - working day';
+      ? 'Store is closed' : 'Store is open';
     updateHoursTableReactivity();
   });
   document.getElementById('reg-sunday').addEventListener('change', function() {
     document.getElementById('sun-label').textContent = this.checked
-      ? 'Yes - rest day' : 'No - working day';
+      ? 'Store is closed' : 'Store is open';
     updateHoursTableReactivity();
   });
 }
@@ -2365,14 +2368,16 @@ var MISSION_LABELS = { mb:'MB', wel:'Welcome', lun:'Lunch' };
 var MISSION_DUR = { mb:0.25, wel:1, lun:1 };
 
 var RETAIL_STATUS = {
-  SM:        { label: 'SM',         block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
-  ASM:       { label: 'ASM',        block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
-  TM:        { label: 'TM',         block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
-  MANAGER:   { label: 'Manager',    block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
-  STOCK:     { label: 'Stock',      block: 'STOCK',    grid: 'stock', pool: 'stock' },
-  SENIOR:    { label: 'Senior',     block: 'SENIOR',   grid: 'sales', pool: 'sales' },
-  SA:        { label: 'SA',         block: 'SA',       grid: 'sales', pool: 'sales' },
-  PART_TIME: { label: 'Part Time',  block: 'PART_TIME',grid: 'sales', pool: 'sales' },
+  SM:               { label: 'Store Manager',          block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  ASM:              { label: 'Deputy Store Director',  block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  TM:               { label: 'Team Manager',           block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  MANAGER:          { label: 'Manager',                block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
+  STOCK:            { label: 'Stock Controller',       block: 'STOCK',    grid: 'stock', pool: 'stock' },
+  STOCK_MANAGER:    { label: 'Stock Manager',          block: 'STOCK',    grid: 'stock', pool: 'stock' },
+  SENIOR:           { label: 'Senior Client Advisor',  block: 'SENIOR',   grid: 'sales', pool: 'sales' },
+  SA:               { label: 'Client Advisor',         block: 'SA',       grid: 'sales', pool: 'sales' },
+  GRAND_VENDEUR:    { label: 'Grand Vendeur',          block: 'SA',       grid: 'sales', pool: 'sales' },
+  PART_TIME:        { label: 'Part Time',              block: 'PART_TIME',grid: 'sales', pool: 'sales' },
 };
 function poolOf(a) { return (RETAIL_STATUS[retailStatusOf(a)] || {}).pool || 'sales'; }
 // Ordre des blocs dans la grille (comme l'Excel)
@@ -2490,7 +2495,16 @@ function retailStatusOf(agent) {
   return RETAIL_STATUS[st] ? st : 'SA';
 }
 
-var HIERARCHY_ORDER = ['SM', 'ASM', 'SENIOR', 'SA', 'PART_TIME', 'STOCK'];
+var HIERARCHY_ORDER = ['SM', 'ASM', 'TM', 'MANAGER', 'SENIOR', 'SA', 'GRAND_VENDEUR', 'PART_TIME', 'STOCK_MANAGER', 'STOCK'];
+function skillMatchesCorner(skills, cornerCode) {
+  if (!skills || !skills.length || !cornerCode) return false;
+  // WMN (raccourci UI) correspond au corner "Women"/"WOMEN".
+  var norm = function(s){ s = (s||'').toUpperCase(); return s === 'WMN' ? 'WOMEN' : s; };
+  var target = norm(cornerCode);
+  for (var i = 0; i < skills.length; i++) if (norm(skills[i]) === target) return true;
+  return false;
+}
+
 function agentSubLabel(a) {
   // Multi-corner : afficher le code du corner d'attache. Sinon le nom du store.
   if (storeCorners.length > 1 && a.home_corner_id) {
@@ -2566,12 +2580,9 @@ function attachCrossHighlight() {
   tbl.addEventListener('mouseleave', clear);
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// MOTEUR DE TRAFIC
-// Le manager saisit un TOTAL MENSUEL. L'outil le ventile automatiquement sur
-// chaque jour en suivant la courbe de reference. Un jour corrige a la main
-// (is_manual) n'est plus recalcule ; le total du mois s'ajuste autour.
-// ══════════════════════════════════════════════════════════════════════════
+// le moteur de traffic. le manager rentre un total pour le mois, l outil
+// l etale sur chaque jour en suivant la courbe. si un jour est corrige a la
+// main (is_manual) on n y touche plus, et le reste du mois se reajuste autour.
 
 // Poids relatif de chaque jour de la semaine (base sur la realite retail :
 // week-end nettement plus charge que le milieu de semaine).
@@ -4268,20 +4279,15 @@ function renderMonthlyPlanning() {
                      closure: closure, vol: vol });
   }
 
-  // ══════════════════════════════════════════════════════════════════════
-  // MOTEUR D'AFFECTATION - 4 COUCHES
-  //
-  //   1. SOCLE      : chaque jour ouvert recoit une equipe minimale
-  //                   (1 ouverture, 1 fermeture, 1 SM/ASM, 1 stock si present).
-  //                   Ces agents sont poses en premier, plus rien ne les deloge.
-  //   2. TRAFIC     : le reste de l'effectif se repartit proportionnellement
-  //                   au trafic du jour, avec un plancher de 50% de l'equipe.
-  //   3. LEGAL      : 5 jours travailles maximum par semaine et par agent,
-  //                   temps partiels ramenes a leur pourcentage.
-  //   4. PREFERENCES: a competence egale, on departage avec les preferences,
-  //                   equilibrees par un systeme de dette pour eviter qu'un
-  //                   agent monopolise ses creneaux favoris.
-  // ══════════════════════════════════════════════════════════════════════
+  // le moteur d affectation, en gros ca marche en couches :
+  //   1. le socle : chaque jour ouvert a son equipe minimale (1 ouverture,
+  //      1 fermeture, 1 SM/ASM, 1 stock si present). une fois poses on n y
+  //      touche plus.
+  //   2. le traffic : le reste se repartit au prorata du traffic du jour,
+  //      avec un plancher a 50% de l equipe.
+  //   3. le legal : 5 jours max par semaine par agent, les temps partiels
+  //      ramenes a leur pourcentage.
+  //   4. les jours a eviter de l agent departagent les cas limites.
 
   function weekKey(d) {
     var dd = new Date(d);
@@ -4379,6 +4385,8 @@ function renderMonthlyPlanning() {
 
   function canWork(a, d) {
     if (isBlocked(a, d)) return false;
+    // Part-time a jours fixes sans horaire : ne travaille QUE ses jours fixes.
+    if (isFixed(a) && !fixedHasTime(a) && !fixedWorksOn(a, d)) return false;
     var wk = weekKey(d.date);
     var doneThisWeek = workedInWeek[a.id][wk] || 0;
     if (doneThisWeek >= 5) return false;                       // plafond legal hebdo
@@ -4414,29 +4422,40 @@ function renderMonthlyPlanning() {
     return (fx && fx.enabled && fx.days && fx.days.length) ? fx : null;
   }
   function isFixed(a) { return !!fixedSchedOf(a); }
+  // Un part-time fixe a-t-il aussi un horaire impose ? (start/end non nuls)
+  // Sinon : jours fixes mais shift laisse au moteur (option #7).
+  function fixedHasTime(a) {
+    var fx = fixedSchedOf(a);
+    return !!(fx && (fx.start || fx.end));
+  }
+  function isFixedTimed(a) { return isFixed(a) && fixedHasTime(a); }
   // Un part-time fixe travaille-t-il ce jour (selon ses jours contractuels) ?
   function fixedWorksOn(a, d) {
     var fx = fixedSchedOf(a);
     return fx && fx.days.indexOf(d.date.getDay()) !== -1;
   }
 
-  // Les part-time fixes sont exclus de la ventilation (planning contractuel).
-  function isLeadV(a)  { return isLead(a)  && !isFixed(a); }
-  function isStockV(a) { return isStock(a) && !isFixed(a); }
-  function isSalesV(a) { return isSales(a) && !isFixed(a); }
+  // Les part-time fixes AVEC horaire sont exclus de la ventilation (planning
+  // contractuel fige). Ceux avec jours fixes mais sans horaire restent ventiles
+  // (le moteur leur donne un shift), seuls leurs jours OFF sont imposes.
+  function isLeadV(a)  { return isLead(a)  && !isFixedTimed(a); }
+  function isStockV(a) { return isStock(a) && !isFixedTimed(a); }
+  function isSalesV(a) { return isSales(a) && !isFixedTimed(a); }
 
   var mgmtAgents  = agents.filter(isLeadV);
   var salesAgents = agents.filter(isSalesV);
   var stockAgents = agents.filter(isStockV);
-  var fixedAgents = agents.filter(isFixed);
+  var fixedAgents = agents.filter(isFixedTimed);
   var hasStockTeam = stockAgents.length > 0;
   var hasMgmt = mgmtAgents.length > 0;
 
-  // Pre-affectation des part-time fixes sur leurs jours contractuels.
-  fixedAgents.forEach(function(a) {
+  // Pre-affectation des part-time fixes sur leurs jours contractuels (timed ou
+  // non : dans les deux cas les jours sont garantis, seul le shift differe).
+  var fixedAllAgents = agents.filter(isFixed);
+  fixedAllAgents.forEach(function(a) {
     monthDays.forEach(function(d) {
       if (d.closure) return;
-      if (fixedWorksOn(a, d)) {
+      if (fixedWorksOn(a, d) && assignedMap[d.ds].indexOf(a.id) === -1) {
         assignedMap[d.ds].push(a.id);
         assign(a, d);
       }
@@ -4723,10 +4742,11 @@ function renderMonthlyPlanning() {
     var present = assignedMap[d.ds].slice();
     var plan = {};
 
-    // Part-time fixes : code 'PT' a leurs heures, prioritaire sur le shift D.
+    // Part-time fixes AVEC horaire : code 'PT' a leurs heures, hors ventilation.
+    // Ceux sans horaire restent dans present pour recevoir un vrai shift.
     present = present.filter(function(id) {
       var a = agents.find(function(x){ return x.id === id; });
-      if (a && isFixed(a)) { plan[id] = 'PT'; return false; }
+      if (a && isFixedTimed(a)) { plan[id] = 'PT'; return false; }
       return true;
     });
 
@@ -4926,9 +4946,10 @@ function renderMonthlyPlanning() {
       // les corners sous leur cible (prioritairement les plus deficitaires).
       var assign = {};
       storeCorners.forEach(function(c){ assign[c.id] = byCorner[c.id].slice(); });
-      noHome.forEach(function(a) {
+      noHome.slice().sort(function(a,b){ return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }).forEach(function(a) {
         var short = storeCorners.slice().sort(function(x,y){
-          return (target[y.id]-assign[y.id].length) - (target[x.id]-assign[x.id].length);
+          var d = (target[y.id]-assign[y.id].length) - (target[x.id]-assign[x.id].length);
+          return d!==0 ? d : (x.id<y.id?-1:1);
         })[0];
         assign[short.id].push(a);
       });
@@ -4953,9 +4974,14 @@ function renderMonthlyPlanning() {
         });
         if (pool.length <= 1) return null;   // ne pas casser la couverture du donneur
         // priorite competence pour le corner cible
-        var skilled = pool.filter(function(a){ return (a.corner_skills||[]).indexOf(toCode) !== -1; });
+        var skilled = pool.filter(function(a){ return skillMatchesCorner(a.corner_skills, toCode); });
         var cand = skilled.length ? skilled : pool;
-        return cand[Math.floor(Math.random()*cand.length)];
+        // Choix deterministe : on trie par id et on prend le premier. Garantit
+        // qu'un meme planning redonne exactement le meme resultat a chaque calcul
+        // (pas d'aleatoire : les plannings sont diffuses un mois avant, ils ne
+        // doivent pas bouger a chaque reouverture).
+        cand = cand.slice().sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
+        return cand[0];
       }
 
       // 1) Garde-fou couverture : chaque corner doit avoir 1 O + 1 C.
@@ -4983,8 +5009,8 @@ function renderMonthlyPlanning() {
         var over = storeCorners.filter(function(c){ return assign[c.id].length - target[c.id] >= 1; });
         var under = storeCorners.filter(function(c){ return target[c.id] - assign[c.id].length >= 1; });
         if (!over.length || !under.length) break;
-        var to = under.sort(function(x,y){ return (target[y.id]-assign[y.id].length)-(target[x.id]-assign[x.id].length); })[0];
-        var from = over.sort(function(x,y){ return (assign[y.id].length-target[y.id])-(assign[x.id].length-target[x.id]); })[0];
+        var to = under.sort(function(x,y){ var d=(target[y.id]-assign[y.id].length)-(target[x.id]-assign[x.id].length); return d!==0?d:(x.id<y.id?-1:1); })[0];
+        var from = over.sort(function(x,y){ var d=(assign[y.id].length-target[y.id])-(assign[x.id].length-target[x.id]); return d!==0?d:(x.id<y.id?-1:1); })[0];
         // preferer deplacer un agent dont le shift ne casse pas la couverture du donneur
         var donor = pickDonor(from.id, true, to.code) || pickDonor(from.id, false, to.code);
         if (!donor) break;
@@ -5017,8 +5043,9 @@ function renderMonthlyPlanning() {
   function shiftFor(agent, day) {
     if (day.closure) return { code: '', cls: 'sh-closed', special: 'closed' };
 
-    // Part-time fixe : 'PT' ses jours contractuels, OFF sinon. Prime sur tout.
-    if (isFixed(agent)) {
+    // Part-time fixe AVEC horaire : 'PT' ses jours contractuels, OFF sinon.
+    // Sans horaire : on laisse le flux normal (le moteur donne O/C/M).
+    if (isFixedTimed(agent)) {
       return fixedWorksOn(agent, day)
         ? { code: 'PT' }
         : { code: 'OFF', cls: 'sh-off', special: 'off' };
@@ -5249,7 +5276,7 @@ function renderMonthlyPlanning() {
     return h + '</thead>';
   }
 
-  // ══ TABLEAU 1 : PLANNING AGENTS (lignes continues, sans blocs) ══
+  // tableau 1 : le planning des agents (lignes continues)
   html += '<div class="mth-wrap"><table class="mth" id="mth-table">';
   html += headRow('Agent');
   html += '<tbody>';
@@ -5325,7 +5352,7 @@ function renderMonthlyPlanning() {
   });
   html += '</tbody></table></div>';
 
-  // ══ TABLEAU 2 : RECAP MANAGERIAL (bulle separee) ══
+  // tableau 2 : le recap pour le manager (bulle a part)
   // Totaux globaux + effectif present par POOL, chaque jour.
   var POOL_LABELS = [['mgmt','Management'],['sales','Vendeur'],['stock','Stock']];
   var poolDayCount = {};   // pool -> { ds: n }
@@ -5420,7 +5447,7 @@ function renderAgents() {
 }
 
 // ── EDITEUR D'AGENT (pop-in) ──────────────────────────────────────────────
-var STATUS_OPTS = ['SM','ASM','TM','MANAGER','STOCK','SENIOR','SA','PART_TIME'];
+var STATUS_OPTS = ['SM','ASM','TM','MANAGER','STOCK_MANAGER','STOCK','SENIOR','SA','GRAND_VENDEUR','PART_TIME'];
 var agentEditorId = null;
 
 function statusOptionsHtml(cur) {
@@ -5451,7 +5478,7 @@ function renderDayChips(selected, boxId) {
   }).join('');
 }
 
-var CORNER_SKILLS = ['PRF', 'LG', 'RTW', 'MEN', 'WOMEN'];
+var CORNER_SKILLS = ['PRF', 'LG', 'RTW', 'MEN', 'WMN'];
 function renderSkillChips(selected) {
   var box = document.getElementById('ae-skills');
   if (!box) return;
@@ -5524,8 +5551,8 @@ function openAgentEditor(agentId) {
   var fx = p.fixed_schedule || null;
   var isVolant = !(fx && fx.enabled) && (a.work_pct || 100) < 100;
   renderDayChips((fx && fx.days) || [], 'ae-fixed-days');
-  document.getElementById('ae-fixed-start').value = minToTimeInput((fx && fx.start != null) ? fx.start : 600);
-  document.getElementById('ae-fixed-end').value   = minToTimeInput((fx && fx.end != null) ? fx.end : 1080);
+  document.getElementById('ae-fixed-start').value = minToTimeInput((fx && fx.start != null) ? fx.start : 0);
+  document.getElementById('ae-fixed-end').value   = minToTimeInput((fx && fx.end != null) ? fx.end : 0);
   var pctVal = ((a.work_pct || 100) < 100) ? String(a.work_pct) : '50';
   document.getElementById('ae-pct-vol').value = pctVal;
   updateFixedSectionVisibility();
@@ -5673,7 +5700,7 @@ function exportMonthly() {
     var num = (v !== '' && v != null && !isNaN(v) && String(v).trim() !== '');
     var c = { v:(v==null?'':(num?Number(v):v)), t:num?'n':'s' };
     var s = {
-      alignment:{ horizontal:o.align||'center', vertical:'center', wrapText:false },
+      alignment:{ horizontal:o.align||'center', vertical:'center', wrapText:!!o.wrap },
       font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, italic:!!o.italic, color:{rgb:o.tx||'18181B'},
              underline:!!o.underline }
     };
@@ -5771,13 +5798,13 @@ function exportMonthly() {
       days.forEach(function(d){
         var res = (monthlyResult[d.ds] || {})[a.id];
         var code = res ? res.code : '';
-        var disp = (res && res.corner) ? (res.corner + '\u00b7' + code) : code;
+        var disp = (res && res.corner) ? (res.corner + '\n' + code) : code;
         if (d.closure && !code) { r.push(cell('\u00b7',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
         var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
         if (res && res.half) {
-          r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,diag:(res.half==='pm')?'up':'down'}));
+          r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,diag:(res.half==='pm')?'up':'down',wrap:!!(res&&res.corner)}));
         } else {
-          r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,sz:(res&&res.corner)?8:10}));
+          r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,sz:(res&&res.corner)?8:10,wrap:!!(res&&res.corner)}));
         }
         if (code==='O'||code==='OS'){ cntO++; if(code==='O')perDay.open[d.ds]++; }
         if (code==='C'||code==='CS'){ cntC++; if(code==='C')perDay.close[d.ds]++; }
@@ -6502,7 +6529,7 @@ init();
       </div>
       <div class="modal-sec">Preferences</div>
       <div class="fld" style="margin-top:12px;">
-        <label>Days to avoid</label>
+        <label>Days I prefer to be off (optional)</label>
         <div class="day-chips" id="ae-avoid"></div>
       </div>
       <div id="ae-fixed-sec" style="display:none;">
@@ -6517,6 +6544,7 @@ init();
             <div class="day-chips" id="ae-fixed-days"></div>
           </div>
           <div class="form-grid" style="margin-top:10px;">
+            <div class="fld" style="grid-column:1 / -1;"><span class="ae-fixed-note">Optional - set hours only if the part-time contract fixes them. Leave at 00:00 to let the tool assign the shift.</span></div>
             <div class="fld"><label>Start</label><input type="time" id="ae-fixed-start" class="ae-fixed-hour" step="900"></div>
             <div class="fld"><label>End</label><input type="time" id="ae-fixed-end" class="ae-fixed-hour" step="900"></div>
           </div>
@@ -6592,4 +6620,3 @@ init();
 </div>
 </body>
 </html>
-
