@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CORA Retail V5.7</title>
+  <title>CORA Retail V5.8</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <button class="nav-subitem"        data-view="intraday" onclick="switchPlanningView('intraday', this)">Intraday</button>
       </div>
     </div>
-    <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Sales Advisors</span></button>
+    <button class="nav-item" onclick="switchTab('agents', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Client Advisors</span></button>
     <button class="nav-item" onclick="switchTab('traffic', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg><span>Traffic</span></button>
     <div class="nav-group">
       <button class="nav-item has-sub" onclick="toggleNavGroup('calendar', this)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span><svg class="ic nav-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -1060,7 +1060,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
     <div class="tb-inner">
     <div class="tb-search">
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><line x1="20" y1="20" x2="16.7" y2="16.7"/></svg>
-      <input type="text" placeholder="Search sales advisors…" disabled>
+      <input type="text" placeholder="Search client advisors…" disabled>
     </div>
     <div class="tb-right">
       <button class="icon-btn" disabled title="Notifications (coming soon)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
@@ -1091,7 +1091,8 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
           <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
           <button class="btn btn-ghost btn-sm" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
         </div>
-        <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
+        <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
+        <button id="btn-export-pdf" class="btn btn-ghost" onclick="exportMonthlyPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
       </div>
     </div>
     <div id="planning-monthly-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the monthly planning.</p></div></div>
@@ -1104,7 +1105,8 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(-1)">&lsaquo;</button>
         <input type="date" id="intraday-date" onchange="intradayPickDate(this.value)" style="height:32px">
         <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(1)">&rsaquo;</button>
-        <button class="btn btn-ghost" onclick="exportIntraday()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Export</span></button>
+        <button class="btn btn-ghost" onclick="exportIntraday()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
+        <button class="btn btn-ghost" onclick="exportIntradayPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
       </div>
     </div>
     <div id="planning-intraday-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div></div>
@@ -1118,8 +1120,8 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   <div class="wrap">
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 class="page-title">Sales Advisors</h2>
-      <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()">+ Add SA</button>
+      <h2 class="page-title">Client Advisors</h2>
+      <button class="btn btn-primary btn-sm" onclick="toggleAddAgentForm()">+ Add CA</button>
     </div>
     <div id="add-agent-form">
       <div class="form-grid">
@@ -3193,7 +3195,7 @@ function renderIntraday(ds) {
     return mr && !mr.special;   // present = a un shift, pas off/leave/closed
   });
   if (!working.length) {
-    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">No sales advisors scheduled on ' + formatDateDisplay(ds) + '.</p></div>';
+    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">No client advisors scheduled on ' + formatDateDisplay(ds) + '.</p></div>';
     return;
   }
 
@@ -4251,7 +4253,7 @@ function renderMonthlyPlanning() {
     return;
   }
   if (!agents.length) {
-    container.innerHTML = '<p style="color:#888">No sales advisors for this store. Add them in the Sales Advisors tab.</p>';
+    container.innerHTML = '<p style="color:#888">No client advisors for this store. Add them in the Client Advisors tab.</p>';
     return;
   }
 
@@ -5417,7 +5419,7 @@ function retailInitials(f, l) {
 function renderAgents() {
   var container = document.getElementById('agent-list');
   if (!agents.length) {
-    container.innerHTML = '<p style="color:var(--tx-3)">No sales advisors yet. Click Add SA above.</p>';
+    container.innerHTML = '<p style="color:var(--tx-3)">No client advisors yet. Click Add CA above.</p>';
     return;
   }
   container.innerHTML = agents.map(function(a) {
@@ -5437,7 +5439,7 @@ function renderAgents() {
         '<span class="pill pill-neutral">' + stInfo.label + '</span>' +
         (pct < 100 ? '<span class="ag-pct">' + pct + '%</span>' : '') +
       '</span>' +
-      '<button class="icon-btn" title="Edit sales advisor" onclick="openAgentEditor(\'' + a.id + '\')">' +
+      '<button class="icon-btn" title="Edit client advisor" onclick="openAgentEditor(\'' + a.id + '\')">' +
         '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
         'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/>' +
         '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' +
@@ -5658,6 +5660,45 @@ async function addAgent() {
 }
 
 // ── EXPORT MONTHLY (Excel) ────────────────────────────────────────────────
+// Export PDF : on ouvre une fenetre avec le tableau + un CSS d'impression, et
+// on lance l'impression navigateur (l'utilisateur choisit "Enregistrer en PDF").
+// Pas de librairie externe : fiable et sans dependance.
+function printableExport(bodyId, titleText) {
+  var src = document.getElementById(bodyId);
+  if (!src || !currentStoreId) { showToast('Nothing to export', 'error'); return; }
+  var w = window.open('', '_blank');
+  if (!w) { showToast('Popup blocked - allow popups to export PDF', 'error'); return; }
+  var css =
+    'body{font-family:Arial,sans-serif;margin:16px;color:#18181B;}' +
+    'h1{font-size:16px;margin:0 0 4px;}' +
+    '.sub{font-size:11px;color:#6B7280;margin:0 0 14px;}' +
+    'table{border-collapse:collapse;width:100%;}' +
+    'th,td{border:1px solid #E0E0E0;padding:3px 5px;font-size:9px;text-align:center;}' +
+    '.sh{display:inline-block;min-width:20px;padding:1px 4px;border-radius:3px;font-weight:600;}' +
+    '.sh-cnr{display:inline-flex;flex-direction:column;line-height:1.1;}' +
+    '.sh-cnr-tag{font-size:7px;font-weight:700;color:#7c3aed;}' +
+    '.mth-group td{background:#F4F5F7;font-weight:700;text-transform:uppercase;text-align:left;}' +
+    '.it-group{margin-top:8px;font-weight:700;font-size:10px;text-transform:uppercase;color:#52525B;}' +
+    '@media print{@page{size:landscape;margin:10mm;}}';
+  var stamp = currentStoreName + ' \u00b7 ' + titleText;
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
+    stamp + '</title><style>' + css + '</style></head><body>' +
+    '<h1>' + stamp + '</h1><div class="sub">CORA \u00b7 generated ' +
+    new Date().toLocaleDateString('en-GB') + '</div>' +
+    src.innerHTML + '</body></html>');
+  w.document.close();
+  setTimeout(function(){ w.focus(); w.print(); }, 300);
+}
+
+function exportMonthlyPDF() {
+  var mn = MONTH_NAMES[monthlyRef.getMonth()] + ' ' + monthlyRef.getFullYear();
+  printableExport('planning-monthly-body', 'Monthly planning - ' + mn);
+}
+
+function exportIntradayPDF() {
+  printableExport('planning-intraday-body', 'Intraday - ' + (currentIntradayDate || ''));
+}
+
 // Export Excel du planning mensuel : construit a partir du modele (monthlyResult),
 // avec colonne role, synthese par jour, et recap des shifts.
 function exportMonthly() {
@@ -6255,7 +6296,7 @@ function renderMonthlyCalendar() {
 
   // Agent list (right)
   var list = '<div class="cal-agent-list"><h4>Declare absence</h4>';
-  if (!agents.length) list += '<p style="font-size:12px;color:#9ca3af;">No sales advisors.</p>';
+  if (!agents.length) list += '<p style="font-size:12px;color:#9ca3af;">No client advisors.</p>';
   agents.forEach(function(a){
     list += '<div class="cal-agent-item" onclick="showLeavePicker(\''+a.id+'\',event)">'+
       a.first_name+' '+a.last_name+'</div>';
@@ -6499,7 +6540,7 @@ init();
   <div class="modal">
     <div class="modal-head">
       <div>
-        <div class="modal-title" id="ae-title">Sales Advisor</div>
+        <div class="modal-title" id="ae-title">Client Advisor</div>
         <div class="modal-sub">Edit agent configuration</div>
       </div>
       <button class="icon-btn" onclick="closeAgentEditor()" aria-label="Close">
