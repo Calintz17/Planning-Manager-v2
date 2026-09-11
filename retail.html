@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V5.9</title>
+  <title>CORA Retail V6.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -242,6 +242,11 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   color:var(--tx-3); pointer-events:none;
 }
 .tb-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
+.lang-picker { display:flex; align-items:center; gap:5px; padding:0 8px; height:34px;
+  border:1px solid var(--line); border-radius:var(--r-sm); background:var(--bg-base); color:var(--tx-2); }
+.lang-picker .ic { width:15px; height:15px; color:var(--tx-3); }
+.lang-picker select { border:none; background:none; font-family:var(--font); font-size:12px;
+  font-weight:600; color:var(--tx-2); cursor:pointer; outline:none; padding:0 2px; }
 .icon-btn {
   width:36px; height:36px; border:1px solid var(--line-2); border-radius:9px;
   background:var(--bg-base); color:var(--tx-2); cursor:pointer;
@@ -951,6 +956,14 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-cnr-opt.is-current { background:var(--info-soft); color:var(--accent-strong); border-color:var(--accent-strong); }
 .ce-cnr-opt.ce-reset { color:var(--tx-3); font-style:italic; font-weight:400; }
 .ae-fixed-note { font-size:11px; color:var(--tx-3); line-height:1.4; display:block; }
+.thr-block { margin-top:var(--s5); padding-top:var(--s5); border-top:1px solid var(--line); }
+.thr-title { font-size:13px; font-weight:600; color:var(--tx-1); margin-bottom:var(--s3); }
+.thr-grid { display:flex; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s4); }
+.thr-fld { display:flex; flex-direction:column; gap:4px; }
+.thr-fld label { font-size:11px; color:var(--tx-2); }
+.thr-fld input { width:80px; height:34px; padding:0 8px; border:1px solid var(--line);
+  border-radius:var(--r-sm); font-family:var(--font); font-size:13px; }
+.thr-unit { font-size:10px; color:var(--tx-3); }
 
 /* responsive */
 @media (max-width:900px) {
@@ -1090,6 +1103,13 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
       <input type="text" placeholder="Search client advisors…" disabled>
     </div>
     <div class="tb-right">
+      <div class="lang-picker">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>
+        <select id="lang-select" onchange="applyLang(this.value)">
+          <option value="en">EN</option>
+          <option value="jp">JP</option>
+        </select>
+      </div>
       <button class="icon-btn" disabled title="Notifications (coming soon)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
       <div class="tb-avatar" title="Account (coming soon)">RC</div>
     </div>
@@ -1253,6 +1273,279 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 <div id="status-bar"><span id="status-text">Ready - select a store to begin</span><span id="status-sign">© Roman Inc.</span></div>
 
 <script>
+// Dictionnaire de traduction (EN -> autres langues). JP valide par les equipes Japon.
+// Le dropdown en haut a droite change la langue ; le choix est memorise.
+var I18N = {
+  jp: {
+    'Save': '保存',
+    'Dashboard': 'ダッシュボード',
+    'Planning': 'スケジュール',
+    'Client Advisors': 'クライアントアドバイザー',
+    'Traffic': '来客数',
+    'Calendar': 'カレンダー',
+    'Settings': '設定',
+    'Client Service': 'クライアントサービス',
+    'Retail': 'リテール',
+    'Excel': 'Excel',
+    'PDF': 'PDF',
+    'Forecast with AI': 'AIで予測',
+    'Closed': '休業',
+    'Open': '営業',
+    'Hours': '営業時間',
+    'Ready - select a store to begin': '準備完了 - 店舗を選択してください',
+    'No dates added yet.': '日付がまだ追加されていません',
+    'rest day': '休日',
+    'Max working days / week': '週最大勤務日数',
+    '5 days': '5日',
+    'Max hours / day': '1日最大労働時間',
+    'Max hours / week': '週最大労働時間',
+    'SATURDAY': '土曜日',
+    'SUNDAY': '日曜日',
+    'Year-on-year trend': '前年比の推移',
+    'No trend yet': '推移データなし',
+    'Enter your first months to reveal the trend': '最初の数か月を入力すると推移が表示されます',
+    'Revenir au calcul automatique': '自動計算に戻す',
+    'vs 6-wk avg': '6週平均比',
+    'visits forecasted': '予測来客数',
+    'present': '出勤',
+    'Optional - set hours only if the part-time contract fixes them. Leave at 00:00 to let the tool assign the shift.': '任意 - パート契約で時間が定められている場合のみ設定してください。00:00のままにするとツールがシフトを割り当てます。',
+    'Period': '期間',
+    'Region': '地域',
+    'Country': '国',
+    'Store': '店舗',
+    'First name': '名',
+    'Last name': '姓',
+    'Status': '役職',
+    'From': '開始',
+    'Note': 'メモ',
+    'Home corner': '担当コーナー',
+    'Skills': '対応可能コーナー',
+    'Days I prefer to be off (optional)': '希望休日（任意）',
+    'Working days': '勤務日',
+    'Start': '開始時間',
+    'End': '終了時間',
+    'Work percentage': '勤務割合',
+    'Letter': '記号',
+    'Starts': '開始',
+    'Ends': '終了',
+    'Colour': '色',
+    'Monthly': '月間',
+    'Intraday': '日中',
+    'Bank Holidays': '祝日',
+    'Absence': '欠勤',
+    'Cancel': 'キャンセル',
+    'Create agent': 'スタッフを作成',
+    'Reset': 'リセット',
+    'Reset daily edits': '日次編集をリセット',
+    'Reset curve': 'カーブをリセット',
+    'Auto': '自動',
+    'Add': '追加',
+    'Reset manual changes': '手動変更をリセット',
+    'Fixed': '固定',
+    'Flexible': 'フレキシブル',
+    'Delete': '削除',
+    'Add shift': 'シフトを追加',
+    'Monthly planning': '月間スケジュール',
+    'Intraday planning': '日中スケジュール',
+    'Shift structure': 'シフト構成',
+    'Labor rules': '労働規則',
+    'Operating hours': '営業時間',
+    'Break structure': '休憩構成',
+    'Hourly traffic curve': '時間別来客カーブ',
+    'Select a store to view the dashboard.': 'ダッシュボードを表示するには店舗を選択してください',
+    'Select a store to view the monthly planning.': '月間スケジュールを表示するには店舗を選択してください',
+    'Select a store to view the intraday planning.': '日中スケジュールを表示するには店舗を選択してください',
+    'Select a store to view agents.': 'スタッフを表示するには店舗を選択してください',
+    'Select a store to manage traffic.': '来客数を管理するには店舗を選択してください',
+    'Select a store to view the calendar.': 'カレンダーを表示するには店舗を選択してください',
+    'Select a store to view settings.': '設定を表示するには店舗を選択してください',
+    'Select a store to configure its shifts.': 'シフトを設定するには店舗を選択してください',
+    'No open day this month.': '今月の営業日はありません',
+    'No manager or ASM available - morning brief not assigned.': 'マネージャーまたは副店長が不在 - 朝礼が割り当てられていません',
+    'No client advisors for this store. Add them in the Client Advisors tab.': 'この店舗にクライアントアドバイザーがいません。クライアントアドバイザータブで追加してください。',
+    'No client advisors yet. Click Add CA above.': 'クライアントアドバイザーがいません。上の「CA追加」をクリックしてください。',
+    'No client advisors.': 'クライアントアドバイザーがいません',
+    'Select region': '地域を選択',
+    'All countries': 'すべての国',
+    'All stores': 'すべての店舗',
+    'No store yet': '店舗なし',
+    '50% - half time': '50% - ハーフタイム',
+    'Search client advisors…': 'クライアントアドバイザーを検索…',
+    'Add a highlight or reminder...': 'ハイライトやリマインダーを追加...',
+    'Notifications (coming soon)': '通知（近日公開）',
+    'Account (coming soon)': 'アカウント（近日公開）',
+    'Back to current month': '今月に戻る',
+    'Export to Excel': 'Excelにエクスポート',
+    'Export to PDF': 'PDFにエクスポート',
+    'Remove': '削除',
+    'Edit client advisor': 'クライアントアドバイザーを編集',
+    'Client Advisor': 'クライアントアドバイザー',
+    'New shift': '新しいシフト',
+    'Declare absence': '欠勤を登録',
+    'Store opening': '店舗オープン',
+    'Corner': 'コーナー',
+    'Preferences': '希望条件',
+    'Part-time configuration': 'パートタイム設定',
+    'Failed to load regions': '地域の読み込みに失敗しました',
+    'Could not load countries': '国を読み込めませんでした',
+    'Could not load stores': '店舗を読み込めませんでした',
+    'Error loading regulations': '規則の読み込みエラー',
+    'Select a store first': '先に店舗を選択してください',
+    'Each day: closing hour must be after opening hour': '各日：閉店時間は開店時間より後にしてください',
+    'Save failed:': '保存に失敗しました：',
+    'Settings saved': '設定を保存しました',
+    'Enter a shift letter': 'シフト記号を入力してください',
+    'Use one or two characters': '1〜2文字で入力してください',
+    'Code': 'コード',
+    'End must be after start': '終了は開始より後にしてください',
+    'Shift lasts': 'シフト時間',
+    'Shift': 'シフト',
+    'At least one shift is required': '少なくとも1つのシフトが必要です',
+    'Shifts saved': 'シフトを保存しました',
+    'Error loading agents': 'スタッフの読み込みエラー',
+    'Error loading availability': '勤務可否の読み込みエラー',
+    'Store settings not saved': '店舗設定が保存されませんでした',
+    'Traffic save failed': '来客数の保存に失敗しました',
+    'Curve reset - remember to Save': 'カーブをリセットしました - 保存を忘れずに',
+    'Failed to save curve:': 'カーブの保存に失敗しました：',
+    'Curve saved': 'カーブを保存しました',
+    'Not saved:': '保存されませんでした：',
+    'Mission added': '業務を追加しました',
+    'Not removed:': '削除されませんでした：',
+    'Mission removed': '業務を削除しました',
+    'Moved': '移動しました',
+    'Save failed': '保存に失敗しました',
+    'Traffic saved': '来客数を保存しました',
+    'Daily traffic saved': '日次来客数を保存しました',
+    'Reset failed': 'リセットに失敗しました',
+    'Daily edits cleared': '日次編集をクリアしました',
+    'Not enough history to forecast': '予測に十分な履歴がありません',
+    'Forecast could not be saved': '予測を保存できませんでした',
+    'Forecast generated': '予測を生成しました',
+    'Failed to reset cell': 'セルのリセットに失敗しました',
+    'Back to automatic': '自動に戻す',
+    'Failed to save:': '保存に失敗しました：',
+    'Updated': '更新しました',
+    'Failed to save corner': 'コーナーの保存に失敗しました',
+    'Failed to reset corner': 'コーナーのリセットに失敗しました',
+    'Corner updated': 'コーナーを更新しました',
+    'Manual changes cleared': '手動変更をクリアしました',
+    'Enter a highlight text': 'ハイライトテキストを入力してください',
+    'Highlight not saved:': 'ハイライトが保存されませんでした：',
+    'Highlight added': 'ハイライトを追加しました',
+    'First and last name are required': '姓名は必須です',
+    'Select at least one fixed working day': '少なくとも1つの固定勤務日を選択してください',
+    'Enter valid start and end times': '有効な開始・終了時間を入力してください',
+    'Fixed end must be after start': '固定終了は開始より後にしてください',
+    'Preferences not saved:': '希望条件が保存されませんでした：',
+    'Agent updated': 'スタッフを更新しました',
+    'Failed to delete': '削除に失敗しました',
+    'Agent deleted': 'スタッフを削除しました',
+    'Enter first and last name': '姓名を入力してください',
+    'Failed to add agent': 'スタッフの追加に失敗しました',
+    'Nothing to export': 'エクスポートするものがありません',
+    'Popup blocked - allow popups to export PDF': 'ポップアップがブロックされました - PDFエクスポートにはポップアップを許可してください',
+    'Excel library not loaded': 'Excelライブラリが読み込まれていません',
+    'Export complete': 'エクスポート完了',
+    'Could not load public holidays': '祝日を読み込めませんでした',
+    'Pick both dates': '両方の日付を選択してください',
+    'End date is before start date': '終了日が開始日より前です',
+    'Absence saved': '欠勤を保存しました',
+    'Failed to remove:': '削除に失敗しました：',
+    'Absence removed': '欠勤を削除しました',
+    'Failed:': '失敗しました：',
+    'Closing must be after opening': '閉店は開店より後にしてください',
+    'Hours saved': '営業時間を保存しました',
+    'Hours reset': '営業時間をリセットしました',
+    'Loading': '読み込み中',
+    'Slate': 'スレート',
+    'Morning brief': '朝礼',
+    'Welcome': 'お出迎え',
+    'Store Manager': 'ストアマネージャー',
+    'Deputy Store Director': 'デピュティストアディレクター',
+    'Team Manager': 'チームマネージャー',
+    'Manager': 'マネージャー',
+    'Stock Controller': '在庫管理担当',
+    'Stock Manager': '在庫マネージャー',
+    'Senior Client Advisor': 'シニアクライアントアドバイザー',
+    'Grand Vendeur': 'グランヴァンドゥール',
+    'Part Time': 'パートタイム',
+    'Management': 'マネジメント',
+    'Unassigned': '未割当',
+    'Stock': '在庫',
+    'Leave': '休暇',
+    'Sick': '病欠',
+    'CORA': 'CORA',
+    '© Roman Inc.': '© Roman Inc.',
+    '&times;': '×',
+    'OFF': '休み',
+    '&lsaquo;': '‹',
+    '&rsaquo;': '›',
+  }
+};
+
+// ── i18n : moteur de traduction ──────────────────────────────────
+// Langue courante ('en' par defaut). On ne traduit que ce qui est connu ;
+// tout texte absent du dico reste en anglais (fallback naturel).
+var CURRENT_LANG = 'en';
+try { CURRENT_LANG = localStorage.getItem('cora_lang') || 'en'; } catch(e) {}
+
+// Traduit une chaine anglaise vers la langue courante (utilise dans le JS
+// qui genere les vues dynamiques).
+function t(en) {
+  if (CURRENT_LANG === 'en' || !en) return en;
+  var d = I18N[CURRENT_LANG];
+  if (!d) return en;
+  return d[String(en).trim()] || en;
+}
+
+// Applique la langue au HTML statique : on ne remplace un noeud texte que si
+// son contenu, une fois nettoye, correspond EXACTEMENT a une cle connue. Pas
+// de remplacement partiel (evite de casser les libelles avec des variables).
+function applyLang(lang) {
+  CURRENT_LANG = lang;
+  try { localStorage.setItem('cora_lang', lang); } catch(e) {}
+  document.documentElement.setAttribute('lang', lang);
+  var d = I18N[lang] || null;
+
+  // Re-render des vues dynamiques d'abord (elles regenerent du texte anglais),
+  // puis on balaye tout le DOM pour traduire.
+  if (typeof currentStoreId !== 'undefined' && currentStoreId) {
+    if (typeof renderMonthlyPlanning === 'function') renderMonthlyPlanning();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    if (typeof renderAgents === 'function') renderAgents();
+  }
+
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+  var nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function(node) {
+    var p = node.parentNode; if (!p) return;
+    if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE') return;
+    var trimmed = (node.nodeValue || '').trim();
+    if (!trimmed) return;
+    if (node.__en == null) node.__en = trimmed;
+    var en = node.__en;
+    var lead = node.nodeValue.match(/^\s*/)[0];
+    var tail = node.nodeValue.match(/\s*$/)[0];
+    if (lang === 'en') { node.nodeValue = lead + en + tail; return; }
+    if (d && d[en]) node.nodeValue = lead + d[en] + tail;
+  });
+
+  ['placeholder','title'].forEach(function(attr) {
+    document.querySelectorAll('['+attr+']').forEach(function(el) {
+      var ck = '__en_'+attr;
+      if (el[ck] == null) el[ck] = el.getAttribute(attr);
+      var en = el[ck];
+      if (lang === 'en') { el.setAttribute(attr, en); return; }
+      if (d && d[en]) el.setAttribute(attr, d[en]);
+    });
+  });
+
+  var sel = document.getElementById('lang-select');
+  if (sel) sel.value = lang;
+}
+
 // ── SUPABASE ──────────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://miawersffeosiovqdokw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXdlcnNmZmVvc2lvdnFkb2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMDY4NTYsImV4cCI6MjA3Njc4Mjg1Nn0.ixCX8Zh8QLxJrnV7ncpNSCv3KtL0ao0PqsFmA6xYYyA';
@@ -1447,6 +1740,31 @@ function switchTab(name, btn) {
   if (name === 'regulations' && currentStoreId) renderRegulations();
   if (name === 'calendar' && currentStoreId) renderCalendar();
   if (name === 'traffic') renderTraffic();
+  if (CURRENT_LANG !== 'en') retranslate();
+}
+
+// Balaye le DOM et traduit ce qui est connu, sans re-render (utilise apres une
+// navigation ou un rendu ponctuel quand la langue n'est pas l'anglais).
+function retranslate() {
+  var d = I18N[CURRENT_LANG]; if (!d) return;
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+  var nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function(node) {
+    var p = node.parentNode; if (!p) return;
+    if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE') return;
+    var trimmed = (node.nodeValue || '').trim(); if (!trimmed) return;
+    if (node.__en == null) node.__en = trimmed;
+    var en = node.__en;
+    var lead = node.nodeValue.match(/^\s*/)[0], tail = node.nodeValue.match(/\s*$/)[0];
+    if (d[en]) node.nodeValue = lead + d[en] + tail;
+  });
+  ['placeholder','title'].forEach(function(attr) {
+    document.querySelectorAll('['+attr+']').forEach(function(el) {
+      var ck = '__en_'+attr;
+      if (el[ck] == null) el[ck] = el.getAttribute(attr);
+      if (d[el[ck]]) el.setAttribute(attr, d[el[ck]]);
+    });
+  });
 }
 
 function toggleNavGroup(name, btn) {
@@ -1493,6 +1811,7 @@ function toggleAddAgentForm() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
+  applyLang(CURRENT_LANG);
   updateWeekLabel();
   updateMonthlyLabel();
   showLoader();
@@ -1966,6 +2285,18 @@ function buildShiftSettingsHtml() {
       '<button class="btn btn-save btn-sm" onclick="saveShiftConfig()">Save</button></div>' +
     block('sales', 'Sales shifts') +
     block('stock', 'Stock shifts') +
+    '<div class="thr-block">' +
+      '<div class="thr-title">Coverage thresholds</div>' +
+      '<div class="thr-grid">' +
+        '<div class="thr-fld"><label>Opening minimum</label>' +
+          '<input type="number" id="thr-open" min="0" max="20" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '"><span class="thr-unit">Client Advisors</span></div>' +
+        '<div class="thr-fld"><label>Closing minimum</label>' +
+          '<input type="number" id="thr-close" min="0" max="20" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '"><span class="thr-unit">Client Advisors</span></div>' +
+        '<div class="thr-fld"><label>Closing ratio</label>' +
+          '<input type="number" id="thr-ratio" min="0" max="100" step="5" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '"><span class="thr-unit">% on closing</span></div>' +
+      '</div>' +
+      '<button class="btn btn-save btn-sm" onclick="saveThresholds()">Save thresholds</button>' +
+    '</div>' +
     '</div>';
 }
 
@@ -2468,12 +2799,41 @@ async function loadStoreSettings() {
   if (res.error || !res.data || !res.data.length) return;
   storeSettings = res.data[0];
 
+  // Seuils de couverture (avec valeurs par defaut si non definis).
+  storeSettings.min_opening  = storeSettings.min_opening  != null ? storeSettings.min_opening  : 1;
+  storeSettings.min_closing  = storeSettings.min_closing  != null ? storeSettings.min_closing  : 1;
+  storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70;
+
   // La boutique pilote l'ouverture du week-end
   regulations.saturday_rest = !storeSettings.saturday_open;
   regulations.sunday_rest   = !storeSettings.sunday_open;
   if (storeSettings.day_hours && Object.keys(storeSettings.day_hours).length) {
     regulations.day_hours = storeSettings.day_hours;
   }
+}
+
+async function saveThresholds() {
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  var mo = parseInt(document.getElementById('thr-open').value, 10);
+  var mc = parseInt(document.getElementById('thr-close').value, 10);
+  var rr = parseInt(document.getElementById('thr-ratio').value, 10);
+  if (isNaN(mo) || mo < 0) mo = 1;
+  if (isNaN(mc) || mc < 0) mc = 1;
+  if (isNaN(rr) || rr < 0 || rr > 100) rr = 70;
+  var row = {
+    store_id: currentStoreId,
+    saturday_open: !regulations.saturday_rest,
+    sunday_open:   !regulations.sunday_rest,
+    day_hours: regulations.day_hours || {},
+    hourly_curve: (storeSettings && storeSettings.hourly_curve) || null,
+    min_opening: mo, min_closing: mc, closing_ratio: rr / 100
+  };
+  var res = await sb.from('retail_store_settings').upsert(row, { onConflict: 'store_id' });
+  if (res.error) { showToast('Save failed', 'error'); return; }
+  if (!storeSettings) storeSettings = {};
+  storeSettings.min_opening = mo; storeSettings.min_closing = mc; storeSettings.closing_ratio = rr / 100;
+  showToast('Thresholds saved \u2713');
+  if (currentStoreId) renderMonthlyPlanning();
 }
 
 async function saveStoreSettings() {
@@ -2485,7 +2845,10 @@ async function saveStoreSettings() {
     saturday_open: satEl ? !satEl.checked : true,
     sunday_open:   sunEl ? !sunEl.checked : false,
     day_hours: regulations.day_hours || {},
-    hourly_curve: (storeSettings && storeSettings.hourly_curve) || null
+    hourly_curve: (storeSettings && storeSettings.hourly_curve) || null,
+    min_opening: (storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1,
+    min_closing: (storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1,
+    closing_ratio: (storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70
   };
   var res = await sb.from('retail_store_settings')
     .upsert(row, { onConflict: 'store_id' });
@@ -4295,17 +4658,15 @@ function renderMonthlyPlanning() {
 
   // Liste des jours du mois + trafic (forecast) par jour, pour decider repos
   var monthDays = [];
+  var _todayStr = toDateStr(new Date());
   for (var dnum = 1; dnum <= nDays; dnum++) {
     var dObj = new Date(year, monthIdx, dnum);
     var ds   = toDateStr(dObj);
     var closure = getDayClosureType(ds);
-    // BRIDGE TRAFIC : le trafic reel de la boutique prime sur l'ancien
-    // volume de contacts. C'est lui qui determine les jours creux (repos)
-    // et les jours charges (tout le monde present).
     var vol = (trafficDaily[ds] && trafficDaily[ds].traffic != null)
       ? trafficDaily[ds].traffic : 0;
     monthDays.push({ num: dnum, date: dObj, ds: ds, dow: dObj.getDay(),
-                     closure: closure, vol: vol });
+                     closure: closure, vol: vol, past: ds < _todayStr });
   }
 
   // le moteur d affectation, en gros ca marche en couches :
@@ -4655,9 +5016,11 @@ function renderMonthlyPlanning() {
     });
   }
 
-  // Filet de securite : comble les jours restes sous le plancher de 2, sans
-  // depasser le quota hebdo ni la limite legale de 5 jours.
-  var minFloor = 2;
+  // Filet de securite : comble les jours restes sous le plancher, sans
+  // depasser le quota hebdo ni la limite legale de 5 jours. Le plancher =
+  // somme des minimums ouverture + fermeture definis par la boutique.
+  var minFloor = ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1)
+               + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
   openList.forEach(function(d) {
     if (assignedMap[d.ds].length >= minFloor) return;
     var already = {};
@@ -4893,9 +5256,19 @@ function renderMonthlyPlanning() {
       var midShifts = grid.filter(function(s){ return !s.isOpening && !s.isClosing; });
 
       var nTotal = list.length;
-      var nClose = Math.round(nTotal * eveningShare);
-      nClose = Math.max(0, Math.min(nTotal, nClose));
-      if (nTotal >= 2 && nClose >= nTotal) nClose = nTotal - 1;   // au moins 1 open
+      // Gel des jours passes : ils gardent les seuils par defaut, pour qu'un
+      // changement de reglage aujourd'hui ne modifie pas le planning deja passe.
+      var frozen = d.past;
+      var closeRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
+      var minOpen  = frozen ? 1 : ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1);
+      var minClose = frozen ? 1 : ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
+      var nClose = Math.round(nTotal * closeRatio);
+      if (nTotal >= minOpen + minClose) {
+        nClose = Math.max(minClose, Math.min(nClose, nTotal - minOpen));
+      } else {
+        nClose = Math.max(0, Math.min(nTotal, nClose));
+        if (nTotal >= 2 && nClose >= nTotal) nClose = nTotal - 1;
+      }
       var nOpen = nTotal - nClose;
 
       // Quota par shift : openings et closings selon la bascule, middle a 0
@@ -4955,6 +5328,20 @@ function renderMonthlyPlanning() {
         return poolOf(a) === 'sales' && assignedMap[d.ds].indexOf(a.id) !== -1;
       });
       if (!present.length) return;
+
+      // Jour passe : on fige. Chaque agent reste sur son corner d'attache, pas
+      // de reequilibrage ni de prefixe retroactif (le passe ne bouge plus).
+      if (d.past) {
+        present.forEach(function(a) {
+          if (a.home_corner_id) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = a.home_corner_id;
+        });
+        // On applique quand meme un override manuel pose sur ce jour.
+        present.forEach(function(a) {
+          var ov = (cornerOverrides[a.id] || {})[d.ds];
+          if (ov) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = ov;
+        });
+        return;
+      }
 
       // Plan manager : agents groupes par corner d'attache.
       var byCorner = {};
