@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V6.1</title>
+  <title>CORA Retail V6.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -351,7 +351,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 }
 .card-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
              margin-bottom:var(--s3); flex-wrap:wrap; }
-.card-title { font-size:15px; font-weight:600; }
+.card-title { font-size:15px; font-weight:600; color:var(--tx-1); }
 .card-sub { font-size:12.5px; color:var(--tx-2); margin-top:2px; }
 .sec-title { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
              color:var(--tx-2); margin-bottom:var(--s3); }
@@ -742,14 +742,15 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
   background:rgba(16,24,40,.34); align-items:center; justify-content:center; padding:var(--s5); }
 .modal-overlay.open { display:flex; }
 .modal { background:var(--bg-base); border-radius:var(--r-xl); width:100%; max-width:520px;
-  box-shadow:0 20px 48px rgba(16,24,40,.20); overflow:hidden; }
+  box-shadow:0 20px 48px rgba(16,24,40,.20); overflow:hidden;
+  display:flex; flex-direction:column; max-height:calc(100vh - 2 * var(--s5)); }
 .modal-head { display:flex; align-items:flex-start; justify-content:space-between;
-  gap:var(--s3); padding:var(--s5) var(--s5) var(--s4); }
+  gap:var(--s3); padding:var(--s5) var(--s5) var(--s4); flex-shrink:0; }
 .modal-title { font-size:16px; font-weight:600; color:var(--tx-1); }
 .modal-sub { font-size:12.5px; color:var(--tx-3); margin-top:2px; }
-.modal-body { padding:0 var(--s5) var(--s5); }
+.modal-body { padding:0 var(--s5) var(--s5); overflow-y:auto; flex:1 1 auto; }
 .modal-foot { display:flex; align-items:center; gap:var(--s2);
-  padding:var(--s4) var(--s5); background:var(--bg-base-2); border-top:1px solid var(--line); }
+  padding:var(--s4) var(--s5); background:var(--bg-base-2); border-top:1px solid var(--line); flex-shrink:0; }
 
 /* le bloc de selection periode/region/pays/boutique */
 .sb-scope { position:relative; margin-top:var(--s5);
@@ -956,8 +957,16 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-cnr-opt.is-current { background:var(--info-soft); color:var(--accent-strong); border-color:var(--accent-strong); }
 .ce-cnr-opt.ce-reset { color:var(--tx-3); font-style:italic; font-weight:400; }
 .ae-fixed-note { font-size:11px; color:var(--tx-3); line-height:1.4; display:block; }
+.corner-tabs { display:flex; gap:2px; flex-wrap:wrap; margin-bottom:var(--s4); }
+.corner-tabs:empty { display:none; }
+.corner-tab { padding:6px 14px; border:1px solid var(--line); background:var(--bg-base);
+  border-radius:var(--r-sm); font-family:var(--font); font-size:12px; font-weight:600;
+  color:var(--tx-2); cursor:pointer; transition:background .12s, color .12s; }
+.corner-tab:hover { background:var(--bg-base-3); }
+.corner-tab.active { background:var(--nav-active-bg); color:#fff; border-color:var(--nav-active-bg); }
 .thr-block { margin-top:var(--s5); padding-top:var(--s5); border-top:1px solid var(--line); }
-.thr-title { font-size:13px; font-weight:600; color:var(--tx-1); margin-bottom:var(--s3); }
+.thr-title { font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--tx-3); margin-bottom:var(--s3); }
 .thr-grid { display:flex; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s4); }
 .thr-fld { display:flex; flex-direction:column; gap:4px; }
 .thr-fld label { font-size:11px; color:var(--tx-2); }
@@ -968,8 +977,12 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 /* responsive */
 @media (max-width:900px) {
   :root { --sb-w:60px; }
-  .sb-name, .nav-item span, .sb-sec, .sb-field, .sb-foot span { display:none; }
-  .nav-item { justify-content:center; padding:10px 0; }
+  .sb-name, .nav-item span, .sb-sec, #sidebar .sb-field, .sb-foot span { display:none; }
+  .nav-item { justify-content:center; gap:0; padding:0; width:40px; height:40px; margin:0 auto; }
+  .nav-item .ic { margin:0; }
+  .nav-caret { display:none; }
+  .nav-item.has-sub { justify-content:center; }
+  .nav-sub, .nav-sub.open { display:none; }
   .sb-brand { justify-content:center; padding:var(--s2) 0 var(--s5); }
   .tb-search { max-width:none; }
 }
@@ -1142,6 +1155,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <button id="btn-export-pdf" class="btn btn-ghost" onclick="exportMonthlyPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
       </div>
     </div>
+    <div id="corner-tabs-monthly" class="corner-tabs"></div>
     <div id="planning-monthly-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the monthly planning.</p></div></div>
     </div>
 
@@ -1156,6 +1170,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <button class="btn btn-ghost" onclick="exportIntradayPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
       </div>
     </div>
+    <div id="corner-tabs-intraday" class="corner-tabs"></div>
     <div id="planning-intraday-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div></div>
     </div>
 
@@ -1304,7 +1319,7 @@ var I18N = {
     'Year-on-year trend': '前年比の推移',
     'No trend yet': '推移データなし',
     'Enter your first months to reveal the trend': '最初の数か月を入力すると推移が表示されます',
-    'Revenir au calcul automatique': '自動計算に戻す',
+    'Back to automatic': '自動計算に戻す',
     'vs 6-wk avg': '6週平均比',
     'visits forecasted': '予測来客数',
     'present': '出勤',
@@ -1584,6 +1599,7 @@ let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
 let currentStoreId    = null;
 let storeCorners         = [];   // corners du store courant
+let currentCornerView    = null; // null = vue All, sinon corner_id filtre
 let cornerTrafficMonthly = {};   // 'cornerId|year|month' -> ligne trafic corner
 let currentStoreName  = '';
 let currentStoreCity  = '';
@@ -2016,6 +2032,7 @@ async function onStoreChange() {
 
   if (!currentStoreId) { updateStatusBar(); return; }
 
+  currentCornerView = null;
   saveScope();
   closeStoreGate();
   await loadRegulations();
@@ -2525,11 +2542,6 @@ function renderRegulations() {
   const rotationNote = '';
 
   // Dynamic break/day total = sum of all break durations (read-only, reflects Break Structure)
-  var breakDayMin = (regulations.breaks || []).reduce(function(s,b){ return s + (b.duration||0); }, 0);
-  var breakDayLabel = breakDayMin >= 60
-    ? Math.floor(breakDayMin/60) + 'h' + (breakDayMin%60 ? String(breakDayMin%60).padStart(2,'0') : '')
-    : breakDayMin + 'min';
-
   // (AHT/Priority/Monthly-Targets bloc retire - refonte Settings a venir)
   var settingsExtra = buildShiftSettingsHtml();
 
@@ -2895,6 +2907,36 @@ function skillMatchesCorner(skills, cornerCode) {
   var target = norm(cornerCode);
   for (var i = 0; i < skills.length; i++) if (norm(skills[i]) === target) return true;
   return false;
+}
+
+// Barre de tabs par corner (au-dessus du monthly et de l'intraday). Visible
+// uniquement en multi-corner. "All" = vue complete (directeur) ; chaque corner
+// = vue filtree (manager de proximite).
+function renderCornerTabs() {
+  ['monthly','intraday'].forEach(function(which) {
+    var box = document.getElementById('corner-tabs-' + which);
+    if (!box) return;
+    if (storeCorners.length <= 1) { box.innerHTML = ''; return; }
+    var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
+    function cw(cid){ var t = cornerTrafficMonthly[cid+'|'+refY+'|'+refM]; return t ? (t.last_year||t.n_2||0) : 0; }
+    var sorted = storeCorners.slice().sort(function(a,b){ return cw(b.id) - cw(a.id); });
+    var html = '<button class="corner-tab' + (currentCornerView === null ? ' active' : '') +
+               '" onclick="switchCornerView(null)">All</button>';
+    sorted.forEach(function(c) {
+      html += '<button class="corner-tab' + (currentCornerView === c.id ? ' active' : '') +
+              '" onclick="switchCornerView(\'' + c.id + '\')">' + esc(c.code) + '</button>';
+    });
+    box.innerHTML = html;
+  });
+}
+
+function switchCornerView(cid) {
+  currentCornerView = cid;
+  renderCornerTabs();
+  if (currentStoreId) {
+    renderMonthlyPlanning();
+    if (typeof loadAndRenderIntraday === 'function' && currentIntradayDate) renderIntraday(currentIntradayDate);
+  }
 }
 
 function agentSubLabel(a) {
@@ -3550,6 +3592,7 @@ async function loadAndRenderIntraday(ds) {
 function renderIntraday(ds) {
   var body = document.getElementById('planning-intraday-body');
   if (!body) return;
+  renderCornerTabs();
   if (!currentStoreId) { body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div>'; return; }
 
   if (!ds) ds = toDateStr(new Date());
@@ -3799,13 +3842,17 @@ function renderIntraday(ds) {
     var mgmt = working.filter(function(a){ return poolOf(a)==='mgmt'; });
     if (mgmt.length) groups.push({ title:'MANAGEMENT', list:mgmt });
     storeCorners.slice().sort(function(x,y){ return cWi(y.id)-cWi(x.id); }).forEach(function(c){
+      // Vue filtree : on ne montre que le corner selectionne.
+      if (currentCornerView && c.id !== currentCornerView) return;
       var here = working.filter(function(a){ return poolOf(a)==='sales' && effCorner(a)===c.id; });
       if (here.length) groups.push({ title:c.code.toUpperCase(), list:here });
     });
     var placedI = {};
     groups.forEach(function(g){ g.list.forEach(function(a){ placedI[a.id]=true; }); });
-    var noH = working.filter(function(a){ return poolOf(a)==='sales' && !placedI[a.id]; });
-    if (noH.length) groups.push({ title:'UNASSIGNED', list:noH });
+    if (!currentCornerView) {
+      var noH = working.filter(function(a){ return poolOf(a)==='sales' && !placedI[a.id]; });
+      if (noH.length) groups.push({ title:'UNASSIGNED', list:noH });
+    }
     var stk = working.filter(function(a){ return poolOf(a)==='stock'; });
     if (stk.length) groups.push({ title:'STOCK', list:stk });
   } else {
@@ -4267,7 +4314,7 @@ function openCellEditor(agentId, ds, evt) {
   if (current) {
     html += '<div class="ce-sep"></div>' +
             '<button class="ce-opt ce-reset" onclick="applyCellOverride(null)">' +
-            '<span class="ce-lbl">Revenir au calcul automatique</span></button>';
+            '<span class="ce-lbl">Back to automatic</span></button>';
   }
 
   // Multi-corner : choix manuel du corner pour ce jour.
@@ -4638,6 +4685,7 @@ function hlAddFormHtml(weekStart, weekEnd) {
 function renderMonthlyPlanning() {
   var container = document.getElementById('planning-monthly-body');
   if (!container) return;
+  renderCornerTabs();
   if (!currentStoreId) {
     container.innerHTML = '<p style="color:#888">Select a store to view the monthly planning.</p>';
     return;
@@ -5253,7 +5301,6 @@ function renderMonthlyPlanning() {
       // Nombre de closings : part du soir, arrondi vers le HAUT (biais soir).
       var openSh  = grid.find(function(s){ return s.isOpening; }) || grid[0];
       var closeSh = grid.find(function(s){ return s.isClosing; }) || grid[grid.length - 1];
-      var midShifts = grid.filter(function(s){ return !s.isOpening && !s.isClosing; });
 
       var nTotal = list.length;
       // Gel des jours passes : ils gardent les seuils par defaut, pour qu'un
@@ -5573,7 +5620,6 @@ function renderMonthlyPlanning() {
   // ── Construction du tableau HTML ──
   var todayStr = toDateStr(new Date());
   var rhCols = ['O','C','OFF','DIM','FER','CP'];
-  var nCols  = 1 + nDays + rhCols.length;
 
   function dayCls(d) {
     var c = 'c-day';
@@ -5707,21 +5753,44 @@ function renderMonthlyPlanning() {
       var t = cornerTrafficMonthly[cid + '|' + refYb + '|' + refMb];
       return t ? (t.last_year || t.n_2 || 0) : 0;
     }
-    // Management (mgmt) en haut
+    var viewCorner = currentCornerView
+      ? storeCorners.filter(function(c){ return c.id === currentCornerView; })[0] : null;
+
+    // Un agent renforce le corner filtre s'il y travaille au moins un jour
+    // sans que ce soit son corner d'attache (prefixe = code du corner filtre).
+    function reinforcesView(a) {
+      if (!viewCorner) return false;
+      var rows = agentRows[a.id] || [];
+      return rows.some(function(rc){ return rc.res && rc.res.corner === viewCorner.code; });
+    }
+
+    // Management toujours visible
     var mgmt = agents.filter(function(a){ return poolOf(a) === 'mgmt'; });
     if (mgmt.length) { ordered.push({ group: 'Management' }); mgmt.forEach(function(a){ ordered.push(a); }); }
-    // Bulles corner (vendeurs), triees par trafic descendant
+
     var cornersSorted = storeCorners.slice().sort(function(x,y){ return cWeight(y.id) - cWeight(x.id); });
     var placed = {};
-    cornersSorted.forEach(function(c) {
-      var here = agents.filter(function(a){ return poolOf(a) === 'sales' && a.home_corner_id === c.id; });
-      ordered.push({ group: c.code });
+    if (viewCorner) {
+      // Vue filtree : uniquement le corner selectionne (agents home + renforts).
+      var here = agents.filter(function(a){ return poolOf(a) === 'sales' && a.home_corner_id === viewCorner.id; });
+      var reinforcements = agents.filter(function(a){
+        return poolOf(a) === 'sales' && a.home_corner_id !== viewCorner.id && reinforcesView(a);
+      });
+      ordered.push({ group: viewCorner.code });
       here.forEach(function(a){ ordered.push(a); placed[a.id] = true; });
-    });
-    // Vendeurs sans corner d'attache : bulle "Unassigned"
-    var noHome = agents.filter(function(a){ return poolOf(a) === 'sales' && !placed[a.id]; });
-    if (noHome.length) { ordered.push({ group: 'Unassigned' }); noHome.forEach(function(a){ ordered.push(a); }); }
-    // Stock en bas
+      reinforcements.forEach(function(a){ ordered.push(a); placed[a.id] = true; });
+    } else {
+      // Vue All : toutes les bulles corner.
+      cornersSorted.forEach(function(c) {
+        var hc = agents.filter(function(a){ return poolOf(a) === 'sales' && a.home_corner_id === c.id; });
+        ordered.push({ group: c.code });
+        hc.forEach(function(a){ ordered.push(a); placed[a.id] = true; });
+      });
+      var noHome = agents.filter(function(a){ return poolOf(a) === 'sales' && !placed[a.id]; });
+      if (noHome.length) { ordered.push({ group: 'Unassigned' }); noHome.forEach(function(a){ ordered.push(a); }); }
+    }
+
+    // Stock toujours visible (partage)
     var stock = agents.filter(function(a){ return poolOf(a) === 'stock'; });
     if (stock.length) { ordered.push({ group: 'Stock' }); stock.forEach(function(a){ ordered.push(a); }); }
   } else {
@@ -5755,10 +5824,22 @@ function renderMonthlyPlanning() {
             (pct < 100 ? ' \u00b7 ' + pct + '%' : '') + '</span>' +
         '</span></span></td>';
     agentRows[a.id].forEach(function(rc, i) {
+      // Vue corner filtree : on n'affiche la cellule que si l'agent est sur CE
+      // corner ce jour-la (corner effectif = prefixe si depannage, sinon home).
+      var showCell = true;
+      if (currentCornerView && storeCorners.length > 1) {
+        var eff = (rc.res && rc.res.corner)
+          ? rc.res.corner
+          : (function(){ for (var k=0;k<storeCorners.length;k++) if (storeCorners[k].id===a.home_corner_id) return storeCorners[k].code; return null; })();
+        var viewCode = (function(){ for (var k=0;k<storeCorners.length;k++) if (storeCorners[k].id===currentCornerView) return storeCorners[k].code; return null; })();
+        // On garde aussi les jours OFF/absence pour la lisibilite de la ligne.
+        var isWork = rc.res && !rc.res.special && rc.res.code && rc.res.code !== 'OFF' && rc.res.code !== 'A';
+        if (isWork && eff !== viewCode) showCell = false;
+      }
       var clickable = rc.d.closure ? '' :
         ' onclick="openCellEditor(\'' + a.id + '\',\'' + rc.d.ds + '\',event)"';
       html += '<td class="' + dayCls(rc.d) + (rc.d.closure ? '' : ' is-editable') +
-              '" data-col="' + i + '"' + clickable + '>' + cell(rc.res) + '</td>';
+              '" data-col="' + i + '"' + clickable + '>' + (showCell ? cell(rc.res) : '') + '</td>';
     });
     var c = rh[a.id];
     [c.O, c.C, c.off, c.dim, c.ferie, c.cp].forEach(function(v){
@@ -5770,7 +5851,7 @@ function renderMonthlyPlanning() {
 
   // tableau 2 : le recap pour le manager (bulle a part)
   // Totaux globaux + effectif present par POOL, chaque jour.
-  var POOL_LABELS = [['mgmt','Management'],['sales','Vendeur'],['stock','Stock']];
+  var POOL_LABELS = [['mgmt','Management'],['sales','Sales'],['stock','Stock']];
   var poolDayCount = {};   // pool -> { ds: n }
   poolDayCount.mgmt = {}; poolDayCount.sales = {}; poolDayCount.stock = {};
   agents.forEach(function(a) {
@@ -6082,35 +6163,56 @@ function printableExport(bodyId, titleText) {
   if (!src || !currentStoreId) { showToast('Nothing to export', 'error'); return; }
   var w = window.open('', '_blank');
   if (!w) { showToast('Popup blocked - allow popups to export PDF', 'error'); return; }
-  var css =
-    'body{font-family:Arial,sans-serif;margin:16px;color:#18181B;}' +
-    'h1{font-size:16px;margin:0 0 4px;}' +
-    '.sub{font-size:11px;color:#6B7280;margin:0 0 14px;}' +
-    'table{border-collapse:collapse;width:100%;}' +
-    'th,td{border:1px solid #E0E0E0;padding:3px 5px;font-size:9px;text-align:center;}' +
-    '.sh{display:inline-block;min-width:20px;padding:1px 4px;border-radius:3px;font-weight:600;}' +
-    '.sh-cnr{display:inline-flex;flex-direction:column;line-height:1.1;}' +
-    '.sh-cnr-tag{font-size:7px;font-weight:700;color:#7c3aed;}' +
-    '.mth-group td{background:#F4F5F7;font-weight:700;text-transform:uppercase;text-align:left;}' +
-    '.it-group{margin-top:8px;font-weight:700;font-size:10px;text-transform:uppercase;color:#52525B;}' +
-    '@media print{@page{size:landscape;margin:10mm;}}';
+
+  // 1:1 avec le site : on clone TOUT le CSS du document dans la fenetre PDF,
+  // puis on ajoute un CSS d'impression pour cadrer (paysage, marges, pas
+  // d'interactions). Le rendu est ainsi strictement identique a l'ecran.
+  var siteCss = '';
+  document.querySelectorAll('style').forEach(function(st){ siteCss += st.textContent + '\n'; });
+
+  var printCss =
+    '@page { size:landscape; margin:8mm; }' +
+    'body { background:#fff; margin:0; padding:14px 16px; font-family:var(--font); }' +
+    '.pdf-head { display:flex; align-items:baseline; justify-content:space-between;' +
+      ' margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid var(--nav-active-bg); }' +
+    '.pdf-title { font-size:16px; font-weight:700; color:var(--tx-1); }' +
+    '.pdf-meta { font-size:11px; color:var(--tx-2); }' +
+    // on neutralise les affordances d'edition et on fige les couleurs
+    '.is-editable { cursor:default !important; box-shadow:none !important; }' +
+    '.mth-wrap { overflow:visible !important; border:none !important; }' +
+    '.card { box-shadow:none !important; border:1px solid var(--line) !important; }' +
+    '* { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }';
+
   var stamp = currentStoreName + ' \u00b7 ' + titleText;
-  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
-    stamp + '</title><style>' + css + '</style></head><body>' +
-    '<h1>' + stamp + '</h1><div class="sub">CORA \u00b7 generated ' +
-    new Date().toLocaleDateString('en-GB') + '</div>' +
-    src.innerHTML + '</body></html>');
+  w.document.write('<!DOCTYPE html><html lang="' + (CURRENT_LANG||'en') + '"><head><meta charset="utf-8">' +
+    '<title>' + stamp + '</title>' +
+    '<link rel="preconnect" href="https://fonts.googleapis.com">' +
+    '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+    '<style>' + siteCss + '</style><style>' + printCss + '</style></head><body>' +
+    '<div class="pdf-head"><span class="pdf-title">' + stamp + '</span>' +
+    '<span class="pdf-meta">CORA \u00b7 ' + new Date().toLocaleDateString('en-GB') + '</span></div>' +
+    '<div class="tab-content active" style="display:block;padding:0;">' + src.innerHTML + '</div>' +
+    '</body></html>');
   w.document.close();
-  setTimeout(function(){ w.focus(); w.print(); }, 300);
+  // Laisser le temps aux polices de se charger avant l'impression.
+  setTimeout(function(){ w.focus(); w.print(); }, 600);
 }
 
 function exportMonthlyPDF() {
   var mn = MONTH_NAMES[monthlyRef.getMonth()] + ' ' + monthlyRef.getFullYear();
-  printableExport('planning-monthly-body', 'Monthly planning - ' + mn);
+  var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
+  printableExport('planning-monthly-body', 'Monthly \u00b7 ' + scope + ' \u00b7 ' + mn);
 }
 
 function exportIntradayPDF() {
-  printableExport('planning-intraday-body', 'Intraday - ' + (currentIntradayDate || ''));
+  var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
+  printableExport('planning-intraday-body', 'Intraday \u00b7 ' + scope + ' \u00b7 ' + (currentIntradayDate || ''));
+}
+
+// Code court d'un corner par id (pour l'entete PDF/Excel selon la tab active).
+function cornerCodeById(cid) {
+  for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === cid) return storeCorners[i].code;
+  return 'All';
 }
 
 // Export Excel du planning mensuel : construit a partir du modele (monthlyResult),
