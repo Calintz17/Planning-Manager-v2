@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V6.4</title>
+  <title>CORA Retail V6.5</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -221,8 +221,9 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .sb-period .lbl:hover { background:var(--bg-base-3); }
 
 .sb-foot { margin-top:auto; padding-top:var(--s4); border-top:1px solid var(--line); }
-.sb-mode { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 var(--s2); }
-.sb-mode span { font-size:11.5px; color:var(--tx-2); }
+.sb-mode { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:0 var(--s2); }
+.sb-mode span { font-size:11.5px; color:var(--tx-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex-shrink:1; }
+.sb-mode .toggle { flex-shrink:0; }
 .sb-mode span.on { color:var(--tx-1); font-weight:600; }
 
 /* la barre du haut : recherche + compteur */
@@ -242,11 +243,18 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   color:var(--tx-3); pointer-events:none;
 }
 .tb-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
-.lang-picker { display:flex; align-items:center; gap:5px; padding:0 8px; height:34px;
-  border:1px solid var(--line); border-radius:var(--r-sm); background:var(--bg-base); color:var(--tx-2); }
+.lang-picker { position:relative; display:flex; align-items:center; gap:5px; padding:0 8px; height:34px;
+  border:1px solid var(--line); border-radius:var(--r-sm); background:var(--bg-base); color:var(--tx-2); cursor:pointer;
+  font-size:12px; font-weight:600; user-select:none; }
 .lang-picker .ic { width:15px; height:15px; color:var(--tx-3); }
-.lang-picker select { border:none; background:none; font-family:var(--font); font-size:12px;
-  font-weight:600; color:var(--tx-2); cursor:pointer; outline:none; padding:0 2px; }
+.lang-picker .lang-caret { width:12px; height:12px; }
+.lang-menu { display:none; position:absolute; top:calc(100% + 4px); right:0; z-index:750;
+  background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-sm);
+  box-shadow:var(--sh-2); overflow:hidden; min-width:64px; }
+.lang-menu.open { display:block; }
+.lang-opt { display:block; width:100%; text-align:left; padding:8px 14px; border:none; background:none;
+  font-family:var(--font); font-size:12px; font-weight:600; color:var(--tx-2); cursor:pointer; }
+.lang-opt:hover { background:var(--bg-base-3); color:var(--tx-1); }
 .icon-btn {
   width:36px; height:36px; border:1px solid var(--line-2); border-radius:9px;
   background:var(--bg-base); color:var(--tx-2); cursor:pointer;
@@ -1116,12 +1124,14 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
       <input type="text" placeholder="Search client advisors…" disabled>
     </div>
     <div class="tb-right">
-      <div class="lang-picker">
+      <div class="lang-picker" onclick="toggleLangMenu(event)">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>
-        <select id="lang-select" onchange="applyLang(this.value)">
-          <option value="en">EN</option>
-          <option value="jp">JP</option>
-        </select>
+        <span id="lang-current">EN</span>
+        <svg class="ic lang-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="lang-menu" id="lang-menu">
+          <button class="lang-opt" onclick="pickLang('en', event)">EN</button>
+          <button class="lang-opt" onclick="pickLang('jp', event)">JP</button>
+        </div>
       </div>
       <button class="icon-btn" disabled title="Notifications (coming soon)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
       <div class="tb-avatar" title="Account (coming soon)">RC</div>
@@ -1292,6 +1302,54 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'January': '1月',
+    'February': '2月',
+    'March': '3月',
+    'April': '4月',
+    'May': '5月',
+    'June': '6月',
+    'July': '7月',
+    'August': '8月',
+    'September': '9月',
+    'October': '10月',
+    'November': '11月',
+    'December': '12月',
+    'Sun': '日',
+    'Mon': '月',
+    'Tue': '火',
+    'Wed': '水',
+    'Thu': '木',
+    'Fri': '金',
+    'Sat': '土',
+    'Sunday': '日曜',
+    'Monday': '月曜',
+    'Tuesday': '火曜',
+    'Wednesday': '水曜',
+    'Thursday': '木曜',
+    'Friday': '金曜',
+    'Saturday': '土曜',
+    'Monthly traffic': '月間来客数',
+    'Daily breakdown': '日別内訳',
+    'Computed from the monthly total. Edit any day to override it - the rest adjusts around it.': '月間合計から算出。任意の日を編集すると上書きされ、残りが自動調整されます。',
+    'Drag any point to reshape the day. The rest adjusts to keep the total at 100%.': 'ポイントをドラッグして曲線を調整。残りは合計100%を保つよう自動調整されます。',
+    'Sales shifts': '販売シフト',
+    'Stock shifts': '在庫シフト',
+    'Opening minimum': 'オープン最少人数',
+    'Closing minimum': 'クローズ最少人数',
+    'Closing ratio': 'クローズ比率',
+    'Coverage thresholds': '人員基準',
+    'On the floor today': '本日の出勤',
+    'Absences this week': '今週の欠勤',
+    'Public holidays': '祝日',
+    'Forecast traffic · this week': '来客予測 · 今週',
+    'This week at a glance': '今週の概要',
+    'Save thresholds': '基準を保存',
+    'Edit agent configuration': 'スタッフ設定を編集',
+    'Coverage & headcount': '人員カバレッジ',
+    'Today': '本日',
+    'Sales': '販売',
+    'Store is open': '営業日',
+    'Store is closed': '休業日',
     'Save': '保存',
     'Dashboard': 'ダッシュボード',
     'Planning': 'スケジュール',
@@ -1507,6 +1565,7 @@ try { CURRENT_LANG = localStorage.getItem('cora_lang') || 'en'; } catch(e) {}
 
 // Traduit une chaine anglaise vers la langue courante (utilise dans le JS
 // qui genere les vues dynamiques).
+function dLoc() { return CURRENT_LANG === 'jp' ? 'ja-JP' : 'en-GB'; }
 function t(en) {
   if (CURRENT_LANG === 'en' || !en) return en;
   var d = I18N[CURRENT_LANG];
@@ -1557,8 +1616,43 @@ function applyLang(lang) {
     });
   });
 
-  var sel = document.getElementById('lang-select');
-  if (sel) sel.value = lang;
+  var cur = document.getElementById('lang-current');
+  if (cur) cur.textContent = lang.toUpperCase();
+}
+
+function toggleLangMenu(e) {
+  e.stopPropagation();
+  var m = document.getElementById('lang-menu');
+  if (!m) return;
+  var open = m.classList.toggle('open');
+  if (open) setTimeout(function(){ document.addEventListener('click', closeLangMenuOutside); }, 0);
+}
+function closeLangMenuOutside() {
+  var m = document.getElementById('lang-menu');
+  if (m) m.classList.remove('open');
+  document.removeEventListener('click', closeLangMenuOutside);
+}
+function pickLang(lang, e) {
+  e.stopPropagation();
+  var m = document.getElementById('lang-menu');
+  if (m) m.classList.remove('open');
+  applyLang(lang);
+}
+
+// Apres chaque fonction de rendu, on retraduit si la langue n'est pas l'anglais.
+// Centralise : on enveloppe les fonctions de rendu une seule fois.
+function installRetranslateHooks() {
+  ['renderTraffic','renderDashboard','renderCalendar','renderRegulations',
+   'renderAgents','renderIntraday','renderAnnualCalendar','renderMonthlyCalendar']
+  .forEach(function(fn) {
+    if (typeof window[fn] !== 'function') return;
+    var orig = window[fn];
+    window[fn] = function() {
+      var r = orig.apply(this, arguments);
+      if (CURRENT_LANG !== 'en') { try { retranslate(); } catch(e) {} }
+      return r;
+    };
+  });
 }
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────
@@ -1689,12 +1783,12 @@ function getWeekNumber(date) {
 }
 
 function formatDate(date) {
-  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  return date.toLocaleDateString(dLoc(), { day: '2-digit', month: 'short' });
 }
 
 function formatDateDisplay(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(dLoc(), { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function isToday(date) { return toDateStr(date) === toDateStr(new Date()); }
@@ -1723,7 +1817,7 @@ function monthlyToday() {
 
 function updateMonthlyLabel() {
   var el = document.getElementById('monthly-label');
-  if (el) el.textContent = monthlyRef.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+  if (el) el.textContent = monthlyRef.toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
 }
 
 function updateWeekLabel() {
@@ -1827,6 +1921,7 @@ function toggleAddAgentForm() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
+  installRetranslateHooks();
   applyLang(CURRENT_LANG);
   updateWeekLabel();
   updateMonthlyLabel();
@@ -3265,7 +3360,7 @@ async function renderTraffic() {
 
   html += '<div class="card">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<h2 class="page-title">Monthly traffic ' + year + '</h2>';
+  html +=     '<h2 class="page-title">' + t('Monthly traffic') + ' ' + year + '</h2>';
   html +=     '<button class="btn btn-save btn-sm" onclick="saveMonthlyTraffic()">Save</button>';
   html +=   '</div>';
 
@@ -3320,18 +3415,18 @@ async function renderTraffic() {
 
   // ── Carte 2 : ventilation journaliere du mois courant ──
   var mIdx  = currentWeekMonday.getMonth() + 1;
-  var mName = MONTH_NAMES[mIdx - 1];
+  var mName = t(MONTH_NAMES[mIdx - 1]);
   var recM  = trafficMonthly[monthKey(year, mIdx)] || {};
   var spread = spreadMonthToDays(year, mIdx, recM.current_year || 0);
   var keys   = Object.keys(spread).sort();
 
   html += '<div class="card">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<div><h2 class="page-title">Daily breakdown \u00b7 ' + mName + '</h2>';
+  html +=     '<div><h2 class="page-title">' + t('Daily breakdown') + ' \u00b7 ' + mName + '</h2>';
   html +=     '<div class="card-sub">Computed from the monthly total. ' +
               'Edit any day to override it - the rest adjusts around it.</div></div>';
   html +=     '<div style="display:flex;gap:var(--s3)">';
-  html +=       '<button class="btn btn-ghost btn-sm" onclick="resetDailyOverrides()">Reset daily edits</button>';
+  html +=       '<button class="btn btn-ghost btn-sm" onclick="resetDailyOverrides()">' + t('Reset daily edits') + '</button>';
   html +=       '<button class="btn btn-save btn-sm" onclick="saveDailyTraffic()">Save</button>';
   html +=     '</div>';
   html +=   '</div>';
@@ -3370,8 +3465,7 @@ async function renderTraffic() {
   html += '<div class="card">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
   html +=     '<div><h2 class="page-title">Hourly traffic curve</h2>';
-  html +=     '<div class="card-sub">Drag any point to reshape the day. ' +
-              'The rest adjusts to keep the total at 100%.</div></div>';
+  html +=     '<div class="card-sub">' + t('Drag any point to reshape the day. The rest adjusts to keep the total at 100%.') + '</div></div>';
   html +=     '<div style="display:flex;gap:var(--s3)">';
   html +=       '<button class="btn btn-ghost btn-sm" onclick="resetHourlyCurve()">Reset curve</button>';
   html +=       '<button class="btn btn-save btn-sm" onclick="saveHourlyCurve()">Save</button>';
@@ -4362,12 +4456,30 @@ async function applyCellOverride(value) {
   closeCellEditor();
 
   if (value === null) {
-    // Retirer la modification : la cellule redevient automatique
+    // Retirer la modification : cellule automatique. On enleve aussi une
+    // eventuelle absence d'un jour posee sur cette date (synchro calendrier).
     var del = await sb.from('retail_planning_overrides')
       .delete().eq('agent_id', st.agentId).eq('date', st.ds);
     if (del.error) { showToast('Failed to reset cell', 'error'); return; }
     if (planningOverrides[st.agentId]) delete planningOverrides[st.agentId][st.ds];
+    // Supprimer une absence d'un seul jour couvrant cette date, si elle existe.
+    var oneDay = agentLeaves.filter(function(l){
+      return l.agent_id === st.agentId && l.start_date === st.ds && l.end_date === st.ds;
+    });
+    for (var i = 0; i < oneDay.length; i++) {
+      await sb.from('retail_agent_leave').delete().eq('id', oneDay[i].id);
+      agentLeaves = agentLeaves.filter(function(l){ return l.id !== oneDay[i].id; });
+    }
     showToast('Back to automatic \u2713');
+  } else if (value === 'A') {
+    // Une absence declaree depuis le monthly cree une entree d'absence d'un
+    // jour, pour qu'elle apparaisse aussi dans Calendar > Absence.
+    var row = { store_id: currentStoreId, agent_id: st.agentId, start_date: st.ds, end_date: st.ds, type: 'absence' };
+    var ins = await sb.from('retail_agent_leave').insert([row]).select();
+    if (ins.error) { showToast('Failed to save: ' + ins.error.message, 'error'); return; }
+    if (ins.data && ins.data[0]) agentLeaves.push(ins.data[0]);
+    showToast('Absence saved \u2713');
+    renderCalendar();
   } else {
     var up = await sb.from('retail_planning_overrides')
       .upsert({ agent_id: st.agentId, date: st.ds, value: value },
@@ -4378,6 +4490,7 @@ async function applyCellOverride(value) {
     showToast('Updated \u2713');
   }
   renderMonthlyPlanning();
+  if (currentStoreId) renderDashboard();
 }
 
 async function applyCornerOverride(cornerId) {
@@ -4406,7 +4519,7 @@ async function clearMonthOverrides() {
   var year  = ref.getFullYear(), mIdx = ref.getMonth();
   var first = toDateStr(new Date(year, mIdx, 1));
   var last  = toDateStr(new Date(year, mIdx + 1, 0));
-  var label = new Date(year, mIdx, 1).toLocaleDateString('en-GB',
+  var label = new Date(year, mIdx, 1).toLocaleDateString(dLoc(),
                 { month: 'long', year: 'numeric' });
 
   if (!confirm('Reset all manual changes for ' + label + '?')) return;
@@ -4702,7 +4815,7 @@ function renderMonthlyPlanning() {
   var lastDay  = new Date(year, monthIdx + 1, 0);
   var nDays    = lastDay.getDate();
   var monthName = new Date(year, monthIdx, 1)
-                    .toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+                    .toLocaleDateString(dLoc(), { month: 'long', year: 'numeric' });
 
   // Liste des jours du mois + trafic (forecast) par jour, pour decider repos
   var monthDays = [];
@@ -5447,18 +5560,21 @@ function renderMonthlyPlanning() {
         return cand[0];
       }
 
-      // 1) Garde-fou couverture : chaque corner doit avoir 1 O + 1 C.
+      // 1) Garde-fou couverture : chaque corner doit avoir 1 O + 1 C. On ne
+      //    pioche que dans un corner en SURPLUS (effectif > cible) pour eviter
+      //    les echanges croises qui se compensent (A->B et B->A le meme jour).
       storeCorners.forEach(function(c) {
         var gap = coverGap(c.id);
         [['O',gap.needO],['C',gap.needC]].forEach(function(g){
           if (!g[1]) return;
           var wantOpen = g[0]==='O';
-          // chercher un donneur dans un autre corner
-          for (var i=0;i<storeCorners.length;i++){
-            var src = storeCorners[i]; if (src.id===c.id) continue;
-            var donor = pickDonor(src.id, wantOpen, c.code);
+          // corners sources tries par surplus decroissant
+          var srcs = storeCorners.filter(function(s){ return s.id !== c.id && (assign[s.id].length - target[s.id]) > 0; })
+            .sort(function(x,y){ return (assign[y.id].length-target[y.id]) - (assign[x.id].length-target[x.id]); });
+          for (var i=0;i<srcs.length;i++){
+            var donor = pickDonor(srcs[i].id, wantOpen, c.code);
             if (donor){
-              assign[src.id] = assign[src.id].filter(function(x){return x.id!==donor.id;});
+              assign[srcs[i].id] = assign[srcs[i].id].filter(function(x){return x.id!==donor.id;});
               assign[c.id].push(donor); break;
             }
           }
@@ -5827,12 +5943,13 @@ function renderMonthlyPlanning() {
       // Vue corner filtree : on n'affiche la cellule que si l'agent est sur CE
       // corner ce jour-la (corner effectif = prefixe si depannage, sinon home).
       var showCell = true;
-      if (currentCornerView && storeCorners.length > 1) {
+      // Le masquage ne concerne que les vendeurs. Management et stock sont
+      // transverses : ils gardent tous leurs jours visibles dans chaque tab.
+      if (currentCornerView && storeCorners.length > 1 && poolOf(a) === 'sales') {
         var eff = (rc.res && rc.res.corner)
           ? rc.res.corner
           : (function(){ for (var k=0;k<storeCorners.length;k++) if (storeCorners[k].id===a.home_corner_id) return storeCorners[k].code; return null; })();
         var viewCode = (function(){ for (var k=0;k<storeCorners.length;k++) if (storeCorners[k].id===currentCornerView) return storeCorners[k].code; return null; })();
-        // On garde aussi les jours OFF/absence pour la lisibilite de la ligne.
         var isWork = rc.res && !rc.res.special && rc.res.code && rc.res.code !== 'OFF' && rc.res.code !== 'A';
         if (isWork && eff !== viewCode) showCell = false;
       }
@@ -6190,7 +6307,7 @@ function printableExport(bodyId, titleText) {
     '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' +
     '<style>' + siteCss + '</style><style>' + printCss + '</style></head><body>' +
     '<div class="pdf-head"><span class="pdf-title">' + stamp + '</span>' +
-    '<span class="pdf-meta">CORA \u00b7 ' + new Date().toLocaleDateString('en-GB') + '</span></div>' +
+    '<span class="pdf-meta">CORA \u00b7 ' + new Date().toLocaleDateString(dLoc()) + '</span></div>' +
     '<div class="tab-content active" style="display:block;padding:0;">' + src.innerHTML + '</div>' +
     '</body></html>');
   w.document.close();
@@ -6225,7 +6342,7 @@ function exportMonthly() {
   var ref = new Date(monthlyRef);
   var year = ref.getFullYear(), monthIdx = ref.getMonth();
   var nDays = new Date(year, monthIdx + 1, 0).getDate();
-  var monthName = new Date(year, monthIdx, 1).toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+  var monthName = new Date(year, monthIdx, 1).toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
 
   var days = [];
   for (var dn = 1; dn <= nDays; dn++) {
@@ -6323,15 +6440,30 @@ function exportMonthly() {
   if (storeCorners.length > 1) {
     var refYx = monthlyRef.getFullYear(), refMx = monthlyRef.getMonth() + 1;
     var cWx = function(cid){ var t=cornerTrafficMonthly[cid+'|'+refYx+'|'+refMx]; return t?(t.last_year||t.n_2||0):0; };
+    var viewC = currentCornerView ? cornerCodeById(currentCornerView) : null;
+    // Un agent renforce le corner filtre s'il y travaille au moins un jour.
+    function reinf(a){
+      if (!viewC) return false;
+      var res = monthlyResult;
+      for (var ds in res) { if (res[ds][a.id] && res[ds][a.id].corner === viewC) return true; }
+      return false;
+    }
     var mgmtL = agents.filter(function(a){ return poolOf(a)==='mgmt'; });
     if (mgmtL.length) xlGroups.push({ label:'Management', pool:'mgmt', list:mgmtL });
     var placedX = {};
     storeCorners.slice().sort(function(x,y){ return cWx(y.id)-cWx(x.id); }).forEach(function(c){
+      if (currentCornerView && c.id !== currentCornerView) return;   // tab filtree
       var here = agents.filter(function(a){ return poolOf(a)==='sales' && a.home_corner_id===c.id; });
+      if (currentCornerView) {
+        var rf = agents.filter(function(a){ return poolOf(a)==='sales' && a.home_corner_id!==c.id && reinf(a); });
+        here = here.concat(rf);
+      }
       if (here.length) { xlGroups.push({ label:c.code, pool:'sales', list:here }); here.forEach(function(a){ placedX[a.id]=true; }); }
     });
-    var noHx = agents.filter(function(a){ return poolOf(a)==='sales' && !placedX[a.id]; });
-    if (noHx.length) xlGroups.push({ label:'Unassigned', pool:'sales', list:noHx });
+    if (!currentCornerView) {
+      var noHx = agents.filter(function(a){ return poolOf(a)==='sales' && !placedX[a.id]; });
+      if (noHx.length) xlGroups.push({ label:'Unassigned', pool:'sales', list:noHx });
+    }
     var stkL = agents.filter(function(a){ return poolOf(a)==='stock'; });
     if (stkL.length) xlGroups.push({ label:'Stock', pool:'stock', list:stkL });
   } else {
@@ -6683,7 +6815,7 @@ async function renderCalendar() {
   document.getElementById('cal-month-label').textContent =
     (currentCalView === 'annual')
       ? String(year)
-      : calMonth.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+      : calMonth.toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
   if (currentCalView === 'annual') renderAnnualCalendar();
   else renderMonthlyCalendar();
 }
@@ -6994,7 +7126,7 @@ function wkpChangeMonth(dir) {
 function renderWeekPicker() {
   var y = wkpDate.getFullYear(), m = wkpDate.getMonth();
   document.getElementById('wkp-month-label').textContent =
-    new Date(y, m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+    new Date(y, m, 1).toLocaleDateString(dLoc(), {month:'long', year:'numeric'});
 
   // First day of grid: Monday on or before the 1st of the month
   var first = new Date(y, m, 1);
