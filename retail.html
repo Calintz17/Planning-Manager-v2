@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V6.5</title>
+  <title>CORA Retail V6.6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2172,6 +2172,15 @@ async function loadRegulations() {
     sunday_rest:     def.sunday_rest,
     weekly_hours:    def.weekly_hours,
     max_daily_hours: 8,
+    trend_pct:       0,
+    aht_tasks: {
+      FRAUD: 10, CALL: 10, CHAT: 8, MAIL: 5, CLIENTELING: 15, 'BACK-OFFICE': 10,
+    },
+    breaks: [
+      { name: 'Lunch', duration: 60, window_start: 12, window_end: 14 },
+      { name: 'Break', duration: 15, window_start: 11, window_end: 12 },
+      { name: 'Break', duration: 15, window_start: 14, window_end: 17 },
+    ],
     closed_dates:    [],
     public_holidays: [],
     day_hours:       buildDefaultDayHours(def.open, def.close),
@@ -2217,6 +2226,9 @@ async function seedRegulations() {
     { store_id: currentStoreId, rule_key: 'public_holidays', rule_value: '[]' },
     { store_id: currentStoreId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
   ];
+  rows.forEach(function(r) {
+    if (r.rule_value === undefined || r.rule_value === null) r.rule_value = '';
+  });
   await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
 }
 
@@ -2294,6 +2306,12 @@ async function saveRegulations() {
     { store_id: currentStoreId, rule_key: 'public_holidays', rule_value: JSON.stringify(regulations.public_holidays) },
     { store_id: currentStoreId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
   ];
+
+  // Garde-fou : aucune rule_value ne doit etre null/undefined (contrainte NOT
+  // NULL en base). Si un champ manque, on retombe sur une valeur vide sure.
+  rows.forEach(function(r) {
+    if (r.rule_value === undefined || r.rule_value === null) r.rule_value = '';
+  });
 
   showLoader();
   const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
