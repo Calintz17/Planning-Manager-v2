@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.0</title>
+  <title>CORA Retail V7.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -5329,6 +5329,68 @@ function renderMonthlyPlanning() {
       assignedMap[d.ds].push(pool[i].id);
     }
   });
+
+  // ── Passe d'optimisation : regrouper les jours de repos (semblant de week-end)
+  // Module isole, preference douce : on echange des jours travailles/repos entre
+  // deux agents UNIQUEMENT si l'echange rend des repos consecutifs sans changer
+  // le nombre de presents aucun jour (donc zero impact business). Ne touche
+  // jamais les jours passes, absences, part-time fixes, ni la couverture.
+  (function groupDaysOff() {
+    var open = monthDays.filter(function(d){ return !d.closure && !d.past; });
+    // index des jours ouverts pour tester l'adjacence
+    var idxByDs = {}; monthDays.forEach(function(d, i){ idxByDs[d.ds] = i; });
+    function worksOn(a, d){ return assignedMap[d.ds].indexOf(a.id) !== -1; }
+    function isRest(a, d){ return !worksOn(a, d) && !isBlocked(a, d); }
+    // Un repos est "isole" si ni la veille ni le lendemain (jours ouverts) n'est un repos.
+    function restIsolated(a, di) {
+      var prev = monthDays[di - 1], next = monthDays[di + 1];
+      var prevRest = prev && !prev.closure ? !worksOn(a, prev) : false;
+      var nextRest = next && !next.closure ? !worksOn(a, next) : false;
+      return !prevRest && !nextRest;
+    }
+    // Echange : a1 travaille dOff (repos souhaite) et est au repos dOn (adjacent
+    // a un autre repos) ; a2 fait l'inverse. On ne bouge un agent que si ca ne
+    // viole pas son quota et ses contraintes.
+    function canSwap(a1, a2, dOff, dOn) {
+      // a1 : travaille dOff -> repos, repos dOn -> travaille. a2 : l'inverse.
+      if (!worksOn(a1, dOff) || worksOn(a1, dOn)) return false;
+      if (worksOn(a2, dOff) || !worksOn(a2, dOn)) return false;
+      // Ne pas casser des shifts fixes / absences
+      if (isBlocked(a1, dOn) || isBlocked(a2, dOff)) return false;
+      if (isFixedTimed(a1) || isFixedTimed(a2)) return false;
+      // Meme grille (un vendeur remplace un vendeur, stock un stock)
+      if (poolOf(a1) !== poolOf(a2)) return false;
+      return true;
+    }
+    function doSwap(a1, a2, dOff, dOn) {
+      // a1 quitte dOff, rejoint dOn ; a2 quitte dOn, rejoint dOff
+      assignedMap[dOff.ds] = assignedMap[dOff.ds].filter(function(id){ return id !== a1.id; });
+      assignedMap[dOn.ds].push(a1.id); assign(a1, dOn);
+      assignedMap[dOn.ds] = assignedMap[dOn.ds].filter(function(id){ return id !== a2.id; });
+      assignedMap[dOff.ds].push(a2.id); assign(a2, dOff);
+    }
+    var vendors = agents.filter(function(a){ return poolOf(a) === 'sales' && !isFixedTimed(a); });
+    vendors.forEach(function(a1) {
+      open.forEach(function(d, oi) {
+        var di = idxByDs[d.ds];
+        // repos isole de a1 ce jour ?
+        if (worksOn(a1, d) || isBlocked(a1, d)) return;
+        if (!restIsolated(a1, di)) return;
+        // cherche un jour travaille adjacent a un autre repos de a1, a echanger
+        [-1, 1].forEach(function(off) {
+          var adj = monthDays[di + off];
+          if (!adj || adj.closure || adj.past) return;
+          // adj doit devenir repos pour coller au repos d : donc a1 travaille adj
+          if (!worksOn(a1, adj)) return;
+          // apres echange, a1 aura repos d + repos adj (consecutifs)
+          for (var k = 0; k < vendors.length; k++) {
+            var a2 = vendors[k]; if (a2.id === a1.id) continue;
+            if (canSwap(a1, a2, adj, d)) { doSwap(a1, a2, adj, d); break; }
+          }
+        });
+      });
+    });
+  })();
 
   // ── Traduction en jours de repos ──
   monthDays.forEach(function(d) {
