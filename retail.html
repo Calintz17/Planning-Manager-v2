@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V6.9</title>
+  <title>CORA Retail V7.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1294,6 +1294,9 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'Fairness rotation': '公平ローテーション',
+    'On - everyone rotates': 'オン - 全員ローテーション',
+    'Off - home corners': 'オフ - 担当コーナー',
     'Off': '休み',
     'Total present': '出勤合計',
     'Opening': 'オープン',
@@ -2300,6 +2303,28 @@ function toggleDayOpen(cb) {
   if (lbl) lbl.textContent = closed ? 'Closed' : 'Open';
 }
 
+async function toggleFairness(cb) {
+  if (!currentStoreId) return;
+  var on = cb.checked;
+  var lbl = document.getElementById('fairness-lbl');
+  if (lbl) lbl.textContent = on ? t('On - everyone rotates') : t('Off - home corners');
+  if (!storeSettings) storeSettings = {};
+  storeSettings.fairness_rotation = on;
+  await sb.from('retail_store_settings').upsert({
+    store_id: currentStoreId,
+    saturday_open: !regulations.saturday_rest,
+    sunday_open: !regulations.sunday_rest,
+    day_hours: regulations.day_hours || {},
+    hourly_curve: storeSettings.hourly_curve || null,
+    min_opening: storeSettings.min_opening != null ? storeSettings.min_opening : 1,
+    min_closing: storeSettings.min_closing != null ? storeSettings.min_closing : 1,
+    closing_ratio: storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70,
+    fairness_rotation: on
+  }, { onConflict: 'store_id' });
+  showToast('Saved \u2713');
+  renderMonthlyPlanning();
+}
+
 // Sauve les corners de la boutique : cree les nouveaux, met a jour les codes/noms,
 // supprime ceux retires. Le dropdown de corner a la creation/edition d'agent est
 // alimente par cette liste.
@@ -2830,6 +2855,10 @@ function renderRegulations() {
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
         '<h2 class="page-title">' + t('Corners') + '</h2>' +
         '<button class="btn btn-save btn-sm" onclick="saveCorners()">' + t('Save') + '</button></div>' +
+      '<div class="set-rule" style="margin-bottom:var(--s3)"><span class="set-rule-lbl">' + t('Fairness rotation') + '</span>' +
+        '<label class="toggle"><input type="checkbox" id="fairness-toggle"' + ((storeSettings && storeSettings.fairness_rotation) ? ' checked' : '') + ' onchange="toggleFairness(this)">' +
+        '<span class="toggle-slider"></span></label>' +
+        '<span class="day-open-lbl" id="fairness-lbl">' + ((storeSettings && storeSettings.fairness_rotation) ? t('On - everyone rotates') : t('Off - home corners')) + '</span></div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
         '<th style="width:52px"></th></tr></thead>' +
@@ -3025,6 +3054,7 @@ async function loadStoreSettings() {
   storeSettings.min_opening  = storeSettings.min_opening  != null ? storeSettings.min_opening  : 1;
   storeSettings.min_closing  = storeSettings.min_closing  != null ? storeSettings.min_closing  : 1;
   storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70;
+  storeSettings.fairness_rotation = !!storeSettings.fairness_rotation;
 
   // La boutique pilote l'ouverture du week-end
   regulations.saturday_rest = !storeSettings.saturday_open;
@@ -5559,7 +5589,83 @@ function renderMonthlyPlanning() {
   // (un O manquant se comble par un O), avec garde-fou couverture (min 1 O + 1 C
   // par corner) et tiebreaker competence. Un transfert = prefixe (dépannage).
   var cornerAssign = {};
-  if (storeCorners.length > 1) {
+  var fairnessOn = storeCorners.length > 1 && storeSettings && storeSettings.fairness_rotation;
+
+  if (fairnessOn) {
+    // ── Mode FAIRNESS : rotation equitable, on ignore les corners d'attache ──
+    // Le staffing par corner reste dicte par le trafic (gros corner = plus de
+    // monde), mais chaque agent passe autant que possible le meme nombre de
+    // jours sur chaque corner sur le mois. Compteur d'equite par agent/corner,
+    // reparti de zero chaque mois. On priorise a chaque jour les agents qui ont
+    // le moins frequente le corner a pourvoir.
+    var refYf = monthlyRef.getFullYear(), refMf = monthlyRef.getMonth() + 1;
+    var wF = {};
+    storeCorners.forEach(function(c) {
+      var t = cornerTrafficMonthly[c.id + '|' + refYf + '|' + refMf];
+      wF[c.id] = t ? (t.last_year || t.n_2 || 0) : 0;
+    });
+    var totWf = 0; storeCorners.forEach(function(c){ totWf += wF[c.id]; });
+    // Compteur cumulatif : agentId -> cornerId -> nb de jours deja affectes
+    var fairCount = {};
+    agents.forEach(function(a){ fairCount[a.id] = {}; storeCorners.forEach(function(c){ fairCount[a.id][c.id] = 0; }); });
+    // Corners tries du moins attractif au plus attractif (le corner ingrat se
+    // distribue en premier, c'est lui qu'il faut equilibrer strictement).
+    var cornersByW = storeCorners.slice().sort(function(x,y){ return wF[x.id] - wF[y.id]; });
+
+    monthDays.forEach(function(d) {
+      if (d.closure) return;
+      var present = agents.filter(function(a) {
+        return poolOf(a) === 'sales' && assignedMap[d.ds].indexOf(a.id) !== -1;
+      });
+      if (!present.length) return;
+      var n = present.length;
+      // Besoin par corner ce jour = prorata trafic (au moins 1 si trafic > 0).
+      var need = {};
+      var assignedCount = 0;
+      storeCorners.forEach(function(c) {
+        need[c.id] = totWf > 0 ? Math.max((wF[c.id] > 0 ? 1 : 0), Math.round(n * wF[c.id] / totWf)) : 0;
+        assignedCount += need[c.id];
+      });
+      // Ajuste pour que la somme des besoins = nb de presents (surplus -> gros corner).
+      var big = cornersByW[cornersByW.length - 1];
+      if (big) need[big.id] += (n - assignedCount);
+      if (need[big.id] < 0) need[big.id] = 0;
+
+      // Attribution : pour chaque corner (ingrat d'abord), on prend les agents
+      // pas encore places ce jour qui ont le moins frequente ce corner.
+      var placedToday = {};
+      cornersByW.forEach(function(c) {
+        var slots = need[c.id];
+        if (slots <= 0) return;
+        var cand = present.filter(function(a){ return !placedToday[a.id]; })
+          .sort(function(x, y) {
+            var d1 = fairCount[x.id][c.id] - fairCount[y.id][c.id];
+            if (d1 !== 0) return d1;
+            return x.id < y.id ? -1 : 1;   // deterministe
+          });
+        for (var i = 0; i < slots && i < cand.length; i++) {
+          var a = cand[i];
+          placedToday[a.id] = true;
+          fairCount[a.id][c.id]++;
+          (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = c.id;
+        }
+      });
+      // Restes non places (arrondis) -> gros corner
+      present.forEach(function(a) {
+        if (!placedToday[a.id] && big) {
+          fairCount[a.id][big.id]++;
+          (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = big.id;
+        }
+      });
+      // Override manuel du manager : prime toujours.
+      present.forEach(function(a) {
+        var ov = (cornerOverrides[a.id] || {})[d.ds];
+        if (ov) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = ov;
+      });
+    });
+  }
+
+  if (!fairnessOn && storeCorners.length > 1) {
     var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
     var cornerWeight = {};
     storeCorners.forEach(function(c) {
@@ -5754,9 +5860,12 @@ function renderMonthlyPlanning() {
     // Demi-journee d'un part-time volant : moitie travaillee (am/pm).
     var half = (volantHalfDay[agent.id] || {})[day.ds];
     if (half) return { code: baseCode, tone: baseTone, half: half };
-    // Multi-corner : prefixe si l'agent depanne un corner != son corner d'attache.
+    // Multi-corner : en mode fairness on affiche toujours le corner du jour
+    // (tout le monde tourne, pas de corner d'attache). Sinon, prefixe seulement
+    // si l'agent depanne un corner different de son corner d'attache.
     var cid = (cornerAssign[agent.id] || {})[day.ds];
-    if (cid && cid !== agent.home_corner_id) {
+    var showCorner = cid && (fairnessOn || cid !== agent.home_corner_id);
+    if (showCorner) {
       var cc = cornerCodeOf(cid);
       if (cc) return { code: baseCode, tone: baseTone, corner: cc };
     }
