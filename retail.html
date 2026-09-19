@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V6.8</title>
+  <title>CORA Retail V6.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -540,8 +540,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
 /* --- pastilles de shift : code couleur lisible d'un coup d'oeil --- */
 .sh { display:inline-flex; align-items:center; justify-content:center;
-      min-width:26px; height:22px; padding:0 6px; border-radius:var(--r-sm);
-      font-size:11px; font-weight:600; letter-spacing:.01em; }
+      min-width:26px; height:22px; padding:0 5px; border-radius:var(--r-sm);
+      font-size:10.5px; font-weight:600; letter-spacing:0; white-space:nowrap; }
 .sh-cnr { position:relative; display:inline-flex; align-items:center; justify-content:center; }.sh-cnr-tag { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:1px;
   font-size:7.5px; font-weight:700; color:var(--accent-strong); letter-spacing:.02em; line-height:1; white-space:nowrap; }
 .mth-group td { background:var(--bg-base-2); border-bottom:1px solid var(--line); padding:0; }
@@ -1294,6 +1294,10 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'Off': '休み',
+    'Total present': '出勤合計',
+    'Opening': 'オープン',
+    'Closing': 'クローズ',
     'Max hours between shifts': '勤務間の最大時間',
     'Duration': '所要時間',
     'Corners': 'コーナー',
@@ -2612,7 +2616,7 @@ function confirmShiftCreation() {
   var maxDaily = regulations.max_daily_hours || 8;
 
   if (!code) { showToast('Enter a shift letter', 'error'); return; }
-  if (code.length > 2) { showToast('Use one or two characters', 'error'); return; }
+  if (code.length > 3) { showToast('Use up to three characters', 'error'); return; }
   var exists = false;
   ['sales','stock'].forEach(function(g) {
     (RETAIL_SHIFTS[g] || []).forEach(function(s) { if (s.code === code) exists = true; });
@@ -5743,16 +5747,20 @@ function renderMonthlyPlanning() {
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid];
     var planned = (shiftPlanByDay[day.ds] || {})[agent.id];
     var baseCode = planned || (grid[0] || { code: 'O' }).code;
+    // Tone du shift (open/mid/close/late) : sert a colorer la case de facon
+    // fiable meme si le code est personnalise (ex "10O", "21C").
+    var shiftDef = (grid || []).find(function(s){ return s.code === baseCode; });
+    var baseTone = shiftDef ? shiftDef.tone : null;
     // Demi-journee d'un part-time volant : moitie travaillee (am/pm).
     var half = (volantHalfDay[agent.id] || {})[day.ds];
-    if (half) return { code: baseCode, half: half };
+    if (half) return { code: baseCode, tone: baseTone, half: half };
     // Multi-corner : prefixe si l'agent depanne un corner != son corner d'attache.
     var cid = (cornerAssign[agent.id] || {})[day.ds];
     if (cid && cid !== agent.home_corner_id) {
       var cc = cornerCodeOf(cid);
-      if (cc) return { code: baseCode, corner: cc };
+      if (cc) return { code: baseCode, tone: baseTone, corner: cc };
     }
-    return { code: baseCode };
+    return { code: baseCode, tone: baseTone };
   }
 
   // Pastille HTML pour une lettre de shift
@@ -5783,9 +5791,11 @@ function renderMonthlyPlanning() {
     monthDays.forEach(function(d) {
       var res = shiftFor(a, d);
       agentRows[a.id].push({ d: d, res: res });
-      // compteurs RH
-      var isOpening = (res.code === 'O' || res.code === 'OS');
-      var isClosing = (res.code === 'C' || res.code === 'CS');
+      // compteurs RH : on se base sur le tone du shift (fiable meme si le code
+      // est personnalise, ex "10O"), avec repli sur le texte du code.
+      var isStockShift = /S$/.test(res.code || '');
+      var isOpening = res.tone ? (res.tone === 'open')  : (res.code === 'O' || res.code === 'OS');
+      var isClosing = res.tone ? (res.tone === 'close') : (res.code === 'C' || res.code === 'CS');
       var worked    = !res.special;  // pas off/leave/closed
       if (isOpening) rh[a.id].O++;
       if (isClosing) rh[a.id].C++;
@@ -5801,20 +5811,24 @@ function renderMonthlyPlanning() {
   agents.forEach(function(a) {
     agentRows[a.id].forEach(function(row) {
       if (!monthlyResult[row.d.ds]) monthlyResult[row.d.ds] = {};
-      monthlyResult[row.d.ds][a.id] = { code: row.res.code, special: row.res.special, half: row.res.half, corner: row.res.corner };
+      monthlyResult[row.d.ds][a.id] = { code: row.res.code, tone: row.res.tone, special: row.res.special, half: row.res.half, corner: row.res.corner };
     });
   });
 
-  // Totaux par jour (presents, ouvertures, fermetures)
-  var totPres = {}, totO = {}, totC = {};
+  // Totaux par jour (presents, ouvertures, fermetures, absents)
+  var totPres = {}, totO = {}, totC = {}, totOff = {};
   monthDays.forEach(function(d) {
-    totPres[d.ds] = 0; totO[d.ds] = 0; totC[d.ds] = 0;
+    totPres[d.ds] = 0; totO[d.ds] = 0; totC[d.ds] = 0; totOff[d.ds] = 0;
     agents.forEach(function(a) {
       var res = agentRows[a.id].find(function(r){return r.d.ds===d.ds;}).res;
       if (!res.special) totPres[d.ds]++;
+      else if (res.code === 'OFF' || res.code === 'A' || res.special === 'off') totOff[d.ds]++;
       // Le stock (OS/CS) ne compte pas dans le 70-30 de la boutique.
-      if (res.code === 'O') totO[d.ds]++;
-      if (res.code === 'C') totC[d.ds]++;
+      var isStk = /S$/.test(res.code || '');
+      if (!isStk && !res.special) {
+        if (res.tone ? (res.tone === 'open')  : (res.code === 'O')) totO[d.ds]++;
+        if (res.tone ? (res.tone === 'close') : (res.code === 'C')) totC[d.ds]++;
+      }
     });
   });
 
@@ -6085,6 +6099,7 @@ function renderMonthlyPlanning() {
   }
 
   html2 += sumRow('Total present', totPres, 'tot');
+  html2 += sumRow('Off',           totOff,  'tot');
   html2 += sumRow('Opening',       totO,    'tot');
   html2 += sumRow('Closing',       totC,    'tot tot-last');
 
@@ -7379,7 +7394,7 @@ init();
       <div class="form-grid">
         <div class="fld">
           <label>Letter</label>
-          <input type="text" id="sc-code" maxlength="2" placeholder="E"
+          <input type="text" id="sc-code" maxlength="3" placeholder="E"
                  style="text-transform:uppercase;font-weight:600">
         </div>
         <div class="fld"><label>Starts</label><select id="sc-start"></select></div>
