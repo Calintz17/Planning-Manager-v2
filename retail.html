@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V6.6</title>
+  <title>CORA Retail V6.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1200,6 +1200,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <div class="fld"><label>First name</label><input type="text" id="new-first-name" placeholder="First name"></div>
         <div class="fld"><label>Last name</label><input type="text" id="new-last-name" placeholder="Last name"></div>
         <div class="fld"><label>Status</label><select id="new-status"></select></div>
+        <div class="fld" id="new-corner-fld" style="display:none;"><label>Home corner</label><select id="new-corner"></select></div>
       </div>
       <div class="form-actions">
         <button class="btn btn-ghost" onclick="toggleAddAgentForm()">Cancel</button>
@@ -1302,6 +1303,10 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'Corners': 'コーナー',
+    'Add corner': 'コーナーを追加',
+    'Full name': '正式名称',
+    'Add break': '休憩を追加',
     'January': '1月',
     'February': '2月',
     'March': '3月',
@@ -1916,6 +1921,17 @@ function toggleAddAgentForm() {
   if (opening) {
     var sel = document.getElementById('new-status');
     if (sel && !sel.options.length) sel.innerHTML = statusOptionsHtml('SA');
+    // Dropdown corner d'appartenance, visible seulement en multi-corner.
+    var cfld = document.getElementById('new-corner-fld');
+    var csel = document.getElementById('new-corner');
+    if (storeCorners.length > 1) {
+      var opts = '<option value="">- none -</option>';
+      storeCorners.forEach(function(c) { opts += '<option value="' + c.id + '">' + esc(c.code) + '</option>'; });
+      csel.innerHTML = opts;
+      cfld.style.display = '';
+    } else {
+      cfld.style.display = 'none';
+    }
   }
 }
 
@@ -2250,6 +2266,66 @@ function addBreakRow() {
 function removeBreakRow(btn) {
   var tr = btn.closest('tr');
   if (tr) tr.remove();
+}
+
+function addCornerRow() {
+  var body = document.getElementById('corners-body');
+  if (!body) return;
+  var tr = document.createElement('tr');
+  tr.className = 'corner-row';
+  tr.dataset.id = 'new';
+  tr.innerHTML =
+    '<td><input type="text" class="corner-code" value="" maxlength="12" style="width:110px"></td>' +
+    '<td><input type="text" class="corner-name" value=""></td>' +
+    '<td><button class="btn btn-danger btn-sm" onclick="removeCornerRow(this)">\u2715</button></td>';
+  body.appendChild(tr);
+}
+
+function removeCornerRow(btn) {
+  var tr = btn.closest('tr');
+  if (tr) tr.remove();
+}
+
+// Sauve les corners de la boutique : cree les nouveaux, met a jour les codes/noms,
+// supprime ceux retires. Le dropdown de corner a la creation/edition d'agent est
+// alimente par cette liste.
+async function saveCorners() {
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#corners-body .corner-row'));
+  var keptIds = {};
+  var seen = {};
+  // Validation + upsert
+  for (var i = 0; i < rows.length; i++) {
+    var tr = rows[i];
+    var code = tr.querySelector('.corner-code').value.trim();
+    var name = tr.querySelector('.corner-name').value.trim();
+    if (!code) { showToast('Every corner needs a code', 'error'); return; }
+    if (seen[code.toLowerCase()]) { showToast('Duplicate corner code: ' + code, 'error'); return; }
+    seen[code.toLowerCase()] = true;
+    var id = tr.dataset.id;
+    if (id && id !== 'new') {
+      await sb.from('retail_corners').update({ code: code, full_name: name || code }).eq('id', id);
+      keptIds[id] = true;
+    } else {
+      var ins = await sb.from('retail_corners')
+        .insert({ store_id: currentStoreId, code: code, full_name: name || code, sort_order: i })
+        .select();
+      if (ins.data && ins.data[0]) keptIds[ins.data[0].id] = true;
+    }
+  }
+  // Supprimer les corners retires de la liste
+  for (var j = 0; j < storeCorners.length; j++) {
+    if (!keptIds[storeCorners[j].id]) {
+      await sb.from('retail_corners').delete().eq('id', storeCorners[j].id);
+    }
+  }
+  // Recharger les corners et rafraichir
+  var { data: cnrData } = await sb.from('retail_corners')
+    .select('*').eq('store_id', currentStoreId).order('sort_order');
+  storeCorners = cnrData || [];
+  showToast('Corners saved \u2713');
+  renderRegulations();
+  if (currentStoreId) renderMonthlyPlanning();
 }
 
 async function saveRegulations() {
@@ -2636,6 +2712,15 @@ function renderRegulations() {
       '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>' +
       '</tr>';
   });
+  let cornerRows = '';
+  storeCorners.forEach(function(c) {
+    cornerRows += '<tr class="corner-row" data-id="' + c.id + '">' +
+      '<td><input type="text" class="corner-code" value="' + esc(c.code || '') + '" maxlength="12" style="width:110px"></td>' +
+      '<td><input type="text" class="corner-name" value="' + esc(c.full_name || '') + '"></td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="removeCornerRow(this)">\u2715</button></td>' +
+      '</tr>';
+  });
+
   const closedTagsHtml = regulations.closed_dates.length
     ? regulations.closed_dates.map(function(d) {
         return '<span class="date-tag">' + formatDateDisplay(d) +
@@ -2701,14 +2786,24 @@ function renderRegulations() {
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
         '<h2 class="page-title">Break structure</h2>' +
         '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button></div>' +
-      '<div class="card-sub" style="margin-bottom:var(--s4)">Define breaks per shift. ' +
-        'The engine places each break in the lowest-traffic slot within its window.</div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>Name</th><th style="width:120px">Duration (min)</th>' +
         '<th style="width:130px">Window start</th><th style="width:130px">Window end</th>' +
         '<th style="width:52px"></th></tr></thead>' +
         '<tbody id="breaks-body">' + breakRows + '</tbody></table>' +
-      '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addBreakRow()">+ Add break</button>' +
+      '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addBreakRow()">+ ' + t('Add break') + '</button>' +
+    '</div>' +
+
+    // ── BUBBLE: Corners ──────────────────────────────────────────────────
+    '<div class="card">' +
+      '<div class="page-head" style="margin-bottom:var(--s3)">' +
+        '<h2 class="page-title">' + t('Corners') + '</h2>' +
+        '<button class="btn btn-save btn-sm" onclick="saveCorners()">' + t('Save') + '</button></div>' +
+      '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
+        '<th>' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
+        '<th style="width:52px"></th></tr></thead>' +
+        '<tbody id="corners-body">' + cornerRows + '</tbody></table>' +
+      '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addCornerRow()">+ ' + t('Add corner') + '</button>' +
     '</div>' +
 
     settingsExtra;
@@ -6274,10 +6369,16 @@ async function addAgent() {
   var pct    = 100;   // full-time par defaut, ajustable ensuite dans l'editeur
   if (!first || !last) { showToast('Enter first and last name', 'error'); return; }
 
+  var homeCorner = null;
+  if (storeCorners.length > 1) {
+    var cv = document.getElementById('new-corner');
+    homeCorner = (cv && cv.value) ? cv.value : null;
+  }
+
   showLoader();
   var res = await sb.from('retail_agents').insert({
     store_id: currentStoreId, first_name: first, last_name: last,
-    status: status, work_pct: pct, is_active: true
+    status: status, work_pct: pct, is_active: true, home_corner_id: homeCorner
   });
   hideLoader();
   if (res.error) { showToast('Failed to add agent', 'error'); return; }
