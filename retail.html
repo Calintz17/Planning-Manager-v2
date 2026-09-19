@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V6.7</title>
+  <title>CORA Retail V6.8</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -412,7 +412,7 @@ select:focus, input:focus { outline:none; border-color:var(--brand);
   border-radius:var(--r-pill); transition:.2s; cursor:pointer; }
 .toggle-slider:before { content:""; position:absolute; width:16px; height:16px; left:3px; bottom:3px;
   background:#fff; border-radius:50%; transition:.2s; box-shadow:var(--sh-1); }
-input:checked + .toggle-slider { background:var(--brand); }
+input:checked + .toggle-slider { background:var(--nav-active-bg); }
 input:checked + .toggle-slider:before { transform:translateX(18px); }
 .pt-type-switch { display:inline-flex; background:var(--bg-base-2); border:1px solid var(--line);
   border-radius:var(--r-md); padding:2px; gap:2px; }
@@ -448,7 +448,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 /* Status bar */
 #status-bar { margin-top:auto; background:var(--bg-base); border-top:1px solid var(--line);
   color:var(--tx-2); font-size:12px; padding:10px var(--s6);
-  display:flex; justify-content:space-between; align-items:center; }
+  display:flex; justify-content:flex-end; align-items:center; }
 
 /* Loader / toast */
 #loader { display:none; position:fixed; inset:0; background:rgba(255,255,255,.7);
@@ -664,6 +664,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
 /* settings */
 .set-rules { display:flex; flex-direction:column; gap:0; }
+.set-rules-2col { display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s6); }
+.day-open-lbl { margin-left:8px; font-size:12px; color:var(--tx-2); }
 .set-rule {
   display:grid; grid-template-columns:260px 120px 1fr;
   align-items:center; gap:var(--s3);
@@ -687,8 +689,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .hours-table tr:last-child td { border-bottom:none; }
 .hours-table tr.rest-day td { opacity:.5; }
 .hours-table tr.rest-day td:first-child { opacity:1; }
-.rest-badge { background:var(--bg-base-3); color:var(--tx-2); border-radius:var(--r-pill);
-  padding:2px 8px; font-size:10.5px; margin-left:var(--s2); }
 .toggle-label { font-size:12.5px; color:var(--tx-2); }
 
 /* settings : entete de carte + tables */
@@ -972,15 +972,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   color:var(--tx-2); cursor:pointer; transition:background .12s, color .12s; }
 .corner-tab:hover { background:var(--bg-base-3); }
 .corner-tab.active { background:var(--nav-active-bg); color:#fff; border-color:var(--nav-active-bg); }
-.thr-block { margin-top:var(--s5); padding-top:var(--s5); border-top:1px solid var(--line); }
-.thr-title { font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--tx-3); margin-bottom:var(--s3); }
-.thr-grid { display:flex; flex-wrap:wrap; gap:var(--s4); margin-bottom:var(--s4); }
-.thr-fld { display:flex; flex-direction:column; gap:4px; }
-.thr-fld label { font-size:11px; color:var(--tx-2); }
-.thr-fld input { width:80px; height:34px; padding:0 8px; border:1px solid var(--line);
-  border-radius:var(--r-sm); font-family:var(--font); font-size:13px; }
-.thr-unit { font-size:10px; color:var(--tx-3); }
 
 /* responsive */
 @media (max-width:900px) {
@@ -1296,13 +1287,15 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 
 </div><!-- /#main -->
 
-<div id="status-bar"><span id="status-text">Ready - select a store to begin</span><span id="status-sign">© Roman Inc.</span></div>
+<div id="status-bar"><span id="status-sign">© Roman Inc.</span></div>
 
 <script>
 // Dictionnaire de traduction (EN -> autres langues). JP valide par les equipes Japon.
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'Max hours between shifts': '勤務間の最大時間',
+    'Duration': '所要時間',
     'Corners': 'コーナー',
     'Add corner': 'コーナーを追加',
     'Full name': '正式名称',
@@ -1727,7 +1720,9 @@ let regulations = {
   saturday_rest:   true,
   sunday_rest:     true,
   weekly_hours:    40,
-  max_daily_hours: 8,
+  max_daily_hours: 8.5,
+  max_days: 5,
+  rest_gap_hours: 11,
   trend_pct:       0,
   aht_tasks: {
     FRAUD:        10,
@@ -1835,7 +1830,7 @@ function updateWeekLabel() {
 // ── UI HELPERS ────────────────────────────────────────────────────────────
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
-function setStatus(msg) { document.getElementById('status-text').textContent = msg; }
+function setStatus(msg) { var el = document.getElementById('status-text'); if (el) el.textContent = msg; }
 
 function showToast(msg, type) {
   type = type || 'success';
@@ -2187,7 +2182,9 @@ async function loadRegulations() {
     saturday_rest:   def.saturday_rest,
     sunday_rest:     def.sunday_rest,
     weekly_hours:    def.weekly_hours,
-    max_daily_hours: 8,
+    max_daily_hours: 8.5,
+    max_days: 5,
+    rest_gap_hours: 11,
     trend_pct:       0,
     aht_tasks: {
       FRAUD: 10, CALL: 10, CHAT: 8, MAIL: 5, CLIENTELING: 15, 'BACK-OFFICE': 10,
@@ -2207,7 +2204,9 @@ async function loadRegulations() {
       case 'saturday_rest':   regulations.saturday_rest = row.rule_value === 'true'; break;
       case 'sunday_rest':     regulations.sunday_rest   = row.rule_value === 'true'; break;
       case 'weekly_hours':    regulations.weekly_hours  = parseFloat(row.rule_value); break;
-      case 'max_daily_hours': regulations.max_daily_hours = parseFloat(row.rule_value) || 8; break;
+      case 'max_daily_hours': regulations.max_daily_hours = parseFloat(row.rule_value) || 8.5; break;
+      case 'max_days':        regulations.max_days      = parseInt(row.rule_value, 10) || 5; break;
+      case 'rest_gap_hours':  regulations.rest_gap_hours = parseFloat(row.rule_value) || 11; break;
       case 'trend_pct':       regulations.trend_pct     = parseFloat(row.rule_value) || 0; break;
       case 'aht_tasks':
         try { regulations.aht_tasks = JSON.parse(row.rule_value); } catch(e) {}
@@ -2286,6 +2285,17 @@ function removeCornerRow(btn) {
   if (tr) tr.remove();
 }
 
+// Slider open/close d'un jour dans la table Operating hours : grise la ligne
+// et met a jour le libelle. Pour samedi/dimanche, pilote le repos hebdo.
+function toggleDayOpen(cb) {
+  var tr = cb.closest('tr');
+  if (!tr) return;
+  var closed = !cb.checked;
+  tr.classList.toggle('rest-day', closed);
+  var lbl = tr.querySelector('.day-open-lbl');
+  if (lbl) lbl.textContent = closed ? 'Closed' : 'Open';
+}
+
 // Sauve les corners de la boutique : cree les nouveaux, met a jour les codes/noms,
 // supprime ceux retires. Le dropdown de corner a la creation/edition d'agent est
 // alimente par cette liste.
@@ -2331,10 +2341,17 @@ async function saveCorners() {
 async function saveRegulations() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
 
-  regulations.saturday_rest = document.getElementById('reg-saturday').checked;
-  regulations.sunday_rest   = document.getElementById('reg-sunday').checked;
+  // Statut open/close par jour (slider dans Operating hours).
+  var satTog = document.querySelector('.day-open-toggle[data-day="sat"]');
+  var sunTog = document.querySelector('.day-open-toggle[data-day="sun"]');
+  if (satTog) regulations.saturday_rest = !satTog.checked;
+  if (sunTog) regulations.sunday_rest   = !sunTog.checked;
 
   // Editable labor rules
+  const maxDaysEl = document.getElementById('reg-max-days');
+  if (maxDaysEl) { var mdays = parseInt(maxDaysEl.value, 10); if (mdays > 0) regulations.max_days = mdays; }
+  const restGapEl = document.getElementById('reg-rest-gap');
+  if (restGapEl) { var rg = parseFloat(restGapEl.value); if (rg >= 0) regulations.rest_gap_hours = rg; }
   const maxDailyEl = document.getElementById('reg-max-daily');
   if (maxDailyEl) {
     var md = parseFloat(maxDailyEl.value);
@@ -2344,6 +2361,25 @@ async function saveRegulations() {
   if (weeklyEl) {
     var wh = parseFloat(weeklyEl.value);
     if (wh > 0) regulations.weekly_hours = wh;
+  }
+
+  // Coverage thresholds (integres dans Labor rules)
+  var thrOpen = document.getElementById('thr-open');
+  var thrClose = document.getElementById('thr-close');
+  var thrRatio = document.getElementById('thr-ratio');
+  if (thrOpen || thrClose || thrRatio) {
+    if (!storeSettings) storeSettings = {};
+    if (thrOpen)  { var mo = parseInt(thrOpen.value,10);  storeSettings.min_opening  = (isNaN(mo)||mo<0)?1:mo; }
+    if (thrClose) { var mc = parseInt(thrClose.value,10); storeSettings.min_closing  = (isNaN(mc)||mc<0)?1:mc; }
+    if (thrRatio) { var rr = parseInt(thrRatio.value,10); storeSettings.closing_ratio = (isNaN(rr)||rr<0||rr>100)?0.70:rr/100; }
+    await sb.from('retail_store_settings').upsert({
+      store_id: currentStoreId,
+      saturday_open: !regulations.saturday_rest,
+      sunday_open: !regulations.sunday_rest,
+      day_hours: regulations.day_hours || {},
+      hourly_curve: storeSettings.hourly_curve || null,
+      min_opening: storeSettings.min_opening, min_closing: storeSettings.min_closing, closing_ratio: storeSettings.closing_ratio
+    }, { onConflict: 'store_id' });
   }
 
   let valid = true;
@@ -2375,6 +2411,8 @@ async function saveRegulations() {
     { store_id: currentStoreId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
     { store_id: currentStoreId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
     { store_id: currentStoreId, rule_key: 'max_daily_hours', rule_value: String(regulations.max_daily_hours) },
+    { store_id: currentStoreId, rule_key: 'max_days',        rule_value: String(regulations.max_days || 5) },
+    { store_id: currentStoreId, rule_key: 'rest_gap_hours',  rule_value: String(regulations.rest_gap_hours || 11) },
     { store_id: currentStoreId, rule_key: 'trend_pct',       rule_value: String(regulations.trend_pct) },
     { store_id: currentStoreId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
     { store_id: currentStoreId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
@@ -2491,18 +2529,6 @@ function buildShiftSettingsHtml() {
       '<button class="btn btn-save btn-sm" onclick="saveShiftConfig()">Save</button></div>' +
     block('sales', 'Sales shifts') +
     block('stock', 'Stock shifts') +
-    '<div class="thr-block">' +
-      '<div class="thr-title">Coverage thresholds</div>' +
-      '<div class="thr-grid">' +
-        '<div class="thr-fld"><label>Opening minimum</label>' +
-          '<input type="number" id="thr-open" min="0" max="20" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '"><span class="thr-unit">Client Advisors</span></div>' +
-        '<div class="thr-fld"><label>Closing minimum</label>' +
-          '<input type="number" id="thr-close" min="0" max="20" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '"><span class="thr-unit">Client Advisors</span></div>' +
-        '<div class="thr-fld"><label>Closing ratio</label>' +
-          '<input type="number" id="thr-ratio" min="0" max="100" step="5" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '"><span class="thr-unit">% on closing</span></div>' +
-      '</div>' +
-      '<button class="btn btn-save btn-sm" onclick="saveThresholds()">Save thresholds</button>' +
-    '</div>' +
     '</div>';
 }
 
@@ -2687,18 +2713,19 @@ function renderRegulations() {
   DAY_KEYS.forEach(function(key, i) {
     const h = (regulations.day_hours && regulations.day_hours[key])
       ? regulations.day_hours[key] : { open: 10, close: 18 };
-    const isSat     = i === 5;
-    const isSun     = i === 6;
-    const isRestDay = (isSat && regulations.saturday_rest) || (isSun && regulations.sunday_rest);
-    const restNote  = isRestDay ? '<span class="rest-badge">rest day</span>' : '';
-    const trClass   = isRestDay ? ' class="rest-day"' : '';
+    const isSat = i === 5;
+    const isSun = i === 6;
+    const isClosed = (isSat && regulations.saturday_rest) || (isSun && regulations.sunday_rest);
+    const trClass = isClosed ? ' class="rest-day"' : '';
     var durH = Math.max(0, h.close - h.open);
     hoursRows += '<tr' + trClass + ' data-day="' + key + '">' +
-      '<td style="font-weight:600">' + DAY_NAMES[i] + ' ' + restNote + '</td>' +
+      '<td style="font-weight:600">' + DAY_NAMES[i] + '</td>' +
+      '<td><label class="toggle"><input type="checkbox" class="day-open-toggle" data-day="' + key + '"' + (isClosed ? '' : ' checked') + ' onchange="toggleDayOpen(this)">' +
+        '<span class="toggle-slider"></span></label>' +
+        '<span class="day-open-lbl">' + (isClosed ? 'Closed' : 'Open') + '</span></td>' +
       '<td>' + hourSelectHtml('reg-open-' + key, h.open) + '</td>' +
       '<td>' + hourSelectHtml('reg-close-' + key, h.close) + '</td>' +
       '<td>' + durH + 'h</td>' +
-      '<td></td><td></td>' +
       '</tr>';
   });
 
@@ -2752,21 +2779,21 @@ function renderRegulations() {
         '<h2 class="page-title">Labor rules</h2>' +
         '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button>' +
       '</div>' +
-      '<div class="set-rules">' +
+      '<div class="set-rules set-rules-2col">' +
         '<div class="set-rule"><span class="set-rule-lbl">Max working days / week</span>' +
-          '<span class="set-rule-ro">5 days</span><span></span></div>' +
+          '<input type="number" id="reg-max-days" class="set-rule-input" value="' + (regulations.max_days||5) + '" min="1" max="7" step="1"><span class="set-rule-unit">d</span></div>' +
         '<div class="set-rule"><span class="set-rule-lbl">Max hours / day</span>' +
-          '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8) + '" min="1" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
+          '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8.5) + '" min="1" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
         '<div class="set-rule"><span class="set-rule-lbl">Max hours / week</span>' +
           '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5"><span class="set-rule-unit">h</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">SATURDAY</span>' +
-          '<label class="toggle"><input type="checkbox" id="reg-saturday"' + (regulations.saturday_rest ? ' checked' : '') + '>' +
-          '<span class="toggle-slider"></span></label>' +
-          '<span class="toggle-label" id="sat-label">' + (regulations.saturday_rest ? 'Store is closed' : 'Store is open') + '</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">SUNDAY</span>' +
-          '<label class="toggle"><input type="checkbox" id="reg-sunday"' + (regulations.sunday_rest ? ' checked' : '') + '>' +
-          '<span class="toggle-slider"></span></label>' +
-          '<span class="toggle-label" id="sun-label">' + (regulations.sunday_rest ? 'Store is closed' : 'Store is open') + '</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Max hours between shifts</span>' +
+          '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours||11) + '" min="0" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Opening minimum</span>' +
+          '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1"><span class="set-rule-unit">CA</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Closing minimum</span>' +
+          '<input type="number" id="thr-close" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '" min="0" max="20" step="1"><span class="set-rule-unit">CA</span></div>' +
+        '<div class="set-rule"><span class="set-rule-lbl">Closing ratio</span>' +
+          '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5"><span class="set-rule-unit">%</span></div>' +
       '</div>' +
     '</div>' +
 
@@ -2775,9 +2802,9 @@ function renderRegulations() {
       '<div class="page-head" style="margin-bottom:0">' +
         '<h2 class="page-title">Operating hours</h2>' +
         '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button></div>' +
-      '<table class="tbl tbl-framed set-tbl" style="margin-top:var(--s5)"><thead><tr>' +
-        '<th style="width:120px">Day</th><th>Starts</th><th>Ends</th>' +
-        '<th style="width:110px">Duration</th><th style="width:130px"></th><th style="width:52px"></th>' +
+      '<table class="tbl tbl-framed set-tbl hours-table" style="margin-top:var(--s5)"><thead><tr>' +
+        '<th style="width:120px">Day</th><th style="width:120px">Status</th><th>Starts</th><th>Ends</th>' +
+        '<th style="width:110px">Duration</th>' +
       '</tr></thead><tbody>' + hoursRows + '</tbody></table>' +
     '</div>' +
 
@@ -2807,35 +2834,6 @@ function renderRegulations() {
     '</div>' +
 
     settingsExtra;
-
-  // Toggle reactivity
-  function updateHoursTableReactivity() {
-    var satChecked = document.getElementById('reg-saturday').checked;
-    var sunChecked = document.getElementById('reg-sunday').checked;
-    var satRow = document.querySelector('.hours-table tr[data-day="sat"]');
-    var sunRow = document.querySelector('.hours-table tr[data-day="sun"]');
-    if (satRow) {
-      satRow.classList.toggle('rest-day', satChecked);
-      var satBadge = satRow.querySelector('.rest-badge');
-      if (satBadge) satBadge.style.display = satChecked ? '' : 'none';
-    }
-    if (sunRow) {
-      sunRow.classList.toggle('rest-day', sunChecked);
-      var sunBadge = sunRow.querySelector('.rest-badge');
-      if (sunBadge) sunBadge.style.display = sunChecked ? '' : 'none';
-    }
-  }
-
-  document.getElementById('reg-saturday').addEventListener('change', function() {
-    document.getElementById('sat-label').textContent = this.checked
-      ? 'Store is closed' : 'Store is open';
-    updateHoursTableReactivity();
-  });
-  document.getElementById('reg-sunday').addEventListener('change', function() {
-    document.getElementById('sun-label').textContent = this.checked
-      ? 'Store is closed' : 'Store is open';
-    updateHoursTableReactivity();
-  });
 }
 
 // ── LOAD WEEK DATA ────────────────────────────────────────────────────────
@@ -3032,38 +3030,12 @@ async function loadStoreSettings() {
   }
 }
 
-async function saveThresholds() {
+async function saveStoreSettings() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
-  var mo = parseInt(document.getElementById('thr-open').value, 10);
-  var mc = parseInt(document.getElementById('thr-close').value, 10);
-  var rr = parseInt(document.getElementById('thr-ratio').value, 10);
-  if (isNaN(mo) || mo < 0) mo = 1;
-  if (isNaN(mc) || mc < 0) mc = 1;
-  if (isNaN(rr) || rr < 0 || rr > 100) rr = 70;
   var row = {
     store_id: currentStoreId,
     saturday_open: !regulations.saturday_rest,
     sunday_open:   !regulations.sunday_rest,
-    day_hours: regulations.day_hours || {},
-    hourly_curve: (storeSettings && storeSettings.hourly_curve) || null,
-    min_opening: mo, min_closing: mc, closing_ratio: rr / 100
-  };
-  var res = await sb.from('retail_store_settings').upsert(row, { onConflict: 'store_id' });
-  if (res.error) { showToast('Save failed', 'error'); return; }
-  if (!storeSettings) storeSettings = {};
-  storeSettings.min_opening = mo; storeSettings.min_closing = mc; storeSettings.closing_ratio = rr / 100;
-  showToast('Thresholds saved \u2713');
-  if (currentStoreId) renderMonthlyPlanning();
-}
-
-async function saveStoreSettings() {
-  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
-  var satEl = document.getElementById('reg-saturday');
-  var sunEl = document.getElementById('reg-sunday');
-  var row = {
-    store_id: currentStoreId,
-    saturday_open: satEl ? !satEl.checked : true,
-    sunday_open:   sunEl ? !sunEl.checked : false,
     day_hours: regulations.day_hours || {},
     hourly_curve: (storeSettings && storeSettings.hourly_curve) || null,
     min_opening: (storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1,
