@@ -55,3 +55,29 @@
 | CORA_V4.5 | Part-time volant : the flexible one. Engine spreads them on the busy days at their %, half a day lands when the count says so. |
 | CORA_V4.6 | Volant polish : slider Fixed / Flexible in the agent editor, % only shown for part-timers, half-cell cut diagonally, intraday half-shift. |
 | CORA_V4.6.1 | Cleanup pass : killed the ghost onboarding popup, de-robot-ified the comments, checked the whole thing holds together as a system. Diagonal half-cell now follows O / C. |
+| CORA_V4.7 | Traffic tab : added N-2 column (N-2 / N-1 / This year / Variation). |
+| CORA_V4.8 | Dashboard shows dates + refreshes on live absence. Lunch breaks keep the floor covered. 70-30 split separately for managers and sellers. |
+| CORA_V4.9 | Corner tag format on the shift cell (dormant until engine 2). |
+| CORA_V5.0 | Multi-corner : corners in base, home corner + skills on agents, engine 2 assigns vendors to corners. |
+| CORA_V5.1 | Engine 2 rebalancing : pro-rata store traffic vs manager plan, minimum transfers. Corner bubbles + per-corner dashboard count. |
+| CORA_V5.2 | Manual corner override per cell. Scope saved (F5 keeps the store). Stores/countries sorted A-Z. |
+| CORA_V5.3 | Removed shift + weekend preferences. Absence = one reason. |
+| CORA_V5.4 | Calendar moved to burger menu (Bank Holidays / Absence). Intraday grouped by corner. Excel shows corners. |
+| CORA_V5.5 | Engine made deterministic (same input = same planning). 3-letter shift codes start here. |
+| CORA_V5.6 | Renamed roles to official titles + Grand Vendeur / Stock Manager / Stock Controller. Saturday/Sunday open-closed wording. |
+| CORA_V5.7 | Shifts past midnight (18:00 -> 02:00). Part-time with fixed days but no fixed hours (engine picks the shift). |
+| CORA_V5.8 | PDF export button on monthly and intraday. |
+| CORA_V6.0 | Multilingual EN / JP. Language dropdown top right, choice remembered. |
+| CORA_V6.1 | Coverage thresholds per store (min open / min close / ratio). Past days frozen : settings changes only affect today onward. |
+| CORA_V6.2 | Corner tabs on monthly + intraday : each tab = one corner's people + shared stock + management. |
+| CORA_V6.3 | Agent popup scrolls (Save always reachable). Mobile store gate fixed. |
+| CORA_V6.4 | PDF export redone : matches the site 1:1, follows the active tab. |
+| CORA_V6.5 | Excel follows the active tab. Absences from monthly sync to the Calendar. |
+| CORA_V6.6 | Fixed first-time store save failing (Japan). |
+| CORA_V6.7 | Corners fully custom per store (named in Settings). Home corner set at agent creation. |
+| CORA_V6.8 | Labor rules : editable max days, max hours between shifts, max hours/day (8h30 default), coverage inline. Open/close slider per day. |
+| CORA_V6.9 | Off count row in the monthly recap. Shift codes up to 3 chars, colors/counters read the shift tone. |
+| CORA_V7.0 | Fairness rotation toggle : ignore home corners, everyone rotates fair on the low corner (traffic still drives headcount). |
+| CORA_V7.1 | Consecutive days off : groups isolated rest days when it doesn't change daily headcount. |
+| CORA_V7.2 | Intraday reinforcement toggle : engine proposes moving one agent 1h to the busy corner at peak. |
+| CORA_V7.3 | Code cleanup + fixed settings save silently resetting the fairness / reinforcement toggles. |
