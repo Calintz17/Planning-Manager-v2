@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.1</title>
+  <title>CORA Retail V7.3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -966,6 +966,13 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-cnr-opt.ce-reset { color:var(--tx-3); font-style:italic; font-weight:400; }
 .ae-fixed-note { font-size:11px; color:var(--tx-3); line-height:1.4; display:block; }
 .corner-tabs { display:flex; gap:2px; flex-wrap:wrap; margin-bottom:var(--s4); }
+.reinf-bar { background:var(--info-soft); border:1px solid var(--info-tx); border-radius:var(--r-md);
+  padding:var(--s3) var(--s4); margin:var(--s3) 0 var(--s4); }
+.reinf-title { font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--info-tx); margin-bottom:var(--s2); }
+.reinf-item { display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
+  padding:4px 0; }
+.reinf-txt { font-size:12.5px; color:var(--tx-1); }
 .corner-tabs:empty { display:none; }
 .corner-tab { padding:6px 14px; border:1px solid var(--line); background:var(--bg-base);
   border-radius:var(--r-sm); font-family:var(--font); font-size:12px; font-weight:600;
@@ -1294,6 +1301,10 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'Intraday reinforcement': '日中応援',
+    'On - auto proposals': 'オン - 自動提案',
+    'Off': 'オフ',
+    'Reinforcement proposals': '応援提案',
     'Fairness rotation': '公平ローテーション',
     'On - everyone rotates': 'オン - 全員ローテーション',
     'Off - home corners': 'オフ - 担当コーナー',
@@ -1693,6 +1704,7 @@ let currentCountryIso = '';
 let currentIntradayDate = null;
 let intradayOverrides = {};   // { 'agentId:blockType': start_min } pour le jour affiche
 let addedMissions = {};       // { agentId: [{id, type, start}] } missions ajoutees a la main
+let dismissedReinf = {};      // { 'ds:agentId': true } propositions de renfort ecartees (session)
 let countries         = [];   // pays de la region courante
 let stores            = [];   // boutiques du pays courant
 let currentCountryId  = null;
@@ -1837,7 +1849,6 @@ function updateWeekLabel() {
 // ── UI HELPERS ────────────────────────────────────────────────────────────
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
-function setStatus(msg) { var el = document.getElementById('status-text'); if (el) el.textContent = msg; }
 
 function showToast(msg, type) {
   type = type || 'success';
@@ -1962,7 +1973,6 @@ async function init() {
   if (cSel) cSel.addEventListener('change', onCountryChange);
   var sSel = document.getElementById('store-select');
   if (sSel) sSel.addEventListener('change', onStoreChange);
-  setStatus('Ready - select a store to begin');
   if (await restoreScope()) return;
   openStoreGate();
 }
@@ -2143,7 +2153,7 @@ async function onStoreChange() {
   currentStoreName = st ? st.name : '';
   currentStoreCity = st ? (st.city || st.location || '') : '';
 
-  if (!currentStoreId) { updateStatusBar(); return; }
+  if (!currentStoreId) return;
 
   currentCornerView = null;
   saveScope();
@@ -2155,28 +2165,12 @@ async function onStoreChange() {
   await loadHighlights();
   await loadWeekData();
   if (!currentIntradayDate) currentIntradayDate = toDateStr(new Date());
-  updateStatusBar();
   renderMonthlyPlanning();
   renderAgents();
   renderDashboard();
 }
 
 // Libelle complet du perimetre courant, utilise dans la barre d'etat
-function scopeLabel() {
-  var parts = [];
-  if (currentRegionName) parts.push(currentRegionName.split(' \u00b7 ')[0]);
-  var c = countries.find(function(x) { return x.id === currentCountryId; });
-  if (c) parts.push(c.name);
-  if (currentStoreName) parts.push(currentStoreName);
-  return parts.join(' \u00b7 ');
-}
-
-function updateStatusBar() {
-  var label = scopeLabel();
-  setStatus((label || 'Ready') + ' \u00b7 W' + getWeekNumber(currentWeekMonday) +
-            ' \u00b7 ' + agents.length + ' agents');
-}
-
 // ── LOAD REGULATIONS ──────────────────────────────────────────────────────
 async function loadRegulations() {
   const { data, error } = await sb
@@ -2303,14 +2297,12 @@ function toggleDayOpen(cb) {
   if (lbl) lbl.textContent = closed ? 'Closed' : 'Open';
 }
 
-async function toggleFairness(cb) {
-  if (!currentStoreId) return;
-  var on = cb.checked;
-  var lbl = document.getElementById('fairness-lbl');
-  if (lbl) lbl.textContent = on ? t('On - everyone rotates') : t('Off - home corners');
+// Upsert des reglages boutique depuis l'etat courant (storeSettings + regulations).
+// Centralise pour eviter la duplication entre les toggles et les saves.
+async function persistStoreSettings() {
+  if (!currentStoreId) return { error: 'no store' };
   if (!storeSettings) storeSettings = {};
-  storeSettings.fairness_rotation = on;
-  await sb.from('retail_store_settings').upsert({
+  return await sb.from('retail_store_settings').upsert({
     store_id: currentStoreId,
     saturday_open: !regulations.saturday_rest,
     sunday_open: !regulations.sunday_rest,
@@ -2319,10 +2311,39 @@ async function toggleFairness(cb) {
     min_opening: storeSettings.min_opening != null ? storeSettings.min_opening : 1,
     min_closing: storeSettings.min_closing != null ? storeSettings.min_closing : 1,
     closing_ratio: storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70,
-    fairness_rotation: on
+    fairness_rotation: !!storeSettings.fairness_rotation,
+    intraday_reinforcement: !!storeSettings.intraday_reinforcement
   }, { onConflict: 'store_id' });
+}
+
+async function toggleFairness(cb) {
+  if (!currentStoreId) return;
+  var on = cb.checked;
+  var lbl = document.getElementById('fairness-lbl');
+  if (lbl) lbl.textContent = on ? t('On - everyone rotates') : t('Off - home corners');
+  if (!storeSettings) storeSettings = {};
+  storeSettings.fairness_rotation = on;
+  await persistStoreSettings();
   showToast('Saved \u2713');
   renderMonthlyPlanning();
+}
+
+function dismissReinf(agentId) {
+  if (!currentIntradayDate) return;
+  dismissedReinf[currentIntradayDate + ':' + agentId] = true;
+  renderIntraday(currentIntradayDate);
+}
+
+async function toggleReinforcement(cb) {
+  if (!currentStoreId) return;
+  var on = cb.checked;
+  var lbl = document.getElementById('reinf-lbl');
+  if (lbl) lbl.textContent = on ? t('On - auto proposals') : t('Off');
+  if (!storeSettings) storeSettings = {};
+  storeSettings.intraday_reinforcement = on;
+  await persistStoreSettings();
+  showToast('Saved \u2713');
+  if (currentIntradayDate) renderIntraday(currentIntradayDate);
 }
 
 // Sauve les corners de la boutique : cree les nouveaux, met a jour les codes/noms,
@@ -2401,14 +2422,7 @@ async function saveRegulations() {
     if (thrOpen)  { var mo = parseInt(thrOpen.value,10);  storeSettings.min_opening  = (isNaN(mo)||mo<0)?1:mo; }
     if (thrClose) { var mc = parseInt(thrClose.value,10); storeSettings.min_closing  = (isNaN(mc)||mc<0)?1:mc; }
     if (thrRatio) { var rr = parseInt(thrRatio.value,10); storeSettings.closing_ratio = (isNaN(rr)||rr<0||rr>100)?0.70:rr/100; }
-    await sb.from('retail_store_settings').upsert({
-      store_id: currentStoreId,
-      saturday_open: !regulations.saturday_rest,
-      sunday_open: !regulations.sunday_rest,
-      day_hours: regulations.day_hours || {},
-      hourly_curve: storeSettings.hourly_curve || null,
-      min_opening: storeSettings.min_opening, min_closing: storeSettings.min_closing, closing_ratio: storeSettings.closing_ratio
-    }, { onConflict: 'store_id' });
+    await persistStoreSettings();
   }
 
   let valid = true;
@@ -2859,6 +2873,10 @@ function renderRegulations() {
         '<label class="toggle"><input type="checkbox" id="fairness-toggle"' + ((storeSettings && storeSettings.fairness_rotation) ? ' checked' : '') + ' onchange="toggleFairness(this)">' +
         '<span class="toggle-slider"></span></label>' +
         '<span class="day-open-lbl" id="fairness-lbl">' + ((storeSettings && storeSettings.fairness_rotation) ? t('On - everyone rotates') : t('Off - home corners')) + '</span></div>' +
+      '<div class="set-rule" style="margin-bottom:var(--s3)"><span class="set-rule-lbl">' + t('Intraday reinforcement') + '</span>' +
+        '<label class="toggle"><input type="checkbox" id="reinf-toggle"' + ((storeSettings && storeSettings.intraday_reinforcement) ? ' checked' : '') + ' onchange="toggleReinforcement(this)">' +
+        '<span class="toggle-slider"></span></label>' +
+        '<span class="day-open-lbl" id="reinf-lbl">' + ((storeSettings && storeSettings.intraday_reinforcement) ? t('On - auto proposals') : t('Off')) + '</span></div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
         '<th style="width:52px"></th></tr></thead>' +
@@ -2872,7 +2890,6 @@ function renderRegulations() {
 // ── LOAD WEEK DATA ────────────────────────────────────────────────────────
 async function loadWeekData() {
   showLoader();
-  setStatus('Loading ' + currentStoreName + '\u2026');
   const days      = getWeekDays(currentWeekMonday);
   const startDate = toDateStr(days[0]);
   const endDate   = toDateStr(days[6]);
@@ -2930,7 +2947,6 @@ async function loadWeekData() {
   await loadTraffic(currentWeekMonday.getFullYear());
 
 
-  updateStatusBar();
   renderPlanning();
   renderAgents();
 }
@@ -3055,6 +3071,7 @@ async function loadStoreSettings() {
   storeSettings.min_closing  = storeSettings.min_closing  != null ? storeSettings.min_closing  : 1;
   storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70;
   storeSettings.fairness_rotation = !!storeSettings.fairness_rotation;
+  storeSettings.intraday_reinforcement = !!storeSettings.intraday_reinforcement;
 
   // La boutique pilote l'ouverture du week-end
   regulations.saturday_rest = !storeSettings.saturday_open;
@@ -3066,20 +3083,8 @@ async function loadStoreSettings() {
 
 async function saveStoreSettings() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
-  var row = {
-    store_id: currentStoreId,
-    saturday_open: !regulations.saturday_rest,
-    sunday_open:   !regulations.sunday_rest,
-    day_hours: regulations.day_hours || {},
-    hourly_curve: (storeSettings && storeSettings.hourly_curve) || null,
-    min_opening: (storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1,
-    min_closing: (storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1,
-    closing_ratio: (storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70
-  };
-  var res = await sb.from('retail_store_settings')
-    .upsert(row, { onConflict: 'store_id' });
-  if (res.error) { showToast('Store settings not saved', 'error'); return; }
-  storeSettings = row;
+  var res = await persistStoreSettings();
+  if (res && res.error) { showToast('Store settings not saved', 'error'); return; }
 }
 
 async function loadShiftConfig() {
@@ -3892,6 +3897,67 @@ function renderIntraday(ds) {
 
   var curve = (storeSettings && storeSettings.hourly_curve) || null;
 
+  // ── Moteur de RENFORT intraday (department stores multi-corner) ────────────
+  // Detecte les heures ou un gros corner manque de monde alors qu'un petit
+  // corner a du surplus, et propose de deplacer 1 agent en renfort >= 1h, en
+  // milieu de journee seulement (l'agent doit pouvoir assurer O/C sur son
+  // corner). Ne prend jamais un agent si son corner tombe sous son plancher.
+  var reinforcements = [];
+  if (storeSettings && storeSettings.intraday_reinforcement && storeCorners.length > 1 && curve && curve.length) {
+    var refYr = monthlyRef.getFullYear(), refMr = monthlyRef.getMonth() + 1;
+    function cwR(cid){ var t = cornerTrafficMonthly[cid+'|'+refYr+'|'+refMr]; return t ? (t.last_year||t.n_2||0) : 0; }
+    // corner effectif d'un agent ce jour (prefixe monthly sinon home)
+    function effCornerId(a){
+      var r = (monthlyResult[ds] || {})[a.id];
+      if (r && r.corner) { for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id; }
+      return a.home_corner_id || null;
+    }
+    // agents vendeurs presents groupes par corner
+    var byC = {}; storeCorners.forEach(function(c){ byC[c.id]=[]; });
+    working.forEach(function(a){ if (poolOf(a)==='sales'){ var cid=effCornerId(a); if (cid&&byC[cid]) byC[cid].push(a); } });
+    // fenetre milieu de journee : on evite la 1ere et la derniere heure
+    var midStart = Math.ceil(openH) + 1, midEnd = Math.floor(closeH) - 1;
+    var minOpen = (storeSettings.min_opening != null) ? storeSettings.min_opening : 1;
+    var totCw = 0; storeCorners.forEach(function(c){ totCw += cwR(c.id); });
+    // charge horaire relative de la boutique (part du pic)
+    function hourWeight(h){
+      var idx = Math.round(h) - Math.floor(openH);
+      if (idx < 0 || idx >= curve.length) return 0;
+      return curve[idx] || 0;
+    }
+    var peakH = 0, peakVal = 0;
+    for (var h = midStart; h <= midEnd; h++) { var w = hourWeight(h); if (w > peakVal) { peakVal = w; peakH = h; } }
+    // A l'heure de pic : le plus gros corner sous-dote emprunte au plus petit sur-dote.
+    if (peakVal > 0 && totCw > 0) {
+      var sorted = storeCorners.slice().sort(function(x,y){ return cwR(y.id) - cwR(x.id); });
+      var big = sorted[0], small = sorted[sorted.length - 1];
+      if (big && small && big.id !== small.id) {
+        var bigCount = (byC[big.id]||[]).length, smallCount = (byC[small.id]||[]).length;
+        // Au pic horaire, le gros corner a besoin de PLUS que sa moyenne : on
+        // majore sa cible par l'intensite du pic vs la moyenne de la journee.
+        var avgW = 0, nH = 0;
+        for (var hh = Math.ceil(openH); hh < Math.floor(closeH); hh++) { avgW += hourWeight(hh); nH++; }
+        avgW = nH ? avgW / nH : 1;
+        var peakFactor = avgW > 0 ? (peakVal / avgW) : 1;   // >1 au pic
+        var totalPresent = working.filter(function(a){return poolOf(a)==='sales';}).length;
+        var bigBase = totalPresent * cwR(big.id) / totCw;
+        var bigPeakTarget = Math.round(bigBase * peakFactor);
+        // renfort si au pic le gros manque de monde ET le petit garde son plancher
+        if (bigCount < bigPeakTarget && smallCount > minOpen) {
+          var donor = (byC[small.id]||[])[smallCount - 1];
+          if (donor) {
+            reinforcements.push({
+              agentId: donor.id,
+              agentName: donor.first_name + ' ' + (donor.last_name||'').charAt(0) + '.',
+              fromCode: small.code, toCode: big.code,
+              startH: peakH, durH: 1
+            });
+          }
+        }
+      }
+    }
+  }
+
   var breaks = (regulations.breaks || []);
   var lunch = breaks.find(function(b) { return /lunch|dej/i.test(b.name); }) || breaks[0] || null;
 
@@ -4174,11 +4240,28 @@ function renderIntraday(ds) {
 
   var noBriefNote = !noLeadAtAll ? '' : '<div class="card" style="margin-bottom:12px;background:var(--warn-soft)"><p style="color:var(--warn-tx);font-size:12px;margin:0">No manager or ASM available - morning brief not assigned.</p></div>';
 
+  var reinfHtml = '';
+  var visibleReinf = reinforcements.filter(function(r){ return !dismissedReinf[ds + ':' + r.agentId]; });
+  if (visibleReinf.length) {
+    function fmtHr(h){ var hh=Math.floor(h), mm=Math.round((h-hh)*60); return hh + (mm?('h'+String(mm).padStart(2,'0')):'h'); }
+    reinfHtml = '<div class="reinf-bar"><div class="reinf-title">' + t('Reinforcement proposals') + '</div>';
+    visibleReinf.forEach(function(r) {
+      reinfHtml += '<div class="reinf-item">' +
+        '<span class="reinf-txt"><strong>' + esc(r.agentName) + '</strong> \u00b7 ' +
+          esc(r.fromCode) + ' \u2192 ' + esc(r.toCode) + ' \u00b7 ' +
+          fmtHr(r.startH) + '-' + fmtHr(r.startH + r.durH) + '</span>' +
+        '<button class="btn btn-danger btn-sm" onclick="dismissReinf(\'' + r.agentId + '\')">\u2715</button>' +
+        '</div>';
+    });
+    reinfHtml += '</div>';
+  }
+
   body.innerHTML =
     noBriefNote +
     '<div class="card it-wrap">' +
       '<div class="it-head"><div class="it-title">' + formatDateDisplay(ds) + '</div>' +
         '<div class="it-sub">' + working.length + ' present</div></div>' +
+      reinfHtml +
       axis + band +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
@@ -5340,7 +5423,6 @@ function renderMonthlyPlanning() {
     // index des jours ouverts pour tester l'adjacence
     var idxByDs = {}; monthDays.forEach(function(d, i){ idxByDs[d.ds] = i; });
     function worksOn(a, d){ return assignedMap[d.ds].indexOf(a.id) !== -1; }
-    function isRest(a, d){ return !worksOn(a, d) && !isBlocked(a, d); }
     // Un repos est "isole" si ni la veille ni le lendemain (jours ouverts) n'est un repos.
     function restIsolated(a, di) {
       var prev = monthDays[di - 1], next = monthDays[di + 1];
@@ -5964,7 +6046,6 @@ function renderMonthlyPlanning() {
       agentRows[a.id].push({ d: d, res: res });
       // compteurs RH : on se base sur le tone du shift (fiable meme si le code
       // est personnalise, ex "10O"), avec repli sur le texte du code.
-      var isStockShift = /S$/.test(res.code || '');
       var isOpening = res.tone ? (res.tone === 'open')  : (res.code === 'O' || res.code === 'OS');
       var isClosing = res.tone ? (res.tone === 'close') : (res.code === 'C' || res.code === 'CS');
       var worked    = !res.special;  // pas off/leave/closed
