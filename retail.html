@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.3</title>
+  <title>CORA Retail V7.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -667,12 +667,15 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .set-rules-2col { display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s6); }
 .day-open-lbl { margin-left:8px; font-size:12px; color:var(--tx-2); }
 .set-rule {
-  display:grid; grid-template-columns:260px 120px 1fr;
+  display:grid; grid-template-columns:1fr 120px;
   align-items:center; gap:var(--s3);
-  height:52px; padding:0;
+  min-height:52px; padding:var(--s2) 0;
   border-bottom:1px solid var(--line);
   font-size:13px; color:var(--tx-1);
 }
+.set-rule-lbl-wrap { display:flex; flex-direction:column; gap:2px; }
+.set-rule-hint { font-size:11px; font-style:italic; color:var(--tx-3); line-height:1.3; }
+.set-rule-field { display:flex; align-items:center; justify-content:flex-end; gap:6px; }
 .set-rule > * { min-width:0; }
 .set-rule:last-child { border-bottom:none; }
 .set-rule-lbl { color:var(--tx-2); }
@@ -1301,6 +1304,15 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'How many days an advisor can legally work per week in your country': '各国の法定週間労働日数の上限',
+    'Contractually, how long one advisor can work per day': '契約上、1名が1日に勤務できる時間',
+    'The standard weekly contract of your team': 'チームの標準的な週間契約時間',
+    'How long an advisor must rest between two shifts': '2つのシフト間に必要な休息時間',
+    'How many advisors are needed at minimum to open a store or a corner': '店舗またはコーナーの開店に最低限必要な人数',
+    'How many advisors are needed at minimum to close a store or a corner': '店舗またはコーナーの閉店に最低限必要な人数',
+    'How many advisors you want on closing versus opening': 'オープンに対するクローズの人数配分',
+    'Rotate every advisor fairly across all corners over the month': '月間で全員を全コーナーに公平にローテーション',
+    'Let the engine move an advisor to a busier corner for a short slot during the day': '日中の短時間、混雑するコーナーへ応援を割り当てる',
     'Intraday reinforcement': '日中応援',
     'On - auto proposals': 'オン - 自動提案',
     'Off': 'オフ',
@@ -2417,13 +2429,14 @@ async function saveRegulations() {
   var thrOpen = document.getElementById('thr-open');
   var thrClose = document.getElementById('thr-close');
   var thrRatio = document.getElementById('thr-ratio');
-  if (thrOpen || thrClose || thrRatio) {
-    if (!storeSettings) storeSettings = {};
-    if (thrOpen)  { var mo = parseInt(thrOpen.value,10);  storeSettings.min_opening  = (isNaN(mo)||mo<0)?1:mo; }
-    if (thrClose) { var mc = parseInt(thrClose.value,10); storeSettings.min_closing  = (isNaN(mc)||mc<0)?1:mc; }
-    if (thrRatio) { var rr = parseInt(thrRatio.value,10); storeSettings.closing_ratio = (isNaN(rr)||rr<0||rr>100)?0.70:rr/100; }
-    await persistStoreSettings();
-  }
+  if (!storeSettings) storeSettings = {};
+  if (thrOpen)  { var mo = parseInt(thrOpen.value,10);  storeSettings.min_opening  = (isNaN(mo)||mo<0)?1:mo; }
+  if (thrClose) { var mc = parseInt(thrClose.value,10); storeSettings.min_closing  = (isNaN(mc)||mc<0)?1:mc; }
+  if (thrRatio) { var rr = parseInt(thrRatio.value,10); storeSettings.closing_ratio = (isNaN(rr)||rr<0||rr>100)?0.70:rr/100; }
+  // Toujours persister store_settings : c'est la source de verite du week-end
+  // (saturday_open / sunday_open) qui gagne au rechargement. Sinon les rules et
+  // store_settings se desynchronisent et le week-end reste ferme a tort.
+  await persistStoreSettings();
 
   let valid = true;
   DAY_KEYS.forEach(function(k) {
@@ -2749,6 +2762,23 @@ async function saveShiftConfig() {
   renderMonthlyPlanning();
 }
 
+// Ligne de reglage : titre + phrase d'aide (grise, italique) a gauche, champ a droite.
+function rrow(label, hint, inputHtml, unit) {
+  return '<div class="set-rule">' +
+    '<span class="set-rule-lbl-wrap"><span class="set-rule-lbl">' + t(label) + '</span>' +
+      '<span class="set-rule-hint">' + t(hint) + '</span></span>' +
+    '<span class="set-rule-field">' + inputHtml + (unit ? '<span class="set-rule-unit">' + unit + '</span>' : '') + '</span>' +
+    '</div>';
+}
+function rrowToggle(label, hint, id, handler, checked) {
+  return '<div class="set-rule">' +
+    '<span class="set-rule-lbl-wrap"><span class="set-rule-lbl">' + t(label) + '</span>' +
+      '<span class="set-rule-hint">' + t(hint) + '</span></span>' +
+    '<span class="set-rule-field"><label class="toggle"><input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') +
+      ' onchange="' + handler + '(this)"><span class="toggle-slider"></span></label></span>' +
+    '</div>';
+}
+
 function renderRegulations() {
   if (!currentStoreId) return;
 
@@ -2822,21 +2852,27 @@ function renderRegulations() {
         '<h2 class="page-title">Labor rules</h2>' +
         '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button>' +
       '</div>' +
-      '<div class="set-rules set-rules-2col">' +
-        '<div class="set-rule"><span class="set-rule-lbl">Max working days / week</span>' +
-          '<input type="number" id="reg-max-days" class="set-rule-input" value="' + (regulations.max_days||5) + '" min="1" max="7" step="1"><span class="set-rule-unit">d</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Max hours / day</span>' +
-          '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8.5) + '" min="1" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Max hours / week</span>' +
-          '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5"><span class="set-rule-unit">h</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Max hours between shifts</span>' +
-          '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours||11) + '" min="0" max="24" step="0.5"><span class="set-rule-unit">h</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Opening minimum</span>' +
-          '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1"><span class="set-rule-unit">CA</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Closing minimum</span>' +
-          '<input type="number" id="thr-close" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '" min="0" max="20" step="1"><span class="set-rule-unit">CA</span></div>' +
-        '<div class="set-rule"><span class="set-rule-lbl">Closing ratio</span>' +
-          '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5"><span class="set-rule-unit">%</span></div>' +
+      '<div class="set-rules">' +
+        rrow('Max working days / week', 'How many days an advisor can legally work per week in your country',
+          '<input type="number" id="reg-max-days" class="set-rule-input" value="' + (regulations.max_days||5) + '" min="1" max="7" step="1">', 'd') +
+        rrow('Max hours / day', 'Contractually, how long one advisor can work per day',
+          '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8.5) + '" min="1" max="24" step="0.5">', 'h') +
+        rrow('Max hours / week', 'The standard weekly contract of your team',
+          '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5">', 'h') +
+        rrow('Max hours between shifts', 'How long an advisor must rest between two shifts',
+          '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours||11) + '" min="0" max="24" step="0.5">', 'h') +
+        rrow('Opening minimum', 'How many advisors are needed at minimum to open a store or a corner',
+          '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1">', 'CA') +
+        rrow('Closing minimum', 'How many advisors are needed at minimum to close a store or a corner',
+          '<input type="number" id="thr-close" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '" min="0" max="20" step="1">', 'CA') +
+        rrow('Closing ratio', 'How many advisors you want on closing versus opening',
+          '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5">', '%') +
+        (storeCorners.length > 1 ?
+          rrowToggle('Fairness rotation', 'Rotate every advisor fairly across all corners over the month',
+            'fairness-toggle', 'toggleFairness', !!(storeSettings && storeSettings.fairness_rotation)) +
+          rrowToggle('Intraday reinforcement', 'Let the engine move an advisor to a busier corner for a short slot during the day',
+            'reinf-toggle', 'toggleReinforcement', !!(storeSettings && storeSettings.intraday_reinforcement))
+          : '') +
       '</div>' +
     '</div>' +
 
@@ -2869,14 +2905,6 @@ function renderRegulations() {
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
         '<h2 class="page-title">' + t('Corners') + '</h2>' +
         '<button class="btn btn-save btn-sm" onclick="saveCorners()">' + t('Save') + '</button></div>' +
-      '<div class="set-rule" style="margin-bottom:var(--s3)"><span class="set-rule-lbl">' + t('Fairness rotation') + '</span>' +
-        '<label class="toggle"><input type="checkbox" id="fairness-toggle"' + ((storeSettings && storeSettings.fairness_rotation) ? ' checked' : '') + ' onchange="toggleFairness(this)">' +
-        '<span class="toggle-slider"></span></label>' +
-        '<span class="day-open-lbl" id="fairness-lbl">' + ((storeSettings && storeSettings.fairness_rotation) ? t('On - everyone rotates') : t('Off - home corners')) + '</span></div>' +
-      '<div class="set-rule" style="margin-bottom:var(--s3)"><span class="set-rule-lbl">' + t('Intraday reinforcement') + '</span>' +
-        '<label class="toggle"><input type="checkbox" id="reinf-toggle"' + ((storeSettings && storeSettings.intraday_reinforcement) ? ' checked' : '') + ' onchange="toggleReinforcement(this)">' +
-        '<span class="toggle-slider"></span></label>' +
-        '<span class="day-open-lbl" id="reinf-lbl">' + ((storeSettings && storeSettings.intraday_reinforcement) ? t('On - auto proposals') : t('Off')) + '</span></div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
         '<th style="width:52px"></th></tr></thead>' +
