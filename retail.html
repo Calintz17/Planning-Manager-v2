@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.5</title>
+  <title>CORA Retail V7.6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2267,17 +2267,19 @@ function addBreakRow() {
   var tr = document.createElement('tr');
   tr.className = 'break-row';
   tr.innerHTML =
-    '<td><input type="text" class="break-name" value="Break"></td>' +
-    '<td><input type="number" class="break-dur" value="15" min="5" max="120" style="width:70px"></td>' +
+    '<td><input onchange="saveRegulations()" type="text" class="break-name" value="Break"></td>' +
+    '<td><input onchange="saveRegulations()" type="number" class="break-dur" value="15" min="5" max="120" style="width:70px"></td>' +
     '<td>' + hourSelectHtml2('break-ws', 11) + '</td>' +
     '<td>' + hourSelectHtml2('break-we', 12) + '</td>' +
     '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>';
   body.appendChild(tr);
+  saveRegulations();
 }
 
 function removeBreakRow(btn) {
   var tr = btn.closest('tr');
   if (tr) tr.remove();
+  saveRegulations();
 }
 
 function addCornerRow() {
@@ -2287,8 +2289,8 @@ function addCornerRow() {
   tr.className = 'corner-row';
   tr.dataset.id = 'new';
   tr.innerHTML =
-    '<td><input type="text" class="corner-code" value="" maxlength="12" style="width:110px"></td>' +
-    '<td><input type="text" class="corner-name" value=""></td>' +
+    '<td><input onchange="saveCorners(true)" type="text" class="corner-code" value="" maxlength="12" style="width:110px"></td>' +
+    '<td><input onchange="saveCorners(true)" type="text" class="corner-name" value=""></td>' +
     '<td><button class="btn btn-danger btn-sm" onclick="removeCornerRow(this)">\u2715</button></td>';
   body.appendChild(tr);
 }
@@ -2296,6 +2298,7 @@ function addCornerRow() {
 function removeCornerRow(btn) {
   var tr = btn.closest('tr');
   if (tr) tr.remove();
+  saveCorners();
 }
 
 // Slider open/close d'un jour dans la table Operating hours : grise la ligne
@@ -2371,18 +2374,17 @@ async function toggleReinforcement(cb) {
 // Sauve les corners de la boutique : cree les nouveaux, met a jour les codes/noms,
 // supprime ceux retires. Le dropdown de corner a la creation/edition d'agent est
 // alimente par cette liste.
-async function saveCorners() {
-  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+async function saveCorners(silent) {
+  if (!currentStoreId) return;
   var rows = Array.prototype.slice.call(document.querySelectorAll('#corners-body .corner-row'));
   var keptIds = {};
   var seen = {};
-  // Validation + upsert
   for (var i = 0; i < rows.length; i++) {
     var tr = rows[i];
     var code = tr.querySelector('.corner-code').value.trim();
     var name = tr.querySelector('.corner-name').value.trim();
-    if (!code) { showToast('Every corner needs a code', 'error'); return; }
-    if (seen[code.toLowerCase()]) { showToast('Duplicate corner code: ' + code, 'error'); return; }
+    if (!code) { if (!silent) showToast('Every corner needs a code', 'error'); return; }
+    if (seen[code.toLowerCase()]) { if (!silent) showToast('Duplicate corner code: ' + code, 'error'); return; }
     seen[code.toLowerCase()] = true;
     var id = tr.dataset.id;
     if (id && id !== 'new') {
@@ -2392,22 +2394,20 @@ async function saveCorners() {
       var ins = await sb.from('retail_corners')
         .insert({ store_id: currentStoreId, code: code, full_name: name || code, sort_order: i })
         .select();
-      if (ins.data && ins.data[0]) keptIds[ins.data[0].id] = true;
+      if (ins.data && ins.data[0]) { keptIds[ins.data[0].id] = true; tr.dataset.id = ins.data[0].id; }
     }
   }
-  // Supprimer les corners retires de la liste
   for (var j = 0; j < storeCorners.length; j++) {
     if (!keptIds[storeCorners[j].id]) {
       await sb.from('retail_corners').delete().eq('id', storeCorners[j].id);
     }
   }
-  // Recharger les corners et rafraichir
   var { data: cnrData } = await sb.from('retail_corners')
     .select('*').eq('store_id', currentStoreId).order('sort_order');
   storeCorners = cnrData || [];
-  showToast('Corners saved \u2713');
-  renderRegulations();
-  if (currentStoreId) renderMonthlyPlanning();
+  // Re-render seulement quand la structure change (add/remove), pas sur une
+  // simple edition de champ (sinon on perd le focus en plein saisie).
+  if (!silent) { renderRegulations(); renderMonthlyPlanning(); }
 }
 
 async function saveRegulations() {
@@ -2493,13 +2493,9 @@ async function saveRegulations() {
     if (r.rule_value === undefined || r.rule_value === null) r.rule_value = '';
   });
 
-  showLoader();
   const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
-  hideLoader();
   if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
   await saveStoreSettings();
-  showToast('Settings saved \u2713');
-  renderRegulations();
   renderPlanning();
 }
 
@@ -2531,7 +2527,7 @@ function renderDateTags(containerId, dates, type) {
 
 // ── RENDER REGULATIONS ────────────────────────────────────────────────────
 function hourSelectHtml(id, selected)  { return '<select id="' + id + '">' + hourOptionsH(selected) + '</select>'; }
-function hourSelectHtml2(cls, selected) { return '<select class="' + cls + '">' + hourOptionsH(selected) + '</select>'; }
+function hourSelectHtml2(cls, selected) { return '<select onchange="saveRegulations()" class="' + cls + '">' + hourOptionsH(selected) + '</select>'; }
 
 // Palettes proposees a la creation d'un shift
 var SHIFT_TONES = [
@@ -2774,6 +2770,8 @@ async function saveShiftConfig() {
 
 // Ligne de reglage : titre + phrase d'aide (grise, italique) a gauche, champ a droite.
 function rrow(label, hint, inputHtml, unit) {
+  // Auto-save au changement : plus de bouton Save.
+  inputHtml = inputHtml.replace('<input ', '<input onchange="saveRegulations()" ');
   return '<div class="set-rule">' +
     '<span class="set-rule-lbl-wrap"><span class="set-rule-lbl">' + t(label) + '</span>' +
       '<span class="set-rule-hint">' + t(hint) + '</span></span>' +
@@ -2806,8 +2804,8 @@ function renderRegulations() {
       '<td><label class="toggle"><input type="checkbox" class="day-open-toggle" data-day="' + key + '"' + (isClosed ? '' : ' checked') + ' onchange="toggleDayOpen(this)">' +
         '<span class="toggle-slider"></span></label>' +
         '<span class="day-open-lbl">' + (isClosed ? 'Closed' : 'Open') + '</span></td>' +
-      '<td>' + hourSelectHtml('reg-open-' + key, h.open) + '</td>' +
-      '<td>' + hourSelectHtml('reg-close-' + key, h.close) + '</td>' +
+      '<td>' + hourSelectHtml('reg-open-' + key, h.open).replace('<select ', '<select onchange="saveRegulations()" ') + '</td>' +
+      '<td>' + hourSelectHtml('reg-close-' + key, h.close).replace('<select ', '<select onchange="saveRegulations()" ') + '</td>' +
       '<td>' + durH + 'h</td>' +
       '</tr>';
   });
@@ -2815,8 +2813,8 @@ function renderRegulations() {
   let breakRows = '';
   (regulations.breaks || []).forEach(function(b) {
     breakRows += '<tr class="break-row">' +
-      '<td><input type="text" class="break-name" value="' + (b.name || '') + '"></td>' +
-      '<td><input type="number" class="break-dur" value="' + (b.duration || 0) + '" min="5" max="120" style="width:70px"></td>' +
+      '<td><input onchange="saveRegulations()" type="text" class="break-name" value="' + (b.name || '') + '"></td>' +
+      '<td><input onchange="saveRegulations()" type="number" class="break-dur" value="' + (b.duration || 0) + '" min="5" max="120" style="width:70px"></td>' +
       '<td>' + hourSelectHtml2('break-ws', b.window_start) + '</td>' +
       '<td>' + hourSelectHtml2('break-we', b.window_end) + '</td>' +
       '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>' +
@@ -2825,8 +2823,8 @@ function renderRegulations() {
   let cornerRows = '';
   storeCorners.forEach(function(c) {
     cornerRows += '<tr class="corner-row" data-id="' + c.id + '">' +
-      '<td><input type="text" class="corner-code" value="' + esc(c.code || '') + '" maxlength="12" style="width:110px"></td>' +
-      '<td><input type="text" class="corner-name" value="' + esc(c.full_name || '') + '"></td>' +
+      '<td><input onchange="saveCorners(true)" type="text" class="corner-code" value="' + esc(c.code || '') + '" maxlength="12" style="width:110px"></td>' +
+      '<td><input onchange="saveCorners(true)" type="text" class="corner-name" value="' + esc(c.full_name || '') + '"></td>' +
       '<td><button class="btn btn-danger btn-sm" onclick="removeCornerRow(this)">\u2715</button></td>' +
       '</tr>';
   });
@@ -2860,7 +2858,6 @@ function renderRegulations() {
     '<div class="card">' +
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
         '<h2 class="page-title">Labor rules</h2>' +
-        '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button>' +
       '</div>' +
       '<div class="set-rules">' +
         rrow('Max working days / week', 'How many days an advisor can legally work per week in your country',
@@ -2889,8 +2886,7 @@ function renderRegulations() {
     // ── BUBBLE 2: Operating Hours ────────────────────────────────────────
     '<div class="card">' +
       '<div class="page-head" style="margin-bottom:0">' +
-        '<h2 class="page-title">Operating hours</h2>' +
-        '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button></div>' +
+        '<h2 class="page-title">Operating hours</h2></div>' +
       '<table class="tbl tbl-framed set-tbl hours-table" style="margin-top:var(--s5)"><thead><tr>' +
         '<th style="width:120px">Day</th><th style="width:120px">Status</th><th>Starts</th><th>Ends</th>' +
         '<th style="width:110px">Duration</th>' +
@@ -2900,8 +2896,7 @@ function renderRegulations() {
     // ── BUBBLE 3: Break structure ────────────────────────────────────────
     '<div class="card">' +
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
-        '<h2 class="page-title">Break structure</h2>' +
-        '<button class="btn btn-save btn-sm" onclick="saveRegulations()">Save</button></div>' +
+        '<h2 class="page-title">Break structure</h2></div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>Name</th><th style="width:120px">Duration (min)</th>' +
         '<th style="width:130px">Window start</th><th style="width:130px">Window end</th>' +
@@ -2913,8 +2908,7 @@ function renderRegulations() {
     // ── BUBBLE: Corners ──────────────────────────────────────────────────
     '<div class="card">' +
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
-        '<h2 class="page-title">' + t('Corners') + '</h2>' +
-        '<button class="btn btn-save btn-sm" onclick="saveCorners()">' + t('Save') + '</button></div>' +
+        '<h2 class="page-title">' + t('Corners') + '</h2></div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
         '<th style="width:52px"></th></tr></thead>' +
