@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.4</title>
+  <title>CORA Retail V7.5</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2300,13 +2300,23 @@ function removeCornerRow(btn) {
 
 // Slider open/close d'un jour dans la table Operating hours : grise la ligne
 // et met a jour le libelle. Pour samedi/dimanche, pilote le repos hebdo.
-function toggleDayOpen(cb) {
+async function toggleDayOpen(cb) {
   var tr = cb.closest('tr');
   if (!tr) return;
   var closed = !cb.checked;
+  var day = cb.dataset.day;
   tr.classList.toggle('rest-day', closed);
   var lbl = tr.querySelector('.day-open-lbl');
   if (lbl) lbl.textContent = closed ? 'Closed' : 'Open';
+  // Persistance immediate : samedi/dimanche pilotent le repos hebdo, source de
+  // verite store_settings. Les autres jours ne portent pas de repos hebdo ici.
+  if (day === 'sat') regulations.saturday_rest = closed;
+  if (day === 'sun') regulations.sunday_rest   = closed;
+  if ((day === 'sat' || day === 'sun') && currentStoreId) {
+    await persistStoreSettings();
+    showToast('Saved \u2713');
+    renderMonthlyPlanning();
+  }
 }
 
 // Upsert des reglages boutique depuis l'etat courant (storeSettings + regulations).
@@ -3102,8 +3112,10 @@ async function loadStoreSettings() {
   storeSettings.intraday_reinforcement = !!storeSettings.intraday_reinforcement;
 
   // La boutique pilote l'ouverture du week-end
-  regulations.saturday_rest = !storeSettings.saturday_open;
-  regulations.sunday_rest   = !storeSettings.sunday_open;
+  // La boutique pilote l'ouverture du week-end, mais seulement si la valeur est
+  // explicitement definie (sinon on garde ce que les regles ont charge).
+  if (storeSettings.saturday_open != null) regulations.saturday_rest = !storeSettings.saturday_open;
+  if (storeSettings.sunday_open   != null) regulations.sunday_rest   = !storeSettings.sunday_open;
   if (storeSettings.day_hours && Object.keys(storeSettings.day_hours).length) {
     regulations.day_hours = storeSettings.day_hours;
   }
