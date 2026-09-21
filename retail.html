@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.7</title>
+  <title>CORA Retail V7.8</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2333,7 +2333,8 @@ async function persistStoreSettings() {
     min_closing: storeSettings.min_closing != null ? storeSettings.min_closing : 1,
     closing_ratio: storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70,
     fairness_rotation: !!storeSettings.fairness_rotation,
-    intraday_reinforcement: !!storeSettings.intraday_reinforcement
+    intraday_reinforcement: !!storeSettings.intraday_reinforcement,
+    sunday_single_shift: storeSettings.sunday_single_shift !== false
   }, { onConflict: 'store_id' });
 }
 
@@ -2367,6 +2368,14 @@ async function toggleReinforcement(cb) {
   await persistStoreSettings();
   showToast('Saved \u2713');
   if (currentIntradayDate) renderIntraday(currentIntradayDate);
+}
+
+async function toggleSundaySingle(cb) {
+  if (!currentStoreId) return;
+  if (!storeSettings) storeSettings = {};
+  storeSettings.sunday_single_shift = cb.checked;
+  await persistStoreSettings();
+  renderMonthlyPlanning();
 }
 
 // Sauve les corners de la boutique : cree les nouveaux, met a jour les codes/noms,
@@ -2872,6 +2881,8 @@ function renderRegulations() {
           '<input type="number" id="thr-close" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '" min="0" max="20" step="1">', 'CA') +
         rrow('Closing ratio', 'How many advisors you want on closing versus opening',
           '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5">', '%') +
+        rrowToggle('Sunday single shift', 'One shift D on Sundays (uncheck for wide-amplitude stores that need O/C on Sunday)',
+          'sunday-single-toggle', 'toggleSundaySingle', !(storeSettings && storeSettings.sunday_single_shift === false)) +
         (storeCorners.length > 1 ?
           rrowToggle('Fairness rotation', 'Rotate every advisor fairly across all corners over the month',
             'fairness-toggle', 'toggleFairness', !!(storeSettings && storeSettings.fairness_rotation)) +
@@ -3102,6 +3113,7 @@ async function loadStoreSettings() {
   storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70;
   storeSettings.fairness_rotation = !!storeSettings.fairness_rotation;
   storeSettings.intraday_reinforcement = !!storeSettings.intraday_reinforcement;
+  storeSettings.sunday_single_shift = storeSettings.sunday_single_shift !== false;
 
   // La boutique pilote l'ouverture du week-end
   // La boutique pilote l'ouverture du week-end, mais seulement si la valeur est
@@ -4019,7 +4031,16 @@ function renderIntraday(ds) {
       });
     }
 
-    // Vendeurs eligibles = floor. On garde au moins la moitie presente.
+    // Corner effectif d'un vendeur ce jour (pour ne jamais vider un corner).
+    function lunchCornerOf(a) {
+      if (storeCorners.length <= 1) return '_store';
+      var r = (monthlyResult[ds] || {})[a.id];
+      if (r && r.corner) return r.corner;
+      for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === a.home_corner_id) return storeCorners[i].code;
+      return '_none';
+    }
+
+    // Vendeurs eligibles = floor.
     var floorElig = byArrival.filter(function(a) {
       if (poolOf(a) !== 'sales') return false;
       var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
@@ -4031,9 +4052,20 @@ function renderIntraday(ds) {
       return Math.min(winEnd, eH) - Math.max(winStart, sH + 1) >= durH;
     });
 
-    // Floor : au plus la moitie en pause a la fois (au moins 1 present s'il en reste).
-    var floorMax = Math.max(1, Math.floor(floorElig.length / 2));
-    planLunch(floorElig, floorMax);
+    // Floor : lissage PAR CORNER. Dans chaque corner, au plus la moitie en pause
+    // a la fois, jamais tout le corner (service minimum garanti a toute heure).
+    var byCornerLunch = {};
+    floorElig.forEach(function(a) {
+      var c = lunchCornerOf(a);
+      (byCornerLunch[c] = byCornerLunch[c] || []).push(a);
+    });
+    Object.keys(byCornerLunch).forEach(function(c) {
+      var list = byCornerLunch[c];
+      // au plus floor(n/2) en pause simultanee, min 1 present si n>=2
+      var maxConc = list.length >= 2 ? Math.floor(list.length / 2) : (list.length ? 1 : 0);
+      maxConc = Math.max(1, maxConc);
+      planLunch(list, maxConc);
+    });
     // Stock + management : lissage simple, ils peuvent partir groupes.
     var otherMax = Math.max(1, Math.ceil(otherElig.length / slots));
     planLunch(otherElig, otherMax);
@@ -5567,7 +5599,12 @@ function renderMonthlyPlanning() {
   var shiftPlanByDay = {};
   // Jour special = dimanche ou ferie ouvert : amplitude unique, shift "D".
   function isSpecialDay(d) {
-    return (d.date.getDay() === 0) || !!calHolidays[d.ds];
+    // Dimanche a shift unique "D" seulement si la boutique l'a active (defaut oui).
+    // Les department stores a large amplitude dominicale le desactivent pour avoir
+    // des O/C le dimanche. Les feries ouverts restent en shift unique D.
+    var sundaySingle = !storeSettings || storeSettings.sunday_single_shift !== false;
+    if (d.date.getDay() === 0) return sundaySingle;
+    return !!calHolidays[d.ds];
   }
   monthDays.forEach(function(d) {
     if (d.closure) return;
@@ -5966,6 +6003,62 @@ function renderMonthlyPlanning() {
       present.forEach(function(a) {
         var ov = (cornerOverrides[a.id] || {})[d.ds];
         if (ov) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = ov;
+      });
+    });
+  }
+
+  // ── Couverture O/C PAR CORNER (chaque corner = mini-boutique) ──────────────
+  // Le moteur 1 a fixe O/C au niveau boutique ; le moteur 2 a reparti les corners.
+  // On recalcule maintenant O/C a l'interieur de chaque corner : min 1 open + 1
+  // close et ratio de fermeture appliques au corner, pas au store. Best-effort si
+  // trop peu d'agents (jamais bloquer), et on leve une alerte de production.
+  var coverageAlerts = [];
+  if (storeCorners.length > 1) {
+    var salesGrid = RETAIL_SHIFTS['sales'] || [];
+    var openCode  = (salesGrid.find(function(s){ return s.isOpening; }) || salesGrid[0] || {code:'O'}).code;
+    var closeCode = (salesGrid.find(function(s){ return s.isClosing; }) || salesGrid[salesGrid.length-1] || {code:'C'}).code;
+    var ratioC  = (storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70;
+    var minO = (storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1;
+    var minC = (storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1;
+
+    monthDays.forEach(function(d) {
+      if (d.closure || d.past) return;                    // passe fige
+      if (isSpecialDay(d)) return;                        // dimanche/ferie = D unique
+      var plan = shiftPlanByDay[d.ds]; if (!plan) return;
+      // Vendeurs presents groupes par corner effectif du jour.
+      var perCorner = {};
+      agents.forEach(function(a) {
+        if (poolOf(a) !== 'sales') return;
+        if (assignedMap[d.ds].indexOf(a.id) === -1) return;
+        var cur = plan[a.id];
+        if (cur !== openCode && cur !== closeCode) return; // ignore D/PT/half
+        var cid = (cornerAssign[a.id] || {})[d.ds];
+        if (!cid) return;
+        (perCorner[cid] = perCorner[cid] || []).push(a);
+      });
+      // Pour chaque corner : appliquer minimums + ratio en interne.
+      Object.keys(perCorner).forEach(function(cid) {
+        var list = perCorner[cid];
+        var n = list.length;
+        if (!n) return;
+        // Tri deterministe pour stabilite.
+        list.sort(function(x,y){ return x.id < y.id ? -1 : 1; });
+        var nClose = Math.round(n * ratioC);
+        if (n >= minO + minC) {
+          nClose = Math.max(minC, Math.min(nClose, n - minO));
+        } else {
+          // pas assez pour les deux minimums : au moins 1 de chaque si possible
+          nClose = Math.max(0, Math.min(nClose, n));
+          if (n >= 2 && nClose >= n) nClose = n - 1;
+          if (n >= 2 && nClose === 0) nClose = 1;
+          // alerte : couverture incomplete sur ce corner ce jour
+          var code = cornerCodeOf(cid);
+          coverageAlerts.push({ ds: d.ds, corner: code, present: n });
+        }
+        var nOpen = n - nClose;
+        list.forEach(function(a, i) {
+          plan[a.id] = (i < nOpen) ? openCode : closeCode;
+        });
       });
     });
   }
