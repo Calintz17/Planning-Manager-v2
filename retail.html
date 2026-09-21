@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.6</title>
+  <title>CORA Retail V7.7</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -45,6 +45,7 @@
 
   /* ---- Sidebar : active = bleu fonce (demande) ---- */
   --nav-active-bg: #1E3A8A;
+  --accent-strong: #5B21B6;
   --nav-active-tx: #FFFFFF;
 
   /* ---- Rayons ---- */
@@ -177,6 +178,8 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 
 /* Missions ajoutees a la main : bulle + croix de retrait */
 .it-blk-added { overflow:visible; }
+.it-blk-reinf { overflow:visible; background:var(--nav-active-bg); color:#fff; }
+.it-blk-reinf:hover .it-blk-x { opacity:1; }
 .it-blk-x { position:absolute; top:-6px; left:-6px; width:15px; height:15px;
   border-radius:var(--r-pill); background:#fff; color:#374151; border:1px solid var(--line);
   box-shadow:0 1px 3px rgba(16,24,40,.25); font-size:11px; line-height:1; cursor:pointer;
@@ -969,13 +972,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-cnr-opt.ce-reset { color:var(--tx-3); font-style:italic; font-weight:400; }
 .ae-fixed-note { font-size:11px; color:var(--tx-3); line-height:1.4; display:block; }
 .corner-tabs { display:flex; gap:2px; flex-wrap:wrap; margin-bottom:var(--s4); }
-.reinf-bar { background:var(--info-soft); border:1px solid var(--info-tx); border-radius:var(--r-md);
-  padding:var(--s3) var(--s4); margin:var(--s3) 0 var(--s4); }
-.reinf-title { font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--info-tx); margin-bottom:var(--s2); }
-.reinf-item { display:flex; align-items:center; justify-content:space-between; gap:var(--s3);
-  padding:4px 0; }
-.reinf-txt { font-size:12.5px; color:var(--tx-1); }
 .corner-tabs:empty { display:none; }
 .corner-tab { padding:6px 14px; border:1px solid var(--line); background:var(--bg-base);
   border-radius:var(--r-sm); font-family:var(--font); font-size:12px; font-weight:600;
@@ -2353,8 +2349,10 @@ async function toggleFairness(cb) {
   renderMonthlyPlanning();
 }
 
-function dismissReinf(agentId) {
+function removeReinf(e, agentId, idx) {
+  if (e) e.stopPropagation();
   if (!currentIntradayDate) return;
+  // Marque ce renfort comme retire pour ce jour (il ne sera pas reproposé).
   dismissedReinf[currentIntradayDate + ':' + agentId] = true;
   renderIntraday(currentIntradayDate);
 }
@@ -3932,61 +3930,57 @@ function renderIntraday(ds) {
   var curve = (storeSettings && storeSettings.hourly_curve) || null;
 
   // ── Moteur de RENFORT intraday (department stores multi-corner) ────────────
-  // Detecte les heures ou un gros corner manque de monde alors qu'un petit
-  // corner a du surplus, et propose de deplacer 1 agent en renfort >= 1h, en
-  // milieu de journee seulement (l'agent doit pouvoir assurer O/C sur son
-  // corner). Ne prend jamais un agent si son corner tombe sous son plancher.
-  var reinforcements = [];
+  // Logique relative, sans ratio trafic->headcount (voulu). A l'heure de pic, on
+  // mesure la TENSION de chaque corner = trafic_corner_a_cette_heure / presents.
+  // On deplace 1 agent du corner le MOINS tendu vers le plus tendu, si le donneur
+  // garde son plancher. Le renfort devient une mission (pill) sur la barre de
+  // l'agent, auto-placee au pic, deplacable et supprimable.
+  // Trafic corner a l'heure h = poids mensuel du corner x forme horaire boutique
+  // (approximation tant que la data horaire par corner n'est pas fournie).
+  var reinforceMissions = {};   // agentId -> [{ start, dur, toCode, toId, auto:true }]
   if (storeSettings && storeSettings.intraday_reinforcement && storeCorners.length > 1 && curve && curve.length) {
     var refYr = monthlyRef.getFullYear(), refMr = monthlyRef.getMonth() + 1;
-    function cwR(cid){ var t = cornerTrafficMonthly[cid+'|'+refYr+'|'+refMr]; return t ? (t.last_year||t.n_2||0) : 0; }
-    // corner effectif d'un agent ce jour (prefixe monthly sinon home)
-    function effCornerId(a){
+    var cwR = function(cid){ var t = cornerTrafficMonthly[cid+'|'+refYr+'|'+refMr]; return t ? (t.last_year||t.n_2||0) : 0; };
+    var effCornerId = function(a){
       var r = (monthlyResult[ds] || {})[a.id];
       if (r && r.corner) { for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id; }
       return a.home_corner_id || null;
-    }
-    // agents vendeurs presents groupes par corner
+    };
     var byC = {}; storeCorners.forEach(function(c){ byC[c.id]=[]; });
     working.forEach(function(a){ if (poolOf(a)==='sales'){ var cid=effCornerId(a); if (cid&&byC[cid]) byC[cid].push(a); } });
-    // fenetre milieu de journee : on evite la 1ere et la derniere heure
-    var midStart = Math.ceil(openH) + 1, midEnd = Math.floor(closeH) - 1;
     var minOpen = (storeSettings.min_opening != null) ? storeSettings.min_opening : 1;
-    var totCw = 0; storeCorners.forEach(function(c){ totCw += cwR(c.id); });
-    // charge horaire relative de la boutique (part du pic)
-    function hourWeight(h){
+    var hourWeight = function(h){
       var idx = Math.round(h) - Math.floor(openH);
       if (idx < 0 || idx >= curve.length) return 0;
       return curve[idx] || 0;
-    }
+    };
+    // Heure de pic de la boutique, en milieu de journee.
+    var midStart = Math.ceil(openH) + 1, midEnd = Math.floor(closeH) - 1;
     var peakH = 0, peakVal = 0;
     for (var h = midStart; h <= midEnd; h++) { var w = hourWeight(h); if (w > peakVal) { peakVal = w; peakH = h; } }
-    // A l'heure de pic : le plus gros corner sous-dote emprunte au plus petit sur-dote.
-    if (peakVal > 0 && totCw > 0) {
-      var sorted = storeCorners.slice().sort(function(x,y){ return cwR(y.id) - cwR(x.id); });
-      var big = sorted[0], small = sorted[sorted.length - 1];
-      if (big && small && big.id !== small.id) {
-        var bigCount = (byC[big.id]||[]).length, smallCount = (byC[small.id]||[]).length;
-        // Au pic horaire, le gros corner a besoin de PLUS que sa moyenne : on
-        // majore sa cible par l'intensite du pic vs la moyenne de la journee.
-        var avgW = 0, nH = 0;
-        for (var hh = Math.ceil(openH); hh < Math.floor(closeH); hh++) { avgW += hourWeight(hh); nH++; }
-        avgW = nH ? avgW / nH : 1;
-        var peakFactor = avgW > 0 ? (peakVal / avgW) : 1;   // >1 au pic
-        var totalPresent = working.filter(function(a){return poolOf(a)==='sales';}).length;
-        var bigBase = totalPresent * cwR(big.id) / totCw;
-        var bigPeakTarget = Math.round(bigBase * peakFactor);
-        // renfort si au pic le gros manque de monde ET le petit garde son plancher
-        if (bigCount < bigPeakTarget && smallCount > minOpen) {
-          var donor = (byC[small.id]||[])[smallCount - 1];
-          if (donor) {
-            reinforcements.push({
-              agentId: donor.id,
-              agentName: donor.first_name + ' ' + (donor.last_name||'').charAt(0) + '.',
-              fromCode: small.code, toCode: big.code,
-              startH: peakH, durH: 1
-            });
-          }
+
+    if (peakVal > 0) {
+      // Tension de chaque corner au pic : trafic corner a cette heure / presents.
+      // trafic corner a l'heure = poids mensuel corner x forme horaire (peakVal).
+      var tension = storeCorners.map(function(c) {
+        var present = (byC[c.id] || []).length;
+        var trafficAtPeak = cwR(c.id) * peakVal;
+        return { c: c, present: present, traffic: trafficAtPeak,
+                 tense: present > 0 ? trafficAtPeak / present : (trafficAtPeak > 0 ? Infinity : 0) };
+      });
+      var most = tension.slice().sort(function(x,y){ return y.tense - x.tense; })[0];
+      // Corner le moins tendu qui peut ceder un agent sans passer sous le plancher.
+      var donorCorner = tension.slice()
+        .filter(function(x){ return x.c.id !== most.c.id && x.present > minOpen; })
+        .sort(function(x,y){ return x.tense - y.tense; })[0];
+      // On ne renforce que si le desequilibre est reel : le plus tendu doit etre
+      // nettement plus tendu que le donneur (sinon deplacer ne sert a rien).
+      if (most && donorCorner && most.tense > donorCorner.tense * 1.5 && most.present >= 0) {
+        var donor = (byC[donorCorner.c.id] || [])[donorCorner.c.id ? (byC[donorCorner.c.id].length - 1) : 0];
+        if (donor && !dismissedReinf[ds + ':' + donor.id]) {
+          (reinforceMissions[donor.id] = reinforceMissions[donor.id] || []).push({
+            start: peakH, dur: 1, toCode: most.c.code, toId: most.c.id, auto: true
+          });
         }
       }
     }
@@ -4259,6 +4253,15 @@ function renderIntraday(ds) {
           ' style="left:' + pct(m.start) + '%;width:' + wpct(durH) + '%">' + label +
           '<span class="it-blk-x" onpointerdown="event.stopPropagation()" onclick="removeAddedMission(event,\'' + m.id + '\')">&times;</span></div>';
       });
+      // Renforts auto (department store) : pill vers un autre corner, au pic.
+      // Slidable et supprimable comme une mission manuelle.
+      (reinforceMissions[a.id] || []).forEach(function(m, mi) {
+        track += '<div class="it-blk it-blk-reinf" draggable="false"' +
+          ' data-agent="' + a.id + '" data-type="reinf" data-ridx="' + mi + '"' +
+          ' data-dur="' + m.dur + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
+          ' style="left:' + pct(m.start) + '%;width:' + wpct(m.dur) + '%">\u2192' + esc(m.toCode) +
+          '<span class="it-blk-x" onpointerdown="event.stopPropagation()" onclick="removeReinf(event,\'' + a.id + '\',' + mi + ')">&times;</span></div>';
+      });
       track += '</div>';
 
       var nm = a.first_name + ' ' + (a.last_name || '').charAt(0) + '.';
@@ -4274,28 +4277,11 @@ function renderIntraday(ds) {
 
   var noBriefNote = !noLeadAtAll ? '' : '<div class="card" style="margin-bottom:12px;background:var(--warn-soft)"><p style="color:var(--warn-tx);font-size:12px;margin:0">No manager or ASM available - morning brief not assigned.</p></div>';
 
-  var reinfHtml = '';
-  var visibleReinf = reinforcements.filter(function(r){ return !dismissedReinf[ds + ':' + r.agentId]; });
-  if (visibleReinf.length) {
-    function fmtHr(h){ var hh=Math.floor(h), mm=Math.round((h-hh)*60); return hh + (mm?('h'+String(mm).padStart(2,'0')):'h'); }
-    reinfHtml = '<div class="reinf-bar"><div class="reinf-title">' + t('Reinforcement proposals') + '</div>';
-    visibleReinf.forEach(function(r) {
-      reinfHtml += '<div class="reinf-item">' +
-        '<span class="reinf-txt"><strong>' + esc(r.agentName) + '</strong> \u00b7 ' +
-          esc(r.fromCode) + ' \u2192 ' + esc(r.toCode) + ' \u00b7 ' +
-          fmtHr(r.startH) + '-' + fmtHr(r.startH + r.durH) + '</span>' +
-        '<button class="btn btn-danger btn-sm" onclick="dismissReinf(\'' + r.agentId + '\')">\u2715</button>' +
-        '</div>';
-    });
-    reinfHtml += '</div>';
-  }
-
   body.innerHTML =
     noBriefNote +
     '<div class="card it-wrap">' +
       '<div class="it-head"><div class="it-title">' + formatDateDisplay(ds) + '</div>' +
         '<div class="it-sub">' + working.length + ' present</div></div>' +
-      reinfHtml +
       axis + band +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
