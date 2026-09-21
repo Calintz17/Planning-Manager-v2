@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.8</title>
+  <title>CORA Retail V7.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -958,6 +958,10 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 }
 .ce-opt:hover { background:var(--bg-base-3); }
 .ce-opt.is-current { background:var(--info-soft); }
+.ce-adjust { width:100%; padding:8px; border:1px solid var(--nav-active-bg); background:var(--nav-active-bg);
+  color:#fff; border-radius:var(--r-sm); font-family:var(--font); font-size:12px; font-weight:600;
+  cursor:pointer; transition:opacity .12s; }
+.ce-adjust:hover { opacity:.9; }
 .ce-lbl { font-size:12.5px; color:var(--tx-2); }
 .ce-reset .ce-lbl { color:var(--tx-3); font-style:italic; }
 .ce-sep { height:1px; background:var(--line); margin:var(--s2) 0; }
@@ -1300,6 +1304,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 // Le dropdown en haut a droite change la langue ; le choix est memorise.
 var I18N = {
   jp: {
+    'Adjust whole planning': '全体のスケジュールを調整',
     'How many days an advisor can legally work per week in your country': '各国の法定週間労働日数の上限',
     'Contractually, how long one advisor can work per day': '契約上、1名が1日に勤務できる時間',
     'The standard weekly contract of your team': 'チームの標準的な週間契約時間',
@@ -1726,6 +1731,8 @@ let storeHighlights   = [];   // [{id, start_date, end_date, text}]
 let planningOverrides = {};   // { agentId: { 'YYYY-MM-DD': 'O' | 'OFF' | 'A' ... } }
 let cornerOverrides   = {};   // { agentId: { 'YYYY-MM-DD': cornerId } } (override manuel corner)
 let monthlyResult = {};       // { 'YYYY-MM-DD': { agentId: {code, special} } } - partage monthly -> intraday
+let manualMode    = true;     // planning figé par défaut ; false = recalcul complet ("Adjust")
+let adjustWarned  = false;    // avertissement "tout va changer" affiché une fois par session
 let intradayExport = null;    // snapshot du dernier intraday rendu, pour l'export Excel
 let agentPrefs        = {};   // { agentId: {avoid_days[], fixed_schedule} }
 let trafficMonthly    = {};   // { 'YYYY-MM': {last_year, current_year, source} }
@@ -4679,6 +4686,9 @@ function openCellEditor(agentId, ds, evt) {
     html += '</div>';
   }
 
+  html += '<div class="ce-sep"></div>' +
+    '<button class="ce-adjust" onclick="adjustWholePlanning()">' + t('Adjust whole planning') + '</button>';
+
   document.getElementById('ce-title').textContent =
     ((agent.first_name || '') + ' ' + (agent.last_name || '')).trim();
   document.getElementById('ce-sub').textContent = formatDateDisplay(ds);
@@ -4702,6 +4712,21 @@ function closeCellEditor() {
   var pop = document.getElementById('cell-editor');
   if (pop) pop.style.display = 'none';
   document.removeEventListener('click', closeCellEditorOutside);
+}
+
+// "Adjust whole planning" : recalcul complet du mois (le figé est leve le temps
+// d'un recalcul, puis remis). Avertissement une seule fois par session.
+async function adjustWholePlanning() {
+  closeCellEditor();
+  if (!adjustWarned) {
+    adjustWarned = true;
+    if (!confirm('This will recompute the whole planning for every advisor (past days stay untouched). Continue?')) return;
+  }
+  manualMode = false;
+  renderMonthlyPlanning();   // recalcul complet
+  manualMode = true;         // on refige aussitot
+  if (currentStoreId) renderDashboard();
+  showToast('Planning adjusted \u2713');
 }
 
 async function applyCellOverride(value) {
@@ -5074,6 +5099,10 @@ function renderMonthlyPlanning() {
   // Liste des jours du mois + trafic (forecast) par jour, pour decider repos
   var monthDays = [];
   var _todayStr = toDateStr(new Date());
+  // Mode figé (défaut) : le planning ne se re-ventile pas. Chaque modif du
+  // manager reste locale (shift, corner, absence) ; le reste ne bouge pas. Le
+  // bouton "Adjust whole planning" relance un recalcul complet (manualMode=false).
+  var _freeze = (typeof manualMode !== 'undefined') ? manualMode : true;
   for (var dnum = 1; dnum <= nDays; dnum++) {
     var dObj = new Date(year, monthIdx, dnum);
     var ds   = toDateStr(dObj);
@@ -5885,9 +5914,10 @@ function renderMonthlyPlanning() {
       });
       if (!present.length) return;
 
-      // Jour passe : on fige. Chaque agent reste sur son corner d'attache, pas
-      // de reequilibrage ni de prefixe retroactif (le passe ne bouge plus).
-      if (d.past) {
+      // Jour passe OU mode figé : on ne rééquilibre pas. Chaque agent reste sur
+      // son corner d'attache, pas de transfert ni de préfixe. Seul un override
+      // manuel du manager s'applique.
+      if (d.past || _freeze) {
         present.forEach(function(a) {
           if (a.home_corner_id) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = a.home_corner_id;
         });
@@ -6022,7 +6052,7 @@ function renderMonthlyPlanning() {
     var minC = (storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1;
 
     monthDays.forEach(function(d) {
-      if (d.closure || d.past) return;                    // passe fige
+      if (d.closure || d.past || _freeze) return;         // passe/fige : pas de recalcul O/C
       if (isSpecialDay(d)) return;                        // dimanche/ferie = D unique
       var plan = shiftPlanByDay[d.ds]; if (!plan) return;
       // Vendeurs presents groupes par corner effectif du jour.
