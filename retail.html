@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.9</title>
+  <title>CORA Retail V7.9.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -958,10 +958,8 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 }
 .ce-opt:hover { background:var(--bg-base-3); }
 .ce-opt.is-current { background:var(--info-soft); }
-.ce-adjust { width:100%; padding:8px; border:1px solid var(--nav-active-bg); background:var(--nav-active-bg);
-  color:#fff; border-radius:var(--r-sm); font-family:var(--font); font-size:12px; font-weight:600;
-  cursor:pointer; transition:opacity .12s; }
-.ce-adjust:hover { opacity:.9; }
+.ce-adjust-row { display:flex; align-items:center; justify-content:space-between; padding:4px 2px; }
+.ce-adjust-lbl { font-size:12.5px; color:var(--tx-2); }
 .ce-lbl { font-size:12.5px; color:var(--tx-2); }
 .ce-reset .ce-lbl { color:var(--tx-3); font-style:italic; }
 .ce-sep { height:1px; background:var(--line); margin:var(--s2) 0; }
@@ -1733,6 +1731,7 @@ let cornerOverrides   = {};   // { agentId: { 'YYYY-MM-DD': cornerId } } (overri
 let monthlyResult = {};       // { 'YYYY-MM-DD': { agentId: {code, special} } } - partage monthly -> intraday
 let manualMode    = true;     // planning figé par défaut ; false = recalcul complet ("Adjust")
 let adjustWarned  = false;    // avertissement "tout va changer" affiché une fois par session
+let cellAdjustMode = false;   // slider dans la bulle : ON = la prochaine modif recalcule tout
 let intradayExport = null;    // snapshot du dernier intraday rendu, pour l'export Excel
 let agentPrefs        = {};   // { agentId: {avoid_days[], fixed_schedule} }
 let trafficMonthly    = {};   // { 'YYYY-MM': {last_year, current_year, source} }
@@ -4687,7 +4686,9 @@ function openCellEditor(agentId, ds, evt) {
   }
 
   html += '<div class="ce-sep"></div>' +
-    '<button class="ce-adjust" onclick="adjustWholePlanning()">' + t('Adjust whole planning') + '</button>';
+    '<div class="ce-adjust-row"><span class="ce-adjust-lbl">' + t('Adjust whole planning') + '</span>' +
+      '<label class="toggle"><input type="checkbox" id="ce-adjust-toggle"' + (cellAdjustMode ? ' checked' : '') +
+      ' onchange="toggleCellAdjustMode(this)"><span class="toggle-slider"></span></label></div>';
 
   document.getElementById('ce-title').textContent =
     ((agent.first_name || '') + ' ' + (agent.last_name || '')).trim();
@@ -4714,19 +4715,32 @@ function closeCellEditor() {
   document.removeEventListener('click', closeCellEditorOutside);
 }
 
-// "Adjust whole planning" : recalcul complet du mois (le figé est leve le temps
-// d'un recalcul, puis remis). Avertissement une seule fois par session.
-async function adjustWholePlanning() {
-  closeCellEditor();
-  if (!adjustWarned) {
+// Slider dans la bulle : ON = les modifs qui suivent recalculent tout le
+// planning ; OFF (defaut) = chaque modif reste locale (figé). Avertissement
+// une seule fois par session au premier passage ON, pour eviter l'erreur sans
+// spammer si plusieurs modifs suivent.
+function toggleCellAdjustMode(cb) {
+  if (cb.checked && !adjustWarned) {
     adjustWarned = true;
-    if (!confirm('This will recompute the whole planning for every advisor (past days stay untouched). Continue?')) return;
+    if (!confirm('While this is on, each change you make will recompute the whole planning for every advisor (past days stay untouched). Continue?')) {
+      cb.checked = false;
+      return;
+    }
   }
-  manualMode = false;
-  renderMonthlyPlanning();   // recalcul complet
-  manualMode = true;         // on refige aussitot
-  if (currentStoreId) renderDashboard();
-  showToast('Planning adjusted \u2713');
+  cellAdjustMode = cb.checked;
+}
+
+// Applique un render en respectant le slider : si cellAdjustMode est actif, on
+// leve le figé le temps de ce recalcul puis on refige aussitot.
+function renderWithAdjustMode() {
+  if (cellAdjustMode) {
+    manualMode = false;
+    renderMonthlyPlanning();
+    manualMode = true;
+    if (currentStoreId) renderDashboard();
+  } else {
+    renderMonthlyPlanning();
+  }
 }
 
 async function applyCellOverride(value) {
@@ -4768,7 +4782,7 @@ async function applyCellOverride(value) {
     planningOverrides[st.agentId][st.ds] = value;
     showToast('Updated \u2713');
   }
-  renderMonthlyPlanning();
+  renderWithAdjustMode();
   if (currentStoreId) renderDashboard();
 }
 
@@ -4790,7 +4804,7 @@ async function applyCornerOverride(cornerId) {
     if (cornerOverrides[st.agentId]) delete cornerOverrides[st.agentId][st.ds];
   }
   showToast('Corner updated \u2713');
-  renderMonthlyPlanning();
+  renderWithAdjustMode();
 }
 async function clearMonthOverrides() {
   if (!agents.length) return;
@@ -5144,9 +5158,16 @@ function renderMonthlyPlanning() {
   // ── Disponibilite de base : absences et conges sont indiscutables ──
   function isBlocked(a, d) {
     if (d.closure) return true;
-    if (agentOnLeave(a.id, d.ds)) return true;
-    var st = (availability[a.id] && availability[a.id][d.ds]) || null;
-    return st === 'absent';
+    // En figé, l'absence ne bloque pas la ventilation : l'agent garde sa place
+    // (le quota l'ignore aussi, cf plus haut), donc personne ne le remplace et
+    // rien ne bouge. shiftFor peint l'absence a l'affichage. Hors figé, l'absence
+    // bloque pour permettre le remplacement.
+    if (!_freeze) {
+      if (agentOnLeave(a.id, d.ds)) return true;
+      var st = (availability[a.id] && availability[a.id][d.ds]) || null;
+      if (st === 'absent') return true;
+    }
+    return false;
   }
 
   // ── Compteur de dette de preference ──
@@ -5186,7 +5207,10 @@ function renderMonthlyPlanning() {
         if (getDayClosureType(dds)) continue;
         openW++;
         var stAv = (availability[a.id] && availability[a.id][dds]) || null;
-        if (agentOnLeave(a.id, dds) || stAv === 'absent') absW++;
+        // En figé, l'absence n'entre pas dans le calcul (quota inchangé) : le
+        // planning reste identique a la reference, l'absence est peinte a
+        // l'affichage seulement, sans decaler personne.
+        if (!_freeze && (agentOnLeave(a.id, dds) || stAv === 'absent')) absW++;
       }
       if (isVolant) {
         // Regle volant : 5 jours pleins x pct. La partie .5 = une demi-journee.
