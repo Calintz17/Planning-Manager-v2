@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V7.9.2</title>
+  <title>CORA Retail V8.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -375,6 +375,9 @@ select, input[type=text], input[type=number], input[type=date] {
 }
 select:focus, input:focus { outline:none; border-color:var(--brand);
   box-shadow:0 0 0 3px rgba(31,31,31,.07); }
+
+.hm-pair { display:inline-flex; align-items:center; gap:4px; width:100%; }
+.hm-pair select { width:auto; flex:1; min-width:0; padding:0 6px; text-align:center; }
 
 /* Recherche : padding gauche pour degager la loupe (apres la regle generique) */
 .tb-search input[type=text] {
@@ -2558,6 +2561,34 @@ function hourSelect(cls, selMin) {
   return '<select class="' + cls + '">' + hourOptions(selMin) + '</select>';
 }
 
+// Double dropdown Heure / Minute (a la minute pres, tous les shifts). Le
+// conteneur porte l'id demande ; .value se lit via hourMinValue(id).
+function hourMinSelectHtml(id, selMin) {
+  selMin = (selMin == null) ? 600 : selMin;
+  var h = Math.floor(selMin / 60), m = selMin % 60;
+  var hOpts = '';
+  for (var hh = 0; hh <= 29; hh++) {
+    var disp = (hh >= 24) ? String(hh - 24).padStart(2,'0') + ' (+1)' : String(hh).padStart(2,'0');
+    hOpts += '<option value="' + hh + '"' + (hh === h ? ' selected' : '') + '>' + disp + '</option>';
+  }
+  var mOpts = '';
+  for (var mm = 0; mm < 60; mm++) {
+    mOpts += '<option value="' + mm + '"' + (mm === m ? ' selected' : '') + '>' + String(mm).padStart(2,'0') + '</option>';
+  }
+  return '<span class="hm-pair" id="' + id + '">' +
+    '<select class="hm-h">' + hOpts + '</select>:' +
+    '<select class="hm-m">' + mOpts + '</select></span>';
+}
+// Lit la valeur en minutes depuis minuit d'un double dropdown cree par hourMinSelectHtml.
+function hourMinValue(id) {
+  var box = document.getElementById(id);
+  if (!box) return null;
+  var h = parseInt(box.querySelector('.hm-h').value, 10);
+  var m = parseInt(box.querySelector('.hm-m').value, 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+
 function durLabel(min) {
   var h = Math.floor(min / 60), m = min % 60;
   return h + 'h' + (m ? String(m).padStart(2,'0') : '');
@@ -2615,8 +2646,8 @@ function openShiftCreator(grid) {
   document.getElementById('sc-sub').textContent =
     (grid === 'stock' ? 'Stock' : 'Sales') + ' shift';
   document.getElementById('sc-code').value = '';
-  document.getElementById('sc-start').innerHTML = hourOptions(600);
-  document.getElementById('sc-end').innerHTML   = hourOptions(1080);
+  document.getElementById('sc-start').innerHTML = hourMinSelectHtml('sc-start-inner', 600);
+  document.getElementById('sc-end').innerHTML   = hourMinSelectHtml('sc-end-inner', 1080);
   renderTonePicker('close');
   document.getElementById('shift-creator').classList.add('open');
   setTimeout(function() { document.getElementById('sc-code').focus(); }, 60);
@@ -2680,8 +2711,8 @@ function deriveShiftTags(startMin, endMin) {
 
 function confirmShiftCreation() {
   var code  = (document.getElementById('sc-code').value || '').trim().toUpperCase();
-  var start = parseInt(document.getElementById('sc-start').value);
-  var end   = parseInt(document.getElementById('sc-end').value);
+  var start = hourMinValue('sc-start-inner');
+  var end   = hourMinValue('sc-end-inner');
   var toneEl = document.querySelector('#sc-tones .tone-chip.on');
   var tone  = toneEl ? toneEl.dataset.tone : 'close';
   var maxDaily = regulations.max_daily_hours || 8;
@@ -7816,8 +7847,8 @@ init();
           <input type="text" id="sc-code" maxlength="3" placeholder="E"
                  style="text-transform:uppercase;font-weight:600">
         </div>
-        <div class="fld"><label>Starts</label><select id="sc-start"></select></div>
-        <div class="fld"><label>Ends</label><select id="sc-end"></select></div>
+        <div class="fld"><label>Starts</label><div id="sc-start"></div></div>
+        <div class="fld"><label>Ends</label><div id="sc-end"></div></div>
       </div>
       <div class="fld" style="margin-top:var(--s4)">
         <label>Colour</label>
