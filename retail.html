@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.0.1</title>
+  <title>CORA Retail V8.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -174,6 +174,10 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .it-blk:hover { box-shadow:0 2px 6px rgba(0,0,0,.22); }
 .b-mb  { background:#1a1a2e; color:#fff; }
 .b-lun { background:#FDE047; color:#713F12; }
+.b-brk0 { background:#BFDBFE; color:#1E3A8A; }
+.b-brk1 { background:#FBCFE8; color:#9D174D; }
+.b-brk2 { background:#BBF7D0; color:#166534; }
+.b-brk3 { background:#DDD6FE; color:#5B21B6; }
 .b-wel { background:#A5B4FC; color:#312E81; }
 
 /* Missions ajoutees a la main : bulle + croix de retrait */
@@ -378,6 +382,7 @@ select:focus, input:focus { outline:none; border-color:var(--brand);
 
 .hm-pair { display:inline-flex; align-items:center; gap:4px; width:100%; }
 .hm-pair select { width:auto; flex:1; min-width:0; padding:0 6px; text-align:center; }
+td.is-multisel { background:var(--info-soft); box-shadow:inset 0 0 0 2px var(--nav-active-bg); }
 
 /* Recherche : padding gauche pour degager la loupe (apres la regle generique) */
 .tb-search input[type=text] {
@@ -949,6 +954,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   background:var(--bg-base); border:1px solid var(--line);
   border-radius:var(--r-lg); box-shadow:0 12px 32px rgba(16,24,40,.18);
   padding:var(--s3); min-width:230px;
+  max-height:calc(100vh - 16px); overflow-y:auto;
 }
 .ce-head { padding:0 var(--s2) var(--s3); }
 .ce-title { font-size:13.5px; font-weight:600; color:var(--tx-1); }
@@ -1735,6 +1741,20 @@ let monthlyResult = {};       // { 'YYYY-MM-DD': { agentId: {code, special} } } 
 let manualMode    = true;     // planning figé par défaut ; false = recalcul complet ("Adjust")
 let adjustWarned  = false;    // avertissement "tout va changer" affiché une fois par session
 let cellAdjustMode = false;   // slider dans la bulle : ON = la prochaine modif recalcule tout
+let multiSelect = [];         // [{agentId, ds}, ...] cellules selectionnees via Ctrl/Cmd+clic
+
+function toggleCellSelect(agentId, ds, td) {
+  var idx = multiSelect.findIndex(function(s){ return s.agentId === agentId && s.ds === ds; });
+  if (idx >= 0) { multiSelect.splice(idx, 1); if (td) td.classList.remove('is-multisel'); }
+  else { multiSelect.push({ agentId: agentId, ds: ds }); if (td) td.classList.add('is-multisel'); }
+}
+function clearMultiSelect() {
+  multiSelect.forEach(function(s) {
+    var el = document.querySelector('td[data-agent="' + s.agentId + '"][data-ds="' + s.ds + '"]');
+    if (el) el.classList.remove('is-multisel');
+  });
+  multiSelect = [];
+}
 let intradayExport = null;    // snapshot du dernier intraday rendu, pour l'export Excel
 let agentPrefs        = {};   // { agentId: {avoid_days[], fixed_schedule} }
 let trafficMonthly    = {};   // { 'YYYY-MM': {last_year, current_year, source} }
@@ -4070,33 +4090,63 @@ function renderIntraday(ds) {
     return shiftInfo[a.id].startMin - shiftInfo[b.id].startMin;
   });
 
-  // ── Plan des pauses dejeuner (lissage par pool, presence floor garantie) ──
-  // Regle terrain : stock et management peuvent partir ensemble, mais les
-  // vendeurs (floor) doivent toujours garder une presence en boutique. On lisse
-  // donc les vendeurs a part, en limitant le nombre en pause simultanee a la
-  // moitie de l'effectif floor, pour ne jamais vider le floor a midi.
-  var lunchPlan = {};
-  if (lunch) {
-    var durH = lunch.duration / 60;
-    var winStart = lunch.window_start, winEnd = lunch.window_end;
-    var slots = Math.max(1, Math.floor((winEnd - winStart) / durH));
+  // ── Plan des pauses (TOUTES : lunch + pauses courtes 15/30min) ──────────────
+  // Chaque break declare dans Settings est planifie independamment, avec sa
+  // propre fenetre et duree. Un agent ne peut pas avoir deux pauses qui se
+  // chevauchent (breakPlan garde toutes les pauses posees par agent).
+  var lunchPlan = {};     // conserve pour compat (placement du lunch, jaune)
+  var breakPlans = [];    // [{ break: b, plan: { agentId: startH } }, ...] pour les autres pauses
+  var takenSlots = {};    // agentId -> [[start,end], ...] deja occupe, pour eviter les chevauchements
 
-    function planLunch(list, maxConcurrent) {
+  function markTaken(agentId, start, dur) {
+    (takenSlots[agentId] = takenSlots[agentId] || []).push([start, start + dur]);
+  }
+  function overlapsTaken(agentId, start, dur) {
+    var list = takenSlots[agentId] || [];
+    for (var i = 0; i < list.length; i++) {
+      if (start < list[i][1] && (start + dur) > list[i][0]) return true;
+    }
+    return false;
+  }
+
+  breaks.forEach(function(brk) {
+    var isLunch = brk === lunch;
+    var durH = brk.duration / 60;
+    var winStart = brk.window_start, winEnd = brk.window_end;
+    var slots = Math.max(1, Math.floor((winEnd - winStart) / durH));
+    var thisPlan = {};
+
+    function planBreak(list, maxConcurrent) {
+      // Repartit sur TOUS les slots de la fenetre (pas seulement en fonction
+      // de maxConcurrent), pour utiliser toute l'amplitude autorisee et eviter
+      // que tout le monde se retrouve au 1er creneau si le groupe est petit.
+      var perSlot = {};
       list.forEach(function(a, i) {
         var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
         var ws = Math.max(winStart, sH + 1);
         var we = Math.min(winEnd, eH) - durH;
         if (we - ws < 0) return;   // pas de place pour une pause
-        var slotIdx = Math.floor(i / maxConcurrent);
-        var ideal = winStart + (slotIdx % slots) * durH;
+        var slotIdx = i % slots;
+        var tries = 0;
+        // Slot deja plein OU chevauche une pause deja posee pour cet agent : avance.
+        while (tries < slots) {
+          var candStart = Math.min(Math.max(winStart + slotIdx * durH, ws), Math.max(ws, we));
+          candStart = Math.round(candStart * 4) / 4;
+          if ((perSlot[slotIdx] || 0) < maxConcurrent && !overlapsTaken(a.id, candStart, durH)) break;
+          slotIdx = (slotIdx + 1) % slots; tries++;
+        }
+        var ideal = winStart + slotIdx * durH;
         var slot = Math.min(Math.max(ideal, ws), Math.max(ws, we));
         slot = Math.round(slot * 4) / 4;
-        lunchPlan[a.id] = slot;
+        if (overlapsTaken(a.id, slot, durH)) return;   // pas de creneau libre, on saute
+        perSlot[slotIdx] = (perSlot[slotIdx] || 0) + 1;
+        thisPlan[a.id] = slot;
+        markTaken(a.id, slot, durH);
       });
     }
 
     // Corner effectif d'un vendeur ce jour (pour ne jamais vider un corner).
-    function lunchCornerOf(a) {
+    function breakCornerOf(a) {
       if (storeCorners.length <= 1) return '_store';
       var r = (monthlyResult[ds] || {})[a.id];
       if (r && r.corner) return r.corner;
@@ -4104,7 +4154,6 @@ function renderIntraday(ds) {
       return '_none';
     }
 
-    // Vendeurs eligibles = floor.
     var floorElig = byArrival.filter(function(a) {
       if (poolOf(a) !== 'sales') return false;
       var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
@@ -4118,22 +4167,23 @@ function renderIntraday(ds) {
 
     // Floor : lissage PAR CORNER. Dans chaque corner, au plus la moitie en pause
     // a la fois, jamais tout le corner (service minimum garanti a toute heure).
-    var byCornerLunch = {};
+    var byCornerBreak = {};
     floorElig.forEach(function(a) {
-      var c = lunchCornerOf(a);
-      (byCornerLunch[c] = byCornerLunch[c] || []).push(a);
+      var c = breakCornerOf(a);
+      (byCornerBreak[c] = byCornerBreak[c] || []).push(a);
     });
-    Object.keys(byCornerLunch).forEach(function(c) {
-      var list = byCornerLunch[c];
-      // au plus floor(n/2) en pause simultanee, min 1 present si n>=2
+    Object.keys(byCornerBreak).forEach(function(c) {
+      var list = byCornerBreak[c];
       var maxConc = list.length >= 2 ? Math.floor(list.length / 2) : (list.length ? 1 : 0);
       maxConc = Math.max(1, maxConc);
-      planLunch(list, maxConc);
+      planBreak(list, maxConc);
     });
-    // Stock + management : lissage simple, ils peuvent partir groupes.
     var otherMax = Math.max(1, Math.ceil(otherElig.length / slots));
-    planLunch(otherElig, otherMax);
-  }
+    planBreak(otherElig, otherMax);
+
+    if (isLunch) lunchPlan = thisPlan;
+    else breakPlans.push({ brk: brk, plan: thisPlan });
+  });
 
   // ── Plan des morning briefs, par vague d'arrivee ──
   // Un MB regroupe les agents arrivant a des horaires proches. Chaque vague
@@ -4300,6 +4350,12 @@ function renderIntraday(ds) {
         var lunDur = lunch.duration / 60;
         blocks.push([withOverride(a.id, 'lun', lunchPlan[a.id], lunDur), lunDur, 'lun', lunch.name]);
       }
+      breakPlans.forEach(function(bp, bi) {
+        if (bp.plan[a.id] == null) return;
+        var bDur = bp.brk.duration / 60;
+        var bType = 'brk' + bi;
+        blocks.push([withOverride(a.id, bType, bp.plan[a.id], bDur), bDur, bType, bp.brk.name]);
+      });
       if (welcomePlan[a.id] && welcomePlan[a.id].length) {
         welcomePlan[a.id].forEach(function(wh, wi) {
           blocks.push([withOverride(a.id, 'wel' + wi, wh, 1), 1, 'wel' + wi, 'Welcome']);
@@ -4702,6 +4758,14 @@ var cellEditorState = { agentId: null, ds: null };
 
 function openCellEditor(agentId, ds, evt) {
   if (evt) evt.stopPropagation();
+  // Ctrl/Cmd+clic : bascule la selection multiple, n'ouvre pas la bulle. Comme
+  // dans Excel, on accumule des cellules pour appliquer le meme changement a
+  // toutes d'un coup au prochain clic normal.
+  if (evt && (evt.ctrlKey || evt.metaKey)) {
+    var td = evt.target.closest('td');
+    toggleCellSelect(agentId, ds, td);
+    return;
+  }
   var agent = agents.find(function(a) { return a.id === agentId; });
   if (!agent) return;
   cellEditorState = { agentId: agentId, ds: ds };
@@ -4755,10 +4819,14 @@ function openCellEditor(agentId, ds, evt) {
 
   var pop = document.getElementById('cell-editor');
   pop.style.display = 'block';
-  var x = Math.min((evt ? evt.clientX : 200) + 8, window.innerWidth  - 250);
-  var y = Math.min((evt ? evt.clientY : 200) + 8, window.innerHeight - 340);
+  pop.style.visibility = 'hidden';
+  pop.style.top = '0px'; pop.style.left = '0px';
+  var ph = pop.offsetHeight, pw = pop.offsetWidth;
+  var x = Math.min((evt ? evt.clientX : 200) + 8, window.innerWidth  - pw  - 8);
+  var y = Math.min((evt ? evt.clientY : 200) + 8, window.innerHeight - ph - 8);
   pop.style.left = Math.max(8, x) + 'px';
   pop.style.top  = Math.max(8, y) + 'px';
+  pop.style.visibility = 'visible';
   setTimeout(function() { document.addEventListener('click', closeCellEditorOutside); }, 0);
 }
 
@@ -4806,40 +4874,44 @@ async function applyCellOverride(value) {
   if (!st.agentId || !st.ds) return;
   closeCellEditor();
 
-  if (value === null) {
-    // Retirer la modification : cellule automatique. On enleve aussi une
-    // eventuelle absence d'un jour posee sur cette date (synchro calendrier).
-    var del = await sb.from('retail_planning_overrides')
-      .delete().eq('agent_id', st.agentId).eq('date', st.ds);
-    if (del.error) { showToast('Failed to reset cell', 'error'); return; }
-    if (planningOverrides[st.agentId]) delete planningOverrides[st.agentId][st.ds];
-    // Supprimer une absence d'un seul jour couvrant cette date, si elle existe.
-    var oneDay = agentLeaves.filter(function(l){
-      return l.agent_id === st.agentId && l.start_date === st.ds && l.end_date === st.ds;
-    });
-    for (var i = 0; i < oneDay.length; i++) {
-      await sb.from('retail_agent_leave').delete().eq('id', oneDay[i].id);
-      agentLeaves = agentLeaves.filter(function(l){ return l.id !== oneDay[i].id; });
-    }
-    showToast('Back to automatic \u2713');
-  } else if (value === 'A') {
-    // Une absence declaree depuis le monthly cree une entree d'absence d'un
-    // jour, pour qu'elle apparaisse aussi dans Calendar > Absence.
-    var row = { store_id: currentStoreId, agent_id: st.agentId, start_date: st.ds, end_date: st.ds, type: 'absence' };
-    var ins = await sb.from('retail_agent_leave').insert([row]).select();
-    if (ins.error) { showToast('Failed to save: ' + ins.error.message, 'error'); return; }
-    if (ins.data && ins.data[0]) agentLeaves.push(ins.data[0]);
-    showToast('Absence saved \u2713');
-    renderCalendar();
-  } else {
-    var up = await sb.from('retail_planning_overrides')
-      .upsert({ agent_id: st.agentId, date: st.ds, value: value },
-              { onConflict: 'agent_id,date' });
-    if (up.error) { showToast('Failed to save: ' + up.error.message, 'error'); return; }
-    if (!planningOverrides[st.agentId]) planningOverrides[st.agentId] = {};
-    planningOverrides[st.agentId][st.ds] = value;
-    showToast('Updated \u2713');
+  // Cibles : toute la selection multiple si elle contient la cellule courante
+  // ou plus generalement si elle n'est pas vide, sinon juste la cellule cliquee.
+  var targets = multiSelect.length ? multiSelect.slice() : [{ agentId: st.agentId, ds: st.ds }];
+  if (multiSelect.length && !targets.some(function(s){ return s.agentId === st.agentId && s.ds === st.ds; })) {
+    targets.push({ agentId: st.agentId, ds: st.ds });
   }
+
+  for (var ti = 0; ti < targets.length; ti++) {
+    var tAgent = targets[ti].agentId, tDs = targets[ti].ds;
+    if (value === null) {
+      var del = await sb.from('retail_planning_overrides')
+        .delete().eq('agent_id', tAgent).eq('date', tDs);
+      if (del.error) { showToast('Failed to reset cell', 'error'); continue; }
+      if (planningOverrides[tAgent]) delete planningOverrides[tAgent][tDs];
+      var oneDay = agentLeaves.filter(function(l){
+        return l.agent_id === tAgent && l.start_date === tDs && l.end_date === tDs;
+      });
+      for (var i = 0; i < oneDay.length; i++) {
+        await sb.from('retail_agent_leave').delete().eq('id', oneDay[i].id);
+        agentLeaves = agentLeaves.filter(function(l){ return l.id !== oneDay[i].id; });
+      }
+    } else if (value === 'A') {
+      var row = { store_id: currentStoreId, agent_id: tAgent, start_date: tDs, end_date: tDs, type: 'absence' };
+      var ins = await sb.from('retail_agent_leave').insert([row]).select();
+      if (ins.error) { showToast('Failed to save: ' + ins.error.message, 'error'); continue; }
+      if (ins.data && ins.data[0]) agentLeaves.push(ins.data[0]);
+    } else {
+      var up = await sb.from('retail_planning_overrides')
+        .upsert({ agent_id: tAgent, date: tDs, value: value },
+                { onConflict: 'agent_id,date' });
+      if (up.error) { showToast('Failed to save: ' + up.error.message, 'error'); continue; }
+      if (!planningOverrides[tAgent]) planningOverrides[tAgent] = {};
+      planningOverrides[tAgent][tDs] = value;
+    }
+  }
+  showToast(targets.length > 1 ? (targets.length + ' cells updated \u2713') : 'Updated \u2713');
+  clearMultiSelect();
+  if (value === 'A') renderCalendar();
   renderWithAdjustMode();
   if (currentStoreId) renderDashboard();
 }
@@ -6532,7 +6604,7 @@ function renderMonthlyPlanning() {
       var clickable = rc.d.closure ? '' :
         ' onclick="openCellEditor(\'' + a.id + '\',\'' + rc.d.ds + '\',event)"';
       html += '<td class="' + dayCls(rc.d) + (rc.d.closure ? '' : ' is-editable') +
-              '" data-col="' + i + '"' + clickable + '>' + (showCell ? cell(rc.res) : '') + '</td>';
+              '" data-col="' + i + '" data-agent="' + a.id + '" data-ds="' + rc.d.ds + '"' + clickable + '>' + (showCell ? cell(rc.res) : '') + '</td>';
     });
     var c = rh[a.id];
     [c.O, c.C, c.off, c.dim, c.ferie, c.cp].forEach(function(v){
@@ -7892,4 +7964,3 @@ init();
 </div>
 </body>
 </html>
-
