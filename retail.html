@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.2.2</title>
+  <title>CORA Retail V8.2.3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -6328,8 +6328,8 @@ function renderMonthlyPlanning() {
     // l'agent n'est pas la ce jour-la) : prioritaires meme pour un temps
     // partiel fixe, sinon l'agent reste affiche "present" a tort.
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
-    var stEarly = (availability[agent.id] && availability[agent.id][day.ds]) || null;
-    if (stEarly === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
+    var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
+    if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
 
     // Part-time fixe AVEC horaire : 'PT' ses jours contractuels, OFF sinon.
     // Sans horaire : on laisse le flux normal (le moteur donne O/C/M).
@@ -6340,8 +6340,7 @@ function renderMonthlyPlanning() {
     }
 
     // Repos et absences manuels (rest_scheduled auto est ignore, gere par restMap).
-    var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
-    if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
+    // st deja lu ci-dessus (absent deja traite) : reutilise ici pour rest_override/rest_parttime.
     if (st === 'rest_override' || st === 'rest_parttime')
       return { code: 'OFF', cls: 'sh-off', special: 'off' };
 
