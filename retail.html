@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.2.3</title>
+  <title>CORA Retail V8.2.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2497,11 +2497,8 @@ async function saveRegulations() {
   if (thrOpen)  { var mo = parseInt(thrOpen.value,10);  storeSettings.min_opening  = (isNaN(mo)||mo<0)?1:mo; }
   if (thrClose) { var mc = parseInt(thrClose.value,10); storeSettings.min_closing  = (isNaN(mc)||mc<0)?1:mc; }
   if (thrRatio) { var rr = parseInt(thrRatio.value,10); storeSettings.closing_ratio = (isNaN(rr)||rr<0||rr>100)?0.70:rr/100; }
-  // Toujours persister store_settings : c'est la source de verite du week-end
-  // (saturday_open / sunday_open) qui gagne au rechargement. Sinon les rules et
-  // store_settings se desynchronisent et le week-end reste ferme a tort.
-  await persistStoreSettings();
 
+  // Valider day_hours AVANT toute ecriture (storeSettings.day_hours en depend).
   let valid = true;
   DAY_KEYS.forEach(function(k) {
     const openEl  = document.getElementById('reg-open-' + k);
@@ -2514,6 +2511,14 @@ async function saveRegulations() {
     }
   });
   if (!valid) { showToast('Each day: closing hour must be after opening hour', 'error'); return; }
+
+  // Une seule ecriture de store_settings, une fois toute la config validee
+  // (saturday_open/sunday_open + day_hours a jour). C'est la source de verite
+  // du week-end qui gagne au rechargement.
+  var storeSettingsRes = await persistStoreSettings();
+  if (storeSettingsRes && storeSettingsRes.error) {
+    showToast('Store settings not saved', 'error'); return;
+  }
 
   // Read breaks
   var newBreaks = [];
@@ -2549,7 +2554,6 @@ async function saveRegulations() {
 
   const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
   if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
-  await saveStoreSettings();
   renderPlanning();
 }
 
@@ -3148,12 +3152,6 @@ async function loadStoreSettings() {
   if (storeSettings.day_hours && Object.keys(storeSettings.day_hours).length) {
     regulations.day_hours = storeSettings.day_hours;
   }
-}
-
-async function saveStoreSettings() {
-  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
-  var res = await persistStoreSettings();
-  if (res && res.error) { showToast('Store settings not saved', 'error'); return; }
 }
 
 async function loadShiftConfig() {
