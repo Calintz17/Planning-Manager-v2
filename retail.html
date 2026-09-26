@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.2.1</title>
+  <title>CORA Retail V8.2.2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2532,7 +2532,7 @@ async function saveRegulations() {
     { store_id: currentStoreId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
     { store_id: currentStoreId, rule_key: 'max_daily_hours', rule_value: String(regulations.max_daily_hours) },
     { store_id: currentStoreId, rule_key: 'max_days',        rule_value: String(regulations.max_days || 5) },
-    { store_id: currentStoreId, rule_key: 'rest_gap_hours',  rule_value: String(regulations.rest_gap_hours || 11) },
+    { store_id: currentStoreId, rule_key: 'rest_gap_hours',  rule_value: String(regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) },
     { store_id: currentStoreId, rule_key: 'trend_pct',       rule_value: String(regulations.trend_pct) },
     { store_id: currentStoreId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
     { store_id: currentStoreId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
@@ -3525,17 +3525,12 @@ async function recomputeMonthDaily(year, month) {
 function openDaysInMonth(year, month) {
   var n = new Date(year, month, 0).getDate(), open = 0;
   for (var d = 1; d <= n; d++) {
-    var dt = new Date(year, month - 1, d);
-    var ds = toDateStr(dt);
-    var dow = dt.getDay();
-    // Week-end chome selon les reglages de la boutique
-    if (dow === 6 && regulations.saturday_rest) continue;
-    if (dow === 0 && regulations.sunday_rest)   continue;
-    // Jour ferie connu, sauf si le manager a force l'ouverture
-    if (calHolidays[ds] && calOverrides[ds] !== true) continue;
-    // Fermeture exceptionnelle explicite
-    if (calOverrides[ds] === false) continue;
-    open++;
+    var ds = toDateStr(new Date(year, month - 1, d));
+    // Reutilise la meme regle que le planning (getDayClosureType) : une
+    // ouverture exceptionnelle (calOverrides[ds] === true) prime toujours,
+    // week-end habituellement chome inclus. Duplication de la regle ailleurs
+    // = risque de desynchronisation (deja arrive une fois).
+    if (!getDayClosureType(ds)) open++;
   }
   return open;
 }
@@ -6329,9 +6324,12 @@ function renderMonthlyPlanning() {
       return { code: ov };
     }
 
-    // Conge declare : prioritaire meme pour un temps partiel fixe (sinon un
-    // agent PT en conge reste affiche "present" ce jour-la).
+    // Conge declare (2 sources distinctes en base, meme priorite metier :
+    // l'agent n'est pas la ce jour-la) : prioritaires meme pour un temps
+    // partiel fixe, sinon l'agent reste affiche "present" a tort.
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
+    var stEarly = (availability[agent.id] && availability[agent.id][day.ds]) || null;
+    if (stEarly === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
 
     // Part-time fixe AVEC horaire : 'PT' ses jours contractuels, OFF sinon.
     // Sans horaire : on laisse le flux normal (le moteur donne O/C/M).
@@ -7110,7 +7108,7 @@ function exportMonthly() {
     'sh-teal':{bg:'CCFBF1',tx:'115E59'}, 'sh-pink':{bg:'FCE7F3',tx:'9D174D'},
     'sh-slate':{bg:'E2E8F0',tx:'334155'},
     'sh-off':{bg:'F1F2F4',tx:'A1A1AA'}, 'sh-cp':{bg:'FEE2E2',tx:'7F1D1D'},
-    'sh-pt':{bg:'FEF9C3',tx:'854D0E'}, 'sh-none':{bg:'FAFAFB',tx:'A1A1AA'}
+    'sh-none':{bg:'FAFAFB',tx:'A1A1AA'}
   };
   // Reutilise la meme resolution de couleur que l'ecran (findShiftDef / tone)
   // pour qu'un shift personnalise garde sa vraie couleur dans l'export, au
@@ -7119,7 +7117,7 @@ function exportMonthly() {
   function toneClass(code) {
     if (code === 'OFF') return 'sh-off';
     if (code === 'A')   return 'sh-cp';
-    if (code === 'PT')  return 'sh-pt';
+    if (code === 'PT')  return 'sh-teal';
     if (code === 'D')   return 'sh-late';
     var cls = shiftCls(code);   // ex "sh-stock sh-close" ou "sh-open"
     var tones = cls.split(' ').filter(function(c){ return c !== 'sh-stock'; });
