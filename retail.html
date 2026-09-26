@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.1</title>
+  <title>CORA Retail V8.2.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -383,6 +383,18 @@ select:focus, input:focus { outline:none; border-color:var(--brand);
 .hm-pair { display:inline-flex; align-items:center; gap:4px; width:100%; }
 .hm-pair select { width:auto; flex:1; min-width:0; padding:0 6px; text-align:center; }
 td.is-multisel { background:var(--info-soft); box-shadow:inset 0 0 0 2px var(--nav-active-bg); }
+tr.evt-row th.c-day { height:36px; padding:2px; cursor:pointer; }
+tr.evt-row th.c-day:hover { background:var(--bg-subtle); }
+tr.evt-row th.c-day.evt-range-hl { background:var(--info-soft); }
+tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:600; text-align:left; padding-left:8px; }
+.evt-bar {
+  display:block; height:28px; line-height:28px; border-radius:4px; font-size:11px;
+  padding:0 6px; cursor:pointer; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; box-sizing:border-box;
+}
+.evt-local    { background:#DBEAFE; color:#1E40AF; }
+.evt-national { background:#FCE7F3; color:#9D174D; }
+.evt-training { background:#DCFCE7; color:#166534; }
 
 /* Recherche : padding gauche pour degager la loupe (apres la regle generique) */
 .tb-search input[type=text] {
@@ -1742,6 +1754,8 @@ let manualMode    = true;     // planning figé par défaut ; false = recalcul c
 let adjustWarned  = false;    // avertissement "tout va changer" affiché une fois par session
 let cellAdjustMode = false;   // slider dans la bulle : ON = la prochaine modif recalcule tout
 let multiSelect = [];         // [{agentId, ds}, ...] cellules selectionnees via Ctrl/Cmd+clic
+let planningEvents = [];      // [{id, store_id, category, start_date, end_date, label}, ...]
+let evtRangeStart = null;     // premiere date cliquee pendant une selection de plage evenement
 
 function toggleCellSelect(agentId, ds, td) {
   var idx = multiSelect.findIndex(function(s){ return s.agentId === agentId && s.ds === ds; });
@@ -1861,12 +1875,14 @@ function changeWeek(dir) {
 function monthlyShift(dir) {
   monthlyRef.setDate(1);
   monthlyRef.setMonth(monthlyRef.getMonth() + dir);
+  evtRangeStart = null;
   updateMonthlyLabel();
   if (currentStoreId) renderMonthlyPlanning();
 }
 
 function monthlyToday() {
   monthlyRef = new Date();
+  evtRangeStart = null;
   updateMonthlyLabel();
   if (currentStoreId) renderMonthlyPlanning();
 }
@@ -2193,6 +2209,7 @@ async function onStoreChange() {
   if (!currentStoreId) return;
 
   currentCornerView = null;
+  evtRangeStart = null;
   saveScope();
   closeStoreGate();
   await loadRegulations();
@@ -2200,6 +2217,7 @@ async function onStoreChange() {
   await loadStoreSettings();
   await loadCalendarData();
   await loadHighlights();
+  await loadPlanningEvents();
   await loadWeekData();
   if (!currentIntradayDate) currentIntradayDate = toDateStr(new Date());
   renderMonthlyPlanning();
@@ -2242,9 +2260,9 @@ async function loadRegulations() {
       case 'saturday_rest':   regulations.saturday_rest = row.rule_value === 'true'; break;
       case 'sunday_rest':     regulations.sunday_rest   = row.rule_value === 'true'; break;
       case 'weekly_hours':    regulations.weekly_hours  = parseFloat(row.rule_value); break;
-      case 'max_daily_hours': regulations.max_daily_hours = parseFloat(row.rule_value) || 8.5; break;
-      case 'max_days':        regulations.max_days      = parseInt(row.rule_value, 10) || 5; break;
-      case 'rest_gap_hours':  regulations.rest_gap_hours = parseFloat(row.rule_value) || 11; break;
+      case 'max_daily_hours': { var vMDH = parseFloat(row.rule_value); regulations.max_daily_hours = isNaN(vMDH) ? 8.5 : vMDH; break; }
+      case 'max_days':        { var vMD  = parseInt(row.rule_value, 10); regulations.max_days = isNaN(vMD) ? 5 : vMD; break; }
+      case 'rest_gap_hours':  { var vRGH = parseFloat(row.rule_value); regulations.rest_gap_hours = isNaN(vRGH) ? 11 : vRGH; break; }
       case 'trend_pct':       regulations.trend_pct     = parseFloat(row.rule_value) || 0; break;
       case 'aht_tasks':
         try { regulations.aht_tasks = JSON.parse(row.rule_value); } catch(e) {}
@@ -2502,8 +2520,8 @@ async function saveRegulations() {
   document.querySelectorAll('.break-row').forEach(function(row) {
     var name  = row.querySelector('.break-name').value.trim();
     var dur   = parseInt(row.querySelector('.break-dur').value) || 0;
-    var wStart= parseInt(row.querySelector('.break-ws').value) || 0;
-    var wEnd  = parseInt(row.querySelector('.break-we').value) || 0;
+    var wStart= parseFloat(row.querySelector('.break-ws').value) || 0;
+    var wEnd  = parseFloat(row.querySelector('.break-we').value) || 0;
     if (name && dur > 0) newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd });
   });
   regulations.breaks = newBreaks;
@@ -2535,32 +2553,6 @@ async function saveRegulations() {
   renderPlanning();
 }
 
-// ── DATE TAG MANAGEMENT ───────────────────────────────────────────────────
-function removeClosedDate(dateStr) {
-  regulations.closed_dates = regulations.closed_dates.filter(function(d) { return d !== dateStr; });
-  renderDateTags('closed-dates-tags', regulations.closed_dates, 'closed');
-}
-
-function removeHoliday(dateStr) {
-  regulations.public_holidays = regulations.public_holidays.filter(function(d) { return d !== dateStr; });
-  renderDateTags('holiday-dates-tags', regulations.public_holidays, 'holiday');
-}
-
-function renderDateTags(containerId, dates, type) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  if (!dates.length) {
-    container.innerHTML = '<span style="color:#9ca3af;font-size:12px;">No dates added yet.</span>';
-    return;
-  }
-  container.innerHTML = dates.map(function(d) {
-    const cls  = type === 'holiday' ? 'date-tag holiday-tag' : 'date-tag';
-    const fn   = type === 'holiday' ? 'removeHoliday' : 'removeClosedDate';
-    return '<span class="' + cls + '">' + formatDateDisplay(d) +
-      '<button onclick="' + fn + '(\'' + d + '\')" title="Remove">\u2715</button></span>';
-  }).join('');
-}
-
 // ── RENDER REGULATIONS ────────────────────────────────────────────────────
 function hourSelectHtml(id, selected)  { return '<select id="' + id + '">' + hourOptionsH(selected) + '</select>'; }
 function hourSelectHtml2(cls, selected) { return '<select onchange="saveRegulations()" class="' + cls + '">' + hourOptionsH(selected) + '</select>'; }
@@ -2578,7 +2570,9 @@ var SHIFT_TONES = [
 
 // Selecteur d'heure identique a celui des horaires d'ouverture (pas de input time)
 // Variante classe (plusieurs lignes dans un tableau, une par shift existant).
-function hourMinSelectHtmlCls(cls, selMin) {
+// Genere le HTML interne (2 selects) d'un double dropdown Heure/Minute, a la
+// minute pres, jusqu'a 29h (shifts qui passent minuit, ex Dubai ferme a 2h).
+function hourMinOptionsPair(selMin) {
   selMin = (selMin == null) ? 600 : selMin;
   var h = Math.floor(selMin / 60), m = selMin % 60;
   var hOpts = '';
@@ -2590,13 +2584,10 @@ function hourMinSelectHtmlCls(cls, selMin) {
   for (var mm = 0; mm < 60; mm++) {
     mOpts += '<option value="' + mm + '"' + (mm === m ? ' selected' : '') + '>' + String(mm).padStart(2,'0') + '</option>';
   }
-  return '<span class="hm-pair ' + cls + '">' +
-    '<select class="hm-h">' + hOpts + '</select>:' +
-    '<select class="hm-m">' + mOpts + '</select></span>';
+  return '<select class="hm-h">' + hOpts + '</select>:<select class="hm-m">' + mOpts + '</select>';
 }
-// Lit la valeur en minutes d'un hm-pair trouve dans un conteneur (ex une <tr>).
-function hourMinValueIn(container, cls) {
-  var box = container.querySelector('.' + cls);
+// Lit la valeur en minutes d'un hm-pair deja resolu en element DOM.
+function hourMinValueOf(box) {
   if (!box) return null;
   var h = parseInt(box.querySelector('.hm-h').value, 10);
   var m = parseInt(box.querySelector('.hm-m').value, 10);
@@ -2604,36 +2595,22 @@ function hourMinValueIn(container, cls) {
   return h * 60 + m;
 }
 
-function hourSelect(cls, selMin) {
-  return '<select class="' + cls + '">' + hourOptions(selMin) + '</select>';
+function hourMinSelectHtmlCls(cls, selMin) {
+  return '<span class="hm-pair ' + cls + '">' + hourMinOptionsPair(selMin) + '</span>';
+}
+// Lit la valeur en minutes d'un hm-pair trouve dans un conteneur (ex une <tr>).
+function hourMinValueIn(container, cls) {
+  return hourMinValueOf(container.querySelector('.' + cls));
 }
 
 // Double dropdown Heure / Minute (a la minute pres, tous les shifts). Le
 // conteneur porte l'id demande ; .value se lit via hourMinValue(id).
 function hourMinSelectHtml(id, selMin) {
-  selMin = (selMin == null) ? 600 : selMin;
-  var h = Math.floor(selMin / 60), m = selMin % 60;
-  var hOpts = '';
-  for (var hh = 0; hh <= 29; hh++) {
-    var disp = (hh >= 24) ? String(hh - 24).padStart(2,'0') + ' (+1)' : String(hh).padStart(2,'0');
-    hOpts += '<option value="' + hh + '"' + (hh === h ? ' selected' : '') + '>' + disp + '</option>';
-  }
-  var mOpts = '';
-  for (var mm = 0; mm < 60; mm++) {
-    mOpts += '<option value="' + mm + '"' + (mm === m ? ' selected' : '') + '>' + String(mm).padStart(2,'0') + '</option>';
-  }
-  return '<span class="hm-pair" id="' + id + '">' +
-    '<select class="hm-h">' + hOpts + '</select>:' +
-    '<select class="hm-m">' + mOpts + '</select></span>';
+  return '<span class="hm-pair" id="' + id + '">' + hourMinOptionsPair(selMin) + '</span>';
 }
 // Lit la valeur en minutes depuis minuit d'un double dropdown cree par hourMinSelectHtml.
 function hourMinValue(id) {
-  var box = document.getElementById(id);
-  if (!box) return null;
-  var h = parseInt(box.querySelector('.hm-h').value, 10);
-  var m = parseInt(box.querySelector('.hm-m').value, 10);
-  if (isNaN(h) || isNaN(m)) return null;
-  return h * 60 + m;
+  return hourMinValueOf(document.getElementById(id));
 }
 
 function durLabel(min) {
@@ -2702,23 +2679,6 @@ function openShiftCreator(grid) {
 
 function closeShiftCreator() {
   document.getElementById('shift-creator').classList.remove('open');
-}
-
-function hourOptions(selMin) {
-  var o = '';
-  // 00:00 -> 23:45 normal, puis 24:00 -> 05:45 pour les shifts qui passent
-  // minuit (ex Dubai ferme a 2h). On considere que ces heures restent sur la
-  // meme journee de planning, donc pas d'impact "lendemain".
-  for (var h = 0; h <= 29; h++) {
-    for (var q = 0; q < 60; q += 15) {
-      var v = h * 60 + q;
-      var disp = (h >= 24)
-        ? String(h - 24).padStart(2,'0') + ':' + String(q).padStart(2,'0') + ' (+1)'
-        : String(h).padStart(2,'0') + ':' + String(q).padStart(2,'0');
-      o += '<option value="' + v + '"' + (v === selMin ? ' selected' : '') + '>' + disp + '</option>';
-    }
-  }
-  return o;
 }
 
 function renderTonePicker(sel) {
@@ -2920,30 +2880,11 @@ function renderRegulations() {
       '</tr>';
   });
 
-  const closedTagsHtml = regulations.closed_dates.length
-    ? regulations.closed_dates.map(function(d) {
-        return '<span class="date-tag">' + formatDateDisplay(d) +
-          '<button onclick="removeClosedDate(\'' + d + '\')" title="Remove">\u2715</button></span>';
-      }).join('')
-    : '<span style="color:#9ca3af;font-size:12px;">No dates added yet.</span>';
-
-  const holidayTagsHtml = regulations.public_holidays.length
-    ? regulations.public_holidays.map(function(d) {
-        return '<span class="date-tag holiday-tag">' + formatDateDisplay(d) +
-          '<button onclick="removeHoliday(\'' + d + '\')" title="Remove">\u2715</button></span>';
-      }).join('')
-    : '<span style="color:#9ca3af;font-size:12px;">No dates added yet.</span>';
-
-  const openDayCount = getWeekDays(currentWeekMonday)
-    .filter(function(day) { return !getDayClosureType(toDateStr(day)); }).length;
-  const rotationNote = '';
-
   // Dynamic break/day total = sum of all break durations (read-only, reflects Break Structure)
   // (AHT/Priority/Monthly-Targets bloc retire - refonte Settings a venir)
   var settingsExtra = buildShiftSettingsHtml();
 
   document.getElementById('regulations-content').innerHTML =
-    rotationNote +
 
     // ── BUBBLE 1: Labor Rules ────────────────────────────────────────────
     '<div class="card">' +
@@ -2958,7 +2899,7 @@ function renderRegulations() {
         rrow('Max hours / week', 'The standard weekly contract of your team',
           '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5">', 'h') +
         rrow('Max hours between shifts', 'How long an advisor must rest between two shifts',
-          '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours||11) + '" min="0" max="24" step="0.5">', 'h') +
+          '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) + '" min="0" max="24" step="0.5">', 'h') +
         rrow('Opening minimum', 'How many advisors are needed at minimum to open a store or a corner',
           '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1">', 'CA') +
         rrow('Closing minimum', 'How many advisors are needed at minimum to close a store or a corner',
@@ -3078,8 +3019,8 @@ async function loadWeekData() {
 
 // ── REGULATION HELPER ─────────────────────────────────────────────────────
 function getDayClosureType(dayStr) {
-  // Manager override wins: forced open clears any closure; forced closed = holiday.
-  if (calOverrides[dayStr] === true)  { /* forced open: fall through to weekend check below but not holiday */ }
+  // Manager override wins: forced open clears any closure (holiday AND weekend
+  // rest day) ; forced closed = holiday.
   if (calOverrides[dayStr] === false) return 'holiday';
 
   // Calendar API holidays (per-country, always current) — closed by default,
@@ -3091,8 +3032,8 @@ function getDayClosureType(dayStr) {
   if (regulations.closed_dates.includes(dayStr)    && calOverrides[dayStr] !== true) return 'holiday';
 
   const dow = new Date(dayStr + 'T12:00:00').getDay();
-  if (dow === 6 && regulations.saturday_rest) return 'weekend';
-  if (dow === 0 && regulations.sunday_rest)   return 'weekend';
+  if (dow === 6 && regulations.saturday_rest && calOverrides[dayStr] !== true) return 'weekend';
+  if (dow === 0 && regulations.sunday_rest   && calOverrides[dayStr] !== true) return 'weekend';
   return null;
 }
 
@@ -3395,6 +3336,97 @@ async function loadTraffic(year) {
   if (!dres.error && dres.data) {
     dres.data.forEach(function(r) { trafficDaily[r.date] = r; });
   }
+}
+
+// evenement en cours d'edition : soit un id existant (edition), soit
+// cat+range (creation depuis une selection de plage vide)
+var eventEditorState = { id: null, cat: null, start: null, end: null };
+
+function openEventEditor(id, cat, range) {
+  var modal = document.getElementById('event-editor');
+  if (id) {
+    var ev = planningEvents.find(function(e){ return e.id === id; });
+    if (!ev) return;
+    eventEditorState = { id: ev.id, cat: ev.category, start: ev.start_date, end: ev.end_date };
+    document.getElementById('evt-modal-title').textContent =
+      ev.category.charAt(0).toUpperCase() + ev.category.slice(1) + ' event';
+    document.getElementById('evt-label-input').value = ev.label || '';
+    document.getElementById('evt-delete-btn').style.display = '';
+  } else {
+    eventEditorState = { id: null, cat: cat, start: range.start, end: range.end };
+    document.getElementById('evt-modal-title').textContent =
+      cat.charAt(0).toUpperCase() + cat.slice(1) + ' event';
+    document.getElementById('evt-label-input').value = '';
+    document.getElementById('evt-delete-btn').style.display = 'none';
+  }
+  document.getElementById('evt-dates-display').textContent =
+    formatDateDisplay(eventEditorState.start) +
+    (eventEditorState.start !== eventEditorState.end ? ' \u2192 ' + formatDateDisplay(eventEditorState.end) : '');
+  modal.classList.add('open');
+  setTimeout(function(){ document.getElementById('evt-label-input').focus(); }, 60);
+}
+
+function closeEventEditor() {
+  document.getElementById('event-editor').classList.remove('open');
+  eventEditorState = { id: null, cat: null, start: null, end: null };
+}
+
+async function saveEvent() {
+  var label = document.getElementById('evt-label-input').value.trim();
+  var st = eventEditorState;
+  if (st.id) {
+    var up = await sb.from('retail_planning_events')
+      .update({ label: label }).eq('id', st.id);
+    if (up.error) { showToast('Save failed', 'error'); return; }
+  } else {
+    var ins = await sb.from('retail_planning_events').insert([{
+      store_id: currentStoreId, category: st.cat,
+      start_date: st.start, end_date: st.end, label: label
+    }]).select();
+    if (ins.error) { showToast('Save failed', 'error'); return; }
+  }
+  await loadPlanningEvents();
+  closeEventEditor();
+  showToast('Event saved \u2713');
+  renderMonthlyPlanning();
+}
+
+async function deleteEvent() {
+  var st = eventEditorState;
+  if (!st.id) return;
+  var del = await sb.from('retail_planning_events').delete().eq('id', st.id);
+  if (del.error) { showToast('Delete failed', 'error'); return; }
+  await loadPlanningEvents();
+  closeEventEditor();
+  showToast('Event deleted \u2713');
+  renderMonthlyPlanning();
+}
+
+async function loadPlanningEvents() {
+  planningEvents = [];
+  if (!currentStoreId) return;
+  var res = await sb.from('retail_planning_events').select('*').eq('store_id', currentStoreId);
+  if (!res.error && res.data) planningEvents = res.data;
+}
+
+// Selection de plage en 2 clics : 1er clic = debut, on surligne les cellules
+// vides de la meme categorie jusqu'au 2e clic, qui ouvre l'editeur avec la
+// plage complete. Un 2e clic sur la MEME case ouvre l'editeur pour ce seul
+// jour (evenement d'un jour), au lieu d'annuler silencieusement.
+function onEventCellClick(cat, ds, th) {
+  if (!evtRangeStart || evtRangeStart.cat !== cat) {
+    evtRangeStart = { cat: cat, ds: ds };
+    document.querySelectorAll('tr.evt-row[data-cat="' + cat + '"] th.c-day').forEach(function(el){
+      el.classList.remove('evt-range-hl');
+    });
+    th.classList.add('evt-range-hl');
+    return;
+  }
+  var start = evtRangeStart.ds < ds ? evtRangeStart.ds : ds;
+  var end   = evtRangeStart.ds < ds ? ds : evtRangeStart.ds;
+  evtRangeStart = null;
+  document.querySelectorAll('tr.evt-row th.c-day').forEach(function(el){ el.classList.remove('evt-range-hl'); });
+  openEventEditor(null, cat, { start: start, end: end });
 }
 
 // Ventile un total mensuel sur les jours ouverts du mois.
@@ -5118,6 +5150,16 @@ function renderDashboard() {
     return h.start_date <= weekEnd && h.end_date >= weekStart;
   }).sort(function(a,b){ return a.start_date < b.start_date ? -1 : 1; });
 
+  // Evenements des 3 lignes du monthly, actifs pour le mois affiche dans le
+  // Monthly Planning (pas la semaine du dashboard) : on ne montre que ceux
+  // qui recoupent ce mois-ci, meme s'ils commencent/finissent hors du mois.
+  var mRef = new Date(monthlyRef);
+  var mStart = toDateStr(new Date(mRef.getFullYear(), mRef.getMonth(), 1));
+  var mEnd   = toDateStr(new Date(mRef.getFullYear(), mRef.getMonth() + 1, 0));
+  var monthEvts = (planningEvents || []).filter(function(e) {
+    return e.start_date <= mEnd && e.end_date >= mStart;
+  }).sort(function(a,b){ return a.start_date < b.start_date ? -1 : 1; });
+
   body.innerHTML =
     '<div class="dash-head">' +
       '<div>' +
@@ -5144,6 +5186,12 @@ function renderDashboard() {
           '<div class="hl-list">' + (hls.length ? hls.map(hlItemHtml).join('') :
             '<div class="mini-empty">No highlights for this week yet.</div>') + '</div>' +
           hlAddFormHtml(weekStart, weekEnd) +
+        '</div>' +
+        '<div class="card">' +
+          '<div class="dash-card-label">Planning events \u00b7 ' +
+            mRef.toLocaleDateString(dLoc(), { month: 'long', year: 'numeric' }) + '</div>' +
+          '<div class="hl-list">' + (monthEvts.length ? monthEvts.map(evtItemHtml).join('') :
+            '<div class="mini-empty">No events this month.</div>') + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="dash-col dash-col-right">' +
@@ -5192,6 +5240,17 @@ function poolBlockHtml(title, list) {
       '</div>';
   }).join('');
   return head + '<div class="pool-agents">' + items + '</div>';
+}
+
+function evtItemHtml(e) {
+  var when = e.start_date === e.end_date
+    ? formatDate(new Date(e.start_date + 'T12:00:00'))
+    : formatDate(new Date(e.start_date + 'T12:00:00')) + ' - ' + formatDate(new Date(e.end_date + 'T12:00:00'));
+  return '<div class="hl-item">' +
+    '<span class="hl-when">' + when + '</span>' +
+    '<span class="hl-text"><span class="evt-bar evt-' + e.category + '" style="display:inline-block;padding:1px 6px;margin-right:6px;">' +
+      e.category.charAt(0).toUpperCase() + e.category.slice(1) + '</span>' + esc(e.label || '') + '</span>' +
+    '</div>';
 }
 
 function hlItemHtml(h) {
@@ -6258,14 +6317,6 @@ function renderMonthlyPlanning() {
   function shiftFor(agent, day) {
     if (day.closure) return { code: '', cls: 'sh-closed', special: 'closed' };
 
-    // Part-time fixe AVEC horaire : 'PT' ses jours contractuels, OFF sinon.
-    // Sans horaire : on laisse le flux normal (le moteur donne O/C/M).
-    if (isFixedTimed(agent)) {
-      return fixedWorksOn(agent, day)
-        ? { code: 'PT' }
-        : { code: 'OFF', cls: 'sh-off', special: 'off' };
-    }
-
     // PRIORITE ABSOLUE : modification manuelle du manager.
     // Le moteur ne recalcule jamais une cellule forcee.
     var ov = (planningOverrides[agent.id] || {})[day.ds];
@@ -6278,7 +6329,17 @@ function renderMonthlyPlanning() {
       return { code: ov };
     }
 
+    // Conge declare : prioritaire meme pour un temps partiel fixe (sinon un
+    // agent PT en conge reste affiche "present" ce jour-la).
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
+
+    // Part-time fixe AVEC horaire : 'PT' ses jours contractuels, OFF sinon.
+    // Sans horaire : on laisse le flux normal (le moteur donne O/C/M).
+    if (isFixedTimed(agent)) {
+      return fixedWorksOn(agent, day)
+        ? { code: 'PT' }
+        : { code: 'OFF', cls: 'sh-off', special: 'off' };
+    }
 
     // Repos et absences manuels (rest_scheduled auto est ignore, gere par restMap).
     var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
@@ -6499,6 +6560,42 @@ function renderMonthlyPlanning() {
     });
     rhCols.forEach(function(){ h += '<th class="c-rh"></th>'; });
     h += '</tr>';
+
+    // ── 3 lignes d'evenements (local / national / training) ──
+    // Pour chaque jour du mois affiche, on sait si une plage d'evenement le
+    // couvre. On fusionne les jours consecutifs d'un meme evenement en une
+    // seule cellule (colspan), les jours vides restent cliquables un par un
+    // pour demarrer une nouvelle plage.
+    ['local', 'national', 'training'].forEach(function(cat) {
+      h += '<tr class="evt-row" data-cat="' + cat + '"><th class="c-agent evt-row-label">' +
+           cat.charAt(0).toUpperCase() + cat.slice(1) + '</th>';
+      var di = 0;
+      while (di < monthDays.length) {
+        var d = monthDays[di];
+        var ev = planningEvents.find(function(e) {
+          return e.category === cat && e.start_date <= d.ds && e.end_date >= d.ds;
+        });
+        if (ev) {
+          // Compte combien de jours consecutifs (dans le mois affiche) cet
+          // evenement couvre encore, pour poser un seul <th colspan=...>.
+          var span = 0;
+          while (di + span < monthDays.length &&
+                 monthDays[di + span].ds >= ev.start_date &&
+                 monthDays[di + span].ds <= ev.end_date) span++;
+          h += '<th class="c-day" colspan="' + span + '">' +
+               '<span class="evt-bar evt-' + cat + '" onclick="openEventEditor(\'' + ev.id + '\',null,null)">' +
+               esc(ev.label || '') + '</span></th>';
+          di += span;
+        } else {
+          h += '<th class="c-day" data-col="' + di + '" data-cat="' + cat + '" data-ds="' + d.ds + '"' +
+               ' onclick="onEventCellClick(\'' + cat + '\',\'' + d.ds + '\',this)"></th>';
+          di++;
+        }
+      }
+      rhCols.forEach(function(){ h += '<th class="c-rh"></th>'; });
+      h += '</tr>';
+    });
+
     return h + '</thead>';
   }
 
@@ -7010,18 +7107,24 @@ function exportMonthly() {
   var SHIFT_XL = {
     'sh-open':{bg:'DCFCE7',tx:'14532D'}, 'sh-mid':{bg:'FEF3C7',tx:'713F12'},
     'sh-close':{bg:'DBEAFE',tx:'1E3A8A'}, 'sh-late':{bg:'EDE9FE',tx:'5B21B6'},
+    'sh-teal':{bg:'CCFBF1',tx:'115E59'}, 'sh-pink':{bg:'FCE7F3',tx:'9D174D'},
+    'sh-slate':{bg:'E2E8F0',tx:'334155'},
     'sh-off':{bg:'F1F2F4',tx:'A1A1AA'}, 'sh-cp':{bg:'FEE2E2',tx:'7F1D1D'},
     'sh-pt':{bg:'FEF9C3',tx:'854D0E'}, 'sh-none':{bg:'FAFAFB',tx:'A1A1AA'}
   };
+  // Reutilise la meme resolution de couleur que l'ecran (findShiftDef / tone)
+  // pour qu'un shift personnalise garde sa vraie couleur dans l'export, au
+  // lieu d'un classement fige par prefixe de lettre qui ne connaissait que
+  // les codes historiques O/OS/M/MS/C/CS.
   function toneClass(code) {
     if (code === 'OFF') return 'sh-off';
     if (code === 'A')   return 'sh-cp';
     if (code === 'PT')  return 'sh-pt';
     if (code === 'D')   return 'sh-late';
-    if (code === 'O' || code === 'OS') return 'sh-open';
-    if (code === 'M' || code === 'MS') return 'sh-mid';
-    if (code === 'C' || code === 'CS') return 'sh-close';
-    return 'sh-none';
+    var cls = shiftCls(code);   // ex "sh-stock sh-close" ou "sh-open"
+    var tones = cls.split(' ').filter(function(c){ return c !== 'sh-stock'; });
+    var tone = tones[0];
+    return SHIFT_XL[tone] ? tone : 'sh-none';
   }
 
   function cell(v, o) {
@@ -7924,6 +8027,35 @@ init();
     <div class="ce-sub" id="ce-sub"></div>
   </div>
   <div id="ce-body"></div>
+</div>
+
+<!-- EVENT EDITOR (lignes d'evenements au-dessus du monthly) -->
+<div id="event-editor" class="modal-overlay" onclick="if(event.target===this)closeEventEditor()">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="evt-modal-title">Event</div>
+        <div class="modal-sub" id="evt-dates-display"></div>
+      </div>
+      <button class="icon-btn" onclick="closeEventEditor()" aria-label="Close">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="fld">
+        <label>Text</label>
+        <textarea id="evt-label-input" rows="3" style="width:100%;box-sizing:border-box;font-family:Arial,sans-serif;font-size:13px;padding:8px;border:1px solid var(--line);border-radius:var(--r-md);"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="evt-delete-btn" onclick="deleteEvent()">Delete</button>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeEventEditor()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEvent()">Save</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- SHIFT CREATOR -->
