@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.2.4</title>
+  <title>CORA Retail V8.2.5</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -173,11 +173,15 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; transition:box-shadow .12s; }
 .it-blk:hover { box-shadow:0 2px 6px rgba(0,0,0,.22); }
 .b-mb  { background:#1a1a2e; color:#fff; }
-.b-lun { background:#FDE047; color:#713F12; }
-.b-brk0 { background:#BFDBFE; color:#1E3A8A; }
-.b-brk1 { background:#FBCFE8; color:#9D174D; }
-.b-brk2 { background:#BBF7D0; color:#166534; }
-.b-brk3 { background:#DDD6FE; color:#5B21B6; }
+.bc-yellow { background:#FDE047; color:#713F12; }
+.bc-blue   { background:#BFDBFE; color:#1E3A8A; }
+.bc-pink   { background:#FBCFE8; color:#9D174D; }
+.bc-green  { background:#BBF7D0; color:#166534; }
+.bc-violet { background:#DDD6FE; color:#5B21B6; }
+.bc-slate  { background:#CBD5E1; color:#334155; }
+.brk-swatches { display:inline-flex; gap:var(--s1); align-items:center; }
+.brk-sw { width:18px; height:18px; padding:0; border:1px solid var(--line-2); border-radius:var(--r-pill); cursor:pointer; }
+.brk-sw.is-on { box-shadow:0 0 0 2px var(--bg-base), 0 0 0 4px var(--brand); }
 .b-wel { background:#A5B4FC; color:#312E81; }
 
 /* Missions ajoutees a la main : bulle + croix de retrait */
@@ -385,13 +389,13 @@ select:focus, input:focus { outline:none; border-color:var(--brand);
 td.is-multisel { background:var(--info-soft); box-shadow:inset 0 0 0 2px var(--nav-active-bg); }
 tr.evt-row th.c-day { height:36px; padding:2px; cursor:pointer; }
 tr.evt-row th.c-day:hover { background:var(--bg-subtle); }
-tr.evt-row th.c-day.evt-range-hl { background:var(--info-soft); }
 tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:600; text-align:left; padding-left:8px; }
 .evt-bar {
   display:block; height:28px; line-height:28px; border-radius:4px; font-size:11px;
   padding:0 6px; cursor:pointer; overflow:hidden; text-overflow:ellipsis;
   white-space:nowrap; box-sizing:border-box;
 }
+.evt-text { width:100%; box-sizing:border-box; font-family:var(--font); font-size:13px; padding:var(--s2); border:1px solid var(--line-2); border-radius:var(--r-md); resize:none; }
 .evt-local    { background:#DBEAFE; color:#1E40AF; }
 .evt-national { background:#FCE7F3; color:#9D174D; }
 .evt-training { background:#DCFCE7; color:#166534; }
@@ -1755,7 +1759,6 @@ let adjustWarned  = false;    // avertissement "tout va changer" affiché une fo
 let cellAdjustMode = false;   // slider dans la bulle : ON = la prochaine modif recalcule tout
 let multiSelect = [];         // [{agentId, ds}, ...] cellules selectionnees via Ctrl/Cmd+clic
 let planningEvents = [];      // [{id, store_id, category, start_date, end_date, label}, ...]
-let evtRangeStart = null;     // premiere date cliquee pendant une selection de plage evenement
 
 function toggleCellSelect(agentId, ds, td) {
   var idx = multiSelect.findIndex(function(s){ return s.agentId === agentId && s.ds === ds; });
@@ -1875,14 +1878,12 @@ function changeWeek(dir) {
 function monthlyShift(dir) {
   monthlyRef.setDate(1);
   monthlyRef.setMonth(monthlyRef.getMonth() + dir);
-  evtRangeStart = null;
   updateMonthlyLabel();
   if (currentStoreId) renderMonthlyPlanning();
 }
 
 function monthlyToday() {
   monthlyRef = new Date();
-  evtRangeStart = null;
   updateMonthlyLabel();
   if (currentStoreId) renderMonthlyPlanning();
 }
@@ -2209,7 +2210,6 @@ async function onStoreChange() {
   if (!currentStoreId) return;
 
   currentCornerView = null;
-  evtRangeStart = null;
   saveScope();
   closeStoreGate();
   await loadRegulations();
@@ -2303,6 +2303,31 @@ async function seedRegulations() {
   await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
 }
 
+// Couleurs pre-selectionnees des pauses (pastille intraday). Une seule
+// source : la classe .bc-<key> sert au bouton ET a la pastille intraday.
+var BREAK_COLORS = ['yellow', 'blue', 'pink', 'green', 'violet', 'slate'];
+
+// Couleur d'une pause : celle choisie, sinon le lunch en jaune et les autres
+// pauses dans l'ordre de la palette.
+function breakColorOf(b, i) {
+  if (b && b.color && BREAK_COLORS.indexOf(b.color) >= 0) return b.color;
+  if (b && /lunch|dej/i.test(b.name || '')) return 'yellow';
+  return BREAK_COLORS[1 + (i % (BREAK_COLORS.length - 1))];
+}
+
+function breakSwatchesHtml(sel) {
+  return '<span class="brk-swatches">' + BREAK_COLORS.map(function(k) {
+    return '<button type="button" class="brk-sw bc-' + k + (k === sel ? ' is-on' : '') +
+      '" data-color="' + k + '" aria-label="' + k + '" onclick="pickBreakColor(this)"></button>';
+  }).join('') + '</span>';
+}
+
+function pickBreakColor(btn) {
+  btn.parentNode.querySelectorAll('.brk-sw').forEach(function(b){ b.classList.remove('is-on'); });
+  btn.classList.add('is-on');
+  saveRegulations();
+}
+
 // ── SAVE REGULATIONS ──────────────────────────────────────────────────────
 function addBreakRow() {
   var body = document.getElementById('breaks-body');
@@ -2314,6 +2339,7 @@ function addBreakRow() {
     '<td><input onchange="saveRegulations()" type="number" class="break-dur" value="15" min="5" max="120" style="width:70px"></td>' +
     '<td>' + hourSelectHtml2('break-ws', 11) + '</td>' +
     '<td>' + hourSelectHtml2('break-we', 12) + '</td>' +
+    '<td>' + breakSwatchesHtml(breakColorOf({}, body.children.length)) + '</td>' +
     '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>';
   body.appendChild(tr);
   saveRegulations();
@@ -2512,22 +2538,15 @@ async function saveRegulations() {
   });
   if (!valid) { showToast('Each day: closing hour must be after opening hour', 'error'); return; }
 
-  // Une seule ecriture de store_settings, une fois toute la config validee
-  // (saturday_open/sunday_open + day_hours a jour). C'est la source de verite
-  // du week-end qui gagne au rechargement.
-  var storeSettingsRes = await persistStoreSettings();
-  if (storeSettingsRes && storeSettingsRes.error) {
-    showToast('Store settings not saved', 'error'); return;
-  }
-
-  // Read breaks
+  // Read breaks (nom, duree, fenetre, couleur choisie)
   var newBreaks = [];
   document.querySelectorAll('.break-row').forEach(function(row) {
     var name  = row.querySelector('.break-name').value.trim();
     var dur   = parseInt(row.querySelector('.break-dur').value) || 0;
     var wStart= parseFloat(row.querySelector('.break-ws').value) || 0;
     var wEnd  = parseFloat(row.querySelector('.break-we').value) || 0;
-    if (name && dur > 0) newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd });
+    var sw    = row.querySelector('.brk-sw.is-on');
+    if (name && dur > 0) newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd, color: sw ? sw.getAttribute('data-color') : null });
   });
   regulations.breaks = newBreaks;
 
@@ -2552,8 +2571,13 @@ async function saveRegulations() {
     if (r.rule_value === undefined || r.rule_value === null) r.rule_value = '';
   });
 
+  // Ecritures seulement apres validation complete : une fois chaque table.
+  // Un echec sur store_settings n'empeche pas l'enregistrement des regles,
+  // et le message affiche la vraie erreur Supabase.
   const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
   if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
+  var ssRes = await persistStoreSettings();
+  if (ssRes && ssRes.error) showToast('Store settings not saved: ' + (ssRes.error.message || ssRes.error), 'error');
   renderPlanning();
 }
 
@@ -2866,12 +2890,13 @@ function renderRegulations() {
   });
 
   let breakRows = '';
-  (regulations.breaks || []).forEach(function(b) {
+  (regulations.breaks || []).forEach(function(b, i) {
     breakRows += '<tr class="break-row">' +
-      '<td><input onchange="saveRegulations()" type="text" class="break-name" value="' + (b.name || '') + '"></td>' +
+      '<td><input onchange="saveRegulations()" type="text" class="break-name" value="' + esc(b.name || '') + '"></td>' +
       '<td><input onchange="saveRegulations()" type="number" class="break-dur" value="' + (b.duration || 0) + '" min="5" max="120" style="width:70px"></td>' +
       '<td>' + hourSelectHtml2('break-ws', b.window_start) + '</td>' +
       '<td>' + hourSelectHtml2('break-we', b.window_end) + '</td>' +
+      '<td>' + breakSwatchesHtml(breakColorOf(b, i)) + '</td>' +
       '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>' +
       '</tr>';
   });
@@ -2938,7 +2963,7 @@ function renderRegulations() {
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>Name</th><th style="width:120px">Duration (min)</th>' +
         '<th style="width:130px">Window start</th><th style="width:130px">Window end</th>' +
-        '<th style="width:52px"></th></tr></thead>' +
+        '<th style="width:150px">Color</th><th style="width:52px"></th></tr></thead>' +
         '<tbody id="breaks-body">' + breakRows + '</tbody></table>' +
       '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addBreakRow()">+ ' + t('Add break') + '</button>' +
     '</div>' +
@@ -3336,53 +3361,45 @@ async function loadTraffic(year) {
   }
 }
 
-// evenement en cours d'edition : soit un id existant (edition), soit
-// cat+range (creation depuis une selection de plage vide)
-var eventEditorState = { id: null, cat: null, start: null, end: null };
+// Evenement en cours d'edition : id existant (edition) ou categorie + date
+// cliquee (creation). Les dates se choisissent ensuite dans le modal.
+var eventEditorState = { id: null, cat: null };
+var eventSaving = false;
 
-function openEventEditor(id, cat, range) {
-  var modal = document.getElementById('event-editor');
-  if (id) {
-    var ev = planningEvents.find(function(e){ return e.id === id; });
-    if (!ev) return;
-    eventEditorState = { id: ev.id, cat: ev.category, start: ev.start_date, end: ev.end_date };
-    document.getElementById('evt-modal-title').textContent =
-      ev.category.charAt(0).toUpperCase() + ev.category.slice(1) + ' event';
-    document.getElementById('evt-label-input').value = ev.label || '';
-    document.getElementById('evt-delete-btn').style.display = '';
-  } else {
-    eventEditorState = { id: null, cat: cat, start: range.start, end: range.end };
-    document.getElementById('evt-modal-title').textContent =
-      cat.charAt(0).toUpperCase() + cat.slice(1) + ' event';
-    document.getElementById('evt-label-input').value = '';
-    document.getElementById('evt-delete-btn').style.display = 'none';
-  }
-  document.getElementById('evt-dates-display').textContent =
-    formatDateDisplay(eventEditorState.start) +
-    (eventEditorState.start !== eventEditorState.end ? ' \u2192 ' + formatDateDisplay(eventEditorState.end) : '');
-  modal.classList.add('open');
+function openEventEditor(id, cat, ds) {
+  var ev = id ? planningEvents.find(function(e){ return e.id === id; }) : null;
+  if (id && !ev) return;
+  var c = ev ? ev.category : cat;
+  eventEditorState = { id: ev ? ev.id : null, cat: c };
+  document.getElementById('evt-modal-title').textContent = c.charAt(0).toUpperCase() + c.slice(1) + ' event';
+  document.getElementById('evt-start').value = ev ? ev.start_date : ds;
+  document.getElementById('evt-end').value   = ev ? ev.end_date   : ds;
+  document.getElementById('evt-label-input').value = ev ? (ev.label || '') : '';
+  document.getElementById('evt-delete-btn').style.display = ev ? '' : 'none';
+  document.getElementById('event-editor').classList.add('open');
   setTimeout(function(){ document.getElementById('evt-label-input').focus(); }, 60);
 }
 
 function closeEventEditor() {
   document.getElementById('event-editor').classList.remove('open');
-  eventEditorState = { id: null, cat: null, start: null, end: null };
+  eventEditorState = { id: null, cat: null };
 }
 
 async function saveEvent() {
-  var label = document.getElementById('evt-label-input').value.trim();
+  if (eventSaving) return;
   var st = eventEditorState;
-  if (st.id) {
-    var up = await sb.from('retail_planning_events')
-      .update({ label: label }).eq('id', st.id);
-    if (up.error) { showToast('Save failed', 'error'); return; }
-  } else {
-    var ins = await sb.from('retail_planning_events').insert([{
-      store_id: currentStoreId, category: st.cat,
-      start_date: st.start, end_date: st.end, label: label
-    }]).select();
-    if (ins.error) { showToast('Save failed', 'error'); return; }
-  }
+  var start = document.getElementById('evt-start').value;
+  var end   = document.getElementById('evt-end').value;
+  var label = document.getElementById('evt-label-input').value.trim();
+  if (!start || !end) { showToast('Select a start and end date', 'error'); return; }
+  if (end < start)    { showToast('End date must be after start date', 'error'); return; }
+  if (!label)         { showToast('Enter a text for the event', 'error'); return; }
+  eventSaving = true;
+  var res = st.id
+    ? await sb.from('retail_planning_events').update({ start_date: start, end_date: end, label: label }).eq('id', st.id)
+    : await sb.from('retail_planning_events').insert([{ store_id: currentStoreId, category: st.cat, start_date: start, end_date: end, label: label }]);
+  eventSaving = false;
+  if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return; }
   await loadPlanningEvents();
   closeEventEditor();
   showToast('Event saved \u2713');
@@ -3393,7 +3410,7 @@ async function deleteEvent() {
   var st = eventEditorState;
   if (!st.id) return;
   var del = await sb.from('retail_planning_events').delete().eq('id', st.id);
-  if (del.error) { showToast('Delete failed', 'error'); return; }
+  if (del.error) { showToast('Delete failed: ' + del.error.message, 'error'); return; }
   await loadPlanningEvents();
   closeEventEditor();
   showToast('Event deleted \u2713');
@@ -3404,27 +3421,8 @@ async function loadPlanningEvents() {
   planningEvents = [];
   if (!currentStoreId) return;
   var res = await sb.from('retail_planning_events').select('*').eq('store_id', currentStoreId);
-  if (!res.error && res.data) planningEvents = res.data;
-}
-
-// Selection de plage en 2 clics : 1er clic = debut, on surligne les cellules
-// vides de la meme categorie jusqu'au 2e clic, qui ouvre l'editeur avec la
-// plage complete. Un 2e clic sur la MEME case ouvre l'editeur pour ce seul
-// jour (evenement d'un jour), au lieu d'annuler silencieusement.
-function onEventCellClick(cat, ds, th) {
-  if (!evtRangeStart || evtRangeStart.cat !== cat) {
-    evtRangeStart = { cat: cat, ds: ds };
-    document.querySelectorAll('tr.evt-row[data-cat="' + cat + '"] th.c-day').forEach(function(el){
-      el.classList.remove('evt-range-hl');
-    });
-    th.classList.add('evt-range-hl');
-    return;
-  }
-  var start = evtRangeStart.ds < ds ? evtRangeStart.ds : ds;
-  var end   = evtRangeStart.ds < ds ? ds : evtRangeStart.ds;
-  evtRangeStart = null;
-  document.querySelectorAll('tr.evt-row th.c-day').forEach(function(el){ el.classList.remove('evt-range-hl'); });
-  openEventEditor(null, cat, { start: start, end: end });
+  if (res.error) { showToast('Events not loaded: ' + res.error.message, 'error'); return; }
+  planningEvents = res.data || [];
 }
 
 // Ventile un total mensuel sur les jours ouverts du mois.
@@ -4373,13 +4371,13 @@ function renderIntraday(ds) {
       }
       if (lunchPlan[a.id] != null && lunch) {
         var lunDur = lunch.duration / 60;
-        blocks.push([withOverride(a.id, 'lun', lunchPlan[a.id], lunDur), lunDur, 'lun', lunch.name]);
+        blocks.push([withOverride(a.id, 'lun', lunchPlan[a.id], lunDur), lunDur, 'lun', lunch.name, 'bc-' + breakColorOf(lunch, breaks.indexOf(lunch))]);
       }
       breakPlans.forEach(function(bp, bi) {
         if (bp.plan[a.id] == null) return;
         var bDur = bp.brk.duration / 60;
         var bType = 'brk' + bi;
-        blocks.push([withOverride(a.id, bType, bp.plan[a.id], bDur), bDur, bType, bp.brk.name]);
+        blocks.push([withOverride(a.id, bType, bp.plan[a.id], bDur), bDur, bType, bp.brk.name, 'bc-' + breakColorOf(bp.brk, breaks.indexOf(bp.brk))]);
       });
       if (welcomePlan[a.id] && welcomePlan[a.id].length) {
         welcomePlan[a.id].forEach(function(wh, wi) {
@@ -4413,11 +4411,11 @@ function renderIntraday(ds) {
         track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(eH) - pct(sH)) + '%"></div>';
       }
       blocks.forEach(function(bl) {
-        var visualCls = 'b-' + String(bl[2]).replace(/[0-9]+$/, '');
+        var visualCls = bl[4] || ('b-' + String(bl[2]).replace(/[0-9]+$/, ''));
         track += '<div class="it-blk ' + visualCls + '" draggable="false"' +
           ' data-agent="' + a.id + '" data-type="' + bl[2] + '"' +
           ' data-dur="' + bl[1] + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
-          ' style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + bl[3] + '</div>';
+          ' style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + esc(bl[3]) + '</div>';
       });
       // Missions ajoutees a la main : memes blocs draggables, avec un [x] de retrait.
       (addedMissions[a.id] || []).forEach(function(m) {
@@ -6583,7 +6581,7 @@ function renderMonthlyPlanning() {
           di += span;
         } else {
           h += '<th class="c-day" data-col="' + di + '" data-cat="' + cat + '" data-ds="' + d.ds + '"' +
-               ' onclick="onEventCellClick(\'' + cat + '\',\'' + d.ds + '\',this)"></th>';
+               ' onclick="openEventEditor(null,\'' + cat + '\',\'' + d.ds + '\')"></th>';
           di++;
         }
       }
@@ -8030,7 +8028,6 @@ init();
     <div class="modal-head">
       <div>
         <div class="modal-title" id="evt-modal-title">Event</div>
-        <div class="modal-sub" id="evt-dates-display"></div>
       </div>
       <button class="icon-btn" onclick="closeEventEditor()" aria-label="Close">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -8038,9 +8035,13 @@ init();
       </button>
     </div>
     <div class="modal-body">
-      <div class="fld">
+      <div class="form-grid">
+        <div class="fld"><label>From</label><input type="date" id="evt-start"></div>
+        <div class="fld"><label>To</label><input type="date" id="evt-end"></div>
+      </div>
+      <div class="fld" style="margin-top:var(--s3)">
         <label>Text</label>
-        <textarea id="evt-label-input" rows="3" style="width:100%;box-sizing:border-box;font-family:Arial,sans-serif;font-size:13px;padding:8px;border:1px solid var(--line);border-radius:var(--r-md);"></textarea>
+        <textarea id="evt-label-input" class="evt-text" rows="3"></textarea>
       </div>
     </div>
     <div class="modal-foot">
