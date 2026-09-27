@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.2.5</title>
+  <title>CORA Retail V8.2.6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -52,7 +52,7 @@
   --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-pill: 999px;
 
   /* ---- Espacements (echelle 4px) ---- */
-  --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
 
   /* ---- Ombres : tres subtiles ---- */
   --sh-1: 0 1px 2px rgba(16,24,40,.04);
@@ -64,6 +64,12 @@
   /* ---- Layout ---- */
   --sb-w: 250px;
   --content-max: 1280px;   /* au dela ca fait trop etale */
+  --content-max-wide: 1664px; /* planning : bulle +30% */
+  --day-w: 44px;    /* colonne jour du monthly (+30%) */
+  --sq-w: 34px;     /* carre de shift, et tout carre equivalent (supprimer, couleur, code) */
+  --sq-h: 22px;
+  --time-w: 136px;  /* tout selecteur d'horaire */
+  --num-w: 110px;   /* champ numerique ou code court */
 }
 
 /* reset + base */
@@ -179,9 +185,11 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .bc-green  { background:#BBF7D0; color:#166534; }
 .bc-violet { background:#DDD6FE; color:#5B21B6; }
 .bc-slate  { background:#CBD5E1; color:#334155; }
-.brk-swatches { display:inline-flex; gap:var(--s1); align-items:center; }
-.brk-sw { width:18px; height:18px; padding:0; border:1px solid var(--line-2); border-radius:var(--r-pill); cursor:pointer; }
-.brk-sw.is-on { box-shadow:0 0 0 2px var(--bg-base), 0 0 0 4px var(--brand); }
+.bc-teal   { background:#5EEAD4; color:#115E59; }
+.color-pop { display:none; position:fixed; z-index:700; gap:var(--s2); padding:var(--s2);
+  background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:0 12px 32px rgba(16,24,40,.18); }
+.color-pop.open { display:flex; }
 .b-wel { background:#A5B4FC; color:#312E81; }
 
 /* Missions ajoutees a la main : bulle + croix de retrait */
@@ -267,7 +275,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   font-family:var(--font); font-size:12px; font-weight:600; color:var(--tx-2); cursor:pointer; }
 .lang-opt:hover { background:var(--bg-base-3); color:var(--tx-1); }
 .icon-btn {
-  width:36px; height:36px; border:1px solid var(--line-2); border-radius:9px;
+  width:36px; height:36px; border:1px solid var(--line-2); border-radius:var(--r-md);
   background:var(--bg-base); color:var(--tx-2); cursor:pointer;
   display:flex; align-items:center; justify-content:center; transition:background .15s;
   padding:0;
@@ -282,6 +290,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 
 /* le contenu */
 .wrap { max-width: var(--content-max); margin: 0 auto; }
+#tab-planning .wrap { max-width: var(--content-max-wide); }
 
 /* Cartes : espacement resserre */
 .card { background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg);
@@ -378,20 +387,25 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 /* tous les controles a 36px de haut, pour que ce soit aligne */
 select, input[type=text], input[type=number], input[type=date] {
   font-family:var(--font); font-size:13px; color:var(--tx-1); height:36px;
-  padding:0 10px; border:1px solid var(--line-2); border-radius:9px;
+  padding:0 10px; border:1px solid var(--line-2); border-radius:var(--r-md);
   background:var(--bg-base); transition:border-color .15s, box-shadow .15s;
 }
 select:focus, input:focus { outline:none; border-color:var(--brand);
   box-shadow:0 0 0 3px rgba(31,31,31,.07); }
 
-.hm-pair { display:inline-flex; align-items:center; gap:4px; width:100%; }
+.time-sel { width:var(--time-w); }
+.hm-pair { display:inline-flex; align-items:center; gap:var(--s1); width:var(--time-w); }
 .hm-pair select { width:auto; flex:1; min-width:0; padding:0 6px; text-align:center; }
+.in-num { width:var(--num-w); text-align:center; }
+.set-tbl th.col-time { width:calc(var(--time-w) + var(--s6)); }
+.set-tbl th.col-num  { width:calc(var(--num-w) + var(--s6)); }
+.set-tbl th.col-sq   { width:calc(var(--sq-w) + var(--s6)); }
 td.is-multisel { background:var(--info-soft); box-shadow:inset 0 0 0 2px var(--nav-active-bg); }
 tr.evt-row th.c-day { height:36px; padding:2px; cursor:pointer; }
-tr.evt-row th.c-day:hover { background:var(--bg-subtle); }
+tr.evt-row th.c-day:hover { background:var(--bg-base-3); }
 tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:600; text-align:left; padding-left:8px; }
 .evt-bar {
-  display:block; height:28px; line-height:28px; border-radius:4px; font-size:11px;
+  display:block; height:28px; line-height:28px; border-radius:var(--r-sm); font-size:11px;
   padding:0 6px; cursor:pointer; overflow:hidden; text-overflow:ellipsis;
   white-space:nowrap; box-sizing:border-box;
 }
@@ -403,7 +417,7 @@ tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:600
 /* Recherche : padding gauche pour degager la loupe (apres la regle generique) */
 .tb-search input[type=text] {
   width:100%; height:36px; padding:0 12px 0 36px;
-  border:1px solid var(--line-2); border-radius:9px; background:var(--bg-base-2);
+  border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--bg-base-2);
 }
 .tb-search input[type=text]:disabled { cursor:not-allowed; }
 
@@ -412,7 +426,7 @@ tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:600
   display:inline-flex; align-items:center; justify-content:center; gap:7px;
   height:36px; padding:0 15px; cursor:pointer; white-space:nowrap;
   font-family:var(--font); font-size:13px; font-weight:500;
-  border-radius:9px; border:1px solid transparent; transition:background .15s, border-color .15s;
+  border-radius:var(--r-md); border:1px solid transparent; transition:background .15s, border-color .15s;
 }
 .btn .ic { width:15px; height:15px; }
 .btn-primary { background:var(--brand); color:var(--brand-on); }
@@ -423,14 +437,14 @@ tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:600
 .btn-danger:hover { background:#FECACA; }
 .btn-save { background:var(--ok-soft); color:var(--ok-tx); }
 .btn-save:hover { background:#BBF7D0; }
-.btn-sm { height:30px; padding:0 11px; font-size:12px; border-radius:7px; }
+.btn-sm { height:30px; padding:0 11px; font-size:12px; border-radius:var(--r-sm); }
 
 
-.btn-xs { display:inline-flex; align-items:center; justify-content:center; height:26px;
-  padding:0 8px; font-size:11px; border-radius:6px; border:none; cursor:pointer;
-  font-family:var(--font); }
-.btn-xs-danger { background:var(--dang-soft); color:var(--dang-tx); }
-.btn-xs-danger:hover { background:#FECACA; }
+.btn-sq { display:inline-flex; align-items:center; justify-content:center;
+  width:var(--sq-w); height:var(--sq-h); padding:0; border:none; border-radius:var(--r-sm);
+  font-family:var(--font); font-size:10.5px; font-weight:600; cursor:pointer;
+  background:var(--dang-soft); color:var(--dang-tx); }
+.btn-sq:hover { background:#FECACA; }
 
 /* Toggle */
 .toggle { position:relative; display:inline-block; width:40px; height:22px; }
@@ -504,7 +518,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
 /* --- colonnes jours : largeur IDENTIQUE --- */
 .mth th.c-day, .mth td.c-day {
-  width:34px; min-width:34px; max-width:34px;
+  width:var(--day-w); min-width:var(--day-w); max-width:var(--day-w);
   padding:5px 0; text-align:center;
 }
 
@@ -567,7 +581,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 
 /* --- pastilles de shift : code couleur lisible d'un coup d'oeil --- */
 .sh { display:inline-flex; align-items:center; justify-content:center;
-      min-width:26px; height:22px; padding:0 5px; border-radius:var(--r-sm);
+      min-width:var(--sq-w); height:var(--sq-h); padding:0 5px; border-radius:var(--r-sm);
       font-size:10.5px; font-weight:600; letter-spacing:0; white-space:nowrap; }
 .sh-cnr { position:relative; display:inline-flex; align-items:center; justify-content:center; }.sh-cnr-tag { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:1px;
   font-size:7.5px; font-weight:700; color:var(--accent-strong); letter-spacing:.02em; line-height:1; white-space:nowrap; }
@@ -706,7 +720,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .set-rule > * { min-width:0; }
 .set-rule:last-child { border-bottom:none; }
 .set-rule-lbl { color:var(--tx-2); }
-.set-rule-input { width:100%; max-width:110px; text-align:center; }
+.set-rule-input { width:var(--num-w); text-align:center; }
 .set-rule-ro { font-weight:600; }
 .set-rule-unit { color:var(--tx-3); font-size:12.5px; }
 .set-note { font-size:12.5px; color:var(--tx-2); margin-bottom:var(--s3); }
@@ -913,11 +927,11 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s4); }
 .trend-txt { font-size:12.5px; color:var(--tx-2); line-height:1.45; }
 
-.tone-picker { display:flex; gap:8px; flex-wrap:wrap; }
+.tone-picker { display:flex; gap:var(--s2); flex-wrap:wrap; }
 .tone-chip {
-  width:38px; height:32px; border-radius:var(--r-md); cursor:pointer;
-  border:2px solid transparent; font-family:var(--font);
-  font-size:12px; font-weight:700;
+  width:var(--sq-w); height:var(--sq-h); padding:0; box-sizing:border-box;
+  border-radius:var(--r-sm); cursor:pointer; border:2px solid transparent;
+  font-family:var(--font); font-size:10.5px; font-weight:600;
   display:inline-flex; align-items:center; justify-content:center;
   transition:border-color .12s, transform .12s;
 }
@@ -1181,9 +1195,9 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
       <h2 class="page-title">Monthly planning</h2>
       <div style="display:flex;align-items:center;gap:var(--s3)">
         <div class="month-nav">
-          <button class="btn btn-ghost btn-sm" onclick="monthlyShift(-1)" aria-label="Previous month">&lsaquo;</button>
+          <button class="btn btn-ghost" onclick="monthlyShift(-1)" aria-label="Previous month">&lsaquo;</button>
           <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
-          <button class="btn btn-ghost btn-sm" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
+          <button class="btn btn-ghost" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
         </div>
         <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
         <button id="btn-export-pdf" class="btn btn-ghost" onclick="exportMonthlyPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
@@ -2305,7 +2319,7 @@ async function seedRegulations() {
 
 // Couleurs pre-selectionnees des pauses (pastille intraday). Une seule
 // source : la classe .bc-<key> sert au bouton ET a la pastille intraday.
-var BREAK_COLORS = ['yellow', 'blue', 'pink', 'green', 'violet', 'slate'];
+var BREAK_COLORS = ['yellow', 'blue', 'pink', 'green', 'violet', 'teal', 'slate'];
 
 // Couleur d'une pause : celle choisie, sinon le lunch en jaune et les autres
 // pauses dans l'ordre de la palette.
@@ -2315,16 +2329,40 @@ function breakColorOf(b, i) {
   return BREAK_COLORS[1 + (i % (BREAK_COLORS.length - 1))];
 }
 
-function breakSwatchesHtml(sel) {
-  return '<span class="brk-swatches">' + BREAK_COLORS.map(function(k) {
-    return '<button type="button" class="brk-sw bc-' + k + (k === sel ? ' is-on' : '') +
-      '" data-color="' + k + '" aria-label="' + k + '" onclick="pickBreakColor(this)"></button>';
-  }).join('') + '</span>';
+// Un seul carre dans la ligne, a la couleur en cours ; clic = popup des 7 couleurs.
+function breakColorBtnHtml(sel) {
+  return '<button type="button" class="tone-chip bc-' + sel + '" data-color="' + sel +
+    '" onclick="openBreakColorPop(this, event)">A</button>';
 }
 
-function pickBreakColor(btn) {
-  btn.parentNode.querySelectorAll('.brk-sw').forEach(function(b){ b.classList.remove('is-on'); });
-  btn.classList.add('is-on');
+var colorPopTarget = null;
+function openBreakColorPop(btn, evt) {
+  evt.stopPropagation();
+  colorPopTarget = btn;
+  var cur = btn.getAttribute('data-color');
+  var pop = document.getElementById('color-pop');
+  pop.innerHTML = BREAK_COLORS.map(function(k) {
+    return '<button type="button" class="tone-chip bc-' + k + (k === cur ? ' on' : '') +
+      '" onclick="pickBreakColor(\'' + k + '\')">A</button>';
+  }).join('');
+  pop.classList.add('open');
+  var r = btn.getBoundingClientRect();
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pop.offsetWidth - 8)) + 'px';
+  pop.style.top  = (r.bottom + 6) + 'px';
+  setTimeout(function() { document.addEventListener('click', closeColorPop, { once: true }); }, 0);
+}
+
+function closeColorPop() {
+  document.getElementById('color-pop').classList.remove('open');
+  colorPopTarget = null;
+}
+
+function pickBreakColor(k) {
+  var btn = colorPopTarget;
+  closeColorPop();
+  if (!btn) return;
+  btn.className = 'tone-chip bc-' + k;
+  btn.setAttribute('data-color', k);
   saveRegulations();
 }
 
@@ -2336,11 +2374,11 @@ function addBreakRow() {
   tr.className = 'break-row';
   tr.innerHTML =
     '<td><input onchange="saveRegulations()" type="text" class="break-name" value="Break"></td>' +
-    '<td><input onchange="saveRegulations()" type="number" class="break-dur" value="15" min="5" max="120" style="width:70px"></td>' +
+    '<td><input onchange="saveRegulations()" type="number" class="break-dur in-num" value="15" min="5" max="120"></td>' +
     '<td>' + hourSelectHtml2('break-ws', 11) + '</td>' +
     '<td>' + hourSelectHtml2('break-we', 12) + '</td>' +
-    '<td>' + breakSwatchesHtml(breakColorOf({}, body.children.length)) + '</td>' +
-    '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>';
+    '<td>' + breakColorBtnHtml(breakColorOf({}, body.children.length)) + '</td>' +
+    '<td><button class="btn-sq" onclick="removeBreakRow(this)" title="Remove">\u2715</button></td>';
   body.appendChild(tr);
   saveRegulations();
 }
@@ -2358,9 +2396,9 @@ function addCornerRow() {
   tr.className = 'corner-row';
   tr.dataset.id = 'new';
   tr.innerHTML =
-    '<td><input onchange="saveCorners(true)" type="text" class="corner-code" value="" maxlength="12" style="width:110px"></td>' +
+    '<td><input onchange="saveCorners(true)" type="text" class="corner-code in-num" value="" maxlength="12"></td>' +
     '<td><input onchange="saveCorners(true)" type="text" class="corner-name" value=""></td>' +
-    '<td><button class="btn btn-danger btn-sm" onclick="removeCornerRow(this)">\u2715</button></td>';
+    '<td><button class="btn-sq" onclick="removeCornerRow(this)" title="Remove">\u2715</button></td>';
   body.appendChild(tr);
 }
 
@@ -2545,7 +2583,7 @@ async function saveRegulations() {
     var dur   = parseInt(row.querySelector('.break-dur').value) || 0;
     var wStart= parseFloat(row.querySelector('.break-ws').value) || 0;
     var wEnd  = parseFloat(row.querySelector('.break-we').value) || 0;
-    var sw    = row.querySelector('.brk-sw.is-on');
+    var sw    = row.querySelector('[data-color]');
     if (name && dur > 0) newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd, color: sw ? sw.getAttribute('data-color') : null });
   });
   regulations.breaks = newBreaks;
@@ -2582,8 +2620,8 @@ async function saveRegulations() {
 }
 
 // ── RENDER REGULATIONS ────────────────────────────────────────────────────
-function hourSelectHtml(id, selected)  { return '<select id="' + id + '">' + hourOptionsH(selected) + '</select>'; }
-function hourSelectHtml2(cls, selected) { return '<select onchange="saveRegulations()" class="' + cls + '">' + hourOptionsH(selected) + '</select>'; }
+function hourSelectHtml(id, selected)  { return '<select class="time-sel" id="' + id + '">' + hourOptionsH(selected) + '</select>'; }
+function hourSelectHtml2(cls, selected) { return '<select onchange="saveRegulations()" class="time-sel ' + cls + '">' + hourOptionsH(selected) + '</select>'; }
 
 // Palettes proposees a la creation d'un shift
 var SHIFT_TONES = [
@@ -2659,8 +2697,8 @@ function buildShiftSettingsHtml() {
     var list = RETAIL_SHIFTS[grid] || [];
     var h = '<div class="sec-title" style="margin-top:var(--s5)">' + title + '</div>';
     h += '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
-         '<th style="width:90px">Code</th><th>Starts</th><th>Ends</th>' +
-         '<th style="width:150px">Duration</th><th style="width:52px"></th>' +
+         '<th class="col-sq">Code</th><th class="col-time">Starts</th><th class="col-time">Ends</th>' +
+         '<th>Duration</th><th class="col-sq"></th>' +
          '</tr></thead><tbody>';
     list.forEach(function(s) {
       var dur  = s.endMin - s.startMin;
@@ -2672,7 +2710,7 @@ function buildShiftSettingsHtml() {
         '<td>' + hourMinSelectHtmlCls('sh-end',   s.endMin)   + '</td>' +
         '<td class="sh-dur">' + durLabel(dur) +
            (over ? ' <span class="pill pill-dang">&gt; ' + maxDaily + 'h</span>' : '') + '</td>' +
-        '<td><button class="btn-xs btn-xs-danger" onclick="removeShiftRow(this)" title="Remove">&#10005;</button></td>' +
+        '<td><button class="btn-sq" onclick="removeShiftRow(this)" title="Remove">\u2715</button></td>' +
         '</tr>';
     });
     h += '</tbody></table>';
@@ -2893,19 +2931,19 @@ function renderRegulations() {
   (regulations.breaks || []).forEach(function(b, i) {
     breakRows += '<tr class="break-row">' +
       '<td><input onchange="saveRegulations()" type="text" class="break-name" value="' + esc(b.name || '') + '"></td>' +
-      '<td><input onchange="saveRegulations()" type="number" class="break-dur" value="' + (b.duration || 0) + '" min="5" max="120" style="width:70px"></td>' +
+      '<td><input onchange="saveRegulations()" type="number" class="break-dur in-num" value="' + (b.duration || 0) + '" min="5" max="120"></td>' +
       '<td>' + hourSelectHtml2('break-ws', b.window_start) + '</td>' +
       '<td>' + hourSelectHtml2('break-we', b.window_end) + '</td>' +
-      '<td>' + breakSwatchesHtml(breakColorOf(b, i)) + '</td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="removeBreakRow(this)">\u2715</button></td>' +
+      '<td>' + breakColorBtnHtml(breakColorOf(b, i)) + '</td>' +
+      '<td><button class="btn-sq" onclick="removeBreakRow(this)" title="Remove">\u2715</button></td>' +
       '</tr>';
   });
   let cornerRows = '';
   storeCorners.forEach(function(c) {
     cornerRows += '<tr class="corner-row" data-id="' + c.id + '">' +
-      '<td><input onchange="saveCorners(true)" type="text" class="corner-code" value="' + esc(c.code || '') + '" maxlength="12" style="width:110px"></td>' +
+      '<td><input onchange="saveCorners(true)" type="text" class="corner-code in-num" value="' + esc(c.code || '') + '" maxlength="12"></td>' +
       '<td><input onchange="saveCorners(true)" type="text" class="corner-name" value="' + esc(c.full_name || '') + '"></td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="removeCornerRow(this)">\u2715</button></td>' +
+      '<td><button class="btn-sq" onclick="removeCornerRow(this)" title="Remove">\u2715</button></td>' +
       '</tr>';
   });
 
@@ -2951,8 +2989,8 @@ function renderRegulations() {
       '<div class="page-head" style="margin-bottom:0">' +
         '<h2 class="page-title">Operating hours</h2></div>' +
       '<table class="tbl tbl-framed set-tbl hours-table" style="margin-top:var(--s5)"><thead><tr>' +
-        '<th style="width:120px">Day</th><th style="width:120px">Status</th><th>Starts</th><th>Ends</th>' +
-        '<th style="width:110px">Duration</th>' +
+        '<th class="col-num">Day</th><th class="col-num">Status</th><th class="col-time">Starts</th><th class="col-time">Ends</th>' +
+        '<th>Duration</th>' +
       '</tr></thead><tbody>' + hoursRows + '</tbody></table>' +
     '</div>' +
 
@@ -2961,9 +2999,9 @@ function renderRegulations() {
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
         '<h2 class="page-title">Break structure</h2></div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
-        '<th>Name</th><th style="width:120px">Duration (min)</th>' +
-        '<th style="width:130px">Window start</th><th style="width:130px">Window end</th>' +
-        '<th style="width:150px">Color</th><th style="width:52px"></th></tr></thead>' +
+        '<th>Name</th><th class="col-num">Duration (min)</th>' +
+        '<th class="col-time">Window start</th><th class="col-time">Window end</th>' +
+        '<th class="col-sq">Color</th><th class="col-sq"></th></tr></thead>' +
         '<tbody id="breaks-body">' + breakRows + '</tbody></table>' +
       '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addBreakRow()">+ ' + t('Add break') + '</button>' +
     '</div>' +
@@ -2973,8 +3011,8 @@ function renderRegulations() {
       '<div class="page-head" style="margin-bottom:var(--s3)">' +
         '<h2 class="page-title">' + t('Corners') + '</h2></div>' +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
-        '<th>' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
-        '<th style="width:52px"></th></tr></thead>' +
+        '<th class="col-num">' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
+        '<th class="col-sq"></th></tr></thead>' +
         '<tbody id="corners-body">' + cornerRows + '</tbody></table>' +
       '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addCornerRow()">+ ' + t('Add corner') + '</button>' +
     '</div>' +
@@ -6576,7 +6614,7 @@ function renderMonthlyPlanning() {
                  monthDays[di + span].ds >= ev.start_date &&
                  monthDays[di + span].ds <= ev.end_date) span++;
           h += '<th class="c-day" colspan="' + span + '">' +
-               '<span class="evt-bar evt-' + cat + '" onclick="openEventEditor(\'' + ev.id + '\',null,null)">' +
+               '<span class="evt-bar evt-' + cat + '" title="' + esc(ev.label || '') + '" onclick="openEventEditor(\'' + ev.id + '\',null,null)">' +
                esc(ev.label || '') + '</span></th>';
           di += span;
         } else {
@@ -8014,6 +8052,8 @@ init();
 </div>
 
 <!-- CELL EDITOR (edition manuelle du planning) -->
+<div id="color-pop" class="color-pop" onclick="event.stopPropagation()"></div>
+
 <div id="cell-editor">
   <div class="ce-head">
     <div class="ce-title" id="ce-title"></div>
