@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.3.0</title>
+  <title>CORA Retail V8.3.1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -145,10 +145,6 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .nav-subitem:hover { background:var(--bg-base-3); color:var(--tx-1); }
 .nav-subitem.active { background:var(--bg-base-3); color:var(--nav-active-bg); font-weight:600; }
 
-.it-wrap { padding:18px 20px; }
-.it-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
-.it-title { font-size:15px; font-weight:600; color:var(--tx-1); }
-.it-sub { font-size:12px; color:var(--tx-3); }
 
 .it-axis { display:flex; margin-bottom:6px; }
 .it-axis .pad { width:196px; flex:0 0 196px; }
@@ -394,6 +390,24 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .help-q.help-pop { animation:help-pop .35s cubic-bezier(.34,1.56,.64,1); }
 @keyframes help-pop { from { transform:scale(.3); opacity:0; } to { transform:scale(1); opacity:1; } }
 .help-host { position:relative; }
+/* Cartes Monthly / Intraday : titre + corners + infos a gauche, controles a droite */
+.plan-head { align-items:flex-start; margin-bottom:var(--s4); gap:var(--s4); flex-wrap:wrap; }
+.plan-head-l { display:flex; flex-direction:column; gap:var(--s2); }
+.plan-head .set-title-row { min-height:36px; }
+.plan-head .corner-tabs { margin-bottom:0; }
+.head-actions { display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
+.plan-empty { color:var(--tx-3); font-size:13px; padding:var(--s3) 0; }
+.plan-note { margin-bottom:var(--s3); padding:var(--s2) var(--s3); border-radius:var(--r-md);
+  background:var(--warn-soft); color:var(--warn-tx); font-size:12.5px; }
+.set-rule-field .help-q, .ce-adjust-row .help-q { margin-left:var(--s2); }
+/* Info-bulle des evenements du monthly : meme bulle blanche que l'editeur de cellule */
+.evt-tip { display:none; position:fixed; z-index:650; max-width:280px; pointer-events:none;
+  background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:0 12px 32px rgba(16,24,40,.18); padding:var(--s3); }
+.evt-tip.open { display:block; }
+.evt-tip-cat { display:inline-block; padding:1px var(--s2); border-radius:var(--r-sm); font-size:11px; font-weight:600; }
+.evt-tip-dates { margin-top:var(--s2); font-size:12px; font-weight:600; color:var(--tx-2); }
+.evt-tip-text { margin-top:var(--s1); font-size:13px; line-height:1.5; color:var(--tx-1); white-space:pre-wrap; word-break:break-word; }
 .help-host.has-help { min-height:460px; }
 .help-ov { position:absolute; inset:0; z-index:5; display:flex; align-items:flex-start; justify-content:center;
   padding:var(--s5); overflow-y:auto; cursor:pointer; border-radius:inherit;
@@ -403,7 +417,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 .help-panel { width:100%; max-width:640px; background:var(--bg-base); border-radius:var(--r-lg);
   box-shadow:0 12px 32px rgba(16,24,40,.18); padding:var(--s5); }
 .help-panel-title { font-size:17px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; color:var(--tx-1); margin-bottom:var(--s2); }
-.help-h { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--tx-3); margin:var(--s4) 0 var(--s1); }
+.help-h { font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tx-1); margin:var(--s4) 0 var(--s1); }
 .help-p { font-size:14px; line-height:1.55; color:var(--tx-1); }
 .help-steps { margin:0; padding-left:var(--s5); font-size:14px; line-height:1.55; color:var(--tx-1); }
 .help-steps li { margin-bottom:var(--s1); }
@@ -1220,35 +1234,51 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   <div class="wrap">
 
     <div id="planning-monthly">
-    <div class="page-head">
-      <h2 class="page-title">Monthly planning</h2>
-      <div style="display:flex;align-items:center;gap:var(--s3)">
-        <div class="month-nav">
-          <button class="btn btn-ghost" onclick="monthlyShift(-1)" aria-label="Previous month">&lsaquo;</button>
-          <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
-          <button class="btn btn-ghost" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
+    <div class="card help-host plan-card" id="monthly-card">
+      <div class="page-head plan-head">
+        <div class="plan-head-l">
+          <div class="set-title-row"><h2 class="set-title">Monthly planning</h2>
+            <button type="button" class="help-q" onclick="openHelp('monthly')" aria-label="Help">?</button></div>
+          <div id="corner-tabs-monthly" class="corner-tabs"></div>
+          <div class="card-sub" id="monthly-meta"></div>
         </div>
-        <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
-        <button id="btn-export-pdf" class="btn btn-ghost" onclick="exportMonthlyPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
+        <div class="head-actions">
+          <div class="month-nav">
+            <button class="btn btn-ghost" onclick="monthlyShift(-1)" aria-label="Previous month">&lsaquo;</button>
+            <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
+            <button class="btn btn-ghost" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
+          </div>
+          <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
+          <button id="btn-export-pdf" class="btn btn-ghost" onclick="exportMonthlyPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
+          <button id="btn-reset-manual" class="btn btn-ghost" onclick="clearMonthOverrides()" style="display:none">Reset manual changes</button>
+        </div>
       </div>
+      <div id="planning-monthly-body"><p class="plan-empty">Select a store to view the monthly planning.</p></div>
     </div>
-    <div id="corner-tabs-monthly" class="corner-tabs"></div>
-    <div id="planning-monthly-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the monthly planning.</p></div></div>
+    <div id="planning-coverage-body"></div>
     </div>
 
     <div id="planning-intraday" style="display:none">
-    <div class="page-head">
-      <h2 class="page-title">Intraday planning</h2>
-      <div style="display:flex;align-items:center;gap:var(--s3)">
-        <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(-1)">&lsaquo;</button>
-        <input type="date" id="intraday-date" onchange="intradayPickDate(this.value)" style="height:32px">
-        <button class="btn btn-ghost btn-sm" onclick="intradayShiftDay(1)">&rsaquo;</button>
-        <button class="btn btn-ghost" onclick="exportIntraday()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
-        <button class="btn btn-ghost" onclick="exportIntradayPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
+    <div class="card help-host plan-card" id="intraday-card">
+      <div class="page-head plan-head">
+        <div class="plan-head-l">
+          <div class="set-title-row"><h2 class="set-title">Intraday planning</h2>
+            <button type="button" class="help-q" onclick="openHelp('intraday')" aria-label="Help">?</button></div>
+          <div id="corner-tabs-intraday" class="corner-tabs"></div>
+          <div class="card-sub" id="intraday-meta"></div>
+        </div>
+        <div class="head-actions">
+          <div class="month-nav">
+            <button class="btn btn-ghost" onclick="intradayShiftDay(-1)" aria-label="Previous day">&lsaquo;</button>
+            <input type="date" id="intraday-date" onchange="intradayPickDate(this.value)">
+            <button class="btn btn-ghost" onclick="intradayShiftDay(1)" aria-label="Next day">&rsaquo;</button>
+          </div>
+          <button class="btn btn-ghost" onclick="exportIntraday()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
+          <button class="btn btn-ghost" onclick="exportIntradayPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
+        </div>
       </div>
+      <div id="planning-intraday-body"><p class="plan-empty">Select a store to view the intraday planning.</p></div>
     </div>
-    <div id="corner-tabs-intraday" class="corner-tabs"></div>
-    <div id="planning-intraday-body"><div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div></div>
     </div>
 
   </div>
@@ -1433,7 +1463,7 @@ var I18N = {
     'On the floor today': '本日の出勤',
     'Absences this week': '今週の欠勤',
     'Public holidays': '祝日',
-    'Forecast traffic · this week': '来客予測 · 今週',
+    'Forecast traffic - this week': '来客予測 - 今週',
     'This week at a glance': '今週の概要',
     'Save thresholds': '基準を保存',
     'Edit agent configuration': 'スタッフ設定を編集',
@@ -1646,15 +1676,58 @@ var I18N = {
     '&lsaquo;': '‹',
     '&rsaquo;': '›',
     // Aide des blocs Settings
-    'The legal limits and minimum staffing of your store. The planning always respects them.': '店舗の法定上限と最低配置人数です。シフト表は常にこのルールを守ります。',
-    'These are the rules of your country and of your store. The planning will never break them.': '国と店舗のルールです。シフト表がこのルールを破ることはありません。',
+    'Choose how Sundays are planned.': '日曜日のシフトの組み方を選びます。',
+    'Turn it OFF only if your Sunday opening hours are longer than one normal working day.': '日曜日の営業時間が通常の1日の勤務時間より長い場合のみ、オフにしてください。',
+    'ON: on Sundays, everyone present works the same single shift, called D. Best for stores with short Sunday hours.': 'オン：日曜日は、出勤者全員が「D」という同じ1つのシフトで働きます。日曜日の営業時間が短い店舗向けです。',
+    'OFF: Sundays are planned like the other days, with opening (O) and closing (C) shifts. Best for department stores open long hours on Sunday.': 'オフ：日曜日も他の日と同じように、オープン（O）とクローズ（C）のシフトで組みます。日曜日の営業時間が長い百貨店向けです。',
+    'Open public holidays always use the single shift D.': '営業する祝日は、常にシングルシフト「D」になります。',
+    'Choose if your advisors stay in their own corner, or rotate between all corners.': 'アドバイザーが自分のコーナーに留まるか、全コーナーをローテーションするかを選びます。',
+    'Use ON if you want every advisor to know every corner. Use OFF to keep stable teams.': 'すべてのアドバイザーに全コーナーを経験させたい場合はオン、チームを固定したい場合はオフにしてください。',
+    'OFF (recommended to start): each advisor works in their home corner. CORA moves someone to another corner only when a corner does not have enough people.': 'オフ（最初はこちらを推奨）：各アドバイザーは担当コーナー（home corner）で働きます。人数が足りないコーナーがある場合のみ、CORAが誰かを別のコーナーに移します。',
+    'ON: each advisor rotates across all corners during the month, so everyone spends about the same number of days in each corner.': 'オン：各アドバイザーが月の間に全コーナーをローテーションし、全員が各コーナーでほぼ同じ日数を過ごします。',
+    'The number of people in each corner always follows the traffic of that corner.': '各コーナーの人数は、常にそのコーナーの来客数に合わせて決まります。',
+    'An advisor working outside their home corner shows the corner code in front of their shift.': '担当コーナー以外で働くアドバイザーは、シフトの前にコーナーコードが表示されます。',
+    'Let CORA suggest short help between corners during the busiest hour of the day.': '1日で最も忙しい時間帯に、コーナー間の短時間の応援をCORAが提案します。',
+    'This needs the hourly traffic curve (Traffic page) to work.': 'この機能には、時間別の来客カーブ（Trafficページ）が必要です。',
+    'ON: at the busiest hour, CORA finds the corner with the most clients per advisor, and suggests moving one advisor there from a quieter corner, for a short time.': 'オン：最も忙しい時間帯に、アドバイザー1人あたりの来客数が最も多いコーナーを見つけ、空いているコーナーから1人を短時間移すよう提案します。',
+    'The suggestion appears as a colored label on the advisor\'s line in the intraday planning. You can move it, or delete it with ✕.': '提案は日中スケジュールのアドバイザーの行に色付きラベルで表示されます。移動したり、✕で削除したりできます。',
+    'A corner never goes below its minimum staff to help another one.': '応援のために、コーナーが最低人数を下回ることはありません。',
+    'OFF: no suggestions. Everyone stays in their corner all day.': 'オフ：提案はありません。全員が1日中自分のコーナーに留まります。',
+    'Choose what happens to the rest of the planning when you change one square.': '1つのマスを変更したとき、シフト表の残りをどうするかを選びます。',
+    'Use ON for a big change (a long absence, a new advisor). Use OFF for small adjustments.': '大きな変更（長期の不在、新しいアドバイザー）にはオン、小さな調整にはオフを使ってください。',
+    'OFF (default): only the square you change is modified. The rest of the planning stays exactly the same, even if openings and closings become unbalanced.': 'オフ（初期設定）：変更したマスだけが変わります。オープンとクローズのバランスが崩れても、シフト表の残りはそのままです。',
+    'ON: after each change, CORA recalculates the whole month around it, to keep the right number of openings, closings and the minimum staff. Other advisors may be moved.': 'オン：変更のたびに、CORAが月全体を再計算し、オープン・クローズの人数と最低人数を保ちます。他のアドバイザーが移動することがあります。',
+    'It stays ON until you turn it off.': 'オフにするまで、オンのままです。',
+    'Your manual changes are always kept, in both modes. Past days are never changed.': 'どちらのモードでも、手動の変更は常に保持されます。過去の日は変更されません。',
+    'Your team planning for the whole month, built automatically by CORA from your Settings, your team and your traffic. The goal: the right people at the right time, fair days off, and all rules respected.': 'CORAが設定・チーム・来客数から自動で作成する、1か月分のシフト表です。目的は、適切な時間に適切な人を配置し、休日を公平にし、すべてのルールを守ることです。',
+    'Your manual changes are always kept. "Reset manual changes" removes all of them for this month.': '手動の変更は常に保持されます。「手動変更をリセット」を押すと、この月の手動変更がすべて削除されます。',
+    'Each line is one person, each column is one day. Each colored square is a shift: see the legend above the table.': '各行が1人、各列が1日です。色付きのマスがシフトです。表の上の凡例を見てください。',
+    'Click a square to change it: another shift, a day off (OFF) or an absence (A).': 'マスをクリックすると変更できます：別のシフト、休み（OFF）、不在（A）。',
+    'To change many squares at once: hold Ctrl (Cmd on Mac) and click several squares, then click one more square normally and choose the change.': '複数のマスを一度に変更するには：Ctrl（MacはCmd）を押しながら複数のマスをクリックし、最後に1つのマスを普通にクリックして変更を選びます。',
+    'The 3 lines at the top (Local, National, Training) are for events: click a day to add one.': '上の3行（Local・National・Training）はイベント用です：日をクリックして追加します。',
+    'Corner buttons (All, then each corner): show the planning of one corner only.': 'コーナーボタン（All、各コーナー）：1つのコーナーのシフトだけを表示します。',
+    'Arrows at the top right: change month. Excel and PDF: export the planning.': '右上の矢印：月を変更します。ExcelとPDF：シフト表を書き出します。',
+    'The second table shows how many people are present each day, for openings and closings.': '下の表は、毎日の出勤人数とオープン・クローズの人数を示します。',
+    'The detail of one day, hour by hour: who works when, breaks and missions. CORA places the breaks automatically so that no corner is left empty and the busiest hours stay covered.': '1日の詳細を時間ごとに表示します：誰がいつ働くか、休憩、ミッション。CORAは、コーナーが空にならず、忙しい時間帯の人員が保たれるよう、休憩を自動で配置します。',
+    'The line at the top shows the store traffic during the day. Breaks avoid the busiest hours when possible.': '一番上の線は、1日の来客数を示します。休憩は、できるだけ忙しい時間帯を避けて配置されます。',
+    'Choose the day with the arrows or the date at the top right.': '右上の矢印か日付で日を選びます。',
+    'Each line is one person. The colored bar shows their working hours.': '各行が1人です。色付きのバーが勤務時間を示します。',
+    'Breaks (lunch and short breaks) are placed automatically inside the windows set in Settings. Drag a break to move it.': '休憩（昼休憩・小休憩）は、設定で決めた時間帯の中に自動で配置されます。休憩をドラッグして移動できます。',
+    'Click on a bar to add a mission, like the morning brief (MB) or Welcome.': 'バーをクリックすると、朝礼（MB）やWelcomeなどのミッションを追加できます。',
+    'If a red message says a break could not be placed, check the break windows in Settings.': '休憩を配置できなかったという赤いメッセージが出た場合は、設定の休憩時間帯を確認してください。',
+    'Excel and PDF: export the day.': 'ExcelとPDF：その日のスケジュールを書き出します。',
+    'Sunday single shift': '日曜日のシングルシフト',
+    'How it works': '仕組み',
+    'How to use it': '使い方',
+    'The legal and HR rules of your store: working time limits and minimum staffing. The planning always respects them.': '店舗の法令・人事ルール（労働時間の上限と最低配置人数）です。シフト表は常にこのルールを守ります。',
+    'These are the legal and HR rules of your store: working time limits and minimum staffing. The planning will never break them.': '店舗の法令・人事ルール（労働時間の上限と最低配置人数）です。シフト表がこのルールを破ることはありません。',
     'Changes are saved automatically. Ask HR if you are not sure about a legal number.': '変更は自動で保存されます。法定の数値がわからない場合は人事部に確認してください。',
     'Max working days / week: how many days one person can work in a week.': '週の最大勤務日数：1人が1週間に働ける日数です。',
     'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract.': '1日の最大時間・週の最大時間：契約で認められる1日と1週間の最長勤務時間です。',
     'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.': 'シフト間の最低休息時間：1日の勤務終了から翌日の勤務開始までに必要な休息時間です。',
     'Opening minimum and Closing minimum: how many people you need, at least, to open and to close the store (or each corner).': 'オープン最低人数・クローズ最低人数：店舗（または各コーナー）の開店・閉店に最低限必要な人数です。',
-    'Closing ratio: how many people you want at closing compared to opening. Example: 70% means 7 people at closing for 10 at opening.': 'クローズ比率：オープンに対するクローズの人数の割合です。例：70%なら、オープン10人に対してクローズ7人です。',
-    'Switches at the bottom: turn a rule on or off. Each switch explains what it does.': '下のスイッチ：ルールをオン・オフします。各スイッチに説明があります。',
+    'Closing ratio: the share of your team working the closing shift. Example: 70% means 7 people on closing and 3 on opening, out of 10.': 'クローズ比率：クローズシフトに入るスタッフの割合です。例：70%なら、10人中7人がクローズ、3人がオープンです。',
+    'Switches at the bottom: turn a rule on or off. Click ? next to a switch to understand it.': '下のスイッチ：ルールをオン・オフします。スイッチ横の「?」をクリックすると説明が表示されます。',
     'The days and hours your store is open to clients.': '店舗がお客様に開いている曜日と時間です。',
     'Tell CORA when your store is open. Nobody will be planned when the store is closed.': '店舗の営業時間をCORAに設定します。閉店中は誰もシフトに入りません。',
     'Changes are saved automatically. For one special day (holiday, event), use the Calendar page instead.': '変更は自動で保存されます。特別な1日（祝日・イベント）は、カレンダーページで設定してください。',
@@ -1672,7 +1745,6 @@ var I18N = {
     'Click ✕ to delete a break.': '✕をクリックすると休憩を削除します。',
     'Only for department stores or stores with several areas: list the areas of your store here.': '百貨店や複数のエリアがある店舗のみ：店舗内のエリアをここに登録します。',
     'A corner is a physical area of your store where clients are served. Example: Leather goods, Ready-to-wear, Shoes. Use this only if your store has several areas (department store, big store).': 'コーナーとは、お客様を接客する店舗内の物理的なエリアです。例：レザーグッズ、プレタポルテ、シューズ。複数のエリアがある店舗（百貨店・大型店）の場合のみ使用してください。',
-    'A corner is NOT a job or a role. Do not create corners like "Management", "Stock" or "Sales advisor". The role of each person is set on the Client Advisors page.': 'コーナーは職務や役割ではありません。「Management」「Stock」「Sales advisor」のようなコーナーは作らないでください。各スタッフの役割はクライアントアドバイザーページで設定します。',
     'Changes are saved automatically. If your store has only one area, leave this empty.': '変更は自動で保存されます。エリアが1つだけの店舗は、ここを空のままにしてください。',
     'Click "+ Add corner" to create an area.': '「+ コーナーを追加」をクリックしてエリアを作成します。',
     'Code: a short name shown in the planning (example: LG).': 'Code：シフト表に表示される短い名前です（例：LG）。',
@@ -1986,7 +2058,7 @@ function updateWeekLabel() {
   const days = getWeekDays(currentWeekMonday);
   const wn   = getWeekNumber(currentWeekMonday);
   document.getElementById('week-label').textContent =
-    'W' + wn + ' \u00b7 ' + formatDate(days[0]) + ' \u2192 ' + formatDate(days[6]);
+    'W' + wn + ' - ' + formatDate(days[0]) + ' \u2192 ' + formatDate(days[6]);
 }
 
 // ── UI HELPERS ────────────────────────────────────────────────────────────
@@ -2093,6 +2165,7 @@ function toggleAddAgentForm() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 async function init() {
+  initPlanHelp();
   installRetranslateHooks();
   applyLang(CURRENT_LANG);
   updateWeekLabel();
@@ -2741,16 +2814,16 @@ function applyRegulationsForm() {
 // Les textes anglais servent de cle de traduction (dictionnaire I18N).
 var SETTINGS_HELP = {
   labor: { n: 1, title: 'Labor rules',
-    sub: 'The legal limits and minimum staffing of your store. The planning always respects them.',
-    what: 'These are the rules of your country and of your store. The planning will never break them.',
+    sub: 'The legal and HR rules of your store: working time limits and minimum staffing. The planning always respects them.',
+    what: 'These are the legal and HR rules of your store: working time limits and minimum staffing. The planning will never break them.',
     warn: null,
     steps: [
       'Max working days / week: how many days one person can work in a week.',
       'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract.',
       'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.',
       'Opening minimum and Closing minimum: how many people you need, at least, to open and to close the store (or each corner).',
-      'Closing ratio: how many people you want at closing compared to opening. Example: 70% means 7 people at closing for 10 at opening.',
-      'Switches at the bottom: turn a rule on or off. Each switch explains what it does.'],
+      'Closing ratio: the share of your team working the closing shift. Example: 70% means 7 people on closing and 3 on opening, out of 10.',
+      'Switches at the bottom: turn a rule on or off. Click ? next to a switch to understand it.'],
     important: 'Changes are saved automatically. Ask HR if you are not sure about a legal number.' },
   hours: { n: 2, title: 'Operating hours',
     sub: 'The days and hours your store is open to clients.',
@@ -2776,7 +2849,7 @@ var SETTINGS_HELP = {
   corners: { n: 4, title: 'Corners',
     sub: 'Only for department stores or stores with several areas: list the areas of your store here.',
     what: 'A corner is a physical area of your store where clients are served. Example: Leather goods, Ready-to-wear, Shoes. Use this only if your store has several areas (department store, big store).',
-    warn: 'A corner is NOT a job or a role. Do not create corners like "Management", "Stock" or "Sales advisor". The role of each person is set on the Client Advisors page.',
+    warn: null,
     steps: [
       'Click "+ Add corner" to create an area.',
       'Code: a short name shown in the planning (example: LG).',
@@ -2794,7 +2867,65 @@ var SETTINGS_HELP = {
       'Choose the start hour and the end hour, then a color.',
       'A shift cannot be longer than "Max hours / day" in Labor rules. A red label warns you if it is too long.',
       'You can change the hours of a shift directly in the table, or click ✕ to delete it.'],
-    important: 'Click Save (top right of this block) after adding or changing a shift. Otherwise your changes are lost.' }
+    important: 'Click Save (top right of this block) after adding or changing a shift. Otherwise your changes are lost.' },
+  sunday: { n: null, title: 'Sunday single shift', stepsTitle: 'How it works',
+    what: 'Choose how Sundays are planned.',
+    warn: null,
+    steps: [
+      'ON: on Sundays, everyone present works the same single shift, called D. Best for stores with short Sunday hours.',
+      'OFF: Sundays are planned like the other days, with opening (O) and closing (C) shifts. Best for department stores open long hours on Sunday.',
+      'Open public holidays always use the single shift D.'],
+    important: 'Turn it OFF only if your Sunday opening hours are longer than one normal working day.' },
+  fairness: { n: null, title: 'Fairness rotation', stepsTitle: 'How it works',
+    what: 'Choose if your advisors stay in their own corner, or rotate between all corners.',
+    warn: null,
+    steps: [
+      'OFF (recommended to start): each advisor works in their home corner. CORA moves someone to another corner only when a corner does not have enough people.',
+      'ON: each advisor rotates across all corners during the month, so everyone spends about the same number of days in each corner.',
+      'The number of people in each corner always follows the traffic of that corner.',
+      'An advisor working outside their home corner shows the corner code in front of their shift.'],
+    important: 'Use ON if you want every advisor to know every corner. Use OFF to keep stable teams.' },
+  reinf: { n: null, title: 'Intraday reinforcement', stepsTitle: 'How it works',
+    what: 'Let CORA suggest short help between corners during the busiest hour of the day.',
+    warn: null,
+    steps: [
+      'ON: at the busiest hour, CORA finds the corner with the most clients per advisor, and suggests moving one advisor there from a quieter corner, for a short time.',
+      'The suggestion appears as a colored label on the advisor\'s line in the intraday planning. You can move it, or delete it with ✕.',
+      'A corner never goes below its minimum staff to help another one.',
+      'OFF: no suggestions. Everyone stays in their corner all day.'],
+    important: 'This needs the hourly traffic curve (Traffic page) to work.' },
+  adjust: { n: null, title: 'Adjust whole planning', stepsTitle: 'How it works',
+    what: 'Choose what happens to the rest of the planning when you change one square.',
+    warn: null,
+    steps: [
+      'OFF (default): only the square you change is modified. The rest of the planning stays exactly the same, even if openings and closings become unbalanced.',
+      'ON: after each change, CORA recalculates the whole month around it, to keep the right number of openings, closings and the minimum staff. Other advisors may be moved.',
+      'It stays ON until you turn it off.',
+      'Your manual changes are always kept, in both modes. Past days are never changed.'],
+    important: 'Use ON for a big change (a long absence, a new advisor). Use OFF for small adjustments.' },
+  monthly: { n: null, title: 'Monthly planning', stepsTitle: 'How to use it',
+    what: 'Your team planning for the whole month, built automatically by CORA from your Settings, your team and your traffic. The goal: the right people at the right time, fair days off, and all rules respected.',
+    warn: null,
+    steps: [
+      'Each line is one person, each column is one day. Each colored square is a shift: see the legend above the table.',
+      'Click a square to change it: another shift, a day off (OFF) or an absence (A).',
+      'To change many squares at once: hold Ctrl (Cmd on Mac) and click several squares, then click one more square normally and choose the change.',
+      'The 3 lines at the top (Local, National, Training) are for events: click a day to add one.',
+      'Corner buttons (All, then each corner): show the planning of one corner only.',
+      'Arrows at the top right: change month. Excel and PDF: export the planning.',
+      'The second table shows how many people are present each day, for openings and closings.'],
+    important: 'Your manual changes are always kept. "Reset manual changes" removes all of them for this month.' },
+  intraday: { n: null, title: 'Intraday planning', stepsTitle: 'How to use it',
+    what: 'The detail of one day, hour by hour: who works when, breaks and missions. CORA places the breaks automatically so that no corner is left empty and the busiest hours stay covered.',
+    warn: null,
+    steps: [
+      'Choose the day with the arrows or the date at the top right.',
+      'Each line is one person. The colored bar shows their working hours.',
+      'Breaks (lunch and short breaks) are placed automatically inside the windows set in Settings. Drag a break to move it.',
+      'Click on a bar to add a mission, like the morning brief (MB) or Welcome.',
+      'If a red message says a break could not be placed, check the break windows in Settings.',
+      'Excel and PDF: export the day.'],
+    important: 'The line at the top shows the store traffic during the day. Breaks avoid the busiest hours when possible.' }
 };
 
 function helpSeen() {
@@ -2810,13 +2941,33 @@ function helpContentHtml(key) {
   var hp = SETTINGS_HELP[key];
   return '<div class="help-h">' + t('What is it?') + '</div><p class="help-p">' + esc(t(hp.what)) + '</p>' +
     (hp.warn ? '<div class="help-warn">' + esc(t(hp.warn)) + '</div>' : '') +
-    '<div class="help-h">' + t('How to set it up') + '</div><ol class="help-steps">' +
-    hp.steps.map(function(s) { return '<li>' + esc(t(s)) + '</li>'; }).join('') + '</ol>' +
+    '<div class="help-h">' + t(hp.stepsTitle || 'How to set it up') + '</div><ol class="help-steps">' +
+    hp.steps.map(function(s) { return '<li>' + helpStepHtml(s) + '</li>'; }).join('') + '</ol>' +
     '<div class="help-h">' + t('Important') + '</div><p class="help-p">' + esc(t(hp.important)) + '</p>';
+}
+// "Libelle : explication" -> libelle en gras, pour une lecture en diagonale.
+function helpStepHtml(s) {
+  var txt = t(s), m = txt.match(/^([^:\uff1a]{2,48})([:\uff1a])\s*([\s\S]*)$/);
+  return m ? '<b>' + esc(m[1] + m[2]) + '</b> ' + esc(m[3]) : esc(txt);
 }
 function helpTitle(key) {
   var hp = SETTINGS_HELP[key];
-  return hp.n + '. ' + t(hp.title);
+  return (hp.n ? hp.n + '. ' : '') + t(hp.title);
+}
+// Bouton "?" fixe (toujours visible, sans animation) : switches, slider.
+function helpBtnHtml(key) {
+  return '<button type="button" class="help-q" onclick="event.stopPropagation();openHelp(\'' + key + '\')" aria-label="' + t('Help') + '">?</button>';
+}
+// Monthly / Intraday : l'overlay du premier affichage est pose dans la carte statique.
+function initPlanHelp() {
+  ['monthly', 'intraday'].forEach(function(key) {
+    var card = document.getElementById(key + '-card');
+    if (!card || helpSeen()[key] || card.querySelector('.help-ov')) return;
+    card.classList.add('has-help');
+    var q = card.querySelector('.help-q');
+    if (q) q.classList.add('is-hidden');
+    card.insertAdjacentHTML('beforeend', helpOverlayHtml(key));
+  });
 }
 
 // En-tete d'un bloc : numero + titre, bouton "?", sous-titre ; actions a droite.
@@ -3139,12 +3290,13 @@ function rrow(label, hint, inputHtml, unit) {
     '<span class="set-rule-field">' + inputHtml + (unit ? '<span class="set-rule-unit">' + unit + '</span>' : '') + '</span>' +
     '</div>';
 }
-function rrowToggle(label, hint, id, handler, checked) {
+function rrowToggle(label, hint, id, handler, checked, helpKey) {
   return '<div class="set-rule">' +
     '<span class="set-rule-lbl-wrap"><span class="set-rule-lbl">' + t(label) + '</span>' +
       '<span class="set-rule-hint">' + t(hint) + '</span></span>' +
     '<span class="set-rule-field"><label class="toggle"><input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') +
-      ' onchange="' + handler + '(this)"><span class="toggle-slider"></span></label></span>' +
+      ' onchange="' + handler + '(this)"><span class="toggle-slider"></span></label>' +
+      (helpKey ? helpBtnHtml(helpKey) : '') + '</span>' +
     '</div>';
 }
 
@@ -3215,12 +3367,12 @@ function renderRegulations() {
         rrow('Closing ratio', 'How many advisors you want on closing versus opening',
           '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5">', '%') +
         rrowToggle('Sunday single shift', 'One shift D on Sundays (uncheck for wide-amplitude stores that need O/C on Sunday)',
-          'sunday-single-toggle', 'toggleSundaySingle', !(storeSettings && storeSettings.sunday_single_shift === false)) +
+          'sunday-single-toggle', 'toggleSundaySingle', !(storeSettings && storeSettings.sunday_single_shift === false), 'sunday') +
         (storeCorners.length > 1 ?
           rrowToggle('Fairness rotation', 'Rotate every advisor fairly across all corners over the month',
-            'fairness-toggle', 'toggleFairness', !!(storeSettings && storeSettings.fairness_rotation)) +
+            'fairness-toggle', 'toggleFairness', !!(storeSettings && storeSettings.fairness_rotation), 'fairness') +
           rrowToggle('Intraday reinforcement', 'Let the engine move an advisor to a busier corner for a short slot during the day',
-            'reinf-toggle', 'toggleReinforcement', !!(storeSettings && storeSettings.intraday_reinforcement))
+            'reinf-toggle', 'toggleReinforcement', !!(storeSettings && storeSettings.intraday_reinforcement), 'reinf')
           : '') +
       '</div>' + helpOverlayHtml('labor') +
     '</div>' +
@@ -3498,6 +3650,17 @@ function skillMatchesCorner(skills, cornerCode) {
 // Barre de tabs par corner (au-dessus du monthly et de l'intraday). Visible
 // uniquement en multi-corner. "All" = vue complete (directeur) ; chaque corner
 // = vue filtree (manager de proximite).
+// Ligne d'infos sous le titre des cartes Monthly / Intraday.
+function setPlanMeta(id, text, isHtml) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (isHtml) el.innerHTML = text; else el.textContent = text;
+}
+function setPlanCoverage(html) {
+  var el = document.getElementById('planning-coverage-body');
+  if (el) el.innerHTML = html;
+}
+
 function renderCornerTabs() {
   ['monthly','intraday'].forEach(function(which) {
     var box = document.getElementById('corner-tabs-' + which);
@@ -3653,6 +3816,27 @@ function openEventEditor(id, cat, ds) {
   document.getElementById('evt-delete-btn').style.display = ev ? '' : 'none';
   document.getElementById('event-editor').classList.add('open');
   setTimeout(function(){ document.getElementById('evt-label-input').focus(); }, 60);
+}
+
+// Info-bulle blanche au survol d'un evenement : categorie, dates, texte complet.
+function showEvtTip(el, id) {
+  var ev = planningEvents.find(function(e) { return e.id === id; });
+  var tip = document.getElementById('evt-tip');
+  if (!ev || !tip) return;
+  var cat = ev.category.charAt(0).toUpperCase() + ev.category.slice(1);
+  tip.innerHTML = '<span class="evt-tip-cat evt-' + ev.category + '">' + esc(t(cat)) + '</span>' +
+    '<div class="evt-tip-dates">' + esc(formatDateDisplay(ev.start_date)) +
+      (ev.end_date !== ev.start_date ? ' - ' + esc(formatDateDisplay(ev.end_date)) : '') + '</div>' +
+    '<div class="evt-tip-text">' + esc(ev.label || '') + '</div>';
+  tip.classList.add('open');
+  var r = el.getBoundingClientRect();
+  var below = r.bottom + 8 + tip.offsetHeight <= window.innerHeight - 8;
+  tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - tip.offsetWidth - 8)) + 'px';
+  tip.style.top  = (below ? r.bottom + 8 : Math.max(8, r.top - 8 - tip.offsetHeight)) + 'px';
+}
+function hideEvtTip() {
+  var tip = document.getElementById('evt-tip');
+  if (tip) tip.classList.remove('open');
 }
 
 function closeEventEditor() {
@@ -4006,7 +4190,7 @@ async function renderTraffic() {
 
   html += '<div class="card">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<div><h2 class="page-title">' + t('Daily breakdown') + ' \u00b7 ' + mName + '</h2>';
+  html +=     '<div><h2 class="page-title">' + t('Daily breakdown') + ' - ' + mName + '</h2>';
   html +=     '<div class="card-sub">Computed from the monthly total. ' +
               'Edit any day to override it - the rest adjusts around it.</div></div>';
   html +=     '<div style="display:flex;gap:var(--s3)">';
@@ -4271,7 +4455,8 @@ function renderIntraday(ds) {
   var body = document.getElementById('planning-intraday-body');
   if (!body) return;
   renderCornerTabs();
-  if (!currentStoreId) { body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Select a store to view the intraday planning.</p></div>'; return; }
+  setPlanMeta('intraday-meta', ds ? formatDateDisplay(ds) : '');
+  if (!currentStoreId) { body.innerHTML = '<p class="plan-empty">Select a store to view the intraday planning.</p>'; return; }
 
   if (!ds) ds = toDateStr(new Date());
   currentIntradayDate = ds;
@@ -4281,7 +4466,7 @@ function renderIntraday(ds) {
   var closure = getDayClosureType(ds);
   if (closure) {
     var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
-    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">' + formatDateDisplay(ds) + ' - store closed (' + why + ').</p></div>';
+    body.innerHTML = '<p class="plan-empty">' + formatDateDisplay(ds) + ' - store closed (' + why + ').</p>';
     return;
   }
 
@@ -4294,8 +4479,8 @@ function renderIntraday(ds) {
   if (!monthlyResult[ds]) renderMonthlyPlanning();
   var dayPlan = monthlyResult[ds];
   if (!dayPlan) {
-    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Open ' +
-      formatDateDisplay(ds) + ' in the Monthly view first to compute its planning.</p></div>';
+    body.innerHTML = '<p class="plan-empty">Open ' +
+      formatDateDisplay(ds) + ' in the Monthly view first to compute its planning.</p>';
     return;
   }
 
@@ -4306,7 +4491,7 @@ function renderIntraday(ds) {
     return mr && !mr.special;   // present = a un shift, pas off/leave/closed
   });
   if (!working.length) {
-    body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">No client advisors scheduled on ' + formatDateDisplay(ds) + '.</p></div>';
+    body.innerHTML = '<p class="plan-empty">No client advisors scheduled on ' + formatDateDisplay(ds) + '.</p>';
     return;
   }
 
@@ -4875,19 +5060,17 @@ function renderIntraday(ds) {
     rowsHtml += '</div>';
   });
 
-  var noBriefNote = !noLeadAtAll ? '' : '<div class="card" style="margin-bottom:12px;background:var(--warn-soft)"><p style="color:var(--warn-tx);font-size:12px;margin:0">No manager or ASM available - morning brief not assigned.</p></div>';
+  var noBriefNote = !noLeadAtAll ? '' : '<div class="plan-note">No manager or ASM available - morning brief not assigned.</div>';
 
   body.innerHTML =
     noBriefNote +
-    '<div class="card it-wrap">' +
-      '<div class="it-head"><div class="it-title">' + formatDateDisplay(ds) + '</div>' +
-        '<div class="it-sub">' + working.length + ' present' +
-          (unplacedBreaks ? ' \u00b7 <span class="it-warn">' + unplacedBreaks + ' break(s) could not be placed</span>' : '') +
-          '</div></div>' +
+    '<div class="it-wrap">' +
       axis + band +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
 
+  setPlanMeta('intraday-meta', esc(formatDateDisplay(ds)) + ' - ' + working.length + ' present' +
+    (unplacedBreaks ? ' - <span class="it-warn">' + unplacedBreaks + ' break(s) could not be placed</span>' : ''), true);
   intradayExport = { ds: ds, openH: openH, closeH: closeH, rows: intradayExportRows };
 
   // Active le drag & drop des blocs (MB, lunch, missions)
@@ -5260,7 +5443,7 @@ function openCellEditor(agentId, ds, evt) {
   html += '<div class="ce-sep"></div>' +
     '<div class="ce-adjust-row"><span class="ce-adjust-lbl">' + t('Adjust whole planning') + '</span>' +
       '<label class="toggle"><input type="checkbox" id="ce-adjust-toggle"' + (cellAdjustMode ? ' checked' : '') +
-      ' onchange="toggleCellAdjustMode(this)"><span class="toggle-slider"></span></label></div>';
+      ' onchange="toggleCellAdjustMode(this)"><span class="toggle-slider"></span></label>' + helpBtnHtml('adjust') + '</div>';
 
   document.getElementById('ce-title').textContent =
     ((agent.first_name || '') + ' ' + (agent.last_name || '')).trim();
@@ -5587,9 +5770,9 @@ function renderDashboard() {
   body.innerHTML =
     '<div class="dash-head">' +
       '<div>' +
-        '<div class="dash-eyebrow">Week ' + wn + ' \u00b7 ' + formatDate(days[0]) + ' - ' + formatDate(days[6]) + '</div>' +
+        '<div class="dash-eyebrow">Week ' + wn + ' - ' + formatDate(days[0]) + ' - ' + formatDate(days[6]) + '</div>' +
         '<div class="dash-title">This week at a glance</div>' +
-        '<div class="dash-sub">' + (todayInWeek ? 'Today \u00b7 ' + DOW_FULL[new Date(todayStr+'T12:00:00').getDay()] + ' ' + formatDate(new Date(todayStr+'T12:00:00')) : 'Monday to Sunday overview') + '</div>' +
+        '<div class="dash-sub">' + (todayInWeek ? 'Today - ' + DOW_FULL[new Date(todayStr+'T12:00:00').getDay()] + ' ' + formatDate(new Date(todayStr+'T12:00:00')) : 'Monday to Sunday overview') + '</div>' +
       '</div>' +
       '<div class="dash-store"><div class="nm">' + esc(currentStoreName || 'Store') + '</div>' +
         '<div class="loc">' + esc(currentStoreCity || '') + '</div></div>' +
@@ -5600,7 +5783,7 @@ function renderDashboard() {
           (trendPct !== null ? '<div class="hero-trend ' + (trendPct >= 0 ? 'up' : 'down') + '">' +
             (trendPct >= 0 ? '\u25B2 +' : '\u25BC ') + trendPct + '%' +
             '<span class="trend-lbl">vs 6-wk avg</span></div>' : '') +
-          '<div class="hero-eyebrow">Forecast traffic \u00b7 this week</div>' +
+          '<div class="hero-eyebrow">Forecast traffic - this week</div>' +
           '<div class="hero-num">' + weekTotal.toLocaleString() + '<span class="unit">visits forecasted</span></div>' +
           '<div class="hero-caption">' + (weekTotal > 0 ? 'Peak on ' + DOW3[days[peakIdx].getDay()] : 'No traffic data entered yet') + '</div>' +
           '<div class="hero-spark"><div class="hero-days">' + spark + '</div></div>' +
@@ -5612,7 +5795,7 @@ function renderDashboard() {
           hlAddFormHtml(weekStart, weekEnd) +
         '</div>' +
         '<div class="card">' +
-          '<div class="dash-card-label">Planning events \u00b7 ' +
+          '<div class="dash-card-label">Planning events - ' +
             mRef.toLocaleDateString(dLoc(), { month: 'long', year: 'numeric' }) + '</div>' +
           '<div class="hl-list">' + (monthEvts.length ? monthEvts.map(evtItemHtml).join('') :
             '<div class="mini-empty">No events this month.</div>') + '</div>' +
@@ -5706,11 +5889,13 @@ function renderMonthlyPlanning() {
   if (!container) return;
   renderCornerTabs();
   if (!currentStoreId) {
-    container.innerHTML = '<p style="color:#888">Select a store to view the monthly planning.</p>';
+    container.innerHTML = '<p class="plan-empty">Select a store to view the monthly planning.</p>';
+    setPlanMeta('monthly-meta', ''); setPlanCoverage('');
     return;
   }
   if (!agents.length) {
-    container.innerHTML = '<p style="color:#888">No client advisors for this store. Add them in the Client Advisors tab.</p>';
+    container.innerHTML = '<p class="plan-empty">No client advisors for this store. Add them in the Client Advisors tab.</p>';
+    setPlanMeta('monthly-meta', ''); setPlanCoverage('');
     return;
   }
 
@@ -6814,7 +6999,7 @@ function renderMonthlyPlanning() {
 
   // Pastille HTML pour une lettre de shift
   function cell(res) {
-    if (res.special === 'closed') return '<span class="sh-none">\u00b7</span>';
+    if (res.special === 'closed') return '<span class="sh-none">-</span>';
     // Demi-journee volant : case coupee en diagonale, moitie coloree selon O/C.
     if (res.half) {
       var cls = shiftCls(res.code);
@@ -6952,15 +7137,10 @@ function renderMonthlyPlanning() {
     });
   });
 
-  html += '<div class="card-head">';
-  html +=   '<div><div class="card-title">' + monthName + '</div>';
-  html +=   '<div class="card-sub">' + agents.length + ' agents \u00b7 ' + nDays + ' days' +
-            (nOverrides ? ' \u00b7 ' + nOverrides + ' manual change' + (nOverrides > 1 ? 's' : '') : '') +
-            '</div></div>';
-  if (nOverrides) {
-    html += '<button class="btn btn-ghost btn-sm" onclick="clearMonthOverrides()">Reset manual changes</button>';
-  }
-  html += '</div>';
+  setPlanMeta('monthly-meta', agents.length + ' agents - ' + nDays + ' days' +
+    (nOverrides ? ' - ' + nOverrides + ' manual change' + (nOverrides > 1 ? 's' : '') : ''));
+  var resetBtn = document.getElementById('btn-reset-manual');
+  if (resetBtn) resetBtn.style.display = nOverrides ? '' : 'none';
 
   html += '<div class="legend">';
   RETAIL_SHIFTS.sales.forEach(function(s){
@@ -7021,7 +7201,7 @@ function renderMonthlyPlanning() {
                  monthDays[di + span].ds >= ev.start_date &&
                  monthDays[di + span].ds <= ev.end_date) span++;
           h += '<th class="c-day" colspan="' + span + '">' +
-               '<span class="evt-bar evt-' + cat + '" title="' + esc(ev.label || '') + '" onclick="openEventEditor(\'' + ev.id + '\',null,null)">' +
+               '<span class="evt-bar evt-' + cat + '" onmouseenter="showEvtTip(this,\'' + ev.id + '\')" onmouseleave="hideEvtTip()" onclick="hideEvtTip();openEventEditor(\'' + ev.id + '\',null,null)">' +
                esc(ev.label || '') + '</span></th>';
           di += span;
         } else {
@@ -7120,7 +7300,7 @@ function renderMonthlyPlanning() {
         '<span style="display:inline-flex;flex-direction:column;line-height:1.25;">' +
           '<span style="font-weight:500;">' + name + '</span>' +
           '<span style="font-size:11px;color:var(--tx-3);">' + stInfo.label +
-            (pct < 100 ? ' \u00b7 ' + pct + '%' : '') + '</span>' +
+            (pct < 100 ? ' - ' + pct + '%' : '') + '</span>' +
         '</span></span></td>';
     agentRows[a.id].forEach(function(rc, i) {
       // Vue corner filtree : on n'affiche la cellule que si l'agent est sur CE
@@ -7176,7 +7356,7 @@ function renderMonthlyPlanning() {
     var r = '<tr class="' + (cls || '') + '"><td class="c-agent">' + label + '</td>';
     monthDays.forEach(function(d, i) {
       r += '<td class="' + dayCls(d) + '" data-col="' + i + '">' +
-           (d.closure ? '<span class="sh-none">\u00b7</span>' : (map[d.ds] || 0)) + '</td>';
+           (d.closure ? '<span class="sh-none">-</span>' : (map[d.ds] || 0)) + '</td>';
     });
     rhCols.forEach(function(){ r += '<td class="c-rh"></td>'; });
     return r + '</tr>';
@@ -7195,11 +7375,9 @@ function renderMonthlyPlanning() {
 
   html2 += '</tbody></table></div>';
 
-  // Les deux bulles
-  html = '<div class="card">' + html + '</div>' +
-         '<div class="card">' + html2 + '</div>';
-
+  // Grille dans la carte statique ; couverture dans sa propre bulle en dessous.
   container.innerHTML = html;
+  setPlanCoverage('<div class="card">' + html2 + '</div>');
   attachCrossHighlight();
 }
 
@@ -7462,9 +7640,8 @@ async function addAgent() {
 // Export PDF : on ouvre une fenetre avec le tableau + un CSS d'impression, et
 // on lance l'impression navigateur (l'utilisateur choisit "Enregistrer en PDF").
 // Pas de librairie externe : fiable et sans dependance.
-function printableExport(bodyId, titleText) {
-  var src = document.getElementById(bodyId);
-  if (!src || !currentStoreId) { showToast('Nothing to export', 'error'); return; }
+function printableExport(contentHtml, titleText) {
+  if (!contentHtml || !currentStoreId) { showToast('Nothing to export', 'error'); return; }
   var w = window.open('', '_blank');
   if (!w) { showToast('Popup blocked - allow popups to export PDF', 'error'); return; }
 
@@ -7487,15 +7664,15 @@ function printableExport(bodyId, titleText) {
     '.card { box-shadow:none !important; border:1px solid var(--line) !important; }' +
     '* { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }';
 
-  var stamp = currentStoreName + ' \u00b7 ' + titleText;
+  var stamp = currentStoreName + ' - ' + titleText;
   w.document.write('<!DOCTYPE html><html lang="' + (CURRENT_LANG||'en') + '"><head><meta charset="utf-8">' +
     '<title>' + stamp + '</title>' +
     '<link rel="preconnect" href="https://fonts.googleapis.com">' +
     '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' +
     '<style>' + siteCss + '</style><style>' + printCss + '</style></head><body>' +
     '<div class="pdf-head"><span class="pdf-title">' + stamp + '</span>' +
-    '<span class="pdf-meta">CORA \u00b7 ' + new Date().toLocaleDateString(dLoc()) + '</span></div>' +
-    '<div class="tab-content active" style="display:block;padding:0;">' + src.innerHTML + '</div>' +
+    '<span class="pdf-meta">CORA - ' + new Date().toLocaleDateString(dLoc()) + '</span></div>' +
+    '<div class="tab-content active" style="display:block;padding:0;">' + contentHtml + '</div>' +
     '</body></html>');
   w.document.close();
   // Laisser le temps aux polices de se charger avant l'impression.
@@ -7505,12 +7682,14 @@ function printableExport(bodyId, titleText) {
 function exportMonthlyPDF() {
   var mn = MONTH_NAMES[monthlyRef.getMonth()] + ' ' + monthlyRef.getFullYear();
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
-  printableExport('planning-monthly-body', 'Monthly \u00b7 ' + scope + ' \u00b7 ' + mn);
+  printableExport('<div class="card">' + document.getElementById('planning-monthly-body').innerHTML + '</div>' +
+    document.getElementById('planning-coverage-body').innerHTML, 'Monthly - ' + scope + ' - ' + mn);
 }
 
 function exportIntradayPDF() {
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
-  printableExport('planning-intraday-body', 'Intraday \u00b7 ' + scope + ' \u00b7 ' + (currentIntradayDate || ''));
+  printableExport('<div class="card">' + document.getElementById('planning-intraday-body').innerHTML + '</div>',
+    'Intraday - ' + scope + ' - ' + (currentIntradayDate || ''));
 }
 
 // Code court d'un corner par id (pour l'entete PDF/Excel selon la tab active).
@@ -7681,7 +7860,7 @@ function exportMonthly() {
         var res = (monthlyResult[d.ds] || {})[a.id];
         var code = res ? res.code : '';
         var disp = (res && res.corner) ? (res.corner + '\n' + code) : code;
-        if (d.closure && !code) { r.push(cell('\u00b7',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
+        if (d.closure && !code) { r.push(cell('-',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
         var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
         if (res && res.half) {
           r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,diag:(res.half==='pm')?'up':'down',wrap:!!(res&&res.corner)}));
@@ -8149,7 +8328,7 @@ function renderMonthlyCalendar() {
       inner += '<div class="cal-bar" style="top:'+(laneOf[lv.id]*16)+'px;'+
         'background:'+st.bg+';color:'+st.text+';border-radius:'+radius+';'+
         'margin-left:'+ml+';margin-right:'+mr+';" '+
-        'onclick="deleteLeavePrompt(\''+lv.id+'\',event)" title="'+st.label+' \u00b7 '+ag.first_name+' '+ag.last_name+' (click to remove)">'+
+        'onclick="deleteLeavePrompt(\''+lv.id+'\',event)" title="'+st.label+' - '+ag.first_name+' '+ag.last_name+' (click to remove)">'+
         labelTxt + '</div>';
     });
     inner += '</div>';
@@ -8231,7 +8410,7 @@ function hourOptionsH(sel){
 function showDayOpenPicker(ds, event) {
   event.stopPropagation();
   dayOpenPickerDate = ds;
-  document.getElementById('dayopen-subtitle').textContent = (calHolidays[ds]||'Holiday') + ' \u00b7 ' + ds;
+  document.getElementById('dayopen-subtitle').textContent = (calHolidays[ds]||'Holiday') + ' - ' + ds;
   var toggle = document.getElementById('dayopen-toggle');
   toggle.checked = (calOverrides[ds] === true); // checked = forced open
   document.getElementById('dayopen-closed-label').classList.toggle('active', !toggle.checked);
@@ -8479,6 +8658,7 @@ init();
 
 <!-- CELL EDITOR (edition manuelle du planning) -->
 <div id="color-pop" class="color-pop" onclick="event.stopPropagation()"></div>
+<div id="evt-tip" class="evt-tip"></div>
 
 <!-- AIDE : relecture de la notice d'un bloc Settings -->
 <div id="help-modal" class="modal-overlay" onclick="if(event.target===this)closeHelp()">
@@ -8572,4 +8752,3 @@ init();
 </div>
 </body>
 </html>
-
