@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.2.9</title>
+  <title>CORA Retail V8.3.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -382,6 +382,35 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
              margin-bottom:var(--s3); flex-wrap:wrap; }
 .card-title { font-size:15px; font-weight:600; color:var(--tx-1); }
 .card-sub { font-size:12.5px; color:var(--tx-2); margin-top:2px; }
+/* Blocs Settings : titre numerote en capitales (+30%), aide "?" et notice */
+.set-head { align-items:flex-start; margin-bottom:var(--s4); }
+.set-title-row { display:flex; align-items:center; gap:var(--s2); }
+.set-title { font-size:22px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; color:var(--tx-1); }
+.help-q { width:var(--sq-h); height:var(--sq-h); padding:0; border:1px solid var(--line-2); border-radius:var(--r-pill);
+  background:var(--bg-base); color:var(--tx-2); font-family:var(--font); font-size:12px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s, color .15s; }
+.help-q:hover { background:var(--brand); color:var(--brand-on); border-color:var(--brand); }
+.help-q.is-hidden { visibility:hidden; }
+.help-q.help-pop { animation:help-pop .35s cubic-bezier(.34,1.56,.64,1); }
+@keyframes help-pop { from { transform:scale(.3); opacity:0; } to { transform:scale(1); opacity:1; } }
+.help-host { position:relative; }
+.help-host.has-help { min-height:460px; }
+.help-ov { position:absolute; inset:0; z-index:5; display:flex; align-items:flex-start; justify-content:center;
+  padding:var(--s5); overflow-y:auto; cursor:pointer; border-radius:inherit;
+  background:rgba(24,24,27,.30); backdrop-filter:blur(2px);
+  transition:transform .45s cubic-bezier(.4,0,.2,1), opacity .45s ease, border-radius .45s ease; }
+.help-ov.is-leaving { transform:scale(.03); opacity:0; border-radius:var(--r-pill); }
+.help-panel { width:100%; max-width:640px; background:var(--bg-base); border-radius:var(--r-lg);
+  box-shadow:0 12px 32px rgba(16,24,40,.18); padding:var(--s5); }
+.help-panel-title { font-size:17px; font-weight:700; letter-spacing:.02em; text-transform:uppercase; color:var(--tx-1); margin-bottom:var(--s2); }
+.help-h { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--tx-3); margin:var(--s4) 0 var(--s1); }
+.help-p { font-size:14px; line-height:1.55; color:var(--tx-1); }
+.help-steps { margin:0; padding-left:var(--s5); font-size:14px; line-height:1.55; color:var(--tx-1); }
+.help-steps li { margin-bottom:var(--s1); }
+.help-warn { margin-top:var(--s3); padding:var(--s3) var(--s4); border-radius:var(--r-md);
+  background:var(--dang-soft); color:var(--dang-tx); font-size:13.5px; font-weight:600; line-height:1.5; }
+.help-hint { margin-top:var(--s5); padding-top:var(--s3); border-top:1px solid var(--line);
+  font-size:12.5px; color:var(--tx-3); text-align:center; }
 .sec-title { font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
              color:var(--tx-2); margin-bottom:var(--s3); }
 
@@ -1345,7 +1374,6 @@ var I18N = {
     'How many days an advisor can legally work per week in your country': '各国の法定週間労働日数の上限',
     'Contractually, how long one advisor can work per day': '契約上、1名が1日に勤務できる時間',
     'The standard weekly contract of your team': 'チームの標準的な週間契約時間',
-    'How long an advisor must rest between two shifts': '2つのシフト間に必要な休息時間',
     'How many advisors are needed at minimum to open a store or a corner': '店舗またはコーナーの開店に最低限必要な人数',
     'How many advisors are needed at minimum to close a store or a corner': '店舗またはコーナーの閉店に最低限必要な人数',
     'How many advisors you want on closing versus opening': 'オープンに対するクローズの人数配分',
@@ -1353,7 +1381,6 @@ var I18N = {
     'Let the engine move an advisor to a busier corner for a short slot during the day': '日中の短時間、混雑するコーナーへ応援を割り当てる',
     'Intraday reinforcement': '日中応援',
     'On - auto proposals': 'オン - 自動提案',
-    'Off': 'オフ',
     'Reinforcement proposals': '応援提案',
     'Fairness rotation': '公平ローテーション',
     'On - everyone rotates': 'オン - 全員ローテーション',
@@ -1362,7 +1389,6 @@ var I18N = {
     'Total present': '出勤合計',
     'Opening': 'オープン',
     'Closing': 'クローズ',
-    'Max hours between shifts': '勤務間の最大時間',
     'Duration': '所要時間',
     'Corners': 'コーナー',
     'Add corner': 'コーナーを追加',
@@ -1443,7 +1469,6 @@ var I18N = {
     'Year-on-year trend': '前年比の推移',
     'No trend yet': '推移データなし',
     'Enter your first months to reveal the trend': '最初の数か月を入力すると推移が表示されます',
-    'Back to automatic': '自動計算に戻す',
     'vs 6-wk avg': '6週平均比',
     'visits forecasted': '予測来客数',
     'present': '出勤',
@@ -1620,6 +1645,55 @@ var I18N = {
     'OFF': '休み',
     '&lsaquo;': '‹',
     '&rsaquo;': '›',
+    // Aide des blocs Settings
+    'The legal limits and minimum staffing of your store. The planning always respects them.': '店舗の法定上限と最低配置人数です。シフト表は常にこのルールを守ります。',
+    'These are the rules of your country and of your store. The planning will never break them.': '国と店舗のルールです。シフト表がこのルールを破ることはありません。',
+    'Changes are saved automatically. Ask HR if you are not sure about a legal number.': '変更は自動で保存されます。法定の数値がわからない場合は人事部に確認してください。',
+    'Max working days / week: how many days one person can work in a week.': '週の最大勤務日数：1人が1週間に働ける日数です。',
+    'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract.': '1日の最大時間・週の最大時間：契約で認められる1日と1週間の最長勤務時間です。',
+    'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.': 'シフト間の最低休息時間：1日の勤務終了から翌日の勤務開始までに必要な休息時間です。',
+    'Opening minimum and Closing minimum: how many people you need, at least, to open and to close the store (or each corner).': 'オープン最低人数・クローズ最低人数：店舗（または各コーナー）の開店・閉店に最低限必要な人数です。',
+    'Closing ratio: how many people you want at closing compared to opening. Example: 70% means 7 people at closing for 10 at opening.': 'クローズ比率：オープンに対するクローズの人数の割合です。例：70%なら、オープン10人に対してクローズ7人です。',
+    'Switches at the bottom: turn a rule on or off. Each switch explains what it does.': '下のスイッチ：ルールをオン・オフします。各スイッチに説明があります。',
+    'The days and hours your store is open to clients.': '店舗がお客様に開いている曜日と時間です。',
+    'Tell CORA when your store is open. Nobody will be planned when the store is closed.': '店舗の営業時間をCORAに設定します。閉店中は誰もシフトに入りません。',
+    'Changes are saved automatically. For one special day (holiday, event), use the Calendar page instead.': '変更は自動で保存されます。特別な1日（祝日・イベント）は、カレンダーページで設定してください。',
+    'For each day, use the switch to set the store Open or Closed.': '曜日ごとに、スイッチで営業（Open）か休業（Closed）かを選びます。',
+    'Choose the opening hour (Starts) and the closing hour (Ends).': '開店時間（Starts）と閉店時間（Ends）を選びます。',
+    'The closing hour must be after the opening hour.': '閉店時間は開店時間より後にしてください。',
+    'The breaks your team takes each day (lunch, short breaks) and when they can take them.': 'チームが毎日取る休憩（昼休憩・小休憩）と、取れる時間帯です。',
+    'List the breaks your team takes every day. CORA places each break automatically, so the store is never empty.': 'チームが毎日取る休憩を登録します。CORAが店舗を空にしないよう、休憩を自動で配置します。',
+    'Changes are saved automatically. A wide window lets CORA spread the breaks better.': '変更は自動で保存されます。時間帯を広くすると、CORAが休憩をうまく分散できます。',
+    'Click "+ Add break" to create a break.': '「+ 休憩を追加」をクリックして休憩を作成します。',
+    'Give it a name (example: Lunch) and a duration in minutes.': '名前（例：Lunch）と長さ（分）を入力します。',
+    'Window start and Window end: the period of the day when this break can be taken. Example: lunch between 12:00 and 15:00.': 'Window start・Window end：その休憩を取れる時間帯です。例：昼休憩は12:00から15:00の間。',
+    'The window must be longer than the break.': '時間帯は休憩の長さより長くしてください。',
+    'Click the colored square to choose the color of the break in the daily planning.': '色の四角をクリックすると、日別シフト表での休憩の色を選べます。',
+    'Click ✕ to delete a break.': '✕をクリックすると休憩を削除します。',
+    'Only for department stores or stores with several areas: list the areas of your store here.': '百貨店や複数のエリアがある店舗のみ：店舗内のエリアをここに登録します。',
+    'A corner is a physical area of your store where clients are served. Example: Leather goods, Ready-to-wear, Shoes. Use this only if your store has several areas (department store, big store).': 'コーナーとは、お客様を接客する店舗内の物理的なエリアです。例：レザーグッズ、プレタポルテ、シューズ。複数のエリアがある店舗（百貨店・大型店）の場合のみ使用してください。',
+    'A corner is NOT a job or a role. Do not create corners like "Management", "Stock" or "Sales advisor". The role of each person is set on the Client Advisors page.': 'コーナーは職務や役割ではありません。「Management」「Stock」「Sales advisor」のようなコーナーは作らないでください。各スタッフの役割はクライアントアドバイザーページで設定します。',
+    'Changes are saved automatically. If your store has only one area, leave this empty.': '変更は自動で保存されます。エリアが1つだけの店舗は、ここを空のままにしてください。',
+    'Click "+ Add corner" to create an area.': '「+ コーナーを追加」をクリックしてエリアを作成します。',
+    'Code: a short name shown in the planning (example: LG).': 'Code：シフト表に表示される短い名前です（例：LG）。',
+    'Full name: the complete name (example: Leather goods).': 'Full name：正式な名前です（例：Leather goods）。',
+    'Then, on the Client Advisors page, choose the home corner of each person.': '次に、クライアントアドバイザーページで各スタッフの担当コーナー（home corner）を選びます。',
+    'Click ✕ to delete a corner.': '✕をクリックするとコーナーを削除します。',
+    'The working hours (shifts) your team can work. The planning is built with these shifts.': 'チームが働ける勤務時間（シフト）です。シフト表はこのシフトで作成されます。',
+    'A shift is a working time slot, for example 10:00 to 19:00. CORA builds your planning only with the shifts you create here.': 'シフトとは勤務の時間枠です（例：10:00から19:00）。CORAはここで作成したシフトだけを使ってシフト表を作ります。',
+    'Click Save (top right of this block) after adding or changing a shift. Otherwise your changes are lost.': 'シフトを追加・変更したら、このブロック右上のSaveをクリックしてください。クリックしないと変更は失われます。',
+    'Sales shifts are for the people who serve clients. Stock shifts are for the stock team.': 'Sales shiftsは接客スタッフ用、Stock shiftsはストックチーム用です。',
+    'Click "+ New shift" and give it a short code (example: O for opening, C for closing).': '「+ New shift」をクリックし、短いコードを付けます（例：オープンはO、クローズはC）。',
+    'Choose the start hour and the end hour, then a color.': '開始時間と終了時間、色を選びます。',
+    'A shift cannot be longer than "Max hours / day" in Labor rules. A red label warns you if it is too long.': 'シフトは労働規則の「1日の最大時間」を超えられません。長すぎる場合は赤いラベルで警告されます。',
+    'You can change the hours of a shift directly in the table, or click ✕ to delete it.': '表の中で直接シフトの時間を変更したり、✕で削除したりできます。',
+    'What is it?': 'これは何？',
+    'How to set it up': '設定方法',
+    'Important': '重要',
+    'Help': 'ヘルプ',
+    'Click anywhere to continue. You can read this again with the ? button.': 'どこかをクリックして続けます。この説明は「?」ボタンでいつでも読み直せます。',
+    'Minimum rest between shifts': 'シフト間の最低休息時間',
+    'How many hours an advisor must rest between the end of one shift and the start of the next': '1つのシフト終了から次のシフト開始までに必要な休息時間',
   }
 };
 
@@ -2660,6 +2734,136 @@ function applyRegulationsForm() {
   return true;
 }
 
+// ── AIDE DES BLOCS SETTINGS ──────────────────────────────────────────────
+// Chaque bloc a : un numero, un titre, un sous-titre toujours visible, et une
+// notice. Au premier affichage (par navigateur), la notice recouvre le bloc ;
+// un clic la reduit vers le bouton "?", qui permet de la relire a tout moment.
+// Les textes anglais servent de cle de traduction (dictionnaire I18N).
+var SETTINGS_HELP = {
+  labor: { n: 1, title: 'Labor rules',
+    sub: 'The legal limits and minimum staffing of your store. The planning always respects them.',
+    what: 'These are the rules of your country and of your store. The planning will never break them.',
+    warn: null,
+    steps: [
+      'Max working days / week: how many days one person can work in a week.',
+      'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract.',
+      'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.',
+      'Opening minimum and Closing minimum: how many people you need, at least, to open and to close the store (or each corner).',
+      'Closing ratio: how many people you want at closing compared to opening. Example: 70% means 7 people at closing for 10 at opening.',
+      'Switches at the bottom: turn a rule on or off. Each switch explains what it does.'],
+    important: 'Changes are saved automatically. Ask HR if you are not sure about a legal number.' },
+  hours: { n: 2, title: 'Operating hours',
+    sub: 'The days and hours your store is open to clients.',
+    what: 'Tell CORA when your store is open. Nobody will be planned when the store is closed.',
+    warn: null,
+    steps: [
+      'For each day, use the switch to set the store Open or Closed.',
+      'Choose the opening hour (Starts) and the closing hour (Ends).',
+      'The closing hour must be after the opening hour.'],
+    important: 'Changes are saved automatically. For one special day (holiday, event), use the Calendar page instead.' },
+  breaks: { n: 3, title: 'Break structure',
+    sub: 'The breaks your team takes each day (lunch, short breaks) and when they can take them.',
+    what: 'List the breaks your team takes every day. CORA places each break automatically, so the store is never empty.',
+    warn: null,
+    steps: [
+      'Click "+ Add break" to create a break.',
+      'Give it a name (example: Lunch) and a duration in minutes.',
+      'Window start and Window end: the period of the day when this break can be taken. Example: lunch between 12:00 and 15:00.',
+      'The window must be longer than the break.',
+      'Click the colored square to choose the color of the break in the daily planning.',
+      'Click ✕ to delete a break.'],
+    important: 'Changes are saved automatically. A wide window lets CORA spread the breaks better.' },
+  corners: { n: 4, title: 'Corners',
+    sub: 'Only for department stores or stores with several areas: list the areas of your store here.',
+    what: 'A corner is a physical area of your store where clients are served. Example: Leather goods, Ready-to-wear, Shoes. Use this only if your store has several areas (department store, big store).',
+    warn: 'A corner is NOT a job or a role. Do not create corners like "Management", "Stock" or "Sales advisor". The role of each person is set on the Client Advisors page.',
+    steps: [
+      'Click "+ Add corner" to create an area.',
+      'Code: a short name shown in the planning (example: LG).',
+      'Full name: the complete name (example: Leather goods).',
+      'Then, on the Client Advisors page, choose the home corner of each person.',
+      'Click ✕ to delete a corner.'],
+    important: 'Changes are saved automatically. If your store has only one area, leave this empty.' },
+  shifts: { n: 5, title: 'Shift structure',
+    sub: 'The working hours (shifts) your team can work. The planning is built with these shifts.',
+    what: 'A shift is a working time slot, for example 10:00 to 19:00. CORA builds your planning only with the shifts you create here.',
+    warn: null,
+    steps: [
+      'Sales shifts are for the people who serve clients. Stock shifts are for the stock team.',
+      'Click "+ New shift" and give it a short code (example: O for opening, C for closing).',
+      'Choose the start hour and the end hour, then a color.',
+      'A shift cannot be longer than "Max hours / day" in Labor rules. A red label warns you if it is too long.',
+      'You can change the hours of a shift directly in the table, or click ✕ to delete it.'],
+    important: 'Click Save (top right of this block) after adding or changing a shift. Otherwise your changes are lost.' }
+};
+
+function helpSeen() {
+  try { return JSON.parse(localStorage.getItem('cora_help_seen') || '{}'); } catch (e) { return {}; }
+}
+function markHelpSeen(key) {
+  var s = helpSeen(); s[key] = true;
+  try { localStorage.setItem('cora_help_seen', JSON.stringify(s)); } catch (e) {}
+}
+
+// Contenu de la notice (identique dans l'overlay et dans la popup).
+function helpContentHtml(key) {
+  var hp = SETTINGS_HELP[key];
+  return '<div class="help-h">' + t('What is it?') + '</div><p class="help-p">' + esc(t(hp.what)) + '</p>' +
+    (hp.warn ? '<div class="help-warn">' + esc(t(hp.warn)) + '</div>' : '') +
+    '<div class="help-h">' + t('How to set it up') + '</div><ol class="help-steps">' +
+    hp.steps.map(function(s) { return '<li>' + esc(t(s)) + '</li>'; }).join('') + '</ol>' +
+    '<div class="help-h">' + t('Important') + '</div><p class="help-p">' + esc(t(hp.important)) + '</p>';
+}
+function helpTitle(key) {
+  var hp = SETTINGS_HELP[key];
+  return hp.n + '. ' + t(hp.title);
+}
+
+// En-tete d'un bloc : numero + titre, bouton "?", sous-titre ; actions a droite.
+function settingsHeadHtml(key, actionsHtml) {
+  var seen = !!helpSeen()[key];
+  return '<div class="page-head set-head"><div>' +
+      '<div class="set-title-row"><h2 class="set-title">' + esc(helpTitle(key)) + '</h2>' +
+        '<button type="button" class="help-q' + (seen ? '' : ' is-hidden') + '" data-help="' + key +
+          '" onclick="openHelp(\'' + key + '\')" aria-label="' + t('Help') + '">?</button></div>' +
+      '<div class="card-sub">' + esc(t(SETTINGS_HELP[key].sub)) + '</div>' +
+    '</div>' + (actionsHtml || '') + '</div>';
+}
+
+// Overlay du premier affichage (rien si deja vu).
+function helpOverlayHtml(key) {
+  if (helpSeen()[key]) return '';
+  return '<div class="help-ov" onclick="dismissHelp(\'' + key + '\', this)">' +
+    '<div class="help-panel"><div class="help-panel-title">' + esc(helpTitle(key)) + '</div>' +
+      helpContentHtml(key) +
+      '<div class="help-hint">' + t('Click anywhere to continue. You can read this again with the ? button.') + '</div>' +
+    '</div></div>';
+}
+function helpHostClass(key) { return helpSeen()[key] ? 'card help-host' : 'card help-host has-help'; }
+
+// L'overlay se reduit vers le "?" de son bloc, puis le "?" apparait.
+function dismissHelp(key, ov) {
+  markHelpSeen(key);
+  var card = ov.parentNode, q = card.querySelector('.help-q');
+  if (q) {
+    var cr = card.getBoundingClientRect(), qr = q.getBoundingClientRect();
+    ov.style.transformOrigin = (qr.left + qr.width / 2 - cr.left) + 'px ' + (qr.top + qr.height / 2 - cr.top) + 'px';
+  }
+  ov.classList.add('is-leaving');
+  setTimeout(function() {
+    if (ov.parentNode) ov.parentNode.removeChild(ov);
+    card.classList.remove('has-help');
+    if (q) { q.classList.remove('is-hidden'); q.classList.add('help-pop'); }
+  }, 450);
+}
+
+function openHelp(key) {
+  document.getElementById('help-modal-title').textContent = helpTitle(key);
+  document.getElementById('help-modal-body').innerHTML = helpContentHtml(key);
+  document.getElementById('help-modal').classList.add('open');
+}
+function closeHelp() { document.getElementById('help-modal').classList.remove('open'); }
+
 // ── RENDER REGULATIONS ────────────────────────────────────────────────────
 function hourSelectHtml(id, selected)  { return '<select class="time-sel" id="' + id + '">' + hourOptionsH(selected) + '</select>'; }
 function hourSelectHtml2(cls, selected) { return '<select onchange="saveRegulations()" class="time-sel ' + cls + '">' + hourOptionsH(selected) + '</select>'; }
@@ -2728,7 +2932,7 @@ function durLabel(min) {
 function buildShiftSettingsHtml() {
   if (!currentStoreId) {
     return '<div class="card">' +
-      '<div class="page-head" style="margin-bottom:0"><h2 class="page-title">Shift structure</h2></div>' +
+      '<div class="page-head" style="margin-bottom:0"><h2 class="set-title">' + esc(helpTitle('shifts')) + '</h2></div>' +
       '<p class="set-note" style="margin-top:var(--s3)">Select a store to configure its shifts.</p></div>';
   }
 
@@ -2760,12 +2964,11 @@ function buildShiftSettingsHtml() {
     return h;
   }
 
-  return '<div class="card">' +
-    '<div class="page-head" style="margin-bottom:0">' +
-      '<h2 class="page-title">Shift structure</h2>' +
-      '<button class="btn btn-save btn-sm" onclick="saveShiftConfig()">Save</button></div>' +
+  return '<div class="' + helpHostClass('shifts') + '">' +
+    settingsHeadHtml('shifts', '<button class="btn btn-save btn-sm" onclick="saveShiftConfig()">Save</button>') +
     block('sales', 'Sales shifts') +
     block('stock', 'Stock shifts') +
+    helpOverlayHtml('shifts') +
     '</div>';
 }
 
@@ -2995,10 +3198,7 @@ function renderRegulations() {
   document.getElementById('regulations-content').innerHTML =
 
     // ── BUBBLE 1: Labor Rules ────────────────────────────────────────────
-    '<div class="card">' +
-      '<div class="page-head" style="margin-bottom:var(--s3)">' +
-        '<h2 class="page-title">Labor rules</h2>' +
-      '</div>' +
+    '<div class="' + helpHostClass('labor') + '">' + settingsHeadHtml('labor') +
       '<div class="set-rules">' +
         rrow('Max working days / week', 'How many days an advisor can legally work per week in your country',
           '<input type="number" id="reg-max-days" class="set-rule-input" value="' + (regulations.max_days||5) + '" min="1" max="7" step="1">', 'd') +
@@ -3006,7 +3206,7 @@ function renderRegulations() {
           '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8.5) + '" min="1" max="24" step="0.5">', 'h') +
         rrow('Max hours / week', 'The standard weekly contract of your team',
           '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5">', 'h') +
-        rrow('Max hours between shifts', 'How long an advisor must rest between two shifts',
+        rrow('Minimum rest between shifts', 'How many hours an advisor must rest between the end of one shift and the start of the next',
           '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) + '" min="0" max="24" step="0.5">', 'h') +
         rrow('Opening minimum', 'How many advisors are needed at minimum to open a store or a corner',
           '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1">', 'CA') +
@@ -3022,40 +3222,36 @@ function renderRegulations() {
           rrowToggle('Intraday reinforcement', 'Let the engine move an advisor to a busier corner for a short slot during the day',
             'reinf-toggle', 'toggleReinforcement', !!(storeSettings && storeSettings.intraday_reinforcement))
           : '') +
-      '</div>' +
+      '</div>' + helpOverlayHtml('labor') +
     '</div>' +
 
     // ── BUBBLE 2: Operating Hours ────────────────────────────────────────
-    '<div class="card">' +
-      '<div class="page-head" style="margin-bottom:0">' +
-        '<h2 class="page-title">Operating hours</h2></div>' +
-      '<table class="tbl tbl-framed set-tbl hours-table" style="margin-top:var(--s5)"><thead><tr>' +
+    '<div class="' + helpHostClass('hours') + '">' + settingsHeadHtml('hours') +
+      '<table class="tbl tbl-framed set-tbl hours-table"><thead><tr>' +
         '<th class="col-num">Day</th><th class="col-num">Status</th><th class="col-time">Starts</th><th class="col-time">Ends</th>' +
         '<th>Duration</th>' +
-      '</tr></thead><tbody>' + hoursRows + '</tbody></table>' +
+      '</tr></thead><tbody>' + hoursRows + '</tbody></table>' + helpOverlayHtml('hours') +
     '</div>' +
 
     // ── BUBBLE 3: Break structure ────────────────────────────────────────
-    '<div class="card">' +
-      '<div class="page-head" style="margin-bottom:var(--s3)">' +
-        '<h2 class="page-title">Break structure</h2></div>' +
+    '<div class="' + helpHostClass('breaks') + '">' + settingsHeadHtml('breaks') +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th>Name</th><th class="col-num">Duration (min)</th>' +
         '<th class="col-time">Window start</th><th class="col-time">Window end</th>' +
         '<th class="col-sq">Color</th><th class="col-sq"></th></tr></thead>' +
         '<tbody id="breaks-body">' + breakRows + '</tbody></table>' +
       '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addBreakRow()">+ ' + t('Add break') + '</button>' +
+      helpOverlayHtml('breaks') +
     '</div>' +
 
-    // ── BUBBLE: Corners ──────────────────────────────────────────────────
-    '<div class="card">' +
-      '<div class="page-head" style="margin-bottom:var(--s3)">' +
-        '<h2 class="page-title">' + t('Corners') + '</h2></div>' +
+    // ── BUBBLE 4: Corners ────────────────────────────────────────────────
+    '<div class="' + helpHostClass('corners') + '">' + settingsHeadHtml('corners') +
       '<table class="tbl tbl-framed set-tbl"><thead><tr>' +
         '<th class="col-num">' + t('Code') + '</th><th>' + t('Full name') + '</th>' +
         '<th class="col-sq"></th></tr></thead>' +
         '<tbody id="corners-body">' + cornerRows + '</tbody></table>' +
       '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addCornerRow()">+ ' + t('Add corner') + '</button>' +
+      helpOverlayHtml('corners') +
     '</div>' +
 
     settingsExtra;
@@ -8284,6 +8480,20 @@ init();
 <!-- CELL EDITOR (edition manuelle du planning) -->
 <div id="color-pop" class="color-pop" onclick="event.stopPropagation()"></div>
 
+<!-- AIDE : relecture de la notice d'un bloc Settings -->
+<div id="help-modal" class="modal-overlay" onclick="if(event.target===this)closeHelp()">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-head">
+      <div class="modal-title set-title" id="help-modal-title"></div>
+      <button class="icon-btn" onclick="closeHelp()" aria-label="Close">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="help-modal-body"></div>
+  </div>
+</div>
+
 <div id="cell-editor">
   <div class="ce-head">
     <div class="ce-title" id="ce-title"></div>
@@ -8362,3 +8572,4 @@ init();
 </div>
 </body>
 </html>
+
