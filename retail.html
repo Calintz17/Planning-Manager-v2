@@ -7,7 +7,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.2.6</title>
+  <title>CORA Retail V8.2.9</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -179,6 +179,7 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
   white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; transition:box-shadow .12s; }
 .it-blk:hover { box-shadow:0 2px 6px rgba(0,0,0,.22); }
 .b-mb  { background:#1a1a2e; color:#fff; }
+.it-warn { color:var(--dang-tx); font-weight:600; }
 .bc-yellow { background:#FDE047; color:#713F12; }
 .bc-blue   { background:#BFDBFE; color:#1E3A8A; }
 .bc-pink   { background:#FBCFE8; color:#9D174D; }
@@ -836,7 +837,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .set-tbl { table-layout:fixed; width:100%; }
 .set-tbl th { font-weight:600; }
 .set-tbl td { vertical-align:middle; }
-.set-tbl select { width:100%; max-width:132px; }
 .set-tbl .sh-dur { color:var(--tx-2); font-variant-numeric:tabular-nums; }
 .set-tbl tr.rest-day td { opacity:.5; }
 .set-tbl tr.rest-day td:first-child { opacity:1; }
@@ -1772,6 +1772,7 @@ let manualMode    = true;     // planning figé par défaut ; false = recalcul c
 let adjustWarned  = false;    // avertissement "tout va changer" affiché une fois par session
 let cellAdjustMode = false;   // slider dans la bulle : ON = la prochaine modif recalcule tout
 let multiSelect = [];         // [{agentId, ds}, ...] cellules selectionnees via Ctrl/Cmd+clic
+let curveListeners = null;    // AbortController des ecouteurs globaux de la courbe horaire
 let planningEvents = [];      // [{id, store_id, category, start_date, end_date, label}, ...]
 
 function toggleCellSelect(agentId, ds, td) {
@@ -2224,6 +2225,9 @@ async function onStoreChange() {
   if (!currentStoreId) return;
 
   currentCornerView = null;
+  planningEventsLoadSeq++;
+  planningEvents = [];
+  closeEventEditor();
   saveScope();
   closeStoreGate();
   await loadRegulations();
@@ -2348,7 +2352,9 @@ function openBreakColorPop(btn, evt) {
   pop.classList.add('open');
   var r = btn.getBoundingClientRect();
   pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pop.offsetWidth - 8)) + 'px';
-  pop.style.top  = (r.bottom + 6) + 'px';
+  // Ouvre au-dessus du bouton si l'espace en bas de l'ecran ne suffit pas.
+  var below = r.bottom + 6 + pop.offsetHeight <= window.innerHeight - 8;
+  pop.style.top  = (below ? r.bottom + 6 : Math.max(8, r.top - 6 - pop.offsetHeight)) + 'px';
   setTimeout(function() { document.addEventListener('click', closeColorPop, { once: true }); }, 0);
 }
 
@@ -2423,30 +2429,91 @@ async function toggleDayOpen(cb) {
   if (day === 'sat') regulations.saturday_rest = closed;
   if (day === 'sun') regulations.sunday_rest   = closed;
   if ((day === 'sat' || day === 'sun') && currentStoreId) {
-    await persistStoreSettings();
-    showToast('Saved \u2713');
+    queueStoreSave();
     renderMonthlyPlanning();
   }
 }
 
 // Upsert des reglages boutique depuis l'etat courant (storeSettings + regulations).
 // Centralise pour eviter la duplication entre les toggles et les saves.
-async function persistStoreSettings() {
-  if (!currentStoreId) return { error: 'no store' };
-  if (!storeSettings) storeSettings = {};
-  return await sb.from('retail_store_settings').upsert({
-    store_id: currentStoreId,
+// Instantane complet et fige des reglages d'une boutique (aucune reference
+// partagee avec l'etat vivant : une modif ulterieure ne change pas un job).
+function snapshotStoreSettings(storeId) {
+  var ss = storeSettings || {};
+  return {
+    store_id: storeId,
     saturday_open: !regulations.saturday_rest,
     sunday_open: !regulations.sunday_rest,
-    day_hours: regulations.day_hours || {},
-    hourly_curve: storeSettings.hourly_curve || null,
-    min_opening: storeSettings.min_opening != null ? storeSettings.min_opening : 1,
-    min_closing: storeSettings.min_closing != null ? storeSettings.min_closing : 1,
-    closing_ratio: storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70,
-    fairness_rotation: !!storeSettings.fairness_rotation,
-    intraday_reinforcement: !!storeSettings.intraday_reinforcement,
-    sunday_single_shift: storeSettings.sunday_single_shift !== false
-  }, { onConflict: 'store_id' });
+    day_hours: JSON.parse(JSON.stringify(regulations.day_hours || {})),
+    hourly_curve: ss.hourly_curve ? ss.hourly_curve.slice() : null,
+    min_opening: ss.min_opening != null ? ss.min_opening : 1,
+    min_closing: ss.min_closing != null ? ss.min_closing : 1,
+    closing_ratio: ss.closing_ratio != null ? ss.closing_ratio : 0.70,
+    fairness_rotation: !!ss.fairness_rotation,
+    intraday_reinforcement: !!ss.intraday_reinforcement,
+    sunday_single_shift: ss.sunday_single_shift !== false
+  };
+}
+
+function regulationRows(storeId) {
+  var r = regulations;
+  return [
+    ['saturday_rest', String(r.saturday_rest)], ['sunday_rest', String(r.sunday_rest)],
+    ['weekly_hours', String(r.weekly_hours)], ['max_daily_hours', String(r.max_daily_hours)],
+    ['max_days', String(r.max_days || 5)],
+    ['rest_gap_hours', String(r.rest_gap_hours != null ? r.rest_gap_hours : 11)],
+    ['trend_pct', String(r.trend_pct)], ['aht_tasks', JSON.stringify(r.aht_tasks)],
+    ['breaks', JSON.stringify(r.breaks)], ['closed_dates', JSON.stringify(r.closed_dates)],
+    ['public_holidays', JSON.stringify(r.public_holidays)], ['day_hours', JSON.stringify(r.day_hours)]
+  ].map(function(kv) {
+    // Contrainte NOT NULL en base : jamais de valeur absente.
+    return { store_id: storeId, rule_key: kv[0], rule_value: kv[1] == null ? '' : kv[1] };
+  });
+}
+
+// File d'ecriture unique des reglages (regles + store_settings). Chaque action
+// (formulaire, toggle, courbe) depose un job fige pour SA boutique ; un job pas
+// encore commence est remplace par le plus recent de la meme boutique (qui
+// contient tout l'etat valide). Une seule ecriture a la fois, jamais vers une
+// autre boutique que celle du job, et aucun succes affiche apres un echec.
+var settingsJobs = new Map(), settingsDraining = false;
+
+function queueStoreSave(okMsg) {
+  var storeId = currentStoreId;
+  if (!storeId) return;
+  var prev = settingsJobs.get(storeId);
+  settingsJobs.set(storeId, {
+    storeId: storeId,
+    rows: regulationRows(storeId),
+    settings: snapshotStoreSettings(storeId),
+    okMsg: okMsg || (prev && prev.okMsg) || null
+  });
+  drainSettingsJobs();
+}
+
+async function drainSettingsJobs() {
+  if (settingsDraining) return;
+  settingsDraining = true;
+  try {
+    while (settingsJobs.size) {
+      var job = settingsJobs.values().next().value;
+      settingsJobs.delete(job.storeId);
+      var rulesSaved = false;
+      try {
+        var r1 = await sb.from('retail_regulations').upsert(job.rows, { onConflict: 'store_id,rule_key' });
+        if (r1.error) throw r1.error;
+        rulesSaved = true;
+        var r2 = await sb.from('retail_store_settings').upsert(job.settings, { onConflict: 'store_id' });
+        if (r2.error) throw r2.error;
+        if (job.okMsg && currentStoreId === job.storeId) showToast(job.okMsg);
+      } catch (err) {
+        showToast((rulesSaved ? 'Partial save: rules saved, store settings failed' : 'Save failed') +
+          ': ' + (err.message || String(err)), 'error');
+      }
+    }
+  } finally {
+    settingsDraining = false;
+  }
 }
 
 async function toggleFairness(cb) {
@@ -2456,8 +2523,7 @@ async function toggleFairness(cb) {
   if (lbl) lbl.textContent = on ? t('On - everyone rotates') : t('Off - home corners');
   if (!storeSettings) storeSettings = {};
   storeSettings.fairness_rotation = on;
-  await persistStoreSettings();
-  showToast('Saved \u2713');
+  queueStoreSave();
   renderMonthlyPlanning();
 }
 
@@ -2476,8 +2542,7 @@ async function toggleReinforcement(cb) {
   if (lbl) lbl.textContent = on ? t('On - auto proposals') : t('Off');
   if (!storeSettings) storeSettings = {};
   storeSettings.intraday_reinforcement = on;
-  await persistStoreSettings();
-  showToast('Saved \u2713');
+  queueStoreSave();
   if (currentIntradayDate) renderIntraday(currentIntradayDate);
 }
 
@@ -2485,7 +2550,7 @@ async function toggleSundaySingle(cb) {
   if (!currentStoreId) return;
   if (!storeSettings) storeSettings = {};
   storeSettings.sunday_single_shift = cb.checked;
-  await persistStoreSettings();
+  queueStoreSave();
   renderMonthlyPlanning();
 }
 
@@ -2528,95 +2593,71 @@ async function saveCorners(silent) {
   if (!silent) { renderRegulations(); renderMonthlyPlanning(); }
 }
 
-async function saveRegulations() {
+// Auto-save : le formulaire est lu, valide et applique en memoire tout de
+// suite ; seule l'ecriture en base passe par la file (voir queueStoreSave).
+function saveRegulations() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  if (!applyRegulationsForm()) return;
+  queueStoreSave();
+  renderPlanning();
+}
 
-  // Statut open/close par jour (slider dans Operating hours).
+// Lit le formulaire Settings, le valide, puis l'applique en memoire.
+// Renvoie false (sans rien modifier) si le formulaire est refuse.
+function applyRegulationsForm() {
+  function num(id, parse) { var el = document.getElementById(id); return el ? parse(el.value) : NaN; }
+
+  // 1. Tout lire dans une configuration candidate (rien n'est modifie ici).
   var satTog = document.querySelector('.day-open-toggle[data-day="sat"]');
   var sunTog = document.querySelector('.day-open-toggle[data-day="sun"]');
-  if (satTog) regulations.saturday_rest = !satTog.checked;
-  if (sunTog) regulations.sunday_rest   = !sunTog.checked;
+  var mdays = num('reg-max-days', function(v){ return parseInt(v, 10); });
+  var rg    = num('reg-rest-gap', parseFloat);
+  var md    = num('reg-max-daily', parseFloat);
+  var wh    = num('reg-weekly-hours', parseFloat);
+  var mo    = num('thr-open',  function(v){ return parseInt(v, 10); });
+  var mc    = num('thr-close', function(v){ return parseInt(v, 10); });
+  var rr    = num('thr-ratio', function(v){ return parseInt(v, 10); });
 
-  // Editable labor rules
-  const maxDaysEl = document.getElementById('reg-max-days');
-  if (maxDaysEl) { var mdays = parseInt(maxDaysEl.value, 10); if (mdays > 0) regulations.max_days = mdays; }
-  const restGapEl = document.getElementById('reg-rest-gap');
-  if (restGapEl) { var rg = parseFloat(restGapEl.value); if (rg >= 0) regulations.rest_gap_hours = rg; }
-  const maxDailyEl = document.getElementById('reg-max-daily');
-  if (maxDailyEl) {
-    var md = parseFloat(maxDailyEl.value);
-    if (md > 0) regulations.max_daily_hours = md;
-  }
-  const weeklyEl = document.getElementById('reg-weekly-hours');
-  if (weeklyEl) {
-    var wh = parseFloat(weeklyEl.value);
-    if (wh > 0) regulations.weekly_hours = wh;
-  }
-
-  // Coverage thresholds (integres dans Labor rules)
-  var thrOpen = document.getElementById('thr-open');
-  var thrClose = document.getElementById('thr-close');
-  var thrRatio = document.getElementById('thr-ratio');
-  if (!storeSettings) storeSettings = {};
-  if (thrOpen)  { var mo = parseInt(thrOpen.value,10);  storeSettings.min_opening  = (isNaN(mo)||mo<0)?1:mo; }
-  if (thrClose) { var mc = parseInt(thrClose.value,10); storeSettings.min_closing  = (isNaN(mc)||mc<0)?1:mc; }
-  if (thrRatio) { var rr = parseInt(thrRatio.value,10); storeSettings.closing_ratio = (isNaN(rr)||rr<0||rr>100)?0.70:rr/100; }
-
-  // Valider day_hours AVANT toute ecriture (storeSettings.day_hours en depend).
-  let valid = true;
+  var dayHours = {}, hoursOk = true;
   DAY_KEYS.forEach(function(k) {
-    const openEl  = document.getElementById('reg-open-' + k);
-    const closeEl = document.getElementById('reg-close-' + k);
-    if (openEl && closeEl) {
-      const o = parseFloat(openEl.value);
-      const c = parseFloat(closeEl.value);
-      if (c <= o) valid = false;
-      regulations.day_hours[k] = { open: o, close: c };
-    }
+    var openEl = document.getElementById('reg-open-' + k), closeEl = document.getElementById('reg-close-' + k);
+    if (!openEl || !closeEl) return;
+    var o = parseFloat(openEl.value), c = parseFloat(closeEl.value);
+    if (!(c > o)) hoursOk = false;
+    dayHours[k] = { open: o, close: c };
   });
-  if (!valid) { showToast('Each day: closing hour must be after opening hour', 'error'); return; }
 
-  // Read breaks (nom, duree, fenetre, couleur choisie)
-  var newBreaks = [];
+  var newBreaks = [], breaksOk = true, breaksNamed = true;
   document.querySelectorAll('.break-row').forEach(function(row) {
     var name  = row.querySelector('.break-name').value.trim();
-    var dur   = parseInt(row.querySelector('.break-dur').value) || 0;
+    var dur   = parseInt(row.querySelector('.break-dur').value, 10) || 0;
     var wStart= parseFloat(row.querySelector('.break-ws').value) || 0;
     var wEnd  = parseFloat(row.querySelector('.break-we').value) || 0;
     var sw    = row.querySelector('[data-color]');
-    if (name && dur > 0) newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd, color: sw ? sw.getAttribute('data-color') : null });
+    if (!name || dur <= 0) { breaksNamed = false; return; }
+    if ((wEnd - wStart) * 60 < dur) breaksOk = false;   // fenetre inversee ou trop courte
+    newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd, color: sw ? sw.getAttribute('data-color') : null });
   });
+
+  // 2. Valider : un formulaire refuse ne modifie ni la memoire ni la base.
+  if (!hoursOk)  { showToast('Each day: closing hour must be after opening hour', 'error'); return false; }
+  if (!breaksNamed) { showToast('Each break needs a name and a duration', 'error'); return false; }
+  if (!breaksOk) { showToast('Each break: the window must be longer than the break', 'error'); return false; }
+
+  // 3. Appliquer la configuration validee.
+  if (satTog) regulations.saturday_rest = !satTog.checked;
+  if (sunTog) regulations.sunday_rest   = !sunTog.checked;
+  if (mdays > 0) regulations.max_days = mdays;
+  if (rg >= 0)   regulations.rest_gap_hours = rg;
+  if (md > 0)    regulations.max_daily_hours = md;
+  if (wh > 0)    regulations.weekly_hours = wh;
+  if (!storeSettings) storeSettings = {};
+  if (document.getElementById('thr-open'))  storeSettings.min_opening   = (isNaN(mo) || mo < 0) ? 1 : mo;
+  if (document.getElementById('thr-close')) storeSettings.min_closing   = (isNaN(mc) || mc < 0) ? 1 : mc;
+  if (document.getElementById('thr-ratio')) storeSettings.closing_ratio = (isNaN(rr) || rr < 0 || rr > 100) ? 0.70 : rr / 100;
+  Object.keys(dayHours).forEach(function(k) { regulations.day_hours[k] = dayHours[k]; });
   regulations.breaks = newBreaks;
-
-  const rows = [
-    { store_id: currentStoreId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
-    { store_id: currentStoreId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
-    { store_id: currentStoreId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
-    { store_id: currentStoreId, rule_key: 'max_daily_hours', rule_value: String(regulations.max_daily_hours) },
-    { store_id: currentStoreId, rule_key: 'max_days',        rule_value: String(regulations.max_days || 5) },
-    { store_id: currentStoreId, rule_key: 'rest_gap_hours',  rule_value: String(regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) },
-    { store_id: currentStoreId, rule_key: 'trend_pct',       rule_value: String(regulations.trend_pct) },
-    { store_id: currentStoreId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
-    { store_id: currentStoreId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
-    { store_id: currentStoreId, rule_key: 'closed_dates',    rule_value: JSON.stringify(regulations.closed_dates) },
-    { store_id: currentStoreId, rule_key: 'public_holidays', rule_value: JSON.stringify(regulations.public_holidays) },
-    { store_id: currentStoreId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
-  ];
-
-  // Garde-fou : aucune rule_value ne doit etre null/undefined (contrainte NOT
-  // NULL en base). Si un champ manque, on retombe sur une valeur vide sure.
-  rows.forEach(function(r) {
-    if (r.rule_value === undefined || r.rule_value === null) r.rule_value = '';
-  });
-
-  // Ecritures seulement apres validation complete : une fois chaque table.
-  // Un echec sur store_settings n'empeche pas l'enregistrement des regles,
-  // et le message affiche la vraie erreur Supabase.
-  const { error } = await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
-  if (error) { showToast('Save failed: ' + error.message, 'error'); return; }
-  var ssRes = await persistStoreSettings();
-  if (ssRes && ssRes.error) showToast('Store settings not saved: ' + (ssRes.error.message || ssRes.error), 'error');
-  renderPlanning();
+  return true;
 }
 
 // ── RENDER REGULATIONS ────────────────────────────────────────────────────
@@ -3408,7 +3449,7 @@ function openEventEditor(id, cat, ds) {
   var ev = id ? planningEvents.find(function(e){ return e.id === id; }) : null;
   if (id && !ev) return;
   var c = ev ? ev.category : cat;
-  eventEditorState = { id: ev ? ev.id : null, cat: c };
+  eventEditorState = { id: ev ? ev.id : null, cat: c, storeId: currentStoreId };
   document.getElementById('evt-modal-title').textContent = c.charAt(0).toUpperCase() + c.slice(1) + ' event';
   document.getElementById('evt-start').value = ev ? ev.start_date : ds;
   document.getElementById('evt-end').value   = ev ? ev.end_date   : ds;
@@ -3425,7 +3466,8 @@ function closeEventEditor() {
 
 async function saveEvent() {
   if (eventSaving) return;
-  var st = eventEditorState;
+  var st = eventEditorState, storeId = st.storeId;
+  if (!storeId || storeId !== currentStoreId || !st.cat) return;
   var start = document.getElementById('evt-start').value;
   var end   = document.getElementById('evt-end').value;
   var label = document.getElementById('evt-label-input').value.trim();
@@ -3433,34 +3475,67 @@ async function saveEvent() {
   if (end < start)    { showToast('End date must be after start date', 'error'); return; }
   if (!label)         { showToast('Enter a text for the event', 'error'); return; }
   eventSaving = true;
-  var res = st.id
-    ? await sb.from('retail_planning_events').update({ start_date: start, end_date: end, label: label }).eq('id', st.id)
-    : await sb.from('retail_planning_events').insert([{ store_id: currentStoreId, category: st.cat, start_date: start, end_date: end, label: label }]);
-  eventSaving = false;
-  if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return; }
-  await loadPlanningEvents();
-  closeEventEditor();
-  showToast('Event saved \u2713');
-  renderMonthlyPlanning();
+  try {
+    var payload = { start_date: start, end_date: end, label: label };
+    var query = st.id
+      ? sb.from('retail_planning_events').update(payload).eq('id', st.id).eq('store_id', storeId)
+      : sb.from('retail_planning_events').insert([Object.assign({ store_id: storeId, category: st.cat }, payload)]);
+    var res = await query.select('id');
+    if (res.error) throw res.error;
+    if (!res.data || res.data.length !== 1) throw new Error('Event was not confirmed as saved');
+    await afterEventWrite(st, storeId, 'Event saved \u2713');
+  } catch (err) {
+    showToast('Event not saved: ' + (err.message || String(err)), 'error');
+  } finally {
+    eventSaving = false;
+  }
 }
 
 async function deleteEvent() {
-  var st = eventEditorState;
-  if (!st.id) return;
-  var del = await sb.from('retail_planning_events').delete().eq('id', st.id);
-  if (del.error) { showToast('Delete failed: ' + del.error.message, 'error'); return; }
-  await loadPlanningEvents();
-  closeEventEditor();
-  showToast('Event deleted \u2713');
-  renderMonthlyPlanning();
+  if (eventSaving) return;
+  var st = eventEditorState, storeId = st.storeId;
+  if (!st.id || !storeId || storeId !== currentStoreId) return;
+  eventSaving = true;
+  try {
+    var res = await sb.from('retail_planning_events').delete().eq('id', st.id).eq('store_id', storeId).select('id');
+    if (res.error) throw res.error;
+    if (!res.data || res.data.length !== 1) throw new Error('Event was not confirmed as deleted');
+    await afterEventWrite(st, storeId, 'Event deleted \u2713');
+  } catch (err) {
+    showToast('Event not deleted: ' + (err.message || String(err)), 'error');
+  } finally {
+    eventSaving = false;
+  }
 }
 
+// Apres une ecriture confirmee : recharge, puis ferme l'editeur seulement si
+// c'est toujours le meme (meme boutique, pas rouvert entre-temps).
+async function afterEventWrite(st, storeId, okMsg) {
+  if (currentStoreId !== storeId || eventEditorState !== st) return;
+  var refreshed = await loadPlanningEvents();
+  if (currentStoreId !== storeId || eventEditorState !== st) return;
+  closeEventEditor();
+  if (refreshed) { showToast(okMsg); renderMonthlyPlanning(); }
+  else showToast('Saved, but events could not be reloaded', 'error');
+}
+
+// Chargement : une reponse perimee (autre boutique, requete plus recente) est
+// ignoree, et une erreur conserve la liste deja affichee.
+var planningEventsLoadSeq = 0;
 async function loadPlanningEvents() {
-  planningEvents = [];
-  if (!currentStoreId) return;
-  var res = await sb.from('retail_planning_events').select('*').eq('store_id', currentStoreId);
-  if (res.error) { showToast('Events not loaded: ' + res.error.message, 'error'); return; }
-  planningEvents = res.data || [];
+  var storeId = currentStoreId, seq = ++planningEventsLoadSeq;
+  if (!storeId) { planningEvents = []; return false; }
+  try {
+    var res = await sb.from('retail_planning_events').select('*').eq('store_id', storeId);
+    if (seq !== planningEventsLoadSeq || storeId !== currentStoreId) return false;
+    if (res.error) throw res.error;
+    planningEvents = res.data || [];
+    return true;
+  } catch (err) {
+    if (seq === planningEventsLoadSeq && storeId === currentStoreId)
+      showToast('Events not loaded: ' + (err.message || String(err)), 'error');
+    return false;
+  }
 }
 
 // Ventile un total mensuel sur les jours ouverts du mois.
@@ -3920,10 +3995,14 @@ function initHourlyCurve(keepValues) {
   function start(e){ e.preventDefault(); dragging = parseInt(e.target.getAttribute('data-i'),10); }
   function move(e){ if (dragging===null) return; e.preventDefault(); setValue(dragging, toPct(e)); draw(); }
   function end(){ dragging = null; }
-  window.addEventListener('mousemove', move);
-  window.addEventListener('touchmove', move, {passive:false});
-  window.addEventListener('mouseup', end);
-  window.addEventListener('touchend', end);
+  // Une seule serie d'ecouteurs globaux : ceux de l'ouverture precedente sont retires.
+  if (curveListeners) curveListeners.abort();
+  curveListeners = new AbortController();
+  var sig = curveListeners.signal;
+  window.addEventListener('mousemove', move, { signal: sig });
+  window.addEventListener('touchmove', move, { passive: false, signal: sig });
+  window.addEventListener('mouseup', end, { signal: sig });
+  window.addEventListener('touchend', end, { signal: sig });
 
   draw();
 }
@@ -3937,20 +4016,16 @@ function resetHourlyCurve() {
   showToast('Curve reset - remember to Save');
 }
 
-async function saveHourlyCurve() {  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
-  var rounded = curveValues.map(function(v){ return Math.round(v * 10) / 10; });
-  var row = {
-    store_id: currentStoreId,
-    saturday_open: storeSettings ? storeSettings.saturday_open : true,
-    sunday_open:   storeSettings ? storeSettings.sunday_open   : false,
-    day_hours:     (storeSettings && storeSettings.day_hours) || regulations.day_hours || {},
-    hourly_curve:  rounded
-  };
-  var res = await sb.from('retail_store_settings')
-    .upsert(row, { onConflict: 'store_id' });
-  if (res.error) { showToast('Failed to save curve: ' + res.error.message, 'error'); return; }
-  storeSettings = row;
-  showToast('Curve saved \u2713');
+function saveHourlyCurve() {
+  if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
+  var rounded = curveValues.map(function(v){ return Math.round(Number(v) * 10) / 10; });
+  if (!rounded.length || rounded.some(function(v){ return !isFinite(v) || v < 0; })) {
+    showToast('Enter valid traffic values', 'error'); return;
+  }
+  // Seule la courbe change : seuils, toggles et week-end sont conserves.
+  if (!storeSettings) storeSettings = {};
+  storeSettings.hourly_curve = rounded;
+  queueStoreSave('Curve saved \u2713');
 }
 
 
@@ -4170,80 +4245,194 @@ function renderIntraday(ds) {
     return false;
   }
 
-  breaks.forEach(function(brk) {
-    var isLunch = brk === lunch;
-    var durH = brk.duration / 60;
-    var winStart = brk.window_start, winEnd = brk.window_end;
-    var slots = Math.max(1, Math.floor((winEnd - winStart) / durH));
-    var thisPlan = {};
+  // Ordre d'etalement des creneaux : debut, milieu, quarts, huitiemes...
+  // (0, S/2, S/4, 3S/4...) : un petit effectif se repartit sur toute la fenetre
+  // au lieu de s'empiler au debut.
+  function spreadOrder(n) {
+    var bits = 0; while ((1 << bits) < n) bits++;
+    var out = [];
+    for (var i = 0; i < (1 << bits); i++) {
+      var r = 0;
+      for (var b = 0; b < bits; b++) if (i & (1 << b)) r |= 1 << (bits - 1 - b);
+      if (r < n) out.push(r);
+    }
+    return out;
+  }
+  // Silo d'un agent pour les pauses : corner effectif (vendeurs), management, stock.
+  function breakSiloOf(a) {
+    var pool = poolOf(a);
+    if (pool !== 'sales') return pool;
+    if (storeCorners.length <= 1) return '_store';
+    var r = (monthlyResult[ds] || {})[a.id];
+    if (r && r.corner) return 'c:' + r.corner;
+    for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === a.home_corner_id) return 'c:' + storeCorners[i].code;
+    return 'c:_none';
+  }
+  function lexLess(x, y) {
+    for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i];
+    return false;
+  }
+  // ── Placement des pauses : planning COMPLET evalue, puis ameliore ─────────
+  // Chaque (agent x pause due) est une demande ; ses departs possibles sont
+  // tous les quarts d'heure de sa fenetre compatibles avec son shift. On evalue
+  // toujours le planning ENTIER, avec ce score (le plus petit gagne, dans l'ordre) :
+  //   1. pauses non placees (une pause due n'est jamais sacrifiee a l'etalement),
+  //   2. quarts d'heure ou un corner/le management en poste n'a plus personne,
+  //   3. depassement du plafond "au plus la moitie du silo en pause" (hors stock),
+  //   4. pression trafic : somme sur la journee de trafic(q) / presents(q), avec
+  //      trafic relatif de la courbe boutique (plat si absente). Convexe : evite
+  //      les pics ET l'empilement ; courbe plate = simple etalement ; une
+  //      boutique sans personne pour servir compte double.
+  //   5. etalement sur la fenetre (departage).
+  // Heuristique deterministe (placement du plus contraint au moins contraint,
+  // reparation, puis ameliorations locales) : pas de preuve d'optimum.
+  // Approximation : trafic au niveau boutique (pas encore de courbe par corner).
+  var Q = 0.25;
+  var siloMembers = {};
+  working.forEach(function(a) { var s = breakSiloOf(a); (siloMembers[s] = siloMembers[s] || []).push(a); });
+  var siloKeys = Object.keys(siloMembers);
 
-    function planBreak(list, maxConcurrent) {
-      // Repartit sur TOUS les slots de la fenetre (pas seulement en fonction
-      // de maxConcurrent), pour utiliser toute l'amplitude autorisee et eviter
-      // que tout le monde se retrouve au 1er creneau si le groupe est petit.
-      var perSlot = {};
-      list.forEach(function(a, i) {
-        var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
-        var ws = Math.max(winStart, sH + 1);
-        var we = Math.min(winEnd, eH) - durH;
-        if (we - ws < 0) return;   // pas de place pour une pause
-        var slotIdx = i % slots;
-        var tries = 0;
-        // Slot deja plein OU chevauche une pause deja posee pour cet agent : avance.
-        while (tries < slots) {
-          var candStart = Math.min(Math.max(winStart + slotIdx * durH, ws), Math.max(ws, we));
-          candStart = Math.round(candStart * 4) / 4;
-          if ((perSlot[slotIdx] || 0) < maxConcurrent && !overlapsTaken(a.id, candStart, durH)) break;
-          slotIdx = (slotIdx + 1) % slots; tries++;
+  var q0 = Infinity, q1 = -Infinity;
+  working.forEach(function(a) { q0 = Math.min(q0, shiftInfo[a.id].startMin / 60); q1 = Math.max(q1, shiftInfo[a.id].endMin / 60); });
+  q0 = Math.floor(q0 / Q) * Q;
+  var nQ = working.length ? Math.max(0, Math.ceil((q1 - q0) / Q - 1e-9)) : 0;
+  var inShift = {};
+  working.forEach(function(a) {
+    var si = shiftInfo[a.id], arr = [];
+    for (var i = 0; i < nQ; i++) { var hq = q0 + i * Q; arr.push(hq >= si.startMin / 60 - 1e-9 && hq < si.endMin / 60 - 1e-9); }
+    inShift[a.id] = arr;
+  });
+  var curveAvg = (curve && curve.length) ? curve.reduce(function(s, v) { return s + (+v || 0); }, 0) / curve.length : 0;
+  var demand = [];
+  for (var qd = 0; qd < nQ; qd++) {
+    var ci = Math.floor(q0 + qd * Q - openH + 1e-9);
+    demand.push((curveAvg > 0 && ci >= 0 && ci < curve.length) ? (+curve[ci] || 0) / curveAvg : 1);
+  }
+
+  var jobs = [], plansByIdx = {};
+  breaks.forEach(function(brk, bi) {
+    var dur = brk.duration / 60;
+    if (!(dur > 0) || !(brk.window_end > brk.window_start)) return;
+    plansByIdx[bi] = {};
+    byArrival.forEach(function(a) {
+      var si = shiftInfo[a.id];
+      var ws = Math.ceil(Math.max(brk.window_start, si.startMin / 60 + 1) / Q - 1e-9) * Q;
+      var we = Math.min(brk.window_end, si.endMin / 60) - dur;
+      var starts = [];
+      for (var st = ws; st <= we + 1e-9; st += Q) starts.push(Math.round(st * 4) / 4);
+      if (!starts.length) return;   // fenetre hors du shift : pause non due ici
+      var rank = {};
+      spreadOrder(starts.length).forEach(function(k, r) { rank[k] = r; });
+      jobs.push({ a: a, bi: bi, dur: dur, starts: starts, rank: rank, st: null });
+    });
+  });
+
+  function planScore() {
+    var away = {}, unplaced = 0, empty = 0, over = 0, pressure = 0;
+    jobs.forEach(function(j) {
+      if (j.st == null) { unplaced++; return; }
+      var arr = away[j.a.id] = away[j.a.id] || {};
+      for (var i = Math.max(0, Math.floor((j.st - q0) / Q + 1e-9)); i < nQ && q0 + i * Q < j.st + j.dur - 1e-9; i++) arr[i] = true;
+    });
+    for (var i = 0; i < nQ; i++) {
+      var serving = 0;
+      for (var s = 0; s < siloKeys.length; s++) {
+        if (siloKeys[s] === 'stock') continue;
+        var inS = 0, off = 0, mem = siloMembers[siloKeys[s]];
+        for (var m = 0; m < mem.length; m++) {
+          if (!inShift[mem[m].id][i]) continue;
+          inS++;
+          if (away[mem[m].id] && away[mem[m].id][i]) off++;
         }
-        var ideal = winStart + slotIdx * durH;
-        var slot = Math.min(Math.max(ideal, ws), Math.max(ws, we));
-        slot = Math.round(slot * 4) / 4;
-        if (overlapsTaken(a.id, slot, durH)) return;   // pas de creneau libre, on saute
-        perSlot[slotIdx] = (perSlot[slotIdx] || 0) + 1;
-        thisPlan[a.id] = slot;
-        markTaken(a.id, slot, durH);
+        serving += inS - off;
+        if (inS > 0 && off === inS) empty++;
+        var cap = Math.max(1, Math.floor(inS / 2));
+        if (off > cap) over += off - cap;
+      }
+      pressure += demand[i] / Math.max(0.5, serving);   // boutique vide = pire qu'un seul present
+    }
+    return [unplaced, empty, over, Math.round(pressure * 1e6) / 1e6];
+  }
+  function fits(j, st) {   // pas de chevauchement avec les autres pauses du meme agent
+    for (var k = 0; k < jobs.length; k++) {
+      var o = jobs[k];
+      if (o === j || o.a !== j.a || o.st == null) continue;
+      if (st < o.st + o.dur - 1e-9 && st + j.dur > o.st + 1e-9) return false;
+    }
+    return true;
+  }
+  function bestStart(j) {   // j.st doit etre null ; le reste a null
+    var best = null;
+    j.starts.forEach(function(st, k) {
+      if (!fits(j, st)) return;
+      j.st = st;
+      var sc = planScore().concat([j.rank[k]]);
+      if (!best || lexLess(sc, best.sc)) best = { st: st, sc: sc };
+    });
+    j.st = null;
+    return best;
+  }
+
+  // 1. Placement : les demandes les plus contraintes d'abord.
+  var order = jobs.slice().sort(function(x, y) { return (x.starts.length - y.starts.length) || (y.dur - x.dur); });
+  order.forEach(function(j) {
+    var b = bestStart(j);
+    if (b) { j.st = b.st; return; }
+    // 2. Reparation : deplacer une autre pause du meme agent pour faire la place.
+    var fix = null;
+    jobs.forEach(function(o) {
+      if (o === j || o.a !== j.a || o.st == null) return;
+      var keep = o.st;
+      o.starts.forEach(function(ost) {
+        o.st = ost;
+        if (!fits(o, ost)) return;
+        var bb = bestStart(j);
+        if (bb && (!fix || lexLess(bb.sc, fix.sc))) fix = { o: o, ost: ost, st: bb.st, sc: bb.sc };
       });
+      o.st = keep;
+    });
+    if (fix) { fix.o.st = fix.ost; j.st = fix.st; }
+  });
+
+  // 3. Ameliorations : deplacer une pause, ou echanger les horaires de deux
+  //    pauses de meme duree, seulement si le score global baisse strictement.
+  var cur = planScore();
+  for (var pass = 0; pass < 8; pass++) {
+    var improved = false;
+    order.forEach(function(j) {
+      if (j.st == null) return;
+      j.starts.forEach(function(st) {
+        if (st === j.st || !fits(j, st)) return;
+        var prev = j.st; j.st = st;
+        var sc = planScore();
+        if (lexLess(sc, cur)) { cur = sc; improved = true; } else j.st = prev;
+      });
+    });
+    for (var x = 0; x < order.length; x++) for (var y = x + 1; y < order.length; y++) {
+      var jx = order[x], jy = order[y];
+      if (jx.st == null || jy.st == null || jx.a === jy.a || jx.dur !== jy.dur || jx.st === jy.st) continue;
+      if (jx.starts.indexOf(jy.st) < 0 || jy.starts.indexOf(jx.st) < 0) continue;
+      var sx = jx.st, sy = jy.st;
+      jx.st = sy; jy.st = sx;
+      if (fits(jx, sy) && fits(jy, sx)) {
+        var sc2 = planScore();
+        if (lexLess(sc2, cur)) { cur = sc2; improved = true; continue; }
+      }
+      jx.st = sx; jy.st = sy;
     }
+    if (!improved) break;
+  }
 
-    // Corner effectif d'un vendeur ce jour (pour ne jamais vider un corner).
-    function breakCornerOf(a) {
-      if (storeCorners.length <= 1) return '_store';
-      var r = (monthlyResult[ds] || {})[a.id];
-      if (r && r.corner) return r.corner;
-      for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === a.home_corner_id) return storeCorners[i].code;
-      return '_none';
-    }
-
-    var floorElig = byArrival.filter(function(a) {
-      if (poolOf(a) !== 'sales') return false;
-      var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
-      return Math.min(winEnd, eH) - Math.max(winStart, sH + 1) >= durH;
-    });
-    var otherElig = byArrival.filter(function(a) {
-      if (poolOf(a) === 'sales') return false;
-      var sH = shiftInfo[a.id].startMin / 60, eH = shiftInfo[a.id].endMin / 60;
-      return Math.min(winEnd, eH) - Math.max(winStart, sH + 1) >= durH;
-    });
-
-    // Floor : lissage PAR CORNER. Dans chaque corner, au plus la moitie en pause
-    // a la fois, jamais tout le corner (service minimum garanti a toute heure).
-    var byCornerBreak = {};
-    floorElig.forEach(function(a) {
-      var c = breakCornerOf(a);
-      (byCornerBreak[c] = byCornerBreak[c] || []).push(a);
-    });
-    Object.keys(byCornerBreak).forEach(function(c) {
-      var list = byCornerBreak[c];
-      var maxConc = list.length >= 2 ? Math.floor(list.length / 2) : (list.length ? 1 : 0);
-      maxConc = Math.max(1, maxConc);
-      planBreak(list, maxConc);
-    });
-    var otherMax = Math.max(1, Math.ceil(otherElig.length / slots));
-    planBreak(otherElig, otherMax);
-
-    if (isLunch) lunchPlan = thisPlan;
-    else breakPlans.push({ brk: brk, plan: thisPlan });
+  var unplacedBreaks = 0;
+  jobs.forEach(function(j) {
+    if (j.st == null) { unplacedBreaks++; return; }
+    plansByIdx[j.bi][j.a.id] = j.st;
+    markTaken(j.a.id, j.st, j.dur);
+  });
+  breaks.forEach(function(b, i) {
+    if (!plansByIdx[i]) return;
+    if (b === lunch) lunchPlan = plansByIdx[i];
+    else breakPlans.push({ brk: b, plan: plansByIdx[i] });
   });
 
   // ── Plan des morning briefs, par vague d'arrivee ──
@@ -4293,14 +4482,13 @@ function renderIntraday(ds) {
       var ci = ph - openH;
       if (ci < 0 || ci >= curve.length) continue;
       if (curve[ci] <= avgCurveVal) continue;
-      var lunDurH = lunch ? (lunch.duration / 60) : 0;
       var cand = working.filter(function(a) {
         var si = shiftInfo[a.id];
         if (!si) return false;
         var sH = si.startMin / 60, eH = si.endMin / 60;
         if (sH > ph || eH < ph + 1) return false;
         if (overlapsMission(mbPlan[a.id], 0.25, ph)) return false;
-        if (overlapsMission(lunchPlan[a.id], lunDurH, ph)) return false;
+        if (overlapsTaken(a.id, ph, 1)) return false;   // aucune pause (tous types) pendant le Welcome
         return true;
       });
       if (!cand.length) continue;
@@ -4423,7 +4611,10 @@ function renderIntraday(ds) {
         });
       }
 
-      var exportBlocks = blocks.map(function(b){ return { start:b[0], dur:b[1], type:b[2], label:b[3] }; });
+      var exportBlocks = blocks.map(function(b){
+        return { start:b[0], dur:b[1], type:b[2], label:b[3],
+                 color: (b[4] && b[4].indexOf('bc-') === 0) ? b[4].slice(3) : null };
+      });
       (addedMissions[a.id] || []).forEach(function(m) {
         exportBlocks.push({ start:m.start, dur:(MISSION_DUR[m.type]||1), type:m.type, label:(MISSION_LABELS[m.type]||m.type) });
       });
@@ -4494,7 +4685,9 @@ function renderIntraday(ds) {
     noBriefNote +
     '<div class="card it-wrap">' +
       '<div class="it-head"><div class="it-title">' + formatDateDisplay(ds) + '</div>' +
-        '<div class="it-sub">' + working.length + ' present</div></div>' +
+        '<div class="it-sub">' + working.length + ' present' +
+          (unplacedBreaks ? ' \u00b7 <span class="it-warn">' + unplacedBreaks + ' break(s) could not be placed</span>' : '') +
+          '</div></div>' +
       axis + band +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
@@ -4942,35 +5135,41 @@ async function applyCellOverride(value) {
     targets.push({ agentId: st.agentId, ds: st.ds });
   }
 
+  var succeeded = 0, failed = 0, lastErr = '';
   for (var ti = 0; ti < targets.length; ti++) {
     var tAgent = targets[ti].agentId, tDs = targets[ti].ds;
     if (value === null) {
       var del = await sb.from('retail_planning_overrides')
         .delete().eq('agent_id', tAgent).eq('date', tDs);
-      if (del.error) { showToast('Failed to reset cell', 'error'); continue; }
+      if (del.error) { failed++; lastErr = del.error.message; continue; }
       if (planningOverrides[tAgent]) delete planningOverrides[tAgent][tDs];
       var oneDay = agentLeaves.filter(function(l){
         return l.agent_id === tAgent && l.start_date === tDs && l.end_date === tDs;
       });
+      var leaveFail = false;
       for (var i = 0; i < oneDay.length; i++) {
-        await sb.from('retail_agent_leave').delete().eq('id', oneDay[i].id);
+        var dl = await sb.from('retail_agent_leave').delete().eq('id', oneDay[i].id);
+        if (dl.error) { leaveFail = true; lastErr = dl.error.message; continue; }
         agentLeaves = agentLeaves.filter(function(l){ return l.id !== oneDay[i].id; });
       }
+      if (leaveFail) { failed++; continue; }
     } else if (value === 'A') {
       var row = { store_id: currentStoreId, agent_id: tAgent, start_date: tDs, end_date: tDs, type: 'absence' };
       var ins = await sb.from('retail_agent_leave').insert([row]).select();
-      if (ins.error) { showToast('Failed to save: ' + ins.error.message, 'error'); continue; }
+      if (ins.error) { failed++; lastErr = ins.error.message; continue; }
       if (ins.data && ins.data[0]) agentLeaves.push(ins.data[0]);
     } else {
       var up = await sb.from('retail_planning_overrides')
         .upsert({ agent_id: tAgent, date: tDs, value: value },
                 { onConflict: 'agent_id,date' });
-      if (up.error) { showToast('Failed to save: ' + up.error.message, 'error'); continue; }
+      if (up.error) { failed++; lastErr = up.error.message; continue; }
       if (!planningOverrides[tAgent]) planningOverrides[tAgent] = {};
       planningOverrides[tAgent][tDs] = value;
     }
+    succeeded++;
   }
-  showToast(targets.length > 1 ? (targets.length + ' cells updated \u2713') : 'Updated \u2713');
+  if (failed) showToast(succeeded + ' saved, ' + failed + ' failed: ' + lastErr, 'error');
+  else showToast(succeeded > 1 ? (succeeded + ' cells updated \u2713') : 'Updated \u2713');
   clearMultiSelect();
   if (value === 'A') renderCalendar();
   renderWithAdjustMode();
@@ -5765,13 +5964,25 @@ function renderMonthlyPlanning() {
       if (isFixedTimed(a1) || isFixedTimed(a2)) return false;
       // Meme grille (un vendeur remplace un vendeur, stock un stock)
       if (poolOf(a1) !== poolOf(a2)) return false;
+      // Meme semaine : un echange entre deux semaines changerait le quota
+      // hebdomadaire de chacun (6 jours d'un cote, 4 de l'autre).
+      if (weekKey(dOff.date) !== weekKey(dOn.date)) return false;
       return true;
     }
+    // Echange neutre : a1 quitte dOff et prend dOn, a2 l'inverse. Les compteurs
+    // retirent le jour quitte avant d'ajouter le nouveau (totaux inchanges).
+    // Limite connue : ne verifie pas encore les quotas entre deux semaines ni
+    // que l'echange ameliore reellement les repos (backlog fairness).
     function doSwap(a1, a2, dOff, dOn) {
-      // a1 quitte dOff, rejoint dOn ; a2 quitte dOn, rejoint dOff
+      function unassign(a, d) {
+        var wk = weekKey(d.date);
+        worked[a.id]--;
+        workedInWeek[a.id][wk] = (workedInWeek[a.id][wk] || 0) - 1;
+      }
       assignedMap[dOff.ds] = assignedMap[dOff.ds].filter(function(id){ return id !== a1.id; });
-      assignedMap[dOn.ds].push(a1.id); assign(a1, dOn);
-      assignedMap[dOn.ds] = assignedMap[dOn.ds].filter(function(id){ return id !== a2.id; });
+      assignedMap[dOn.ds]  = assignedMap[dOn.ds].filter(function(id){ return id !== a2.id; });
+      unassign(a1, dOff); unassign(a2, dOn);
+      assignedMap[dOn.ds].push(a1.id);  assign(a1, dOn);
       assignedMap[dOff.ds].push(a2.id); assign(a2, dOff);
     }
     var vendors = agents.filter(function(a){ return poolOf(a) === 'sales' && !isFixedTimed(a); });
@@ -6958,7 +7169,8 @@ function closeAgentEditor() {
 }
 
 async function saveAgentEditor() {
-  if (!agentEditorId) return;
+  var agentId = agentEditorId;   // fige : l'editeur peut changer pendant l'attente
+  if (!agentId) return;
   var first  = document.getElementById('ae-first').value.trim();
   var last   = document.getElementById('ae-last').value.trim();
   var status = document.getElementById('ae-status').value;
@@ -6970,21 +7182,7 @@ async function saveAgentEditor() {
   var pct = 100;
   if (ptVolant) pct = parseInt(document.getElementById('ae-pct-vol').value) || 50;
 
-  // Multi-corner : corner d'attache + competences (si store multi-corner).
-  var upd = { first_name: first, last_name: last, status: status, work_pct: pct };
-  if (storeCorners.length > 1) {
-    upd.home_corner_id = document.getElementById('ae-home-corner').value || null;
-    upd.corner_skills = readSkillChips();
-  }
-
-  showLoader();
-  var res = await sb.from('retail_agents')
-    .update(upd)
-    .eq('id', agentEditorId);
-  hideLoader();
-  if (res.error) { showToast('Save failed', 'error'); return; }
-
-  // Fixed schedule : seulement pour un Part Time en mode Fixe.
+  // Horaire fixe (Part Time Fixe) : valide AVANT toute ecriture.
   var fixedSchedule = null;
   if (isPT && !ptVolant) {
     var fdays = readDayChips('ae-fixed-days');
@@ -6995,19 +7193,29 @@ async function saveAgentEditor() {
     if (fend <= fstart) { showToast('Fixed end must be after start', 'error'); return; }
     fixedSchedule = { enabled: true, days: fdays, start: fstart, end: fend };
   }
-  var prefRow = {
-    agent_id:   agentEditorId,
-    avoid_days: readDayChips('ae-avoid'),
-    fixed_schedule: fixedSchedule
-  };
-  var pres = await sb.from('retail_agent_prefs')
-    .upsert(prefRow, { onConflict: 'agent_id' });
-  if (pres.error) { showToast('Preferences not saved: ' + pres.error.message, 'error'); }
-  else { agentPrefs[agentEditorId] = prefRow; }
 
-  var a = agents.find(function(x){ return x.id === agentEditorId; });
-  if (a) { a.first_name = first; a.last_name = last; a.status = status; a.work_pct = pct; }
-  closeAgentEditor();
+  // Multi-corner : corner d'attache + competences (si store multi-corner).
+  var upd = { first_name: first, last_name: last, status: status, work_pct: pct };
+  if (storeCorners.length > 1) {
+    upd.home_corner_id = document.getElementById('ae-home-corner').value || null;
+    upd.corner_skills = readSkillChips();
+  }
+  var prefRow = { agent_id: agentId, avoid_days: readDayChips('ae-avoid'), fixed_schedule: fixedSchedule };
+
+  showLoader();
+  var res = await sb.from('retail_agents').update(upd).eq('id', agentId);
+  if (res.error) { hideLoader(); showToast('Save failed: ' + res.error.message, 'error'); return; }
+  var a = agents.find(function(x){ return x.id === agentId; });
+  if (a) Object.assign(a, upd);
+  var pres = await sb.from('retail_agent_prefs').upsert(prefRow, { onConflict: 'agent_id' });
+  hideLoader();
+  if (pres.error) {
+    // Succes partiel : l'editeur reste ouvert pour pouvoir reessayer.
+    showToast('Partial save: agent saved, preferences failed: ' + pres.error.message, 'error');
+    return;
+  }
+  agentPrefs[agentId] = prefRow;
+  if (agentEditorId === agentId) closeAgentEditor();
   showToast('Agent updated \u2713');
   await loadWeekData();
 }
@@ -7384,6 +7592,20 @@ function exportIntraday() {
     lun:{bg:'FDE047',tx:'713F12',full:'Lunch'},
     wel:{bg:'A5B4FC',tx:'312E81',full:'Welcome'}
   };
+  // Couleurs des pauses : memes valeurs que les classes .bc-* de l'ecran.
+  var BREAK_XL = {
+    yellow:{bg:'FDE047',tx:'713F12'}, blue:{bg:'BFDBFE',tx:'1E3A8A'},
+    pink:{bg:'FBCFE8',tx:'9D174D'},   green:{bg:'BBF7D0',tx:'166534'},
+    violet:{bg:'DDD6FE',tx:'5B21B6'}, teal:{bg:'5EEAD4',tx:'115E59'},
+    slate:{bg:'CBD5E1',tx:'334155'}
+  };
+  // Style d'un bloc exporte : couleur et nom reels de la pause, sinon mission.
+  function exportBlockStyle(b) {
+    var tone = BREAK_XL[b.color];
+    if (tone) return { bg: tone.bg, tx: tone.tx, full: b.label || '' };
+    var known = MISSION_XL[String(b.type).replace(/[0-9]+$/, '')];
+    return known ? { bg: known.bg, tx: known.tx, full: known.full } : null;
+  }
   var SHIFT_HEAD = {
     open:{bg:'DCFCE7',tx:'14532D'}, close:{bg:'DBEAFE',tx:'1E3A8A'},
     mid:{bg:'FEF3C7',tx:'713F12'}, late:{bg:'EDE9FE',tx:'5B21B6'}
@@ -7457,7 +7679,7 @@ function exportIntraday() {
     }
     // Missions : on marque les quarts et on prepare les fusions
     r.blocks.forEach(function(b) {
-      var mx = MISSION_XL[String(b.type).replace(/[0-9]+$/,'')];
+      var mx = exportBlockStyle(b);
       if (!mx) return;
       var qStart = Math.max(0, Math.round((b.start - openH) * 4));
       var qEnd = Math.min(nQ, Math.round((b.start + b.dur - openH) * 4));
@@ -7492,11 +7714,19 @@ function exportIntraday() {
   var legRow = [ cell('Legend',{align:'left',bold:true,tx:'6B7280',sz:10}) ];
   for (var i=1;i<totalCols;i++) legRow.push(cell(''));
   rows.push(legRow);
-  var legends = [
-    ['MB','Morning brief','1A1A2E','FFFFFF'],
-    ['Lunch','Lunch break','FDE047','713F12'],
-    ['Welcome','Welcome mission','A5B4FC','312E81']
-  ];
+  // Legende = les blocs reellement exportes (noms et couleurs exacts).
+  var MISSION_DESC = { MB: 'Morning brief', Welcome: 'Welcome mission' };
+  var seenLegend = {}, legends = [];
+  intradayExport.rows.forEach(function(row) {
+    row.blocks.forEach(function(b) {
+      var st = exportBlockStyle(b);
+      if (!st) return;
+      var key = st.full + '|' + st.bg;
+      if (seenLegend[key]) return;
+      seenLegend[key] = true;
+      legends.push([st.full, MISSION_DESC[st.full] || st.full, st.bg, st.tx]);
+    });
+  });
   legends.forEach(function(lg){
     var lr = [ cell(lg[0],{bg:lg[2],tx:lg[3],bold:true}), cell(lg[1],{align:'left',tx:'6B7280',sz:9}) ];
     for (var i=2;i<totalCols;i++) lr.push(cell(''));
