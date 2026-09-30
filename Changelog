@@ -81,3 +81,34 @@
 | CORA_V7.1 | Consecutive days off : groups isolated rest days when it doesn't change daily headcount. |
 | CORA_V7.2 | Intraday reinforcement toggle : engine proposes moving one agent 1h to the busy corner at peak. |
 | CORA_V7.3 | Code cleanup + fixed settings save silently resetting the fairness / reinforcement toggles. |
+| CORA_V7.4 | First try at the weekend bug (Saturday / Sunday off when it's the biggest day of the week). Added the help texts in Settings. |
+| CORA_V7.5 | Real weekend fix : open/closed weekend had two sources that didn't talk to each other. One source of truth now. |
+| CORA_V7.6 | Auto-save in Settings : Labor rules, Operating hours, Breaks, Corners. No more Save button there. |
+| CORA_V7.7 | Reinforcement v2 : it's a pill on the agent's bar now, placed at peak, you can slide it or kill it. |
+| CORA_V7.8 | Opening / closing coverage per corner (each corner = a mini store), lunch never empties a corner, Sunday single shift toggle. |
+| CORA_V7.9 | Frozen planning by default : a manual change stays on its cell, nobody else moves. "Adjust whole planning" to recalculate. |
+| CORA_V8.0 | Shift times to the minute (Japan wanted 10:20 and 18:50). Hour + minute dropdowns. |
+| CORA_V8.0.1 | Same minute picker in the shift edit table. Forgot it the first time. |
+| CORA_V8.1 | Japan feedback : all breaks show in the intraday with their name, lunch uses the full window, the shift bubble isn't cut at the bottom anymore, Ctrl+click to change many cells at once. |
+| CORA_V8.1.2 | Event rows on top of the monthly : Local / National / Training, over several days, with a card on the dashboard for the month. |
+| CORA_V8.2.1 | First cross-audit with Astra : dead code out, part-timer on leave shows absent, forced-open Sunday stays open, 12:30 breaks don't turn into 12:00, one-day events. |
+| CORA_V8.2.2 | Zero rest gap saved for real, open days count follows the same closing rule as the planning, both absence types beat fixed part-time, part-timers same color in Excel. |
+| CORA_V8.2.3 | Small cleanup in the shift logic. |
+| CORA_V8.2.4 | Settings save wrote twice, once before checking the form. One write now, after checking. |
+| CORA_V8.2.5 | Break colors, From / To dates on events, real Supabase error messages. Fixed breaks not saving |
+| CORA_V8.2.6 | Everything lines up : monthly 30% wider, one square size everywhere, one color square that opens a popup, same width for all time pickers. Found the missing store settings columns. |
+| CORA_V8.2.7 | Breaks spread over the whole window for the whole store, managers don't eat together, bad breaks refused. One save at a time. |
+| CORA_V8.2.8 | Breaks placed on who's really there, quarter by quarter. A corner never goes empty if it can be avoided. |
+| CORA_V8.2.9 | one single writer for settings, the break engine scores the whole day with traffic, events safe |
+| CORA_V8.3.0 | Help everywhere : numbered block titles, subtitles, first-visit overlay that shrinks into a "?". Japanese included. |
+| CORA_V8.3.1 | "?" on the 3 tricky toggles and on Adjust, titles and buttons inside the Monthly / Intraday card, nice event tooltip, no more "·" anywhere. The 70-30 help text was wrong, the code was right. |
+| CORA_V8.4.0 | Weekly quota fixed (max days finally does something), 2 days off in a row when traffic allows, the manager always wins, stacked events + in Excel, tasks can't overlap, auto-save everywhere with a green Saved. |
+| CORA_V8.4.1 | Legal rules for real : minimum rest between shifts and max hours per week (lunch not counted). |
+| CORA_V8.4.2 | Data loaded for the month on screen, not just the selected week. Holidays over 2 years. |
+| CORA_V8.4.3 | Real frozen planning : saved in Supabase, never moves on its own. "Recalculate from today" button. |
+| CORA_V8.4.4 | CORA date picker. Bye bye ugly browser calendar. |
+| CORA_V8.4.5 | manual cells keep their frozen value, New York timezone bug, corner Excel matches the screen, "Saved" only when it's really saved. |
+| CORA_V8.4.6 | forecast never overwrites a month typed by hand, A in a cell is a manual change, Monday can be closed, missions land at the right hour. |
+| CORA_V8.4.7 | Editing one month of traffic doesn't lock the 11 others, reset clears corner changes too, Monthly / Intraday switch on mobile, coverage alerts on screen. |
+| CORA_V8.4.8 | Fast store switch doesn't mix agents anymore, final rest check on everyone, intraday export date and crash fixed, JP back to EN works. |
+| CORA_V8.5.0 | Add missions by hand in the intraday : any break from Break structure, Training, Clienteling, Welcome, MB. Time to the minute, auto-saved. Reinforcements in Excel. Monthly PDF on one page, grid only. |
