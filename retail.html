@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CORA Retail V8.4.8</title>
+  <title>CORA Retail V8.5.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -181,6 +181,13 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 
 .it-blk-added { overflow:visible; }
 .it-blk-reinf { overflow:visible; background:var(--nav-active-bg); color:#fff; }
+.b-train { background:var(--info); color:var(--brand-on); }
+.b-cli   { background:var(--ok); color:var(--brand-on); }
+.mm-list { max-height:260px; overflow-y:auto; }
+.mission-menu-item.is-on { background:var(--bg-base-3); box-shadow:inset 3px 0 0 var(--brand); }
+.mm-dur { margin-left:auto; font-size:11.5px; color:var(--tx-3); }
+.mm-form { display:flex; align-items:flex-end; gap:var(--s2); padding:var(--s2); border-top:1px solid var(--line); }
+.pdf-grid-only .c-rh, .pdf-grid-only .plan-note, .pdf-grid-only .legend { display:none; }
 .it-blk-reinf:hover .it-blk-x { opacity:1; }
 .it-blk-x { position:absolute; top:-6px; left:-6px; width:15px; height:15px;
   border-radius:var(--r-pill); background:#fff; color:#374151; border:1px solid var(--line);
@@ -1784,6 +1791,11 @@ var I18N = {
     'Click anywhere to continue. You can read this again with the ? button.': 'どこかをクリックして続けます。この説明は「?」ボタンでいつでも読み直せます。',
     'Minimum rest between shifts': 'シフト間の最低休息時間',
     'How many hours an advisor must rest between the end of one shift and the start of the next': '1つのシフト終了から次のシフト開始までに必要な休息時間',
+    'Clienteling': 'クライアンテリング',
+    'Choose a mission': 'ミッションを選択してください',
+    'The mission must fit inside the shift': 'ミッションはシフト時間内に収めてください',
+    'is already planned for this person: drag it to move it': 'はこのスタッフに既に設定されています。移動するにはドラッグしてください',
+    'Reinforcement': '応援',
   }
 };
 
@@ -3635,12 +3647,30 @@ function renderPlanning() {
   renderMonthlyPlanning();
 }
 // Monthly planning constants
-var MISSION_CATALOG = [
-  { type:'mb',  label:'Morning brief' },
-  { type:'wel', label:'Welcome' }
-];
 var MISSION_LABELS = { mb:'MB', wel:'Welcome', lun:'Lunch' };
 var MISSION_DUR = { mb:0.25, wel:1, lun:1 };
+
+// Missions a manager can add: every break of Break structure (live) + fixed missions.
+var FIXED_MISSIONS = [
+  { type: 'mb',    label: 'Morning brief', short: 'MB',          dur: 15, cls: 'b-mb' },
+  { type: 'wel',   label: 'Welcome',       short: 'Welcome',     dur: 60, cls: 'b-wel' },
+  { type: 'train', label: 'Training',      short: 'Training',    dur: 60, cls: 'b-train', free: true },
+  { type: 'cli',   label: 'Clienteling',   short: 'Clienteling', dur: 60, cls: 'b-cli',   free: true }
+];
+function missionDefs() {
+  return (regulations.breaks || []).map(function(b, i) {
+    return { type: 'brk:' + b.name, label: b.name, short: b.name, dur: b.duration,
+             cls: 'bc-' + breakColorOf(b, i), color: breakColorOf(b, i), brk: b };
+  }).concat(FIXED_MISSIONS);
+}
+function missionDef(type) {
+  var d = missionDefs().find(function(m) { return m.type === type; });
+  if (d) return d;
+  var name = type.indexOf('brk:') === 0 ? type.slice(4) : (MISSION_LABELS[type] || type);
+  return { type: type, label: name, short: name, dur: (MISSION_DUR[type] || 1) * 60, cls: 'b-' + type };
+}
+// Duration (hours) of an added mission: its own if set, else its definition.
+function missionDurH(m) { return (m.dur || missionDef(m.type).dur) / 60; }
 
 var RETAIL_STATUS = {
   SM:               { label: 'Store Manager',          block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
@@ -4496,12 +4526,12 @@ async function loadAndRenderIntraday(ds) {
       .select('agent_id, block_type, start_min')
       .eq('store_id', storeId).eq('date', ds);
     var mis = await sb.from('retail_intraday_missions')
-      .select('id, agent_id, mission_type, start_min')
+      .select('*')
       .eq('store_id', storeId).eq('date', ds);
     if (seq !== intradayLoadSeq || storeId !== currentStoreId || ds !== currentIntradayDate) return;
     (!res.error && res.data || []).forEach(function(r) { ov[r.agent_id + ':' + r.block_type] = r.start_min; });
     (!mis.error && mis.data || []).forEach(function(r) {
-      (am[r.agent_id] = am[r.agent_id] || []).push({ id:r.id, type:r.mission_type, start:r.start_min/60 });
+      (am[r.agent_id] = am[r.agent_id] || []).push({ id:r.id, type:r.mission_type, start:r.start_min/60, dur:r.duration_min || null });
     });
   }
   intradayOverrides = ov;
@@ -4708,12 +4738,26 @@ function renderIntraday(ds) {
     demand.push((curveAvg > 0 && ci >= 0 && ci < curve.length) ? (+curve[ci] || 0) / curveAvg : 1);
   }
 
+  // Manual missions of the day: never overlapped by an automatic break; a
+  // manual break replaces the automatic one and counts as time off the floor.
+  var manualBusy = {}, manualBreakAway = {};
+  Object.keys(addedMissions).forEach(function(aid) {
+    (addedMissions[aid] || []).forEach(function(m) {
+      var s0 = m.start, d0 = missionDurH(m);
+      (manualBusy[aid] = manualBusy[aid] || []).push([s0, s0 + d0]);
+      if (m.type.indexOf('brk:') === 0) {
+        var arr = manualBreakAway[aid] = manualBreakAway[aid] || {};
+        for (var i = Math.max(0, Math.floor((s0 - q0) / Q + 1e-9)); i < nQ && q0 + i * Q < s0 + d0 - 1e-9; i++) arr[i] = true;
+      }
+    });
+  });
   var jobs = [], plansByIdx = {};
   breaks.forEach(function(brk, bi) {
     var dur = brk.duration / 60;
     if (!(dur > 0) || !(brk.window_end > brk.window_start)) return;
     plansByIdx[bi] = {};
     byArrival.forEach(function(a) {
+      if ((addedMissions[a.id] || []).some(function(m) { return m.type === 'brk:' + brk.name; })) return;   // placed by hand
       var si = shiftInfo[a.id];
       var ws = Math.ceil(Math.max(brk.window_start, si.startMin / 60 + 1) / Q - 1e-9) * Q;
       var we = Math.min(brk.window_end, si.endMin / 60) - dur;
@@ -4728,6 +4772,7 @@ function renderIntraday(ds) {
 
   function planScore() {
     var away = {}, unplaced = 0, empty = 0, over = 0, pressure = 0;
+    Object.keys(manualBreakAway).forEach(function(aid) { away[aid] = Object.assign({}, manualBreakAway[aid]); });
     jobs.forEach(function(j) {
       if (j.st == null) { unplaced++; return; }
       var arr = away[j.a.id] = away[j.a.id] || {};
@@ -4753,6 +4798,7 @@ function renderIntraday(ds) {
     return [unplaced, empty, over, Math.round(pressure * 1e6) / 1e6];
   }
   function fits(j, st) {
+    if ((manualBusy[j.a.id] || []).some(function(b) { return st < b[1] - 1e-9 && st + j.dur > b[0] + 1e-9; })) return false;
     for (var k = 0; k < jobs.length; k++) {
       var o = jobs[k];
       if (o === j || o.a !== j.a || o.st == null) continue;
@@ -4995,7 +5041,12 @@ function renderIntraday(ds) {
                  color: (b[4] && b[4].indexOf('bc-') === 0) ? b[4].slice(3) : null };
       });
       (addedMissions[a.id] || []).forEach(function(m) {
-        exportBlocks.push({ start:m.start, dur:(MISSION_DUR[m.type]||1), type:m.type, label:(MISSION_LABELS[m.type]||m.type) });
+        var md = missionDef(m.type);
+        exportBlocks.push({ start: m.start, dur: missionDurH(m), type: m.type.indexOf('brk:') === 0 ? 'brk' : m.type,
+                            label: md.label, color: md.color || null });
+      });
+      (reinforceMissions[a.id] || []).forEach(function(m) {
+        exportBlocks.push({ start: m.start, dur: m.dur, type: 'reinf', label: '\u2192' + m.toCode, color: null });
       });
       intradayExportRows.push({
         agentId: a.id,
@@ -5027,11 +5078,12 @@ function renderIntraday(ds) {
           ' style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' + esc(bl[3]) + '</div>';
       });
       (addedMissions[a.id] || []).forEach(function(m) {
-        var visualCls = 'b-' + m.type;
-        var label = MISSION_LABELS[m.type] || m.type.toUpperCase();
-        var durH = MISSION_DUR[m.type] || 1;
+        var md = missionDef(m.type);
+        var visualCls = md.cls;
+        var label = esc(t(md.short));
+        var durH = missionDurH(m);
         track += '<div class="it-blk ' + visualCls + ' it-blk-added" draggable="false"' +
-          ' data-agent="' + a.id + '" data-type="' + m.type + '" data-mid="' + m.id + '"' +
+          ' data-agent="' + a.id + '" data-type="' + esc(m.type) + '" data-mid="' + m.id + '"' +
           ' data-dur="' + durH + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
           ' style="left:' + pct(m.start) + '%;width:' + wpct(durH) + '%">' + label +
           '<span class="it-blk-x" onpointerdown="event.stopPropagation()" onclick="removeAddedMission(event,\'' + m.id + '\')">&times;</span></div>';
@@ -5148,26 +5200,40 @@ function openMissionMenu(ev, agentId) {
   var track = ev.currentTarget;
   var rect = track.getBoundingClientRect();
   var relX = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-  var smin = parseInt(track.dataset.smin), emin = parseInt(track.dataset.emin);
+  var smin = parseInt(track.dataset.smin, 10), emin = parseInt(track.dataset.emin, 10);
+  var clickMin = intradayAxis ? Math.round((intradayAxis.T0 + relX * (intradayAxis.T1 - intradayAxis.T0)) * 60) : smin;
+  clickMin = Math.max(smin, Math.min(emin - 15, Math.round(clickMin / 5) * 5));
+  missionMenuState = { agentId: agentId, smin: smin, emin: emin, type: null };
 
+  var durOpts = '';
+  for (var d = 15; d <= 480; d += 15) durOpts += '<option value="' + d + '"' + (d === 60 ? ' selected' : '') + '>' + durLabel(d) + '</option>';
   var menu = document.createElement('div');
   menu.className = 'mission-menu';
   menu.id = 'mission-menu';
-  MISSION_CATALOG.forEach(function(m) {
-    var item = document.createElement('div');
-    item.className = 'mission-menu-item';
-    item.innerHTML = '<span class="mm-chip b-' + m.type + '">' + (MISSION_LABELS[m.type] || '') + '</span>' + m.label;
-    item.onclick = function(e) {
-      e.stopPropagation();
-      addMissionAt(agentId, m.type, relX, smin, emin);
-      closeMissionMenu();
-    };
-    menu.appendChild(item);
-  });
+  menu.onclick = function(e) { e.stopPropagation(); };
+  menu.innerHTML = '<div class="mm-list">' + missionDefs().map(function(m) {
+      return '<div class="mission-menu-item" data-type="' + esc(m.type) + '" onclick="pickMissionType(this)">' +
+        '<span class="mm-chip ' + m.cls + '">' + esc(m.short) + '</span>' + esc(t(m.label)) +
+        (m.free ? '' : '<span class="mm-dur">' + durLabel(m.dur) + '</span>') + '</div>';
+    }).join('') + '</div>' +
+    '<div class="mm-form">' +
+      '<div class="fld"><label>' + t('Start') + '</label>' + hourMinSelectHtml('mm-start', clickMin) + '</div>' +
+      '<div class="fld" id="mm-dur-fld" style="display:none"><label>' + t('Duration') + '</label><select id="mm-dur">' + durOpts + '</select></div>' +
+      '<button class="btn btn-primary btn-sm" onclick="addMissionFromMenu()">' + t('Add') + '</button>' +
+    '</div>';
   document.body.appendChild(menu);
-  menu.style.left = Math.min(ev.clientX, window.innerWidth - 190) + 'px';
-  menu.style.top  = (ev.clientY + 6) + 'px';
+  var mw = menu.offsetWidth, mh = menu.offsetHeight;
+  menu.style.left = Math.max(8, Math.min(ev.clientX, window.innerWidth - mw - 8)) + 'px';
+  menu.style.top  = (ev.clientY + 6 + mh <= window.innerHeight - 8 ? ev.clientY + 6 : Math.max(8, ev.clientY - 6 - mh)) + 'px';
   setTimeout(function(){ document.addEventListener('click', closeMissionMenu); }, 0);
+}
+
+var missionMenuState = null;
+function pickMissionType(el) {
+  document.querySelectorAll('#mission-menu .mission-menu-item').forEach(function(x) { x.classList.remove('is-on'); });
+  el.classList.add('is-on');
+  missionMenuState.type = el.getAttribute('data-type');
+  document.getElementById('mm-dur-fld').style.display = missionDef(missionMenuState.type).free ? '' : 'none';
 }
 
 function closeMissionMenu() {
@@ -5176,31 +5242,35 @@ function closeMissionMenu() {
   document.removeEventListener('click', closeMissionMenu);
 }
 
-async function addMissionAt(agentId, type, relX, smin, emin) {
-  var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(currentIntradayDate + 'T12:00:00').getDay()];
-  var dh = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
-  if (calHours[currentIntradayDate]) dh = calHours[currentIntradayDate];
-  var openH = dh.open, closeH = dh.close;
-  var durH = MISSION_DUR[type] || 1;
-  var startH = intradayAxis ? intradayAxis.T0 + relX * (intradayAxis.T1 - intradayAxis.T0)
-                            : openH + relX * (closeH - openH);
-  var sH = smin / 60, eH = emin / 60;
-  startH = Math.max(sH, Math.min(startH, eH - durH));
-  var startMin = Math.round(startH * 60);
-  var row = intradayExport && intradayExport.rows.find(function(r) { return r.agentId === agentId; });
-  var sh = startMin / 60;
+// Add a mission from the menu: checks shift, duplicates, overlaps, then saves.
+async function addMissionFromMenu() {
+  var st = missionMenuState;
+  if (!st || !st.type) { showToast('Choose a mission', 'error'); return; }
+  var def = missionDef(st.type);
+  var startMin = hourMinValue('mm-start');
+  var durMin = def.free ? parseInt(document.getElementById('mm-dur').value, 10) : def.dur;
+  if (startMin == null || startMin < st.smin || startMin + durMin > st.emin) {
+    showToast('The mission must fit inside the shift', 'error'); return;
+  }
+  var row = intradayExport && intradayExport.rows.find(function(r) { return r.agentId === st.agentId; });
+  if (def.brk && ((addedMissions[st.agentId] || []).some(function(m) { return m.type === st.type; }) ||
+      (row && row.blocks.some(function(b) { return b.label === def.label && (b.type === 'lun' || /^brk/.test(b.type)); })))) {
+    showToast(t(def.label) + ' ' + t('is already planned for this person: drag it to move it'), 'error'); return;
+  }
+  var sh = startMin / 60, durH = durMin / 60;
   if (row && row.blocks.some(function(b) { return sh < b.start + b.dur - 1e-6 && sh + durH > b.start + 1e-6; })) {
     showToast('Tasks cannot overlap', 'error'); return;
   }
-
-  if (!currentStoreId) return;
+  var storeId = currentStoreId, ds = currentIntradayDate;
+  if (!storeId) return;
+  closeMissionMenu();
   var res = await sb.from('retail_intraday_missions').insert({
-    store_id: currentStoreId, date: currentIntradayDate, agent_id: agentId,
-    mission_type: type, start_min: startMin
+    store_id: storeId, date: ds, agent_id: st.agentId,
+    mission_type: st.type, start_min: startMin, duration_min: durMin
   }).select();
   if (res.error) { showToast('Not saved: ' + (res.error.message || 'error'), 'error'); return; }
-  showToast('Mission added \u2713');
-  loadAndRenderIntraday(currentIntradayDate);
+  showToast('Saved \u2713');
+  if (storeId === currentStoreId && ds === currentIntradayDate) loadAndRenderIntraday(ds);
 }
 
 async function removeAddedMission(ev, missionId) {
@@ -5208,7 +5278,7 @@ async function removeAddedMission(ev, missionId) {
   if (!currentStoreId) return;
   var res = await sb.from('retail_intraday_missions').delete().eq('id', missionId);
   if (res.error) { showToast('Not removed: ' + (res.error.message || 'error'), 'error'); return; }
-  showToast('Mission removed \u2713');
+  showToast('Saved \u2713');
   loadAndRenderIntraday(currentIntradayDate);
 }
 
@@ -5219,7 +5289,7 @@ async function saveAddedMissionPos(missionId, startMin) {
   if (!currentStoreId) return;
   var res = await sb.from('retail_intraday_missions').update({ start_min: startMin }).eq('id', missionId);
   if (res.error) { showToast('Not saved: ' + (res.error.message || 'error'), 'error'); return; }
-  showToast('Moved \u2713');
+  showToast('Saved \u2713');
 }
 
 async function saveIntradayOverride(ds, agentId, blockType, startMin) {
@@ -7513,7 +7583,7 @@ async function addAgent() {
 }
 
 // Monthly Excel export
-function printableExport(contentHtml, titleText) {
+function printableExport(contentHtml, titleText, fitWidth) {
   if (!contentHtml || !currentStoreId) { showToast('Nothing to export', 'error'); return; }
   var w = window.open('', '_blank');
   if (!w) { showToast('Popup blocked - allow popups to export PDF', 'error'); return; }
@@ -7544,14 +7614,22 @@ function printableExport(contentHtml, titleText) {
     '<div class="tab-content active" style="display:block;padding:0;">' + contentHtml + '</div>' +
     '</body></html>');
   w.document.close();
-  setTimeout(function(){ w.focus(); w.print(); }, 600);
+  setTimeout(function(){
+    if (fitWidth) {
+      // Shrink the grid so it fits one A4 landscape page width.
+      var tbl = w.document.querySelector('.mth'), avail = 1060;
+      if (tbl && tbl.scrollWidth > avail) w.document.body.style.zoom = (avail / tbl.scrollWidth).toFixed(3);
+    }
+    w.focus(); w.print();
+  }, 600);
 }
 
 function exportMonthlyPDF() {
   var mn = MONTH_NAMES[monthlyRef.getMonth()] + ' ' + monthlyRef.getFullYear();
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
-  printableExport('<div class="card">' + document.getElementById('planning-monthly-body').innerHTML + '</div>' +
-    document.getElementById('planning-coverage-body').innerHTML, 'Monthly - ' + scope + ' - ' + mn);
+  // One page: names and shift cells only (no counters, no coverage table), fitted to the page width.
+  printableExport('<div class="card pdf-grid-only">' + document.getElementById('planning-monthly-body').innerHTML + '</div>',
+    'Monthly - ' + scope + ' - ' + mn, true);
 }
 
 function exportIntradayPDF() {
@@ -7841,7 +7919,10 @@ function exportIntraday() {
   var MISSION_XL = {
     mb:{bg:'1A1A2E',tx:'FFFFFF',full:'MB'},
     lun:{bg:'FDE047',tx:'713F12',full:'Lunch'},
-    wel:{bg:'A5B4FC',tx:'312E81',full:'Welcome'}
+    wel:{bg:'A5B4FC',tx:'312E81',full:'Welcome'},
+    train:{bg:'2563EB',tx:'FFFFFF',full:'Training'},
+    cli:{bg:'16A34A',tx:'FFFFFF',full:'Clienteling'},
+    reinf:{bg:'1E3A8A',tx:'FFFFFF',full:'Reinforcement'}
   };
   var BREAK_XL = {
     yellow:{bg:'FDE047',tx:'713F12'}, blue:{bg:'BFDBFE',tx:'1E3A8A'},
@@ -7853,7 +7934,7 @@ function exportIntraday() {
     var tone = BREAK_XL[b.color];
     if (tone) return { bg: tone.bg, tx: tone.tx, full: b.label || '' };
     var known = MISSION_XL[String(b.type).replace(/[0-9]+$/, '')];
-    return known ? { bg: known.bg, tx: known.tx, full: known.full } : null;
+    return known ? { bg: known.bg, tx: known.tx, full: b.type === 'reinf' ? b.label : known.full } : null;
   }
   var SHIFT_HEAD = {
     open:{bg:'DCFCE7',tx:'14532D'}, close:{bg:'DBEAFE',tx:'1E3A8A'},
