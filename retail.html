@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v8.6.2</title>
+  <title>CAST v8.6.4</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -92,12 +92,16 @@ h1,h2,h3,h4 { font-weight: 600; line-height: 1.3; color: var(--tx-1); }
 }
 #main { margin-left: var(--sb-w); min-height: 100vh; display: flex; flex-direction: column; }
 
-.sb-brand { display:flex; align-items:baseline; gap:9px; padding:0 var(--s2) var(--s5); }
-.sb-logo { width:26px; height:26px; object-fit:contain; flex-shrink:0; align-self:center; }
-.sb-logo-fb { display:none; width:26px; height:26px; border-radius:7px; background:var(--brand);
+/* Brand font, read from the computer if installed */
+@font-face { font-family:'CAST Brand'; src:local('Britannic Bold'), local('BritannicBold'), local('Britannic-Bold'); font-weight:400; font-style:normal; }
+.sb-brand { display:flex; align-items:center; justify-content:center; gap:10px; padding:8px var(--s2) var(--s5); }
+.sb-logo { width:52px; height:52px; object-fit:contain; flex-shrink:0; align-self:center; }
+.sb-logo-fb { display:none; width:52px; height:52px; border-radius:7px; background:var(--brand);
   color:var(--brand-on); align-items:center; justify-content:center; font-size:13px;
   font-weight:800; flex-shrink:0; align-self:center; }
-.sb-name { font-size:17px; font-weight:700; color:var(--tx-1); letter-spacing:-.02em; }
+.sb-name { font-family:'CAST Brand', 'Britannic Bold', 'Franklin Gothic Demi', 'Arial Black', Arial, sans-serif;
+  font-size:32px; font-weight:400; font-synthesis:none; color:var(--nav-active-bg);
+  line-height:1; white-space:nowrap; letter-spacing:-0.06em; }
 
 .sb-sec { font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase;
           color:var(--tx-3); padding:0 var(--s2) 6px; margin-top:var(--s4); }
@@ -1062,6 +1066,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   .nav-sub, .nav-sub.open { display:none; }
   .view-switch { display:flex; }
   .sb-brand { justify-content:center; padding:var(--s2) 0 var(--s5); }
+  .sb-logo, .sb-logo-fb { width:26px; height:26px; }
   .tb-search { max-width:none; }
 }
 
@@ -1119,7 +1124,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 <nav id="sidebar">
   <div class="sb-brand">
     <img src="CORA_LOGO.png" alt="" class="sb-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span class="sb-logo-fb" aria-hidden="true">C</span>
-    <span class="sb-name">CAST</span>
+    <span class="sb-name">CAST.</span>
   </div>
 
   <div class="sb-sec">Workspace</div>
@@ -4624,32 +4629,18 @@ function renderIntraday(ds) {
     return;
   }
 
+  // Same hours as the monthly planning
   var shiftInfo = {};
   working.forEach(function(a) {
-    var code = dayPlan[a.id].code;
-    if (code === 'PT') {
-      var fx = (agentPrefs[a.id] || {}).fixed_schedule || {};
-      shiftInfo[a.id] = { code: 'PT', startMin: fx.start != null ? fx.start : openH * 60,
-                          endMin: fx.end != null ? fx.end : closeH * 60, tone: 'teal' };
-      return;
-    }
-    if (code === 'D') {
-      shiftInfo[a.id] = { code: 'D', startMin: openH * 60, endMin: closeH * 60, tone: 'late' };
-      return;
-    }
+    var res = dayPlan[a.id];
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(a)].grid] || RETAIL_SHIFTS.sales;
-    var sh = grid.find(function(s) { return s.code === code; }) || grid[0];
-    var halfInfo = dayPlan[a.id].half;
-    if (halfInfo) {
-      var midMin = Math.round((openH + closeH) / 2 * 60);
-      if (halfInfo === 'am') {
-        shiftInfo[a.id] = { code: sh.code, startMin: sh.startMin, endMin: midMin, tone: sh.tone, half: 'am' };
-      } else {
-        shiftInfo[a.id] = { code: sh.code, startMin: midMin, endMin: sh.endMin, tone: sh.tone, half: 'pm' };
-      }
-    } else {
-      shiftInfo[a.id] = sh;
-    }
+    var sh = grid.find(function(s) { return s.code === res.code; }) || grid[0];
+    var w = workHoursOf(a, ds, res) || { start: sh.startMin, end: sh.endMin };
+    var own = res.code === 'PT' || res.code === 'D';
+    shiftInfo[a.id] = {
+      code: own ? res.code : sh.code, startMin: w.start, endMin: w.end,
+      tone: res.code === 'PT' ? 'teal' : res.code === 'D' ? 'late' : sh.tone, half: res.half
+    };
   });
 
   var T0 = 24, T1 = 0;
@@ -6960,18 +6951,28 @@ function renderMonthlyPlanning() {
     return res;
   }
 
+  // Manual corner change wins, also on saved planning
+  function withCorner(agent, day, res) {
+    var cov = (cornerOverrides[agent.id] || {})[day.ds];
+    if (!cov || !res || res.special) return res;
+    var r = Object.assign({}, res);
+    if (cov === agent.home_corner_id && !fairnessOn) delete r.corner;
+    else r.corner = cornerCodeOf(cov) || r.corner;
+    return r;
+  }
+
   function shiftFor(agent, day) {
     if (day.closure) {
       var kept = day.closure === 'weekend' && (snapPlan[day.ds] || {})[agent.id];
       if (!kept || (recalcFromToday && day.ds >= todayDs)) return { code: '', cls: 'sh-closed', special: 'closed' };
     }
-    var automatic = autoLayer(agent, day);
+    var automatic = withCorner(agent, day, autoLayer(agent, day));
 
     var ov = (planningOverrides[agent.id] || {})[day.ds];
     if (ov) {
       if (ov === 'OFF') return { code: 'OFF', special: 'off' };
       if (ov === 'A')   return { code: 'A',   special: 'leave' };
-      return { code: ov };
+      return automatic.corner ? { code: ov, corner: automatic.corner } : { code: ov };
     }
 
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
@@ -7125,8 +7126,7 @@ function renderMonthlyPlanning() {
     // Rest between two days
     var prevDs = prevDayOf(d.ds);
     agents.forEach(function(a) {
-      var prev = (prevDs in resOf[a.id]) ? resOf[a.id][prevDs]
-        : ((planSnapshot && planSnapshot.prevPlan && (planSnapshot.prevPlan[prevDs] || {})[a.id]) || null);
+      var prev = (prevDs in resOf[a.id]) ? resOf[a.id][prevDs] : shownRes(a, prevDs);
       var ph = workHoursOf(a, prevDs, prev), th = workHoursOf(a, d.ds, resOf[a.id][d.ds]);
       if (ph && th && (1440 + th.start - ph.end) < restGapMin)
         coverageAlerts.push({ ds: d.ds, who: a.first_name + (a.last_name ? ' ' + a.last_name.charAt(0) + '.' : ''), reason: 'rest_gap' });
@@ -7140,7 +7140,8 @@ function renderMonthlyPlanning() {
       var key = '';
       if (storeCorners.length > 1) {
         if (poolOf(a) !== 'sales') return;
-        key = cornerCodeOf((cornerAssign[a.id] || {})[d.ds] || a.home_corner_id) || '';
+        var shown = resOf[a.id][d.ds];
+        key = (shown && shown.corner) || cornerCodeOf(a.home_corner_id) || '';
       }
       var g = groups[key];
       if (!g) return;
