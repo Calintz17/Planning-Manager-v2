@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.0.7</title>
+  <title>CAST v9.0.10</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -1245,7 +1245,10 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
         <svg class="ic lang-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         <div class="lang-menu" id="lang-menu">
           <button class="lang-opt" onclick="pickLang('en', event)">EN</button>
-          <button class="lang-opt" onclick="pickLang('jp', event)">JP</button>
+          <button class="lang-opt" onclick="pickLang('jp', event)">日本語</button>
+          <button class="lang-opt" onclick="pickLang('ko', event)">한국어</button>
+          <button class="lang-opt" onclick="pickLang('zh-Hans', event)">简体中文</button>
+          <button class="lang-opt" onclick="pickLang('zh-Hant', event)">繁體中文</button>
         </div>
       </div>
       <button class="icon-btn" disabled title="Notifications (coming soon)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
@@ -1439,430 +1442,53 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 <div id="status-bar"><span id="status-sign">© Roman Inc.</span></div>
 
 <script>
-var I18N = {
-  jp: {
-    'Adjust whole planning': '全体のスケジュールを調整',
-    'How many days an advisor can legally work per week in your country': '各国の法定週間労働日数の上限',
-    'Contractually, how long one advisor can work per day': '契約上、1名が1日に勤務できる時間',
-    'The standard weekly contract of your team': 'チームの標準的な週間契約時間',
-    'How many advisors are needed at minimum to open a store or a corner': '店舗またはコーナーの開店に最低限必要な人数',
-    'How many advisors are needed at minimum to close a store or a corner': '店舗またはコーナーの閉店に最低限必要な人数',
-    'Share of advisors who start in the later half of your shifts': 'シフトの後半に開始するアドバイザーの割合',
-    'Rotate every advisor fairly across all corners over the month': '月間で全員を全コーナーに公平にローテーション',
-    'Let the engine move an advisor to a busier corner for a short slot during the day': '日中の短時間、混雑するコーナーへ応援を割り当てる',
-    'Intraday reinforcement': '日中応援',
-    'On - auto proposals': 'オン - 自動提案',
-    'Reinforcement proposals': '応援提案',
-    'Fairness rotation': '公平なローテーション',
-    'On - everyone rotates': 'オン - 全員ローテーション',
-    'Off - home corners': 'オフ - 担当コーナー',
-    'Off': 'オフ',
-    'Total present': '出勤合計',
-    'Download': 'ダウンロード',
-    'Send': '送信',
-    'Share...': '共有...',
-    'Email': 'メール',
-    'Preparing PDF...': 'PDFを準備中...',
-    'PDF could not be created': 'PDFを作成できませんでした',
-    'Share failed': '共有できませんでした',
-    'Opening': '開店シフト',
-    'Closing': '閉店シフト',
-    'Duration': '所要時間',
-    'Corners': 'コーナー',
-    'Add corner': 'コーナーを追加',
-    'Full name': '正式名称',
-    'Add break': '休憩を追加',
-    'January': '1月',
-    'February': '2月',
-    'March': '3月',
-    'April': '4月',
-    'May': '5月',
-    'June': '6月',
-    'July': '7月',
-    'August': '8月',
-    'September': '9月',
-    'October': '10月',
-    'November': '11月',
-    'December': '12月',
-    'Sun': '日',
-    'Mon': '月',
-    'Tue': '火',
-    'Wed': '水',
-    'Thu': '木',
-    'Fri': '金',
-    'Sat': '土',
-    'Sunday': '日曜',
-    'Monday': '月曜',
-    'Tuesday': '火曜',
-    'Wednesday': '水曜',
-    'Thursday': '木曜',
-    'Friday': '金曜',
-    'Saturday': '土曜',
-    'Monthly traffic': '月間来客数',
-    'Daily breakdown': '日別内訳',
-    'Computed from the monthly total. Edit any day to override it - the rest adjusts around it.': '月間合計から算出。任意の日を編集すると上書きされ、残りが自動調整されます。',
-    'Drag any point to reshape the day. The rest adjusts to keep the total at 100%.': 'ポイントをドラッグして曲線を調整。残りは合計100%を保つよう自動調整されます。',
-    'Sales shifts': '販売シフト',
-    'Stock shifts': '在庫シフト',
-    'Opening minimum': 'オープン最少人数',
-    'Closing minimum': 'クローズ最少人数',
-    'Late shifts target': '遅番の目標割合',
-    'Coverage thresholds': '人員基準',
-    'On the floor today': '本日の出勤',
-    'Absences this week': '今週の欠勤',
-    'Public holidays': '祝日',
-    'Forecast traffic - this week': '来客予測 - 今週',
-    'This week at a glance': '今週の概要',
-    'Save thresholds': '基準を保存',
-    'Edit agent configuration': 'スタッフ設定を編集',
-    'Coverage & headcount': '人員カバレッジ',
-    'Today': '本日',
-    'Sales': '販売',
-    'Store is open': '営業日',
-    'Store is closed': '休業日',
-    'Save': '保存',
-    'Dashboard': 'ダッシュボード',
-    'Planning': 'スケジュール',
-    'Client Advisors': 'クライアントアドバイザー',
-    'Traffic': '来客数',
-    'Calendar': 'カレンダー',
-    'Settings': '設定',
-    'Client Service': 'クライアントサービス',
-    'Retail': 'リテール',
-    'Excel': 'Excel',
-    'PDF': 'PDF',
-    'Forecast with AI': 'AIで予測',
-    'Closed': '休業',
-    'Open': '営業',
-    'Hours': '時間',
-    'Ready - select a store to begin': '準備完了 - 店舗を選択してください',
-    'No dates added yet.': '日付がまだ追加されていません',
-    'rest day': '休日',
-    'Max working days / week': '週最大勤務日数',
-    '5 days': '5日',
-    'Max hours / day': '1日最大労働時間',
-    'Max hours / week': '週最大労働時間',
-    'SATURDAY': '土曜日',
-    'SUNDAY': '日曜日',
-    'Year-on-year trend': '前年比の推移',
-    'No trend yet': '推移データなし',
-    'Enter your first months to reveal the trend': '最初の数か月を入力すると推移が表示されます',
-    'vs 6-wk avg': '6週平均比',
-    'traffic forecasted': '予測来客数',
-    'present': '出勤',
-    'Optional - set hours only if the part-time contract fixes them. Leave at 00:00 to let the tool assign the shift.': '任意 - パート契約で時間が定められている場合のみ設定してください。00:00のままにするとツールがシフトを割り当てます。',
-    'Period': '期間',
-    'Region': '地域',
-    'Country': '国',
-    'Store': '店舗',
-    'First name': '名',
-    'Last name': '姓',
-    'Status': '役職',
-    'From': '開始日',
-    'Note': 'メモ',
-    'Home corner': '担当コーナー',
-    'Skills': '対応可能コーナー',
-    'Days I prefer to be off (optional)': '希望休日（任意）',
-    'Working days': '勤務日',
-    'Start': '開始時間',
-    'End': '終了時間',
-    'Work percentage': '勤務割合',
-    'Letter': '記号',
-    'Starts': '開始時刻',
-    'Ends': '終了',
-    'Colour': '色',
-    'Monthly': '月間',
-    'Intraday': '日中',
-    'Bank Holidays': '祝日',
-    'Absence': '不在',
-    'Cancel': 'キャンセル',
-    'Create agent': 'スタッフを作成',
-    'Reset': 'リセット',
-    'Reset daily edits': '日次編集をリセット',
-    'Reset curve': 'カーブをリセット',
-    'Auto': '自動',
-    'Add': '追加',
-    'Reset manual changes': '手動変更をリセット',
-    'Fixed': '固定',
-    'Flexible': 'フレキシブル',
-    'Delete': '削除',
-    'Add shift': 'シフトを追加',
-    'Monthly planning': '月間スケジュール',
-    'Intraday planning': '日別シフト',
-    'Shift structure': 'シフト構成',
-    'Labor rules': '労働規則',
-    'Operating hours': '営業時間',
-    'Break structure': '休憩構成',
-    'Hourly traffic curve': '時間別来客カーブ',
-    'Select a store to view the dashboard.': 'ダッシュボードを表示するには店舗を選択してください',
-    'Select a store to view the monthly planning.': '月間スケジュールを表示するには店舗を選択してください',
-    'Select a store to view the intraday planning.': '日中スケジュールを表示するには店舗を選択してください',
-    'Select a store to view agents.': 'スタッフを表示するには店舗を選択してください',
-    'Select a store to manage traffic.': '来客数を管理するには店舗を選択してください',
-    'Select a store to view the calendar.': 'カレンダーを表示するには店舗を選択してください',
-    'Select a store to view settings.': '設定を表示するには店舗を選択してください',
-    'Select a store to configure its shifts.': 'シフトを設定するには店舗を選択してください',
-    'No open day this month.': '今月の営業日はありません',
-    'No manager or ASM available - morning brief not assigned.': 'マネージャーまたは副店長が不在 - 朝礼が割り当てられていません',
-    'No client advisors for this store. Add them in the Client Advisors tab.': 'この店舗にクライアントアドバイザーがいません。クライアントアドバイザータブで追加してください。',
-    'No client advisors yet. Click Add CA above.': 'クライアントアドバイザーがいません。上の「CA追加」をクリックしてください。',
-    'No client advisors.': 'クライアントアドバイザーがいません',
-    'Select region': '地域を選択',
-    'All countries': 'すべての国',
-    'All stores': 'すべての店舗',
-    'No store yet': '店舗なし',
-    '50% - half time': '50% - ハーフタイム',
-    'Search client advisors…': 'クライアントアドバイザーを検索…',
-    'Add a highlight or reminder...': 'ハイライトやリマインダーを追加...',
-    'Notifications (coming soon)': '通知（近日公開）',
-    'Account (coming soon)': 'アカウント（近日公開）',
-    'Back to current month': '今月に戻る',
-    'Export to Excel': 'Excelにエクスポート',
-    'Export to PDF': 'PDFにエクスポート',
-    'Remove': '削除',
-    'Edit client advisor': 'クライアントアドバイザーを編集',
-    'Client Advisor': 'クライアントアドバイザー',
-    'New shift': '新しいシフト',
-    'Declare absence': '欠勤を登録',
-    'Store opening': '店舗オープン',
-    'Corner': 'コーナー',
-    'Preferences': '希望条件',
-    'Part-time configuration': 'パートタイム設定',
-    'Failed to load regions': '地域の読み込みに失敗しました',
-    'Could not load countries': '国を読み込めませんでした',
-    'Could not load stores': '店舗を読み込めませんでした',
-    'Error loading regulations': '規則の読み込みエラー',
-    'Select a store first': '先に店舗を選択してください',
-    'Each day: closing hour must be after opening hour': '各日：閉店時間は開店時間より後にしてください',
-    'Save failed:': '保存に失敗しました：',
-    'Settings saved': '設定を保存しました',
-    'Enter a shift letter': 'シフト記号を入力してください',
-    'Use one or two characters': '1〜2文字で入力してください',
-    'Code': 'コード',
-    'End must be after start': '終了は開始より後にしてください',
-    'Shift lasts': 'シフト時間',
-    'Shift': 'シフト',
-    'At least one shift is required': '少なくとも1つのシフトが必要です',
-    'Shifts saved': 'シフトを保存しました',
-    'Error loading agents': 'スタッフの読み込みエラー',
-    'Error loading availability': '勤務可否の読み込みエラー',
-    'Store settings not saved': '店舗設定が保存されませんでした',
-    'Traffic save failed': '来客数の保存に失敗しました',
-    'Curve reset - remember to Save': 'カーブをリセットしました - 保存を忘れずに',
-    'Failed to save curve:': 'カーブの保存に失敗しました：',
-    'Curve saved': 'カーブを保存しました',
-    'Not saved:': '保存されませんでした：',
-    'Mission added': '業務を追加しました',
-    'Not removed:': '削除されませんでした：',
-    'Mission removed': '業務を削除しました',
-    'Moved': '移動しました',
-    'Save failed': '保存に失敗しました',
-    'Traffic saved': '来客数を保存しました',
-    'Daily traffic saved': '日次来客数を保存しました',
-    'Reset failed': 'リセットに失敗しました',
-    'Daily edits cleared': '日次編集をクリアしました',
-    'Not enough history to forecast': '予測に十分な履歴がありません',
-    'Forecast could not be saved': '予測を保存できませんでした',
-    'Forecast generated': '予測を生成しました',
-    'Failed to reset cell': 'セルのリセットに失敗しました',
-    'Back to automatic': '自動に戻す',
-    'Failed to save:': '保存に失敗しました：',
-    'Updated': '更新しました',
-    'Failed to save corner': 'コーナーの保存に失敗しました',
-    'Failed to reset corner': 'コーナーのリセットに失敗しました',
-    'Corner updated': 'コーナーを更新しました',
-    'Manual changes cleared': '手動変更をクリアしました',
-    'Enter a highlight text': 'ハイライトテキストを入力してください',
-    'Highlight not saved:': 'ハイライトが保存されませんでした：',
-    'Highlight added': 'ハイライトを追加しました',
-    'First and last name are required': '姓名は必須です',
-    'Select at least one fixed working day': '少なくとも1つの固定勤務日を選択してください',
-    'Enter valid start and end times': '有効な開始・終了時間を入力してください',
-    'Fixed end must be after start': '固定終了は開始より後にしてください',
-    'Preferences not saved:': '希望条件が保存されませんでした：',
-    'Agent updated': 'スタッフを更新しました',
-    'Failed to delete': '削除に失敗しました',
-    'Agent deleted': 'スタッフを削除しました',
-    'Enter first and last name': '姓名を入力してください',
-    'Failed to add agent': 'スタッフの追加に失敗しました',
-    'Nothing to export': 'エクスポートするものがありません',
-    'Popup blocked - allow popups to export PDF': 'ポップアップがブロックされました - PDFエクスポートにはポップアップを許可してください',
-    'Excel library not loaded': 'Excelライブラリが読み込まれていません',
-    'Export complete': 'エクスポート完了',
-    'Could not load public holidays': '祝日を読み込めませんでした',
-    'Pick both dates': '両方の日付を選択してください',
-    'End date is before start date': '終了日が開始日より前です',
-    'Absence saved': '欠勤を保存しました',
-    'Failed to remove:': '削除に失敗しました：',
-    'Absence removed': '欠勤を削除しました',
-    'Failed:': '失敗しました：',
-    'Closing must be after opening': '閉店は開店より後にしてください',
-    'Hours saved': '営業時間を保存しました',
-    'Hours reset': '営業時間をリセットしました',
-    'Loading': '読み込み中',
-    'Slate': 'スレート',
-    'Morning brief': '朝礼',
-    'Welcome': 'お出迎え',
-    'Store Manager': 'ストアマネージャー',
-    'Deputy Store Director': '副店長',
-    'Team Manager': 'チームマネージャー',
-    'Manager': 'マネージャー',
-    'Stock Controller': '在庫管理担当',
-    'Stock Manager': '在庫マネージャー',
-    'Senior Client Advisor': 'シニアクライアントアドバイザー',
-    'Grand Vendeur': 'グランヴァンドゥール',
-    'Part Time': 'パートタイム',
-    'Management': 'マネジメント',
-    'Unassigned': '未割当',
-    'Stock': '在庫',
-    'Leave': '休暇',
-    'Sick': '病欠',
-    'CAST': 'CAST',
-    '© Roman Inc.': '© Roman Inc.',
-    'OFF': '休み',
-    'Local': 'ローカル',
-    'National': '全国',
-    'Training': 'トレーニング',
-    'Tasks cannot overlap': 'タスクを重ねることはできません',
-    'Saved \u2713': '保存しました \u2713',
-    'Close': '閉じる',
-    'Recalculate from today': '今日から再計算',
-    'Recalculate the planning from today? Past days and your manual changes are kept.': '今日以降のシフト表を再計算しますか？過去の日と手動の変更は保持されます。',
-    'Planning recalculated \u2713': 'シフト表を再計算しました \u2713',
-    'Select a date': '日付を選択',
-    'Planning recalculated, but it could not be saved': 'シフト表を再計算しましたが、保存できませんでした',
-    'minimum rest between shifts could not be kept': 'シフト間の最低休息時間を守れませんでした',
-    'opening below minimum': '開店の人数が最低人数未満',
-    'closing below minimum': '閉店の人数が最低人数未満',
-    'Shift codes: 1 to 3 letters or digits': 'シフトコード：1〜3文字の英数字',
-    'Select your store': '店舗を選択',
-    'To navigate your workspace, please choose a region, a country and a store.': 'ワークスペースを利用するには、地域・国・店舗を選択してください。',
-    '+ Add CA': '+ CAを追加',
-    'Loading…': '読み込み中…',
-    '+ New shift': '+ シフトを追加',
-    'Duration (min)': '長さ（分）',
-    'Window start': '開始可能時刻',
-    'Window end': '終了期限',
-    'Day': '曜日',
-    'Name': '名前',
-    'Color': '色',
-    'To': '終了日',
-    'Text': '内容',
-    'Event': 'イベント',
-    '- Select region -': '- 地域を選択 -',
-    '- All countries -': '- すべての国 -',
-    '- All stores -': '- すべての店舗 -',
-    'Choose how Sundays are planned.': '日曜日のシフトの組み方を選びます。',
-    'Turn it OFF only if your Sunday opening hours are longer than one normal working day.': '日曜日の営業時間が通常の1日の勤務時間より長い場合のみ、オフにしてください。',
-    'ON: on Sundays, everyone present works the same single shift, called D. Best for stores with short Sunday hours.': 'オン：日曜日は、出勤者全員が「D」という同じ1つのシフトで働きます。日曜日の営業時間が短い店舗向けです。',
-    'OFF: Sundays are planned like the other days, with opening (O) and closing (C) shifts. Best for department stores open long hours on Sunday.': 'オフ：日曜日も他の日と同じように、オープン（O）とクローズ（C）のシフトで組みます。日曜日の営業時間が長い百貨店向けです。',
-    'Open public holidays always use the single shift D.': '営業する祝日は、常にシングルシフト「D」になります。',
-    'Choose if your advisors stay in their own corner, or rotate between all corners.': 'アドバイザーが自分のコーナーに留まるか、全コーナーをローテーションするかを選びます。',
-    'Use ON if you want every advisor to know every corner. Use OFF to keep stable teams.': 'すべてのアドバイザーに全コーナーを経験させたい場合はオン、チームを固定したい場合はオフにしてください。',
-    'OFF (recommended to start): each advisor works in their home corner. CAST moves someone to another corner only when a corner does not have enough people.': 'オフ（最初はこちらを推奨）：各アドバイザーは担当コーナー（home corner）で働きます。人数が足りないコーナーがある場合のみ、CASTが誰かを別のコーナーに移します。',
-    'ON: each advisor rotates across all corners during the month, so everyone spends about the same number of days in each corner.': 'オン：各アドバイザーが月の間に全コーナーをローテーションし、全員が各コーナーでほぼ同じ日数を過ごします。',
-    'The number of people in each corner always follows the traffic of that corner.': '各コーナーの人数は、常にそのコーナーの来客数に合わせて決まります。',
-    'An advisor working outside their home corner shows the corner code in front of their shift.': '担当コーナー以外で働くアドバイザーは、シフトの前にコーナーコードが表示されます。',
-    'Let CAST suggest short help between corners during the busiest hour of the day.': '1日で最も忙しい時間帯に、コーナー間の短時間の応援をCASTが提案します。',
-    'This needs the hourly traffic curve (Traffic page) to work.': 'この機能には、時間別の来客カーブ（Trafficページ）が必要です。',
-    'ON: at the busiest hour, CAST finds the corner with the most clients per advisor, and suggests moving one advisor there from a quieter corner, for a short time.': 'オン：最も忙しい時間帯に、アドバイザー1人あたりの来客数が最も多いコーナーを見つけ、空いているコーナーから1人を短時間移すよう提案します。',
-    'The suggestion appears as a colored label on the advisor\'s line in the intraday planning. You can move it, or delete it with ✕.': '提案は日中スケジュールのアドバイザーの行に色付きラベルで表示されます。移動したり、✕で削除したりできます。',
-    'A corner never goes below its minimum staff to help another one.': '応援のために、コーナーが最低人数を下回ることはありません。',
-    'OFF: no suggestions. Everyone stays in their corner all day.': 'オフ：提案はありません。全員が1日中自分のコーナーに留まります。',
-    'Choose what happens to the rest of the planning when you change one square.': '1つのマスを変更したとき、シフト表の残りをどうするかを選びます。',
-    'Use ON for a big change (a long absence, a new advisor). Use OFF for small adjustments.': '大きな変更（長期の不在、新しいアドバイザー）にはオン、小さな調整にはオフを使ってください。',
-    'OFF (default): only the square you change is modified. The rest of the planning stays exactly the same, even if openings and closings become unbalanced.': 'オフ（初期設定）：変更したマスだけが変わります。オープンとクローズのバランスが崩れても、シフト表の残りはそのままです。',
-    'ON: after each change, CAST recalculates the planning from today, to keep the right number of openings, closings and the minimum staff. Other advisors may be moved.': 'オン：変更のたびに、CASTが今日以降のシフト表を再計算し、オープン・クローズの人数と最低人数を保ちます。他のアドバイザーが移動することがあります。',
-    'It stays ON until you turn it off.': 'オフにするまで、オンのままです。',
-    'Your manual changes are always kept, in both modes. Past days are never changed.': 'どちらのモードでも、手動の変更は常に保持されます。過去の日は変更されません。',
-    'Your team planning for the whole month, built automatically by CAST from your Settings, your team and your traffic. The goal: the right people at the right time, fair days off, and all rules respected.': 'CASTが設定・チーム・来客数から自動で作成する、1か月分のシフト表です。目的は、適切な時間に適切な人を配置し、休日を公平にし、すべてのルールを守ることです。',
-    'Your manual changes are always kept. "Reset manual changes" removes all of them for this month.': '手動の変更は常に保持されます。「手動変更をリセット」を押すと、この月の手動変更がすべて削除されます。',
-    'Each line is one person, each column is one day. Each colored square is a shift.': '各行が1人、各列が1日です。色付きのマスがシフトです。',
-    'No SM/ASM': '店長・副店長なし',
-    'Click a square to change it: another shift, a day off (OFF) or an absence (A).': 'マスをクリックすると変更できます：別のシフト、休み（OFF）、不在（A）。',
-    'To change many squares at once: hold Ctrl (Cmd on Mac) and click several squares, then click one more square normally and choose the change.': '複数のマスを一度に変更するには：Ctrl（MacはCmd）を押しながら複数のマスをクリックし、最後に1つのマスを普通にクリックして変更を選びます。',
-    'The 3 lines at the top (Local, National, Training) are for events: click a day to add one.': '上の3行（Local・National・Training）はイベント用です：日をクリックして追加します。',
-    'Corner buttons (All, then each corner): show the planning of one corner only.': 'コーナーボタン（All、各コーナー）：1つのコーナーのシフトだけを表示します。',
-    'Arrows at the top right: change month. Excel and PDF: export the planning. The planning is saved and never changes by itself: after changing your settings, click "Recalculate from today" (past days are never changed).': '右上の矢印：月を変更します。ExcelとPDF：シフト表を書き出します。シフト表は保存され、勝手に変わることはありません。設定を変更したら「今日から再計算」をクリックしてください（過去の日は変更されません）。',
-    'The second table shows how many people are present each day, for openings and closings.': '下の表は、毎日の出勤人数とオープン・クローズの人数を示します。',
-    'The detail of one day, hour by hour: who works when, breaks and missions. CAST places breaks inside the configured windows when possible and tries to keep corners and busy hours covered.': '1日の詳細を時間ごとに表示します：誰がいつ働くか、休憩、ミッション。CASTはできるだけ設定された時間帯の中で休憩を配置し、コーナーや忙しい時間帯の人員をできるだけ確保します。',
-    'Breaks avoid the busiest hours when possible.': '休憩は、できるだけ忙しい時間帯を避けて配置されます。',
-    'Choose the day with the arrows or the date at the top right.': '右上の矢印か日付で日を選びます。',
-    'Each line is one person. The colored bar shows their working hours.': '各行が1人です。色付きのバーが勤務時間を示します。',
-    'Breaks (lunch and short breaks) are placed automatically within the windows set in Settings when possible. To maintain opening and closing coverage, an automatic break may move outside its window. Drag a break to move it.': '休憩（昼休憩・小休憩）は、できるだけ設定で決めた時間帯の中に自動で配置されます。開店時と閉店時の人員を確保するため、自動配置の休憩が設定時間帯の外に移動することがあります。休憩をドラッグして移動できます。',
-    'Click on a bar to add a mission, like the morning brief (MB) or Welcome.': 'バーをクリックすると、朝礼（MB）やWelcomeなどのミッションを追加できます。',
-    'Set lunch and break windows in Settings.': '昼休憩とその他の休憩時間帯は設定で調整してください。',
-    'Excel and PDF: export the day.': 'ExcelとPDF：その日のスケジュールを書き出します。',
-    'Sunday single shift': '日曜日のシングルシフト',
-    'How it works': '仕組み',
-    'How to use it': '使い方',
-    'The legal and HR rules of your store: working time limits and minimum staffing. CAST follows them when it builds the planning.': '店舗の法令・人事ルール（労働時間の上限と最低配置人数）です。CASTはシフト表を作るとき、このルールに従います。',
-    'These are the legal and HR rules of your store: working time limits and minimum staffing. CAST follows them when it builds the planning. A staffing or rest issue can mark the date in the AGENT header in orange, with details on hover. Your manual changes are always kept.': '店舗の法令・人事ルール（労働時間の上限と最低配置人数）です。CASTはシフト表を作るとき、このルールに従います。配置人数や休息時間に問題がある日は、AGENT見出しの日付がオレンジ色になり、カーソルを合わせると詳細が表示されます。手動の変更は常に保持されます。',
-    'Changes are saved automatically. Ask HR if you are not sure about a legal number.': '変更は自動で保存されます。法定の数値がわからない場合は人事部に確認してください。',
-    'Max working days / week: how many days one person can work in a week.': '週の最大勤務日数：1人が1週間に働ける日数です。',
-    'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract. The lunch break is not counted.': '1日の最大時間・週の最大時間：契約で認められる1日と1週間の最長勤務時間です。昼休憩は含みません。',
-    'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.': 'シフト間の最低休息時間：1日の勤務終了から翌日の勤務開始までに必要な休息時間です。',
-    'Opening minimum and Closing minimum: how many people must be there, at least, during the first hour and the last hour of the day (store or each corner).': 'オープン最低人数・クローズ最低人数：1日の最初の1時間と最後の1時間に、最低限必要な人数です（店舗または各コーナー）。',
-    'Late shifts target: the share of your advisors who start in the later half of your shifts. Example: 70% means about 7 out of 10 start late. CAST then picks the exact shifts that best follow your hourly traffic.': '遅番の目標割合：シフトの後半に開始するアドバイザーの割合です。例：70%なら、10人中約7人が遅番です。そのうえでCASTが、時間帯ごとの来客数に最も合うシフトを選びます。',
-    'Switches at the bottom: turn a rule on or off. Click ? next to a switch to understand it.': '下のスイッチ：ルールをオン・オフします。スイッチ横の「?」をクリックすると説明が表示されます。',
-    'The days and hours your store is open to clients.': '店舗がお客様に開いている曜日と時間です。',
-    'Tell CAST when your store is open. Nobody will be planned when the store is closed.': '店舗の営業時間をCASTに設定します。閉店中は誰もシフトに入りません。',
-    'Changes are saved automatically. For one special day (holiday, event), use the Calendar page instead.': '変更は自動で保存されます。特別な1日（祝日・イベント）は、カレンダーページで設定してください。',
-    'For each day, use the switch to set the store Open or Closed.': '曜日ごとに、スイッチで営業（Open）か休業（Closed）かを選びます。',
-    'Choose the opening hour (Starts) and the closing hour (Ends).': '開店時間（Starts）と閉店時間（Ends）を選びます。',
-    'The closing hour must be after the opening hour.': '閉店時間は開店時間より後にしてください。',
-    'The breaks your team takes each day (lunch, short breaks) and when they can take them.': 'チームが毎日取る休憩（昼休憩・小休憩）と、取れる時間帯です。',
-    'List the breaks your team takes every day. CAST places them automatically, inside the configured windows when possible, and tries to maintain coverage.': 'チームが毎日取る休憩を登録します。CASTはできるだけ設定された時間帯の中で休憩を自動配置し、できるだけ必要な人員を確保します。',
-    'Changes are saved automatically. A wide window lets CAST spread the breaks better.': '変更は自動で保存されます。時間帯を広くすると、CASTが休憩をうまく分散できます。',
-    'Click "+ Add break" to create a break.': '「+ 休憩を追加」をクリックして休憩を作成します。',
-    'Give it a name (example: Lunch) and a duration in minutes.': '名前（例：Lunch）と長さ（分）を入力します。',
-    'Window start and Window end: the period of the day when this break can be taken. Example: lunch between 12:00 and 15:00.': 'Window start・Window end：その休憩を取れる時間帯です。例：昼休憩は12:00から15:00の間。',
-    'The window must be longer than the break.': '時間帯は休憩の長さより長くしてください。',
-    'Click the colored square to choose the color of the break in the daily planning.': '色の四角をクリックすると、日別シフト表での休憩の色を選べます。',
-    'Click ✕ to delete a break.': '✕をクリックすると休憩を削除します。',
-    'Only for department stores or stores with several areas: list the areas of your store here.': '百貨店や複数のエリアがある店舗のみ：店舗内のエリアをここに登録します。',
-    'A corner is a physical area of your store where clients are served. Example: Leather goods, Ready-to-wear, Shoes. Use this only if your store has several areas (department store, big store).': 'コーナーとは、お客様を接客する店舗内の物理的なエリアです。例：レザーグッズ、プレタポルテ、シューズ。複数のエリアがある店舗（百貨店・大型店）の場合のみ使用してください。',
-    'Changes are saved automatically. If your store has only one area, leave this empty.': '変更は自動で保存されます。エリアが1つだけの店舗は、ここを空のままにしてください。',
-    'Click "+ Add corner" to create an area.': '「+ コーナーを追加」をクリックしてエリアを作成します。',
-    'Code: a short name shown in the planning (example: LG).': 'Code：シフト表に表示される短い名前です（例：LG）。',
-    'Full name: the complete name (example: Leather goods).': 'Full name：正式な名前です（例：Leather goods）。',
-    'Then, on the Client Advisors page, choose the home corner of each person.': '次に、クライアントアドバイザーページで各スタッフの担当コーナー（home corner）を選びます。',
-    'Click ✕ to delete a corner.': '✕をクリックするとコーナーを削除します。',
-    'The working hours (shifts) your team can work. The planning is built with these shifts.': 'チームが働ける勤務時間（シフト）です。シフト表はこのシフトで作成されます。',
-    'A shift is a working time slot, for example 10:00 to 19:00. CAST builds your planning only with the shifts you create here.': 'シフトとは勤務の時間枠です（例：10:00から19:00）。CASTはここで作成したシフトだけを使ってシフト表を作ります。',
-    'Changes are saved automatically. A green "Saved" message confirms each change.': '変更は自動で保存されます。変更のたびに緑色の「Saved」メッセージが表示されます。',
-    'Sales shifts are for the people who serve clients. Stock shifts are for the stock team.': 'Sales shiftsは接客スタッフ用、Stock shiftsはストックチーム用です。',
-    'Click "+ New shift" and give it a short code (example: O for opening, C for closing).': '「+ New shift」をクリックし、短いコードを付けます（例：オープンはO、クローズはC）。',
-    'Choose the start hour and the end hour, then a color.': '開始時間と終了時間、色を選びます。',
-    'A shift cannot be longer than "Max hours / day" in Labor rules. A red label warns you if it is too long.': 'シフトは労働規則の「1日の最大時間」を超えられません。長すぎる場合は赤いラベルで警告されます。',
-    'You can change the hours of a shift directly in the table, or click ✕ to delete it.': '表の中で直接シフトの時間を変更したり、✕で削除したりできます。',
-    'What is it?': 'これは何？',
-    'How to set it up': '設定方法',
-    'Important': '重要',
-    'Help': 'ヘルプ',
-    'Click anywhere to continue. You can read this again with the ? button.': 'どこかをクリックして続けます。この説明は「?」ボタンでいつでも読み直せます。',
-    'Minimum rest between shifts': 'シフト間の最低休息時間',
-    'How many hours an advisor must rest between the end of one shift and the start of the next': '1つのシフト終了から次のシフト開始までに必要な休息時間',
-    'Clienteling': 'クライアンテリング',
-    'Choose a mission': 'ミッションを選択してください',
-    'The mission must fit inside the shift': 'ミッションはシフト時間内に収めてください',
-    'is already planned for this person: drag it to move it': 'はこのスタッフに既に設定されています。移動するにはドラッグしてください',
-    'Reinforcement': '応援',
-  }
+// Translations live in the repo, in the i18n folder (EN stays in the code)
+var LANGS = {
+  'en':      { label: 'EN',   loc: 'en-GB', html: 'en' },
+  'jp':      { label: 'JP',   loc: 'ja-JP', html: 'ja',      file: 'i18n/ja.json' },
+  'ko':      { label: 'KR',   loc: 'ko-KR', html: 'ko',      file: 'i18n/ko.json' },
+  'zh-Hans': { label: '简体', loc: 'zh-CN', html: 'zh-Hans', file: 'i18n/zh-Hans.json' },
+  'zh-Hant': { label: '繁體', loc: 'zh-TW', html: 'zh-Hant', file: 'i18n/zh-Hant.json' }
 };
+var I18N = {};
 
 // Translation engine
 var CURRENT_LANG = 'en';
 try { CURRENT_LANG = localStorage.getItem('cora_lang') || 'en'; } catch(e) {}
+if (!LANGS[CURRENT_LANG]) CURRENT_LANG = 'en';
 
-function dLoc() { return CURRENT_LANG === 'jp' ? 'ja-JP' : 'en-GB'; }
-function docLang() { return CURRENT_LANG === 'jp' ? 'ja' : (CURRENT_LANG || 'en'); }
+function dLoc() { return (LANGS[CURRENT_LANG] || LANGS.en).loc; }
+function docLang() { return (LANGS[CURRENT_LANG] || LANGS.en).html; }
+
+// Load one language file once; if it fails, CAST stays in English
+function loadLang(lang) {
+  var L = LANGS[lang];
+  if (!L || !L.file || I18N[lang]) return Promise.resolve(!!(L && (!L.file || I18N[lang])));
+  return fetch(L.file, { cache: 'no-cache' })
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d) { I18N[lang] = d; I18N_REV = null; return true; })
+    .catch(function() { return false; });
+}
+function switchLang(lang) {
+  return loadLang(lang).then(function(ok) { applyLang(ok ? lang : 'en'); });
+}
 
 function t(en) {
   if (CURRENT_LANG === 'en' || !en) return en;
   var d = I18N[CURRENT_LANG];
   if (!d) return en;
-  return d[String(en).trim()] || en;
+  var k = String(en).trim();
+  if (d[k]) return d[k];
+  // "Save failed: details" -> translate the part before the colon
+  var i = k.indexOf(': ');
+  var pre = i > 0 ? d[k.slice(0, i + 1)] : null;
+  if (pre) return pre + (pre.slice(-1) === '\uff1a' ? '' : ' ') + k.slice(i + 2);
+  return en;
+}
+
+// Translate a sentence with holes, then fill them: tf('Week {week}', { week: 42 })
+function tf(en, vals) {
+  return t(en).replace(/\{(\w+)\}/g, function(m, k) { return (vals && vals[k] != null) ? vals[k] : m; });
 }
 
 function applyLang(lang) {
@@ -1904,7 +1530,7 @@ function applyLang(lang) {
   });
 
   var cur = document.getElementById('lang-current');
-  if (cur) cur.textContent = lang.toUpperCase();
+  if (cur) cur.textContent = (LANGS[lang] || LANGS.en).label;
 }
 
 function toggleLangMenu(e) {
@@ -1923,7 +1549,7 @@ function pickLang(lang, e) {
   e.stopPropagation();
   var m = document.getElementById('lang-menu');
   if (m) m.classList.remove('open');
-  applyLang(lang);
+  switchLang(lang);
 }
 
 function installRetranslateHooks() {
@@ -2261,7 +1887,7 @@ async function init() {
   enhanceDateInputs();
   new MutationObserver(enhanceDateInputs).observe(document.body, { childList: true, subtree: true });
   installRetranslateHooks();
-  applyLang(CURRENT_LANG);
+  switchLang(CURRENT_LANG);
   updateWeekLabel();
   updateMonthlyLabel();
   showLoader();
@@ -3219,15 +2845,15 @@ function confirmShiftCreation() {
 
   if (!code) { showToast('Enter a shift letter', 'error'); return; }
   if (!/^[A-Z0-9]{1,3}$/.test(code)) { showToast('Shift codes: 1 to 3 letters or digits', 'error'); return; }
-  if (['OFF', 'A', 'PT', 'P'].indexOf(code) !== -1) { showToast('Code ' + code + ' is reserved', 'error'); return; }
+  if (['OFF', 'A', 'PT', 'P'].indexOf(code) !== -1) { showToast(tf('Code {code} is reserved', { code: code }), 'error'); return; }
   var exists = false;
   ['sales','stock'].forEach(function(g) {
     (RETAIL_SHIFTS[g] || []).forEach(function(s) { if (s.code === code) exists = true; });
   });
-  if (exists) { showToast('Code ' + code + ' already exists', 'error'); return; }
+  if (exists) { showToast(tf('Code {code} already exists', { code: code }), 'error'); return; }
   if (end <= start) { showToast('End must be after start', 'error'); return; }
   if ((end - start) / 60 > maxDaily) {
-    showToast('Shift lasts ' + durLabel(end - start) + ', over the ' + maxDaily + 'h limit', 'error');
+    showToast(tf('Shift lasts {duration}, over the {limit}h limit', { duration: durLabel(end - start), limit: maxDaily }), 'error');
     return;
   }
 
@@ -3279,10 +2905,10 @@ async function saveShiftConfigNow() {
     if (!code) { problem = 'Every shift needs a code'; return; }
     if (seen[code]) { problem = 'Duplicate code: ' + code; return; }
     seen[code] = true;
-    if (end <= start) { problem = code + ': end must be after start'; return; }
+    if (end <= start) { problem = tf('{code}: end must be after start', { code: code }); return; }
     if ((end - start) / 60 > maxDaily) {
-      problem = code + ' lasts ' + durLabel(end - start) +
-                ', over the ' + maxDaily + 'h legal limit';
+      problem = tf('{code} lasts {duration}, over the {limit}h legal limit',
+                { code: code, duration: durLabel(end - start), limit: maxDaily });
       return;
     }
     counters[grid]++;
@@ -4049,7 +3675,7 @@ function openEventEditor(id, cat, ds) {
   if (id && !ev) return;
   var c = ev ? ev.category : cat;
   eventEditorState = { id: ev ? ev.id : null, cat: c, storeId: currentStoreId };
-  document.getElementById('evt-modal-title').textContent = c.charAt(0).toUpperCase() + c.slice(1) + ' event';
+  document.getElementById('evt-modal-title').textContent = tf('{category} event', { category: t(c.charAt(0).toUpperCase() + c.slice(1)) });
   document.getElementById('evt-start').value = ev ? ev.start_date : ds;
   document.getElementById('evt-end').value   = ev ? ev.end_date   : ds;
   document.getElementById('evt-label-input').value = ev ? (ev.label || '') : '';
@@ -4678,7 +4304,7 @@ function renderIntraday(ds) {
   var closure = getDayClosureType(ds);
   if (closure) {
     var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
-    body.innerHTML = '<p class="plan-empty">' + formatDateDisplay(ds) + ' - store closed (' + why + ').</p>';
+    body.innerHTML = '<p class="plan-empty">' + tf('{date} - store closed ({reason}).', { date: formatDateDisplay(ds), reason: t(why) }) + '</p>';
     return;
   }
 
@@ -4690,8 +4316,8 @@ function renderIntraday(ds) {
   if (!monthlyResult[ds]) renderMonthlyPlanning();
   var dayPlan = monthlyResult[ds];
   if (!dayPlan) {
-    body.innerHTML = '<p class="plan-empty">Open ' +
-      formatDateDisplay(ds) + ' in the Monthly view first to compute its planning.</p>';
+    body.innerHTML = '<p class="plan-empty">' +
+      tf('Open {date} in the Monthly view first to compute its planning.', { date: formatDateDisplay(ds) }) + '</p>';
     return;
   }
 
@@ -4701,7 +4327,7 @@ function renderIntraday(ds) {
     return mr && !mr.special;
   });
   if (!working.length) {
-    body.innerHTML = '<p class="plan-empty">No client advisors scheduled on ' + formatDateDisplay(ds) + '.</p>';
+    body.innerHTML = '<p class="plan-empty">' + tf('No client advisors scheduled on {date}.', { date: formatDateDisplay(ds) }) + '</p>';
     return;
   }
 
@@ -5351,7 +4977,7 @@ function renderIntraday(ds) {
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
 
-  setPlanMeta('intraday-meta', formatDateDisplay(ds) + ' - ' + working.length + ' present');
+  setPlanMeta('intraday-meta', tf('{date} - {count} present', { date: formatDateDisplay(ds), count: working.length }));
   intradayExport = { ds: ds, storeId: currentStoreId, openH: T0, closeH: T1, rows: intradayExportRows };
 
   initIntradayDrag(body, T0, span, ds);
@@ -5488,7 +5114,7 @@ async function addMissionFromMenu() {
   var row = intradayExport && intradayExport.rows.find(function(r) { return r.agentId === st.agentId; });
   if (def.brk && ((addedMissions[st.agentId] || []).some(function(m) { return m.type === st.type; }) ||
       (row && row.blocks.some(function(b) { return b.label === def.label && (b.type === 'lun' || /^brk/.test(b.type)); })))) {
-    showToast(t(def.label) + ' ' + t('is already planned for this person: drag it to move it'), 'error'); return;
+    showToast(tf('{mission} is already planned for this person: drag it to move it', { mission: t(def.label) }), 'error'); return;
   }
   var sh = startMin / 60, durH = durMin / 60;
   if (row && row.blocks.some(function(b) { return sh < b.start + b.dur - 1e-6 && sh + durH > b.start + 1e-6; })) {
@@ -5599,7 +5225,7 @@ async function resetDailyOverrides() {
   var mIdx = currentWeekMonday.getMonth() + 1;
   var first = toDateStr(new Date(year, mIdx - 1, 1));
   var last  = toDateStr(new Date(year, mIdx, 0));
-  if (!confirm('Reset daily edits for ' + MONTH_NAMES[mIdx - 1] + '?')) return;
+  if (!confirm(tf('Reset daily edits for {month}?', { month: t(MONTH_NAMES[mIdx - 1]) }))) return;
 
   showLoader();
   var res = await sb.from('retail_traffic_daily')
@@ -5839,8 +5465,8 @@ async function applyCellOverride(value) {
     }
     succeeded++;
   }
-  if (failed) showToast(succeeded + ' saved, ' + failed + ' failed: ' + lastErr, 'error');
-  else showToast(succeeded > 1 ? (succeeded + ' cells updated \u2713') : 'Updated \u2713');
+  if (failed) showToast(tf('{saved} saved, {failed} failed: {error}', { saved: succeeded, failed: failed, error: lastErr }), 'error');
+  else showToast(succeeded > 1 ? tf('{count} cells updated \u2713', { count: succeeded }) : 'Updated \u2713');
   clearMultiSelect();
   renderWithAdjustMode();
   if (currentStoreId) renderDashboard();
@@ -5875,7 +5501,7 @@ async function clearMonthOverrides() {
   var label = new Date(year, mIdx, 1).toLocaleDateString(dLoc(),
                 { month: 'long', year: 'numeric' });
 
-  if (!confirm('Reset all manual changes for ' + label + '?')) return;
+  if (!confirm(tf('Reset all manual changes for {period}?', { period: label }))) return;
 
   showLoader();
   var ids = agents.map(function(a) { return a.id; });
@@ -6060,9 +5686,9 @@ function renderDashboard() {
   body.innerHTML =
     '<div class="dash-head">' +
       '<div>' +
-        '<div class="dash-eyebrow">Week ' + wn + ' - ' + formatDate(days[0]) + ' - ' + formatDate(days[6]) + '</div>' +
+        '<div class="dash-eyebrow">' + tf('Week {week}', { week: wn }) + ' - ' + formatDate(days[0]) + ' - ' + formatDate(days[6]) + '</div>' +
         '<div class="dash-title">This week at a glance</div>' +
-        '<div class="dash-sub">' + (todayInWeek ? 'Today - ' + DOW_FULL[new Date(todayStr+'T12:00:00').getDay()] + ' ' + formatDate(new Date(todayStr+'T12:00:00')) : 'Monday to Sunday overview') + '</div>' +
+        '<div class="dash-sub">' + (todayInWeek ? tf('Today - {date}', { date: t(DOW_FULL[new Date(todayStr+'T12:00:00').getDay()]) + ' ' + formatDate(new Date(todayStr+'T12:00:00')) }) : 'Monday to Sunday overview') + '</div>' +
       '</div>' +
       '<div class="dash-store"><div class="nm">' + esc(currentStoreName || 'Store') + '</div>' +
         '<div class="loc">' + esc(currentStoreCity || '') + '</div></div>' +
@@ -6075,7 +5701,7 @@ function renderDashboard() {
             '<span class="trend-lbl">vs 6-wk avg</span></div>' : '') +
           '<div class="hero-eyebrow">Forecast traffic - this week</div>' +
           '<div class="hero-num">' + weekTotal.toLocaleString() + '<span class="unit">traffic forecasted</span></div>' +
-          '<div class="hero-caption">' + (weekTotal > 0 ? 'Peak on ' + DOW3[days[peakIdx].getDay()] : 'No traffic data entered yet') + '</div>' +
+          '<div class="hero-caption">' + (weekTotal > 0 ? tf('Peak on {day}', { day: t(DOW3[days[peakIdx].getDay()]) }) : 'No traffic data entered yet') + '</div>' +
           '<div class="hero-spark"><div class="hero-days">' + spark + '</div></div>' +
         '</div>' +
         '<div class="card">' +
@@ -6085,15 +5711,15 @@ function renderDashboard() {
           hlAddFormHtml(weekStart, weekEnd) +
         '</div>' +
         '<div class="card">' +
-          '<div class="dash-card-label">Planning events - ' +
-            mRef.toLocaleDateString(dLoc(), { month: 'long', year: 'numeric' }) + '</div>' +
+          '<div class="dash-card-label">' + tf('Planning events - {period}',
+            { period: mRef.toLocaleDateString(dLoc(), { month: 'long', year: 'numeric' }) }) + '</div>' +
           '<div class="hl-list">' + (monthEvts.length ? monthEvts.map(evtItemHtml).join('') :
             '<div class="mini-empty">No events this month.</div>') + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="dash-col dash-col-right">' +
         '<div class="card">' +
-          '<div class="dash-card-label">On the floor ' + presLabel + '</div>' +
+          '<div class="dash-card-label">' + tf('On the floor {date}', { date: (presLabel === 'today' && CURRENT_LANG !== 'en') ? t('Today') : t(presLabel) }) + '</div>' +
           poolBlockHtml('Management', poolAgents.mgmt) +
           poolBlockHtml('Sales', poolAgents.sales) +
           (storeCorners.length > 1 ? cornerBreakdownHtml(cornerPresence) : '') +
@@ -7497,8 +7123,9 @@ function renderMonthlyPlanning() {
     });
   });
 
-  setPlanMeta('monthly-meta', agents.length + ' agents - ' + nDays + ' days' +
-    (nOverrides ? ' - ' + nOverrides + ' manual change' + (nOverrides > 1 ? 's' : '') : ''));
+  var mcTxt = (CURRENT_LANG === 'en' && nOverrides === 1) ? '1 manual change' : tf('{count} manual changes', { count: nOverrides });
+  setPlanMeta('monthly-meta', tf('{count} agents - {days} days', { count: agents.length, days: nDays }) +
+    (nOverrides ? ' - ' + mcTxt : ''));
   var resetBtn = document.getElementById('btn-reset-manual');
   if (resetBtn) resetBtn.style.display = nOverrides ? '' : 'none';
 
@@ -7967,7 +7594,7 @@ async function addAgent() {
   document.getElementById('new-first-name').value = '';
   document.getElementById('new-last-name').value  = '';
   document.getElementById('add-agent-form').classList.remove('open');
-  showToast(first + ' ' + last + ' added \u2713');
+  showToast(tf('{person} added \u2713', { person: first + ' ' + last }));
   await loadWeekData();
 }
 
@@ -8099,8 +7726,8 @@ async function buildPlanningPdf(view) {
     return { file: new File([doc.output('blob')], info.file, { type: 'application/pdf' }), info: info };
   } finally { box.remove(); }
 }
-function sendText(info) { return "Hello, please find attached the team's planning for " + info.period + '.'; }
-function sendSubject(info) { return 'Planning ' + info.storeName + ' - ' + info.scope + ' - ' + info.period; }
+function sendText(info) { return tf("Hello, please find attached the team's planning for {period}.", { period: info.period }); }
+function sendSubject(info) { return tf('Planning {store} - {scope} - {period}', { store: info.storeName, scope: t(info.scope), period: info.period }); }
 
 // Send menu: PDF is prepared first, so the share window opens right away
 async function openSendMenu(ev, view) {
@@ -8168,13 +7795,13 @@ function exportMonthlyPDF() {
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   // One page: names and shift cells only (no counters, no coverage table), fitted to the page width.
   printableExport('<div class="card pdf-grid-only">' + document.getElementById('planning-monthly-body').innerHTML + '</div>',
-    'Monthly - ' + scope + ' - ' + mn, true);
+    tf('Monthly - {scope} - {period}', { scope: t(scope), period: mn }), true);
 }
 
 function exportIntradayPDF() {
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   printableExport('<div class="card">' + document.getElementById('planning-intraday-body').innerHTML + '</div>',
-    'Intraday - ' + scope + ' - ' + (currentIntradayDate || ''));
+    tf('Intraday - {scope} - {date}', { scope: t(scope), date: currentIntradayDate || '' }));
 }
 
 // Download menu: Excel or PDF
@@ -8807,8 +8434,8 @@ function renderAnnualCalendar() {
     html += '</div></div>';
   }
   html += '</div>';
-  html += '<p style="font-size:11px;color:#9ca3af;margin-top:12px;">Public holidays for '+
-    (currentCountryIso||'FR')+' are highlighted. Click any holiday to force the store open (green) or closed, or set exceptional hours.</p>';
+  html += '<p style="font-size:11px;color:#9ca3af;margin-top:12px;">' +
+    tf('Public holidays for {country} are highlighted. Click any holiday to force the store open (green) or closed, or set exceptional hours.', { country: currentCountryIso || 'FR' }) + '</p>';
   container.innerHTML = html;
 }
 
