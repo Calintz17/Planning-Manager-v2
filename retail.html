@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.0.0</title>
+  <title>CAST v9.0.1</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -204,6 +204,16 @@ h1,h2,h3,h4 { font-weight:700; line-height: 1.3; color: var(--tx-1); }
 .mission-menu-item:hover { background:var(--bg-base-3); }
 .xm-item { width:100%; border:0; background:transparent; text-align:left; font-family:var(--font); }
 .xm-item:focus-visible { outline:2px solid var(--nav-active-bg); outline-offset:-2px; }
+.xm-item:disabled { opacity:.45; cursor:default; }
+.xm-ic { width:18px; height:18px; flex-shrink:0; color:var(--tx-2); }
+.xm-note { padding:6px 10px 4px; font-size:11px; color:var(--tx-3); }
+/* Off-screen copy of the planning, turned into the PDF */
+.pdf-shot { position:fixed; left:-20000px; top:0; width:max-content; background:#fff; padding:16px; }
+.pdf-shot .mth-wrap, .pdf-shot .it-wrap { overflow:visible; }
+.pdf-shot .mth .c-agent, .pdf-shot .mth thead th { position:static; }
+.pdf-shot.is-intraday { width:1200px; }
+.pdf-shot-head { display:flex; justify-content:space-between; gap:var(--s4); font-size:13px; color:var(--tx-2); margin-bottom:var(--s3); }
+.pdf-shot-head b { color:var(--tx-1); }
 .xm-logo { width:18px; height:18px; object-fit:contain; flex-shrink:0; display:block; }
 /* Logo missing: plain letter tile */
 .xm-fb { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-sm);
@@ -286,7 +296,7 @@ h1,h2,h3,h4 { font-weight:700; line-height: 1.3; color: var(--tx-1); }
 }
 
 .wrap { max-width: var(--content-max); margin: 0 auto; }
-#tab-planning .wrap { max-width: var(--content-max-wide); }
+#tab-planning .wrap, #main:has(#tab-planning.active) #topbar > .tb-inner { max-width: var(--content-max-wide); }
 
 /* Cards */
 .card { background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg);
@@ -1274,6 +1284,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
             <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
             <button class="btn btn-ghost" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
           </div>
+          <button class="btn btn-ghost" onclick="openSendMenu(event,'monthly')" title="Send"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Send</span></button>
           <button class="btn btn-ghost" onclick="openExportMenu(event,'monthly')" title="Download"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download</span></button>
           <button class="btn btn-ghost" onclick="recalcFromToday()">Recalculate from today</button>
           <button id="btn-reset-manual" class="btn btn-ghost" onclick="clearMonthOverrides()" style="display:none">Reset manual changes</button>
@@ -1299,6 +1310,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
             <input type="date" id="intraday-date" onchange="intradayPickDate(this.value)">
             <button class="btn btn-ghost" onclick="intradayShiftDay(1)" aria-label="Next day">&rsaquo;</button>
           </div>
+          <button class="btn btn-ghost" onclick="openSendMenu(event,'intraday')" title="Send"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Send</span></button>
           <button class="btn btn-ghost" onclick="openExportMenu(event,'intraday')" title="Download"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download</span></button>
         </div>
       </div>
@@ -1445,6 +1457,12 @@ var I18N = {
     'Off': 'オフ',
     'Total present': '出勤合計',
     'Download': 'ダウンロード',
+    'Send': '送信',
+    'Share...': '共有...',
+    'Email': 'メール',
+    'Preparing PDF...': 'PDFを準備中...',
+    'PDF could not be created': 'PDFを作成できませんでした',
+    'Share failed': '共有できませんでした',
     'Opening': '開店シフト',
     'Closing': '閉店シフト',
     'Duration': '所要時間',
@@ -4944,6 +4962,25 @@ function renderIntraday(ds) {
       }
       jx.st = sx; jy.st = sy;
     }
+    // Managers never lunch together: try both lunch times as a pair
+    for (var x2 = 0; x2 < order.length; x2++) for (var y2 = x2 + 1; y2 < order.length; y2++) {
+      var px = order[x2], py = order[y2];
+      if (px.st == null || py.st == null || px.a === py.a || px.bi !== py.bi ||
+          breaks[px.bi] !== lunch || poolOf(px.a) !== 'mgmt' || poolOf(py.a) !== 'mgmt') continue;
+      if (px.st >= py.st + py.dur - 1e-9 || py.st >= px.st + px.dur - 1e-9) continue;
+      var keepX = px.st, keepY = py.st, pairBest = null;
+      px.starts.forEach(function(sx) {
+        px.st = sx;
+        py.starts.forEach(function(sy) {
+          py.st = sy;
+          if (!fits(px, sx) || !fits(py, sy)) return;
+          var score = planScore();
+          if (lexLess(score, cur) && (!pairBest || lexLess(score, pairBest.score))) pairBest = { x: sx, y: sy, score: score };
+        });
+      });
+      px.st = keepX; py.st = keepY;
+      if (pairBest) { px.st = pairBest.x; py.st = pairBest.y; cur = pairBest.score; improved = true; }
+    }
     if (!improved) break;
   }
 
@@ -4983,7 +5020,13 @@ function renderIntraday(ds) {
         continue;
       }
       var mbAt = Math.round((w.end / 60) * 4) / 4;
-      w.members.forEach(function(a){ mbPlan[a.id] = mbAt; });
+      // No brief outside the shift or on a break
+      w.members.forEach(function(a) {
+        var si = shiftInfo[a.id];
+        if (!si || mbAt < si.startMin / 60 - 1e-9 || mbAt + 0.25 > si.endMin / 60 + 1e-9 ||
+            overlapsTaken(a.id, mbAt, 0.25)) return;
+        mbPlan[a.id] = mbAt;
+      });
     }
   }
 
@@ -5133,11 +5176,14 @@ function renderIntraday(ds) {
       var track = '<div class="it-track it-track-add" data-agent="' + a.id +
         '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
         ' onclick="openMissionMenu(event,\'' + a.id + '\')">' + grid;
+      // Before opening: light bar, then the normal bar
       if (sH < openH) {
-        track += '<div class="it-shift pre ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(openH) - pct(sH)) + '%"></div>';
-        track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(openH) + '%;width:' + (pct(eH) - pct(openH)) + '%"></div>';
-      } else {
-        track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(eH) - pct(sH)) + '%"></div>';
+        var preEnd = Math.min(eH, openH);
+        track += '<div class="it-shift pre ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(preEnd) - pct(sH)) + '%"></div>';
+      }
+      var floorStart = Math.max(sH, openH);
+      if (eH > floorStart) {
+        track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(floorStart) + '%;width:' + (pct(eH) - pct(floorStart)) + '%"></div>';
       }
       blocks.forEach(function(bl) {
         var visualCls = bl[4] || ('b-' + String(bl[2]).replace(/[0-9]+$/, ''));
@@ -7722,6 +7768,118 @@ function printableExport(contentHtml, titleText, fitWidth) {
     }
     w.focus(); w.print();
   }, 600);
+}
+
+// Send: build a real PDF file, then the share window or an email
+var PDF_LIBS = ['https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+                'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
+var pdfLibsReady = null;
+function loadPdfLibs() {
+  if (!pdfLibsReady) {
+    pdfLibsReady = PDF_LIBS.reduce(function(p, src) {
+      return p.then(function() {
+        return new Promise(function(ok, ko) {
+          var sc = document.createElement('script');
+          sc.src = src; sc.onload = ok; sc.onerror = function() { ko(new Error('PDF library not loaded')); };
+          document.head.appendChild(sc);
+        });
+      });
+    }, Promise.resolve()).catch(function(e) { pdfLibsReady = null; throw e; });
+  }
+  return pdfLibsReady;
+}
+function sendInfo(view) {
+  var store = (currentStoreName || 'Store').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  if (view === 'monthly') {
+    var y = monthlyRef.getFullYear(), m = monthlyRef.getMonth() + 1;
+    return { period: MONTH_NAMES[m - 1] + ' ' + y, bodyId: 'planning-monthly-body',
+             file: 'CAST_' + store + '_Monthly_' + y + '-' + String(m).padStart(2, '0') + '.pdf' };
+  }
+  var ds = currentIntradayDate || toDateStr(new Date());
+  return { period: formatDateDisplay(ds), bodyId: 'planning-intraday-body',
+           file: 'CAST_' + store + '_Intraday_' + ds + '.pdf' };
+}
+// Same content as the PDF export, drawn into one landscape A4 page
+async function buildPlanningPdf(view) {
+  await loadPdfLibs();
+  var info = sendInfo(view);
+  var box = document.createElement('div');
+  box.className = 'pdf-shot' + (view === 'intraday' ? ' is-intraday' : '');
+  box.innerHTML = '<div class="pdf-shot-head"><b>CAST - ' + esc(currentStoreName || '') + '</b><span>' + esc(info.period) + '</span></div>' +
+    '<div class="card' + (view === 'monthly' ? ' pdf-grid-only' : '') + '">' +
+    document.getElementById(info.bodyId).innerHTML.replace(/ id="[^"]*"/g, '') + '</div>';
+  document.body.appendChild(box);
+  try {
+    var canvas = await html2canvas(box, { scale: 2, backgroundColor: '#ffffff', logging: false });
+    var doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    var pw = 297, ph = 210, mg = 8, w = pw - 2 * mg, h = canvas.height * w / canvas.width;
+    if (h > ph - 2 * mg) { h = ph - 2 * mg; w = canvas.width * h / canvas.height; }
+    doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (pw - w) / 2, mg, w, h);
+    return { file: new File([doc.output('blob')], info.file, { type: 'application/pdf' }), info: info };
+  } finally { box.remove(); }
+}
+function sendText(info) { return "Hello, please find attached the team's planning for " + info.period + '.'; }
+function sendSubject(info) { return 'Planning ' + (currentStoreName || '') + ' - ' + info.period; }
+
+// Send menu: PDF is prepared first, so the share window opens right away
+async function openSendMenu(ev, view) {
+  ev.stopPropagation();
+  closeExportMenu();
+  var canShare = !!(navigator.share && navigator.canShare);
+  var m = document.createElement('div');
+  m.id = 'export-menu'; m.className = 'mission-menu';
+  m.exportTrigger = ev.currentTarget;
+  m.innerHTML =
+    (canShare ? '<button type="button" class="mission-menu-item xm-item" data-act="share" disabled>' +
+      '<svg class="ic xm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>' +
+      '<span>' + t('Share...') + '</span></button>' : '') +
+    '<button type="button" class="mission-menu-item xm-item" data-act="mail" disabled>' +
+      '<svg class="ic xm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22 6 12 13 2 6"/></svg>' +
+      '<span>' + t('Email') + '</span></button>' +
+    '<div class="xm-note">' + t('Preparing PDF...') + '</div>';
+  m.addEventListener('click', function(e) { e.stopPropagation(); });
+  document.body.appendChild(m);
+  var r = ev.currentTarget.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+  m.style.top = (r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(r.left, vw - m.offsetWidth - 8)) + 'px';
+  document.addEventListener('keydown', onExportMenuKey);
+  setTimeout(function() { document.addEventListener('click', closeExportMenu); }, 0);
+
+  var built;
+  try { built = await buildPlanningPdf(view); }
+  catch (e) {
+    if (document.getElementById('export-menu') === m) m.querySelector('.xm-note').textContent = t('PDF could not be created');
+    return;
+  }
+  if (document.getElementById('export-menu') !== m) return;
+  m.querySelector('.xm-note').remove();
+  var shareBtn = m.querySelector('[data-act=share]'), mailBtn = m.querySelector('[data-act=mail]');
+  if (shareBtn) {
+    var ok = false;
+    try { ok = navigator.canShare({ files: [built.file] }); } catch (e) {}
+    if (ok) {
+      shareBtn.disabled = false;
+      shareBtn.onclick = function() {
+        closeExportMenu();
+        navigator.share({ files: [built.file], title: sendSubject(built.info), text: sendText(built.info) })
+          .catch(function(err) { if (err && err.name !== 'AbortError') showToast(t('Share failed'), 'error'); });
+      };
+    } else shareBtn.remove();
+  }
+  mailBtn.disabled = false;
+  mailBtn.onclick = function() {
+    closeExportMenu();
+    var url = URL.createObjectURL(built.file);
+    var a = document.createElement('a');
+    a.href = url; a.download = built.file.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+    setTimeout(function() {
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(sendSubject(built.info)) +
+        '&body=' + encodeURIComponent(sendText(built.info));
+    }, 400);
+  };
+  (m.querySelector('button:not([disabled])') || mailBtn).focus({ preventScroll: true });
 }
 
 function exportMonthlyPDF() {
