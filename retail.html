@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.0.1</title>
+  <title>CAST v9.0.7</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -211,6 +211,8 @@ h1,h2,h3,h4 { font-weight:700; line-height: 1.3; color: var(--tx-1); }
 .pdf-shot { position:fixed; left:-20000px; top:0; width:max-content; background:#fff; padding:16px; }
 .pdf-shot .mth-wrap, .pdf-shot .it-wrap { overflow:visible; }
 .pdf-shot .mth .c-agent, .pdf-shot .mth thead th { position:static; }
+/* PDF engine draws inset shadows as full fills */
+.pdf-shot .mth thead th, .pdf-shot .mth td { box-shadow:none !important; }
 .pdf-shot.is-intraday { width:1200px; }
 .pdf-shot-head { display:flex; justify-content:space-between; gap:var(--s4); font-size:13px; color:var(--tx-2); margin-bottom:var(--s3); }
 .pdf-shot-head b { color:var(--tx-1); }
@@ -1445,7 +1447,7 @@ var I18N = {
     'The standard weekly contract of your team': 'チームの標準的な週間契約時間',
     'How many advisors are needed at minimum to open a store or a corner': '店舗またはコーナーの開店に最低限必要な人数',
     'How many advisors are needed at minimum to close a store or a corner': '店舗またはコーナーの閉店に最低限必要な人数',
-    'How many advisors you want on closing versus opening': 'オープンに対するクローズの人数配分',
+    'Share of advisors who start in the later half of your shifts': 'シフトの後半に開始するアドバイザーの割合',
     'Rotate every advisor fairly across all corners over the month': '月間で全員を全コーナーに公平にローテーション',
     'Let the engine move an advisor to a busier corner for a short slot during the day': '日中の短時間、混雑するコーナーへ応援を割り当てる',
     'Intraday reinforcement': '日中応援',
@@ -1504,7 +1506,7 @@ var I18N = {
     'Stock shifts': '在庫シフト',
     'Opening minimum': 'オープン最少人数',
     'Closing minimum': 'クローズ最少人数',
-    'Closing ratio': 'クローズ比率',
+    'Late shifts target': '遅番の目標割合',
     'Coverage thresholds': '人員基準',
     'On the floor today': '本日の出勤',
     'Absences this week': '今週の欠勤',
@@ -1783,11 +1785,11 @@ var I18N = {
     'Corner buttons (All, then each corner): show the planning of one corner only.': 'コーナーボタン（All、各コーナー）：1つのコーナーのシフトだけを表示します。',
     'Arrows at the top right: change month. Excel and PDF: export the planning. The planning is saved and never changes by itself: after changing your settings, click "Recalculate from today" (past days are never changed).': '右上の矢印：月を変更します。ExcelとPDF：シフト表を書き出します。シフト表は保存され、勝手に変わることはありません。設定を変更したら「今日から再計算」をクリックしてください（過去の日は変更されません）。',
     'The second table shows how many people are present each day, for openings and closings.': '下の表は、毎日の出勤人数とオープン・クローズの人数を示します。',
-    'The detail of one day, hour by hour: who works when, breaks and missions. CAST places the breaks automatically so that no corner is left empty and the busiest hours stay covered.': '1日の詳細を時間ごとに表示します：誰がいつ働くか、休憩、ミッション。CASTは、コーナーが空にならず、忙しい時間帯の人員が保たれるよう、休憩を自動で配置します。',
+    'The detail of one day, hour by hour: who works when, breaks and missions. CAST places breaks inside the configured windows when possible and tries to keep corners and busy hours covered.': '1日の詳細を時間ごとに表示します：誰がいつ働くか、休憩、ミッション。CASTはできるだけ設定された時間帯の中で休憩を配置し、コーナーや忙しい時間帯の人員をできるだけ確保します。',
     'Breaks avoid the busiest hours when possible.': '休憩は、できるだけ忙しい時間帯を避けて配置されます。',
     'Choose the day with the arrows or the date at the top right.': '右上の矢印か日付で日を選びます。',
     'Each line is one person. The colored bar shows their working hours.': '各行が1人です。色付きのバーが勤務時間を示します。',
-    'Breaks (lunch and short breaks) are placed automatically inside the windows set in Settings. Drag a break to move it.': '休憩（昼休憩・小休憩）は、設定で決めた時間帯の中に自動で配置されます。休憩をドラッグして移動できます。',
+    'Breaks (lunch and short breaks) are placed automatically within the windows set in Settings when possible. To maintain opening and closing coverage, an automatic break may move outside its window. Drag a break to move it.': '休憩（昼休憩・小休憩）は、できるだけ設定で決めた時間帯の中に自動で配置されます。開店時と閉店時の人員を確保するため、自動配置の休憩が設定時間帯の外に移動することがあります。休憩をドラッグして移動できます。',
     'Click on a bar to add a mission, like the morning brief (MB) or Welcome.': 'バーをクリックすると、朝礼（MB）やWelcomeなどのミッションを追加できます。',
     'Set lunch and break windows in Settings.': '昼休憩とその他の休憩時間帯は設定で調整してください。',
     'Excel and PDF: export the day.': 'ExcelとPDF：その日のスケジュールを書き出します。',
@@ -1800,8 +1802,8 @@ var I18N = {
     'Max working days / week: how many days one person can work in a week.': '週の最大勤務日数：1人が1週間に働ける日数です。',
     'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract. The lunch break is not counted.': '1日の最大時間・週の最大時間：契約で認められる1日と1週間の最長勤務時間です。昼休憩は含みません。',
     'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.': 'シフト間の最低休息時間：1日の勤務終了から翌日の勤務開始までに必要な休息時間です。',
-    'Opening minimum and Closing minimum: how many people you need, at least, to open and to close the store (or each corner).': 'オープン最低人数・クローズ最低人数：店舗（または各コーナー）の開店・閉店に最低限必要な人数です。',
-    'Closing ratio: the share of your team working the closing shift. Example: 70% means 7 people on closing and 3 on opening, out of 10.': 'クローズ比率：クローズシフトに入るスタッフの割合です。例：70%なら、10人中7人がクローズ、3人がオープンです。',
+    'Opening minimum and Closing minimum: how many people must be there, at least, during the first hour and the last hour of the day (store or each corner).': 'オープン最低人数・クローズ最低人数：1日の最初の1時間と最後の1時間に、最低限必要な人数です（店舗または各コーナー）。',
+    'Late shifts target: the share of your advisors who start in the later half of your shifts. Example: 70% means about 7 out of 10 start late. CAST then picks the exact shifts that best follow your hourly traffic.': '遅番の目標割合：シフトの後半に開始するアドバイザーの割合です。例：70%なら、10人中約7人が遅番です。そのうえでCASTが、時間帯ごとの来客数に最も合うシフトを選びます。',
     'Switches at the bottom: turn a rule on or off. Click ? next to a switch to understand it.': '下のスイッチ：ルールをオン・オフします。スイッチ横の「?」をクリックすると説明が表示されます。',
     'The days and hours your store is open to clients.': '店舗がお客様に開いている曜日と時間です。',
     'Tell CAST when your store is open. Nobody will be planned when the store is closed.': '店舗の営業時間をCASTに設定します。閉店中は誰もシフトに入りません。',
@@ -1810,7 +1812,7 @@ var I18N = {
     'Choose the opening hour (Starts) and the closing hour (Ends).': '開店時間（Starts）と閉店時間（Ends）を選びます。',
     'The closing hour must be after the opening hour.': '閉店時間は開店時間より後にしてください。',
     'The breaks your team takes each day (lunch, short breaks) and when they can take them.': 'チームが毎日取る休憩（昼休憩・小休憩）と、取れる時間帯です。',
-    'List the breaks your team takes every day. CAST places each break automatically, so the store is never empty.': 'チームが毎日取る休憩を登録します。CASTが店舗を空にしないよう、休憩を自動で配置します。',
+    'List the breaks your team takes every day. CAST places them automatically, inside the configured windows when possible, and tries to maintain coverage.': 'チームが毎日取る休憩を登録します。CASTはできるだけ設定された時間帯の中で休憩を自動配置し、できるだけ必要な人員を確保します。',
     'Changes are saved automatically. A wide window lets CAST spread the breaks better.': '変更は自動で保存されます。時間帯を広くすると、CASTが休憩をうまく分散できます。',
     'Click "+ Add break" to create a break.': '「+ 休憩を追加」をクリックして休憩を作成します。',
     'Give it a name (example: Lunch) and a duration in minutes.': '名前（例：Lunch）と長さ（分）を入力します。',
@@ -2888,8 +2890,8 @@ var SETTINGS_HELP = {
       'Max working days / week: how many days one person can work in a week.',
       'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract. The lunch break is not counted.',
       'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.',
-      'Opening minimum and Closing minimum: how many people you need, at least, to open and to close the store (or each corner).',
-      'Closing ratio: the share of your team working the closing shift. Example: 70% means 7 people on closing and 3 on opening, out of 10.',
+      'Opening minimum and Closing minimum: how many people must be there, at least, during the first hour and the last hour of the day (store or each corner).',
+      'Late shifts target: the share of your advisors who start in the later half of your shifts. Example: 70% means about 7 out of 10 start late. CAST then picks the exact shifts that best follow your hourly traffic.',
       'Switches at the bottom: turn a rule on or off. Click ? next to a switch to understand it.'],
     important: 'Changes are saved automatically. Ask HR if you are not sure about a legal number.' },
   hours: { n: 2, title: 'Operating hours',
@@ -2903,7 +2905,7 @@ var SETTINGS_HELP = {
     important: 'Changes are saved automatically. For one special day (holiday, event), use the Calendar page instead.' },
   breaks: { n: 3, title: 'Break structure',
     sub: 'The breaks your team takes each day (lunch, short breaks) and when they can take them.',
-    what: 'List the breaks your team takes every day. CAST places each break automatically, so the store is never empty.',
+    what: 'List the breaks your team takes every day. CAST places them automatically, inside the configured windows when possible, and tries to maintain coverage.',
     warn: null,
     steps: [
       'Click "+ Add break" to create a break.',
@@ -2983,12 +2985,12 @@ var SETTINGS_HELP = {
       'The second table shows how many people are present each day, for openings and closings.'],
     important: 'Your manual changes are always kept. "Reset manual changes" removes all of them for this month.' },
   intraday: { n: null, title: 'Intraday planning', stepsTitle: 'How to use it',
-    what: 'The detail of one day, hour by hour: who works when, breaks and missions. CAST places the breaks automatically so that no corner is left empty and the busiest hours stay covered.',
+    what: 'The detail of one day, hour by hour: who works when, breaks and missions. CAST places breaks inside the configured windows when possible and tries to keep corners and busy hours covered.',
     warn: null,
     steps: [
       'Choose the day with the arrows or the date at the top right.',
       'Each line is one person. The colored bar shows their working hours.',
-      'Breaks (lunch and short breaks) are placed automatically inside the windows set in Settings. Drag a break to move it.',
+      'Breaks (lunch and short breaks) are placed automatically within the windows set in Settings when possible. To maintain opening and closing coverage, an automatic break may move outside its window. Drag a break to move it.',
       'Click on a bar to add a mission, like the morning brief (MB) or Welcome.',
       'Set lunch and break windows in Settings.',
       'Excel and PDF: export the day.'],
@@ -3394,7 +3396,7 @@ function renderRegulations() {
           '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1">', 'CA') +
         rrow('Closing minimum', 'How many advisors are needed at minimum to close a store or a corner',
           '<input type="number" id="thr-close" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '" min="0" max="20" step="1">', 'CA') +
-        rrow('Closing ratio', 'How many advisors you want on closing versus opening',
+        rrow('Late shifts target', 'Share of advisors who start in the later half of your shifts',
           '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5">', '%') +
         rrowToggle('Sunday single shift', 'One shift D on Sundays (uncheck for wide-amplitude stores that need O/C on Sunday)',
           'sunday-single-toggle', 'toggleSundaySingle', !(storeSettings && storeSettings.sunday_single_shift === false), 'sunday') +
@@ -3944,9 +3946,10 @@ function shiftClusters(grid, ds) {
   return { open: openG, mid: mid, close: closeG, covers: covers };
 }
 
-// Does a time slot cover opening and closing
+// Present for the first hour (opening) and for the last hour (closing)
 function coverOfHours(start, end, h) {
-  return { open: start <= h.open && end > h.open, close: start < h.close && end >= h.close };
+  return { open: start <= h.open && end >= Math.min(h.close, h.open + 60),
+           close: start <= Math.max(h.open, h.close - 60) && end >= h.close };
 }
 
 // Spread k people evenly over the shifts of a group, turning each day
@@ -4468,6 +4471,11 @@ function weekOpenSpan() {
   return { open: open, close: close };
 }
 
+// Curve indices use the clock labels shown in Traffic, not a day's opening time.
+function hourlyCurveIndex(minute) {
+  return Math.floor(minute / 60) - weekOpenSpan().open;
+}
+
 var curveValues = [];
 var curveHours  = [];
 
@@ -4740,7 +4748,7 @@ function renderIntraday(ds) {
     working.forEach(function(a){ if (poolOf(a)==='sales'){ var cid=effCornerId(a); if (cid&&byC[cid]) byC[cid].push(a); } });
     var minOpen = (storeSettings.min_opening != null) ? storeSettings.min_opening : 1;
     var hourWeight = function(h){
-      var idx = Math.round(h) - Math.floor(openH);
+      var idx = hourlyCurveIndex(h * 60);
       if (idx < 0 || idx >= curve.length) return 0;
       return curve[idx] || 0;
     };
@@ -4835,7 +4843,7 @@ function renderIntraday(ds) {
   var curveAvg = (curve && curve.length) ? curve.reduce(function(s, v) { return s + (+v || 0); }, 0) / curve.length : 0;
   var demand = [];
   for (var qd = 0; qd < nQ; qd++) {
-    var ci = Math.floor(q0 + qd * Q - openH + 1e-9);
+    var ci = hourlyCurveIndex((q0 + qd * Q) * 60 + 1e-7);
     demand.push((curveAvg > 0 && ci >= 0 && ci < curve.length) ? (+curve[ci] || 0) / curveAvg : 1);
   }
 
@@ -4852,11 +4860,16 @@ function renderIntraday(ds) {
       }
     });
   });
-  var jobs = [], plansByIdx = {};
+  // Added manual missions also reserve time for the automatic brief and Welcome.
+  Object.keys(manualBusy).forEach(function(aid) {
+    manualBusy[aid].forEach(function(b) { markTaken(aid, b[0], b[1] - b[0]); });
+  });
+  var jobs = [], plansByIdx = {}, edgeTypeByIdx = {}, edgeBreakIndex = 0;
   breaks.forEach(function(brk, bi) {
     var dur = brk.duration / 60;
     if (!(dur > 0) || !(brk.window_end > brk.window_start)) return;
     plansByIdx[bi] = {};
+    edgeTypeByIdx[bi] = brk === lunch ? 'lun' : 'brk' + edgeBreakIndex++;
     byArrival.forEach(function(a) {
       if ((addedMissions[a.id] || []).some(function(m) { return m.type === 'brk:' + brk.name; })) return;   // placed by hand
       var si = shiftInfo[a.id];
@@ -4869,6 +4882,13 @@ function renderIntraday(ds) {
       spreadOrder(starts.length).forEach(function(k, r) { rank[k] = r; });
       jobs.push({ a: a, bi: bi, dur: dur, starts: starts, rank: rank, st: null });
     });
+  });
+
+  // Reserve valid manual positions before automatic placement and scoring.
+  jobs.forEach(function(j) {
+    var ov = edgeOverride(j);
+    j.manual = ov != null;
+    if (j.manual) j.st = ov;
   });
 
   function planScore() {
@@ -4899,14 +4919,25 @@ function renderIntraday(ds) {
     return [unplaced, empty, over, Math.round(pressure * 1e6) / 1e6];
   }
   function fits(j, st) {
-    if ((manualBusy[j.a.id] || []).some(function(b) { return st < b[1] - 1e-9 && st + j.dur > b[0] + 1e-9; })) return false;
+    function overlaps(start, dur) {
+      return st < start + dur - 1e-9 && st + j.dur > start + 1e-9;
+    }
+    if ((manualBusy[j.a.id] || []).some(function(b) { return overlaps(b[0], b[1] - b[0]); })) return false;
+    var isManagerLunch = breaks[j.bi] === lunch && poolOf(j.a) === 'mgmt';
     for (var k = 0; k < jobs.length; k++) {
       var o = jobs[k];
-      if (o === j || o.a !== j.a || o.st == null) continue;
-      if (st < o.st + o.dur - 1e-9 && st + j.dur > o.st + 1e-9) return false;
+      if (o === j || o.st == null) continue;
+      if ((o.a === j.a || (isManagerLunch && !relaxMgrLunch && breaks[o.bi] === lunch && poolOf(o.a) === 'mgmt' && (j.manual || o.manual))) &&
+          overlaps(o.st, o.dur)) return false;
     }
+    if (isManagerLunch && !relaxMgrLunch && working.some(function(a) {
+      return a !== j.a && poolOf(a) === 'mgmt' && (addedMissions[a.id] || []).some(function(m) {
+        return m.type === 'brk:' + lunch.name && overlaps(m.start, missionDurH(m));
+      });
+    })) return false;
     return true;
   }
+  var relaxMgrLunch = false;
   function bestStart(j) {
     var best = null;
     j.starts.forEach(function(st, k) {
@@ -4921,11 +4952,12 @@ function renderIntraday(ds) {
 
   var order = jobs.slice().sort(function(x, y) { return (x.starts.length - y.starts.length) || (y.dur - x.dur); });
   order.forEach(function(j) {
+    if (j.manual) return;
     var b = bestStart(j);
     if (b) { j.st = b.st; return; }
     var fix = null;
     jobs.forEach(function(o) {
-      if (o === j || o.a !== j.a || o.st == null) return;
+      if (o === j || o.manual || o.a !== j.a || o.st == null) return;
       var keep = o.st;
       o.starts.forEach(function(ost) {
         o.st = ost;
@@ -4942,7 +4974,7 @@ function renderIntraday(ds) {
   for (var pass = 0; pass < 8; pass++) {
     var improved = false;
     order.forEach(function(j) {
-      if (j.st == null) return;
+      if (j.st == null || j.manual) return;
       j.starts.forEach(function(st) {
         if (st === j.st || !fits(j, st)) return;
         var prev = j.st; j.st = st;
@@ -4952,7 +4984,7 @@ function renderIntraday(ds) {
     });
     for (var x = 0; x < order.length; x++) for (var y = x + 1; y < order.length; y++) {
       var jx = order[x], jy = order[y];
-      if (jx.st == null || jy.st == null || jx.a === jy.a || jx.dur !== jy.dur || jx.st === jy.st) continue;
+      if (jx.manual || jy.manual || jx.st == null || jy.st == null || jx.a === jy.a || jx.dur !== jy.dur || jx.st === jy.st) continue;
       if (jx.starts.indexOf(jy.st) < 0 || jy.starts.indexOf(jx.st) < 0) continue;
       var sx = jx.st, sy = jy.st;
       jx.st = sy; jy.st = sx;
@@ -4965,7 +4997,7 @@ function renderIntraday(ds) {
     // Managers never lunch together: try both lunch times as a pair
     for (var x2 = 0; x2 < order.length; x2++) for (var y2 = x2 + 1; y2 < order.length; y2++) {
       var px = order[x2], py = order[y2];
-      if (px.st == null || py.st == null || px.a === py.a || px.bi !== py.bi ||
+      if (px.manual || py.manual || px.st == null || py.st == null || px.a === py.a || px.bi !== py.bi ||
           breaks[px.bi] !== lunch || poolOf(px.a) !== 'mgmt' || poolOf(py.a) !== 'mgmt') continue;
       if (px.st >= py.st + py.dur - 1e-9 || py.st >= px.st + px.dur - 1e-9) continue;
       var keepX = px.st, keepY = py.st, pairBest = null;
@@ -4983,6 +5015,93 @@ function renderIntraday(ds) {
     }
     if (!improved) break;
   }
+
+  // A lunch is never dropped: if the only free slot is with the other manager, keep it there
+  jobs.forEach(function(j) {
+    if (j.st != null || j.manual || breaks[j.bi] !== lunch || poolOf(j.a) !== 'mgmt') return;
+    relaxMgrLunch = true;
+    var b = bestStart(j);
+    relaxMgrLunch = false;
+    if (b) j.st = b.st;
+  });
+
+  // Repair boundary coverage using displayed break positions; manual choices stay locked.
+  function edgeOverride(j) {
+    var value = intradayOverrides[j.a.id + ':' + edgeTypeByIdx[j.bi]];
+    if (value == null) return null;
+    var st = value / 60, si = shiftInfo[j.a.id];
+    return st >= si.startMin / 60 && st + j.dur <= si.endMin / 60 ? st : null;
+  }
+  function edgeQuarter(i) {
+    var hq = q0 + i * Q;
+    function intersects(a, b) {
+      return hq < b - 1e-9 && hq + Q > a + 1e-9;
+    }
+    return intersects(openH, Math.min(closeH, openH + 1)) ||
+           intersects(Math.max(openH, closeH - 1), closeH);
+  }
+  function edgeEmpty() {
+    var away = {}, n = 0;
+    Object.keys(manualBreakAway).forEach(function(aid) { away[aid] = Object.assign({}, manualBreakAway[aid]); });
+    jobs.forEach(function(j) {
+      if (j.st == null) return;
+      var arr = away[j.a.id] = away[j.a.id] || {};
+      for (var i = Math.max(0, Math.floor((j.st - q0) / Q + 1e-9)); i < nQ && q0 + i * Q < j.st + j.dur - 1e-9; i++) arr[i] = true;
+    });
+    for (var i = 0; i < nQ; i++) {
+      if (!edgeQuarter(i)) continue;
+      siloKeys.forEach(function(k) {
+        if (k === 'stock') return;
+        var inS = 0, off = 0;
+        siloMembers[k].forEach(function(a) {
+          if (!inShift[a.id][i]) return;
+          inS++;
+          if (away[a.id] && away[a.id][i]) off++;
+        });
+        if (inS > 0 && off === inS) n++;
+      });
+    }
+    return n;
+  }
+  function edgeFits(j, st) {
+    function overlaps(start, dur) {
+      return st < start + dur - 1e-9 && st + j.dur > start + 1e-9;
+    }
+    if ((manualBusy[j.a.id] || []).some(function(b) { return overlaps(b[0], b[1] - b[0]); })) return false;
+    var isManagerLunch = breaks[j.bi] === lunch && poolOf(j.a) === 'mgmt';
+    for (var k = 0; k < jobs.length; k++) {
+      var o = jobs[k];
+      if (o === j || o.st == null) continue;
+      if ((o.a === j.a || (isManagerLunch && breaks[o.bi] === lunch && poolOf(o.a) === 'mgmt')) &&
+          overlaps(o.st, o.dur)) return false;
+    }
+    if (isManagerLunch && working.some(function(a) {
+      return a !== j.a && poolOf(a) === 'mgmt' && (addedMissions[a.id] || []).some(function(m) {
+        return m.type === 'brk:' + lunch.name && overlaps(m.start, missionDurH(m));
+      });
+    })) return false;
+    return true;
+  }
+  jobs.forEach(function(j) {
+    if (j.st == null || edgeOverride(j) != null) return;
+    var base = edgeEmpty();
+    if (!base) return;
+    var keep = j.st;
+    j.st = null;
+    var without = edgeEmpty();
+    j.st = keep;
+    if (without >= base) return;
+    var si = shiftInfo[j.a.id], brk = breaks[j.bi], found = null;
+    for (var st = Math.ceil((si.startMin / 60 + 1) / Q - 1e-9) * Q; st + j.dur <= si.endMin / 60 + 1e-9; st += Q) {
+      st = Math.round(st * 4) / 4;
+      if (!edgeFits(j, st)) continue;
+      j.st = st;
+      var outside = st < brk.window_start - 1e-9 || st + j.dur > brk.window_end + 1e-9;
+      var sc = [edgeEmpty(), outside ? 1 : 0, Math.abs(st - keep)];
+      if (!found || lexLess(sc, found.sc)) found = { st: st, sc: sc };
+    }
+    j.st = (found && found.sc[0] < base) ? found.st : keep;
+  });
 
   var unplacedBreaks = 0;
   jobs.forEach(function(j) {
@@ -5038,7 +5157,7 @@ function renderIntraday(ds) {
       return missionH < h + 1 && (missionH + missionDur) > h;
     }
     for (var ph = Math.floor(openH); ph < Math.ceil(closeH); ph++) {
-      var ci = ph - openH;
+      var ci = hourlyCurveIndex(ph * 60);
       if (ci < 0 || ci >= curve.length) continue;
       if (curve[ci] <= avgCurveVal) continue;
       var cand = working.filter(function(a) {
@@ -6567,9 +6686,9 @@ function renderMonthlyPlanning() {
       if (calHours[halfDs]) dh = calHours[halfDs];
       var mid = (dh.open + dh.close) / 2;
       var amLoad = 0, pmLoad = 0;
-      var curveArr = curveValues || [];
+      var curveArr = (storeSettings && storeSettings.hourly_curve) || [];
       for (var h = Math.floor(dh.open); h < Math.ceil(dh.close); h++) {
-        var ci = h - Math.floor(dh.open);
+        var ci = hourlyCurveIndex(h * 60);
         var v = (ci >= 0 && ci < curveArr.length) ? curveArr[ci] : 1;
         if (h < mid) amLoad += v; else pmLoad += v;
       }
@@ -6581,6 +6700,7 @@ function renderMonthlyPlanning() {
   var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
 
   var shiftPlanByDay = {};
+  var shiftUse = {};
   function isSpecialDay(d) {
     var sundaySingle = !storeSettings || storeSettings.sunday_single_shift !== false;
     if (d.date.getDay() === 0) return sundaySingle;
@@ -6654,7 +6774,7 @@ function renderMonthlyPlanning() {
             if (!curveArr || !curveArr.length) return 1;
             var sum = 0, n = 0;
             for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
-              var ci = h - dh.open;
+              var ci = hourlyCurveIndex(h * 60);
               if (ci >= 0 && ci < curveArr.length) { sum += curveArr[ci]; n++; }
             }
             return n ? sum / n : 1;
@@ -6692,7 +6812,7 @@ function renderMonthlyPlanning() {
         if (!curveArr || !curveArr.length) return 1;
         var sum = 0, n = 0;
         for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
-          var ci = h - dh.open;
+          var ci = hourlyCurveIndex(h * 60);
           if (ci >= 0 && ci < curveArr.length) { sum += curveArr[ci]; n++; }
         }
         return n ? sum / n : 1;
@@ -6704,30 +6824,84 @@ function renderMonthlyPlanning() {
 
       var nTotal = list.length;
       var frozen = d.past;
-      var closeRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
+      var lateRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
       var minOpen  = frozen ? 1 : ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1);
       var minClose = frozen ? 1 : ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
-      var nClose = Math.round(nTotal * closeRatio);
-      if (nTotal >= minOpen + minClose) {
-        nClose = Math.max(minClose, Math.min(nClose, nTotal - minOpen));
-      } else {
-        nClose = Math.max(0, Math.min(nTotal, nClose));
-        if (nTotal >= 2 && nClose >= nTotal) nClose = nTotal - 1;
-      }
-      var nOpen = nTotal - nClose;
-
       function restOk(a, s) { return !s || restAllows(a, d.ds, s.code); }
-      var earliest = cl.open[0];
 
-      var sortedList = list.slice();
-      var rot = sortedList.length ? (d.num % sortedList.length) : 0;
-      sortedList = sortedList.slice(rot).concat(sortedList.slice(0, rot));
-      sortedList = sortedList.filter(function(a) { return restOk(a, earliest); })
-        .concat(sortedList.filter(function(a) { return !restOk(a, earliest); }));
-      // Openers first, then closers, spread over each group
-      sortedList.forEach(function(a, i) {
-        plan[a.id] = (i < nOpen ? spreadPick(cl.open, i, nOpen, d.num) : spreadPick(cl.close, i - nOpen, nClose, d.num)).code;
+      // Early and late halves of the shift list (middle shift goes late)
+      var byStart = grid.slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
+      var halfAt = Math.floor(byStart.length / 2);
+      var isLate = {};
+      byStart.forEach(function(s, k) { isLate[s.code] = byStart.length > 1 && k >= halfAt; });
+      var nLate = byStart.length > 1 ? Math.max(0, Math.min(nTotal, Math.round(nTotal * lateRatio))) : 0;
+      var left = { early: nTotal - nLate, late: nLate };
+
+      // Hourly traffic of the day, in 15 min slots
+      var hm = dayMinutes(d.ds), slots = [];
+      for (var tm = hm.open; tm < hm.close; tm += 15) {
+        var ci = hourlyCurveIndex(tm);
+        var wv = (curveArr && curveArr.length && ci >= 0 && ci < curveArr.length) ? (+curveArr[ci] || 0) : 1;
+        slots.push({ t: tm, w: Math.max(wv, 0.0001), cov: 0 });
+      }
+      function addCov(st, en) { slots.forEach(function(sl) { if (sl.t >= st && sl.t + 15 <= en) sl.cov++; }); }
+      // People already placed (managers, fixed hours) count
+      var placed = [];
+      Object.keys(plan).forEach(function(id) {
+        var ag = agents.find(function(x) { return x.id === id; });
+        var wh = ag && workHoursOf(ag, d.ds, { code: plan[id] });
+        if (wh) { addCov(wh.start, wh.end); placed.push(wh); }
       });
+      // Value of a shift: traffic it covers, less where people are already there
+      function gain(s) {
+        var g = 0;
+        slots.forEach(function(sl) { if (sl.t >= s.startMin && sl.t + 15 <= s.endMin) g += sl.w / (sl.cov + 1); });
+        return g;
+      }
+      function use(s) { return shiftUse[s.code] || 0; }
+      function best(cands) {
+        var b = null, bg = -1;
+        cands.forEach(function(s) {
+          var g = gain(s);
+          if (!b || g > bg + 1e-9 || (Math.abs(g - bg) <= 1e-9 && use(s) < use(b))) { b = s; bg = g; }
+        });
+        return b;
+      }
+      var pool = list.slice();
+      var rot = pool.length ? (d.num % pool.length) : 0;
+      pool = pool.slice(rot).concat(pool.slice(0, rot));
+      function place(a, s) {
+        plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start: s.startMin, end: s.endMin });
+        shiftUse[s.code] = use(s) + 1;
+        left[isLate[s.code] ? 'late' : 'early']--;
+        pool.splice(pool.indexOf(a), 1);
+      }
+      function roomFor(s) { return left[isLate[s.code] ? 'late' : 'early'] > 0; }
+      // Hard needs first: someone for the first hour, someone for the last hour
+      function cover(key, need) {
+        var have = placed.filter(function(w) { return coverOfHours(w.start, w.end, hm)[key]; }).length;
+        var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
+        while (have < need && shifts.length) {
+          var done = false;
+          for (var k = 0; k < pool.length && !done; k++) {
+            var ok = shifts.filter(function(s) { return restOk(pool[k], s); });
+            if (!ok.length) continue;
+            var inRoom = ok.filter(roomFor);
+            place(pool[k], best(inRoom.length ? inRoom : ok)); have++; done = true;
+          }
+          if (!done) break;
+        }
+      }
+      cover('close', minClose);
+      cover('open', minOpen);
+      // Everyone else: the shift that helps the traffic most, inside the late target
+      while (pool.length) {
+        var a = pool[0];
+        var okS = byStart.filter(function(s) { return restOk(a, s); });
+        if (!okS.length) okS = byStart;
+        var inRoom = okS.filter(roomFor);
+        place(a, best(inRoom.length ? inRoom : okS));
+      }
       list.forEach(function(a) {
         var cur = grid.find(function(s) { return s.code === plan[a.id]; });
         if (!cur || restOk(a, cur)) return;
@@ -6819,7 +6993,7 @@ function renderMonthlyPlanning() {
 
     // Placement groups of the day
     function inPlaceGroup(code, ds, key) {
-      return shiftClusters(RETAIL_SHIFTS.sales, ds)[key].some(function(s) { return s.code === code; });
+      return !!(shiftClusters(RETAIL_SHIFTS.sales, ds).covers[code] || {})[key];
     }
     function isOpenCode(code, ds){ return inPlaceGroup(code, ds, 'open'); }
     function isCloseCode(code, ds){ return inPlaceGroup(code, ds, 'close'); }
@@ -6928,69 +7102,6 @@ function renderMonthlyPlanning() {
     });
   }
 
-  // Opening and closing coverage in each corner
-  if (storeCorners.length > 1) {
-    var salesGrid = RETAIL_SHIFTS['sales'] || [];
-    var ratioC  = (storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70;
-    var minO = (storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1;
-    var minC = (storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1;
-
-    monthDays.forEach(function(d) {
-      if (d.closure || d.past || _freeze) return;
-      if (isSpecialDay(d)) return;
-      var plan = shiftPlanByDay[d.ds]; if (!plan || !salesGrid.length) return;
-      var cl = shiftClusters(salesGrid, d.ds);
-      function inGroup(g, code) { return g.some(function(s) { return s.code === code; }); }
-      var perCorner = {};
-      agents.forEach(function(a) {
-        if (poolOf(a) !== 'sales') return;
-        if (assignedMap[d.ds].indexOf(a.id) === -1) return;
-        var cur = plan[a.id];
-        if (!inGroup(cl.open, cur) && !inGroup(cl.close, cur)) return;
-        var cid = (cornerAssign[a.id] || {})[d.ds];
-        if (!cid) return;
-        (perCorner[cid] = perCorner[cid] || []).push(a);
-      });
-      Object.keys(perCorner).forEach(function(cid) {
-        var list = perCorner[cid];
-        var n = list.length;
-        if (!n) return;
-        list.sort(function(x,y){ return x.id < y.id ? -1 : 1; });
-        var nClose = Math.round(n * ratioC);
-        if (n >= minO + minC) {
-          nClose = Math.max(minC, Math.min(nClose, n - minO));
-        } else {
-          nClose = Math.max(0, Math.min(nClose, n));
-          if (n >= 2 && nClose >= n) nClose = n - 1;
-          if (n >= 2 && nClose === 0) nClose = 1;
-        }
-        var nOpen = n - nClose;
-        var rot = d.num % n;
-        list = list.slice(rot).concat(list.slice(0, rot));
-        var opens  = list.filter(function(a) { return inGroup(cl.open, plan[a.id]); });
-        var closes = list.filter(function(a) { return !inGroup(cl.open, plan[a.id]); });
-        // Move only the people needed, to a free shift of the other group
-        function move(from, to, group, want) {
-          while (to.length < want && from.length) {
-            var slot = spreadPick(group, to.length, want);
-            var pick = null, code = null;
-            for (var i = 0; i < from.length && !pick; i++) {
-              var tries = [slot].concat(group.filter(function(s) { return s !== slot; }));
-              for (var k = 0; k < tries.length; k++) {
-                if (restAllows(from[i], d.ds, tries[k].code)) { pick = from[i]; code = tries[k].code; break; }
-              }
-            }
-            if (!pick) return;
-            plan[pick.id] = code;
-            from.splice(from.indexOf(pick), 1); to.push(pick);
-          }
-        }
-        if (opens.length < nOpen) move(closes, opens, cl.open, nOpen);
-        else if (closes.length < nClose) move(opens, closes, cl.close, nClose);
-      });
-    });
-  }
-
   // Final rest check (all pools)
   monthDays.forEach(function(d) {
     if (d.closure || d.past) return;
@@ -7016,6 +7127,136 @@ function renderMonthlyPlanning() {
       }
     });
   });
+
+  // Repair real displayed coverage after the rest pass. Manual choices stay locked.
+  (function repairDisplayedCoverage() {
+    var grid = RETAIL_SHIFTS.sales || [];
+    if (!grid.length) return;
+    var sortedGrid = grid.slice().sort(function(x, y) {
+      return (x.startMin - y.startMin) || (x.endMin - y.endMin);
+    });
+    var late = {};
+    sortedGrid.forEach(function(s, i) {
+      late[s.code] = sortedGrid.length > 1 && i >= Math.floor(sortedGrid.length / 2);
+    });
+    var minO = storeSettings && storeSettings.min_opening != null ? storeSettings.min_opening : 1;
+    var minC = storeSettings && storeSettings.min_closing != null ? storeSettings.min_closing : 1;
+
+    function effective(a, ds, replacement) {
+      var ov = (planningOverrides[a.id] || {})[ds];
+      if (ov) return { code: ov };
+      var day = monthDays.find(function(d) { return d.ds === ds; });
+      if (!day) return shownRes(a, ds);
+      if (agentOnLeave(a.id, ds)) return { code: 'A', special: 'leave' };
+      var status = (availability[a.id] || {})[ds];
+      if (status === 'absent') return { code: 'A', special: 'leave' };
+      if (isFixedTimed(a)) return fixedWorksOn(a, day) ? { code: 'PT' } : { code: 'OFF', special: 'off' };
+      if (status === 'rest_override' || status === 'rest_parttime') return { code: 'OFF', special: 'off' };
+      var saved = (snapPlan[ds] || {})[a.id];
+      if (saved && (!recalcFromToday || ds < todayDs)) return saved;
+      if ((restMap[a.id] || {})[ds]) return { code: 'OFF', special: 'off' };
+      var code = replacement != null ? replacement : (shiftPlanByDay[ds] || {})[a.id];
+      return { code: code, half: (volantHalfDay[a.id] || {})[ds] };
+    }
+    function mutable(a, d) {
+      return poolOf(a) === 'sales' && !isFixedTimed(a) && !(planningOverrides[a.id] || {})[d.ds] &&
+        !(snapPlan[d.ds] && snapPlan[d.ds][a.id] && !recalcFromToday) &&
+        assignedMap[d.ds].indexOf(a.id) !== -1 && !!workHoursOf(a, d.ds, effective(a, d.ds));
+    }
+    function cornerOf(a, ds) {
+      return (cornerOverrides[a.id] || {})[ds] || (cornerAssign[a.id] || {})[ds] || a.home_corner_id;
+    }
+    function restFits(a, d, code) {
+      var now = workHoursOf(a, d.ds, effective(a, d.ds, code));
+      if (!now) return false;
+      var prevDs = prevDayOf(d.ds);
+      var nextDate = new Date(d.ds + 'T12:00:00'); nextDate.setDate(nextDate.getDate() + 1);
+      var nextDs = toDateStr(nextDate);
+      var prev = workHoursOf(a, prevDs, effective(a, prevDs));
+      var next = workHoursOf(a, nextDs, effective(a, nextDs));
+      return (!prev || 1440 + now.start - prev.end >= restGapMin) &&
+             (!next || 1440 + next.start - now.end >= restGapMin);
+    }
+    function less(x, y) {
+      for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i];
+      return false;
+    }
+
+    monthDays.forEach(function(d) {
+      if (d.closure || d.past || _freeze || isSpecialDay(d)) return;
+      var hm = dayMinutes(d.ds), groups = {};
+      agents.forEach(function(a) {
+        if (storeCorners.length > 1 ? poolOf(a) !== 'sales' : poolOf(a) === 'stock') return;
+        if (!workHoursOf(a, d.ds, effective(a, d.ds))) return;
+        var cid = storeCorners.length > 1 ? cornerOf(a, d.ds) : '_store';
+        if (!cid) return;
+        (groups[cid] = groups[cid] || []).push(a);
+      });
+      Object.keys(groups).forEach(function(cid) {
+        var list = groups[cid];
+        function state(changes) {
+          var o = 0, c = 0, nLate = 0, hours = [];
+          list.forEach(function(a) {
+            var move = changes.find(function(x) { return x.a.id === a.id; });
+            var res = effective(a, d.ds, move ? move.code : null);
+            var wh = workHoursOf(a, d.ds, res);
+            if (!wh) return;
+            var cv = coverOfHours(wh.start, wh.end, hm);
+            if (cv.open) o++; if (cv.close) c++;
+            if (late[res.code]) nLate++;
+            hours.push(wh);
+          });
+          return { o: o, c: c, late: nLate, hours: hours,
+            missing: Math.max(0, minO - o) + Math.max(0, minC - c) };
+        }
+        function pressure(st) {
+          var value = 0;
+          for (var t = hm.open; t + 15 <= hm.close; t += 15) {
+            var ci = hourlyCurveIndex(t);
+            var w = curveArr && ci >= 0 && ci < curveArr.length ? (+curveArr[ci] || 0) : 1;
+            var present = st.hours.filter(function(h) { return h.start <= t && h.end >= t + 15; }).length;
+            value += Math.max(0, w) / Math.max(0.5, present);
+          }
+          return value;
+        }
+        for (var pass = 0; pass < list.length * 2 + 2; pass++) {
+          var before = state([]);
+          if (!before.missing) break;
+          var options = [];
+          list.filter(function(a) { return mutable(a, d); }).forEach(function(a) {
+            var cur = effective(a, d.ds), wh = workHoursOf(a, d.ds, cur);
+            var oldCov = coverOfHours(wh.start, wh.end, hm);
+            grid.forEach(function(s) {
+              if (s.code === cur.code || !restFits(a, d, s.code)) return;
+              var target = workHoursOf(a, d.ds, effective(a, d.ds, s.code));
+              var cv = coverOfHours(target.start, target.end, hm);
+              if (cv.open !== oldCov.open || cv.close !== oldCov.close) options.push({ a: a, code: s.code });
+            });
+          });
+          var best = null;
+          function consider(changes) {
+            var after = state(changes);
+            if (after.missing >= before.missing) return;
+            // Protect the other boundary only when the proposed move would lose it.
+            if ((before.o >= minO && after.o < minO) || (before.c >= minC && after.c < minC)) return;
+            var distance = changes.reduce(function(sum, x) {
+              var wh = workHoursOf(x.a, d.ds, effective(x.a, d.ds));
+              return sum + Math.abs(findShiftDef(x.code).startMin - wh.start);
+            }, 0);
+            var score = [changes.length, after.missing, Math.abs(after.late - before.late), pressure(after), distance];
+            if (!best || less(score, best.score)) best = { changes: changes, score: score };
+          }
+          options.forEach(function(x) { consider([x]); });
+          // A half-day opener and a full-day closer may require two coordinated moves.
+          if (!best) for (var i = 0; i < options.length; i++) for (var j = i + 1; j < options.length; j++) {
+            if (options[i].a.id !== options[j].a.id) consider([options[i], options[j]]);
+          }
+          if (!best) break;
+          best.changes.forEach(function(x) { shiftPlanByDay[d.ds][x.a.id] = x.code; });
+        }
+      });
+    });
+  })();
 
   function cornerCodeOf(cid) {
     for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === cid) return storeCorners[i].code;
@@ -7788,38 +8029,78 @@ function loadPdfLibs() {
   }
   return pdfLibsReady;
 }
+function planningFilePart(value) {
+  return String(value || '').normalize('NFC')
+    .replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '') || 'Store';
+}
 function sendInfo(view) {
-  var store = (currentStoreName || 'Store').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  var storeName = currentStoreName || 'Store';
+  var store = planningFilePart(storeName);
+  var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
+  var scopeSuffix = currentCornerView ? '_' + planningFilePart(scope) : '';
   if (view === 'monthly') {
     var y = monthlyRef.getFullYear(), m = monthlyRef.getMonth() + 1;
-    return { period: MONTH_NAMES[m - 1] + ' ' + y, bodyId: 'planning-monthly-body',
-             file: 'CAST_' + store + '_Monthly_' + y + '-' + String(m).padStart(2, '0') + '.pdf' };
+    return { storeName: storeName, kind: 'Monthly', scope: scope,
+             period: MONTH_NAMES[m - 1] + ' ' + y, bodyId: 'planning-monthly-body',
+             file: 'CAST_' + store + '_Monthly_' + y + '-' + String(m).padStart(2, '0') + scopeSuffix + '.pdf' };
   }
   var ds = currentIntradayDate || toDateStr(new Date());
-  return { period: formatDateDisplay(ds), bodyId: 'planning-intraday-body',
-           file: 'CAST_' + store + '_Intraday_' + ds + '.pdf' };
+  return { storeName: storeName, kind: 'Intraday', scope: scope,
+           period: formatDateDisplay(ds), bodyId: 'planning-intraday-body',
+           file: 'CAST_' + store + '_Intraday_' + ds + scopeSuffix + '.pdf' };
 }
-// Same content as the PDF export, drawn into one landscape A4 page
+// Same content as the PDF export, landscape A4; too tall = more pages, header repeated
 async function buildPlanningPdf(view) {
   await loadPdfLibs();
   var info = sendInfo(view);
   var box = document.createElement('div');
   box.className = 'pdf-shot' + (view === 'intraday' ? ' is-intraday' : '');
-  box.innerHTML = '<div class="pdf-shot-head"><b>CAST - ' + esc(currentStoreName || '') + '</b><span>' + esc(info.period) + '</span></div>' +
+  box.innerHTML = '<div class="pdf-shot-head"><b>CAST - ' + esc(info.storeName + ' - ' + info.kind + ' - ' + info.scope) + '</b><span>' + esc(info.period) + '</span></div>' +
     '<div class="card' + (view === 'monthly' ? ' pdf-grid-only' : '') + '">' +
     document.getElementById(info.bodyId).innerHTML.replace(/ id="[^"]*"/g, '') + '</div>';
   document.body.appendChild(box);
   try {
+    // Where the header ends and where each row ends, in screen pixels
+    var top = box.getBoundingClientRect().top;
+    var headEl = box.querySelector(view === 'monthly' ? '.mth thead' : '.it-axis');
+    var headEnd = headEl ? headEl.getBoundingClientRect().bottom - top : 0;
+    var cuts = Array.prototype.map.call(box.querySelectorAll(view === 'monthly' ? '.mth tbody tr' : '.it-row'),
+      function(r) { return r.getBoundingClientRect().bottom - top; });
     var canvas = await html2canvas(box, { scale: 2, backgroundColor: '#ffffff', logging: false });
+    var k = canvas.width / box.offsetWidth;
     var doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    var pw = 297, ph = 210, mg = 8, w = pw - 2 * mg, h = canvas.height * w / canvas.width;
-    if (h > ph - 2 * mg) { h = ph - 2 * mg; w = canvas.width * h / canvas.height; }
-    doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (pw - w) / 2, mg, w, h);
+    var pw = 297, ph = 210, mg = 8, w = pw - 2 * mg, mmPerPx = w / canvas.width;
+    var room = Math.floor((ph - 2 * mg) / mmPerPx);
+    function slice(y0, y1, withHead) {
+      var hh = withHead ? Math.round(headEnd * k) : 0;
+      var c = document.createElement('canvas');
+      c.width = canvas.width; c.height = hh + (y1 - y0);
+      var g = c.getContext('2d');
+      g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+      if (hh) g.drawImage(canvas, 0, 0, c.width, hh, 0, 0, c.width, hh);
+      g.drawImage(canvas, 0, y0, c.width, y1 - y0, 0, hh, c.width, y1 - y0);
+      return c;
+    }
+    var pages = [], y = 0, first = true;
+    while (y < canvas.height) {
+      var limit = y + room - (first ? 0 : Math.round(headEnd * k));
+      var end = canvas.height;
+      if (end > limit) {
+        var fit = cuts.map(function(b) { return Math.round(b * k); }).filter(function(b) { return b > y && b <= limit; });
+        end = fit.length ? fit[fit.length - 1] : limit;
+      }
+      pages.push(slice(y, end, !first));
+      y = end; first = false;
+    }
+    pages.forEach(function(c, i) {
+      if (i) doc.addPage();
+      doc.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', mg, mg, w, c.height * mmPerPx);
+    });
     return { file: new File([doc.output('blob')], info.file, { type: 'application/pdf' }), info: info };
   } finally { box.remove(); }
 }
 function sendText(info) { return "Hello, please find attached the team's planning for " + info.period + '.'; }
-function sendSubject(info) { return 'Planning ' + (currentStoreName || '') + ' - ' + info.period; }
+function sendSubject(info) { return 'Planning ' + info.storeName + ' - ' + info.scope + ' - ' + info.period; }
 
 // Send menu: PDF is prepared first, so the share window opens right away
 async function openSendMenu(ev, view) {
