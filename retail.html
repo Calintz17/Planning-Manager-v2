@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v8.6.8</title>
+  <title>CAST v9.0.0</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -202,6 +202,14 @@ h1,h2,h3,h4 { font-weight:700; line-height: 1.3; color: var(--tx-1); }
 .mission-menu-item { display:flex; align-items:center; gap:9px; padding:8px 10px; font-size:13px;
   border-radius:var(--r-md); cursor:pointer; color:var(--tx-1); }
 .mission-menu-item:hover { background:var(--bg-base-3); }
+.xm-item { width:100%; border:0; background:transparent; text-align:left; font-family:var(--font); }
+.xm-item:focus-visible { outline:2px solid var(--nav-active-bg); outline-offset:-2px; }
+.xm-logo { width:18px; height:18px; object-fit:contain; flex-shrink:0; display:block; }
+/* Logo missing: plain letter tile */
+.xm-fb { display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-sm);
+  font-size:11px; font-weight:700; color:#fff; }
+.xm-xl { background:var(--ok); }
+.xm-pdf { background:var(--dang); }
 .mm-chip { font-size:10px; font-weight:700; padding:2px 7px; border-radius:var(--r-pill); }
 
 .sb-field { padding:0 var(--s2); margin-bottom:var(--s2); }
@@ -602,7 +610,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth tr.sub td.c-agent { background:var(--bg-base-2); }
 
 .mth tbody tr:hover td { background:rgba(30,58,138,.045); }
-.mth tbody tr:hover td.c-agent { background:rgba(30,58,138,.075); }
+.mth tbody tr:hover td.c-agent { background:#EEF0F6; }
 .mth.xh td.col-hl { background:rgba(30,58,138,.045); }
 .mth.xh thead th.col-hl { background:rgba(30,58,138,.10); }
 
@@ -617,6 +625,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 /* Row labels of the grid: one style */
 .mth thead th.c-agent, .mth tr.evt-row th.evt-row-label, .mth-group td.mth-group-lbl, .mth tr.blk td.c-agent {
   font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; letter-spacing:.06em; padding-left:var(--s4); }
+.lbl-s { display:none; }
+.ag-txt { display:inline-flex; flex-direction:column; line-height:1.25; }
 .cnr-breakdown { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 2px; padding-left:2px; }
 .cnr-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:var(--r-sm);
   background:var(--bg-base-2); border:1px solid var(--line); font-size:11px; }
@@ -1070,6 +1080,9 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
     background:none; border:none; cursor:pointer; color:var(--tx-2); padding:10px 0; }
   .sb-store-btn .ic { width:22px; height:22px; }
   .sb-store-btn-lbl { display:none; }
+  /* Phone: every sidebar icon on the same axis */
+  #sidebar { padding-left:10px; padding-right:10px; }
+  .sb-mode { justify-content:center; padding:0; }
 }
 
 @media (max-width:700px) {
@@ -1102,6 +1115,11 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
   .month-lbl, .cal-month-label { flex:1; min-width:0; }
   .cal-nav { gap:var(--s2); }
   #dayopen-popup { width:250px; min-width:0; max-width:calc(100vw - 16px); }
+  /* Phone: monthly names become initials */
+  #mth-table th.c-agent, #mth-table td.c-agent { width:56px; min-width:56px; max-width:56px; padding:6px; text-align:center; }
+  #mth-table .ag-txt, #mth-table .lbl-l { display:none; }
+  #mth-table .lbl-s { display:inline; }
+  #mth-table .c-agent > span { justify-content:center; }
   #dayopen-hours { flex-wrap:wrap; }
 }
 
@@ -1256,8 +1274,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
             <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
             <button class="btn btn-ghost" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
           </div>
-          <button id="btn-export" class="btn btn-ghost" onclick="exportMonthly()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
-          <button id="btn-export-pdf" class="btn btn-ghost" onclick="exportMonthlyPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
+          <button class="btn btn-ghost" onclick="openExportMenu(event,'monthly')" title="Download"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download</span></button>
           <button class="btn btn-ghost" onclick="recalcFromToday()">Recalculate from today</button>
           <button id="btn-reset-manual" class="btn btn-ghost" onclick="clearMonthOverrides()" style="display:none">Reset manual changes</button>
         </div>
@@ -1282,8 +1299,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
             <input type="date" id="intraday-date" onchange="intradayPickDate(this.value)">
             <button class="btn btn-ghost" onclick="intradayShiftDay(1)" aria-label="Next day">&rsaquo;</button>
           </div>
-          <button class="btn btn-ghost" onclick="exportIntraday()" title="Export to Excel"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Excel</span></button>
-          <button class="btn btn-ghost" onclick="exportIntradayPDF()" title="Export to PDF"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>PDF</span></button>
+          <button class="btn btn-ghost" onclick="openExportMenu(event,'intraday')" title="Download"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download</span></button>
         </div>
       </div>
       <div id="planning-intraday-body"><p class="plan-empty">Select a store to view the intraday planning.</p></div>
@@ -1428,6 +1444,7 @@ var I18N = {
     'Off - home corners': 'オフ - 担当コーナー',
     'Off': 'オフ',
     'Total present': '出勤合計',
+    'Download': 'ダウンロード',
     'Opening': '開店シフト',
     'Closing': '閉店シフト',
     'Duration': '所要時間',
@@ -2198,7 +2215,28 @@ function toggleAddAgentForm() {
 }
 
 // Start-up
+// Touch screens: a tap shows the hover text
+var TAP_TIP_SEL = 'th.has-issue, .it-blk[title], .mth .avatar[title], .lbl-s[title]';
+function initTapTips() {
+  if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) return;
+  var owner = null;
+  function hide() { document.getElementById('evt-tip').classList.remove('open'); owner = null; }
+  document.addEventListener('click', function(e) {
+    var tip = document.getElementById('evt-tip');
+    var el = e.target.closest(TAP_TIP_SEL);
+    if (!el || el === owner || e.target.closest('.it-blk-x')) { if (owner) hide(); return; }
+    owner = el;
+    tip.innerHTML = '<div class="evt-tip-text">' + esc(el.getAttribute('title')) + '</div>';
+    tip.classList.add('open');
+    var r = el.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+    tip.style.left = Math.max(8, Math.min(r.left, vw - tip.offsetWidth - 8)) + 'px';
+    tip.style.top = (r.bottom + 8 + tip.offsetHeight <= window.innerHeight - 8 ? r.bottom + 8 : Math.max(8, r.top - tip.offsetHeight - 8)) + 'px';
+  }, true);
+  window.addEventListener('scroll', function() { if (owner) hide(); }, true);
+}
+
 async function init() {
+  initTapTips();
   initPlanHelp();
   enhanceDateInputs();
   new MutationObserver(enhanceDateInputs).observe(document.body, { childList: true, subtree: true });
@@ -7177,9 +7215,15 @@ function renderMonthlyPlanning() {
   var resetBtn = document.getElementById('btn-reset-manual');
   if (resetBtn) resetBtn.style.display = nOverrides ? '' : 'none';
 
+  // Full label on screen, short one on phone
+  var GROUP_SHORT = { Management:'MGT', Stock:'STK', Unassigned:'-' };
+  function lblPair(full, short) {
+    return '<span class="lbl-l">' + esc(full) + '</span><span class="lbl-s" title="' + esc(full) + '">' + esc(short) + '</span>';
+  }
+
   // Column headers
   function headRow(firstLabel, withEvents) {
-    var h = '<thead><tr><th class="c-agent">' + firstLabel + '</th>';
+    var h = '<thead><tr><th class="c-agent">' + (withEvents ? lblPair(firstLabel, firstLabel) : firstLabel) + '</th>';
     monthDays.forEach(function(d, i) {
       var cls = 'c-day';
       if (d.dow === 1) cls += ' wk-start';
@@ -7198,8 +7242,9 @@ function renderMonthlyPlanning() {
     // Event rows
     if (withEvents) ['local', 'national', 'training'].forEach(function(cat) {
       eventLanes(cat).forEach(function(lane, li) {
+        var catLbl = t(cat.charAt(0).toUpperCase() + cat.slice(1));
         h += '<tr class="evt-row" data-cat="' + cat + '"><th class="c-agent evt-row-label">' +
-             (li === 0 ? t(cat.charAt(0).toUpperCase() + cat.slice(1)) : '') + '</th>';
+             (li === 0 ? lblPair(catLbl, cat.slice(0, 3)) : '') + '</th>';
         var di = 0;
         while (di < monthDays.length) {
           var d = monthDays[di];
@@ -7283,7 +7328,7 @@ function renderMonthlyPlanning() {
 
   ordered.forEach(function(a) {
     if (a.group) {
-      html += '<tr class="mth-group"><td class="c-agent mth-group-lbl">' + a.group +
+      html += '<tr class="mth-group"><td class="c-agent mth-group-lbl">' + lblPair(a.group, GROUP_SHORT[a.group] || a.group) +
               '</td><td colspan="' + (nDayCols + 6) + '"></td></tr>';
       return;
     }
@@ -7293,9 +7338,9 @@ function renderMonthlyPlanning() {
     html += '<tr>';
     html += '<td class="c-agent">' +
       '<span style="display:inline-flex;align-items:center;gap:10px;">' +
-        '<span class="avatar" style="background:' + retailAvatarColor(name) + ';">' +
+        '<span class="avatar" title="' + esc(name + ' - ' + stInfo.label) + '" style="background:' + retailAvatarColor(name) + ';">' +
           retailInitials(a.first_name, a.last_name) + '</span>' +
-        '<span style="display:inline-flex;flex-direction:column;line-height:1.25;">' +
+        '<span class="ag-txt">' +
           '<span style="font-weight:400;">' + esc(name) + '</span>' +
           '<span style="font-size:11px;color:var(--tx-3);">' + esc(stInfo.label) +
             (pct < 100 ? ' - ' + pct + '%' : '') + '</span>' +
@@ -7691,6 +7736,46 @@ function exportIntradayPDF() {
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   printableExport('<div class="card">' + document.getElementById('planning-intraday-body').innerHTML + '</div>',
     'Intraday - ' + scope + ' - ' + (currentIntradayDate || ''));
+}
+
+// Download menu: Excel or PDF
+function openExportMenu(ev, view) {
+  ev.stopPropagation();
+  closeExportMenu();
+  var items = [
+    ['xl', 'Microsoft_Office_Excel_(2025%E2%80%93present).svg.webp', 'Excel', view === 'monthly' ? 'exportMonthly()' : 'exportIntraday()'],
+    ['pdf', 'logo%20pdf.webp', 'PDF', view === 'monthly' ? 'exportMonthlyPDF()' : 'exportIntradayPDF()']
+  ];
+  var m = document.createElement('div');
+  m.id = 'export-menu'; m.className = 'mission-menu';
+  m.exportTrigger = ev.currentTarget;
+  m.innerHTML = items.map(function(it) {
+    return '<button type="button" class="mission-menu-item xm-item" onclick="closeExportMenu();' + it[3] + '">' +
+      '<img class="xm-logo" src="' + it[1] + '" alt="" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'xm-logo xm-fb xm-' + it[0] + '\',textContent:\'' + it[2].charAt(0) + '\'}))">' +
+      '<span>' + it[2] + '</span></button>';
+  }).join('');
+  document.body.appendChild(m);
+  var r = ev.currentTarget.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+  m.style.top = (r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(r.left, vw - m.offsetWidth - 8)) + 'px';
+  var first = m.querySelector('button');
+  if (first) first.focus({ preventScroll:true });
+  document.addEventListener('keydown', onExportMenuKey);
+  setTimeout(function() { document.addEventListener('click', closeExportMenu); }, 0);
+}
+function closeExportMenu() {
+  var m = document.getElementById('export-menu');
+  if (m) m.remove();
+  document.removeEventListener('click', closeExportMenu);
+  document.removeEventListener('keydown', onExportMenuKey);
+}
+// Escape closes the menu and goes back to Download
+function onExportMenuKey(ev) {
+  if (ev.key !== 'Escape') return;
+  ev.preventDefault();
+  var m = document.getElementById('export-menu'), trigger = m && m.exportTrigger;
+  closeExportMenu();
+  if (trigger) trigger.focus({ preventScroll:true });
 }
 
 function cornerCodeById(cid) {
