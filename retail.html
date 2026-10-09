@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.0.10</title>
+  <title>CAST v9.0.11</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -1460,17 +1460,29 @@ if (!LANGS[CURRENT_LANG]) CURRENT_LANG = 'en';
 function dLoc() { return (LANGS[CURRENT_LANG] || LANGS.en).loc; }
 function docLang() { return (LANGS[CURRENT_LANG] || LANGS.en).html; }
 
-// Load one language file once; if it fails, CAST stays in English
+var LANG_LOADS = Object.create(null), LANG_SWITCH_SEQ = 0;
+// Keep one request per language; only the latest choice updates the screen.
 function loadLang(lang) {
   var L = LANGS[lang];
   if (!L || !L.file || I18N[lang]) return Promise.resolve(!!(L && (!L.file || I18N[lang])));
-  return fetch(L.file, { cache: 'no-cache' })
+  if (LANG_LOADS[lang]) return LANG_LOADS[lang];
+  LANG_LOADS[lang] = fetch(L.file, { cache: 'no-cache' })
     .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function(d) { I18N[lang] = d; I18N_REV = null; return true; })
-    .catch(function() { return false; });
+    .then(function(d) {
+      if (!d || typeof d !== 'object' || Array.isArray(d) || !Object.keys(d).length ||
+          Object.keys(d).some(function(k) { return typeof d[k] !== 'string' || !d[k].trim(); })) return false;
+      I18N[lang] = d; I18N_REV = null; return true;
+    })
+    .catch(function() { return false; })
+    .then(function(ok) { delete LANG_LOADS[lang]; return ok; });
+  return LANG_LOADS[lang];
 }
 function switchLang(lang) {
-  return loadLang(lang).then(function(ok) { applyLang(ok ? lang : 'en'); });
+  var seq = ++LANG_SWITCH_SEQ;
+  return loadLang(lang).then(function(ok) {
+    if (seq === LANG_SWITCH_SEQ) applyLang(ok ? lang : 'en');
+    return ok;
+  });
 }
 
 function t(en) {
@@ -1501,6 +1513,34 @@ function applyLang(lang) {
     if (typeof renderMonthlyPlanning === 'function') renderMonthlyPlanning();
     if (typeof renderDashboard === 'function') renderDashboard();
     if (typeof renderAgents === 'function') renderAgents();
+    if (currentIntradayDate) renderIntraday(currentIntradayDate);
+    var calendar = document.getElementById('tab-calendar');
+    if (calendar && calendar.classList.contains('active')) {
+      document.getElementById('cal-month-label').textContent = currentCalView === 'annual'
+        ? String(calMonth.getFullYear()) : calMonth.toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
+      if (currentCalView === 'annual') renderAnnualCalendar(); else renderMonthlyCalendar();
+    }
+    var traffic = document.getElementById('tab-traffic');
+    if (traffic && traffic.classList.contains('active')) {
+      var drafts = {};
+      document.querySelectorAll('#traffic-content .tr-cy, #traffic-content .tr-d').forEach(function(input) {
+        drafts[(input.dataset.date ? 'd:' + input.dataset.date : 'm:' + input.dataset.month)] = input.value;
+      });
+      renderTraffic(true); // Reuse loaded data; language changes do not fetch or save traffic.
+      document.querySelectorAll('#traffic-content .tr-cy, #traffic-content .tr-d').forEach(function(input) {
+        var key = input.dataset.date ? 'd:' + input.dataset.date : 'm:' + input.dataset.month;
+        if (Object.prototype.hasOwnProperty.call(drafts, key)) input.value = drafts[key];
+      });
+    }
+  }
+  updateMonthlyLabel(); updateWeekLabel();
+  document.querySelectorAll('input[type=date][data-dp]').forEach(dpLabel);
+  if (dpInput) renderDatePop();
+  if (eventEditorState && eventEditorState.cat) {
+    var category = eventEditorState.cat;
+    document.getElementById('evt-modal-title').textContent = tf('{category} event', {
+      category: t(category.charAt(0).toUpperCase() + category.slice(1))
+    });
   }
 
   var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
@@ -1508,7 +1548,7 @@ function applyLang(lang) {
   while (walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach(function(node) {
     var p = node.parentNode; if (!p) return;
-    if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE') return;
+    if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE' || (p.closest && p.closest('[data-no-i18n]'))) return;
     var trimmed = (node.nodeValue || '').trim();
     if (!trimmed) return;
     if (node.__en == null) node.__en = enOf(trimmed);
@@ -1519,8 +1559,9 @@ function applyLang(lang) {
     if (d && d[en]) node.nodeValue = lead + d[en] + tail;
   });
 
-  ['placeholder','title'].forEach(function(attr) {
+  ['placeholder','title','aria-label'].forEach(function(attr) {
     document.querySelectorAll('['+attr+']').forEach(function(el) {
+      if (el.closest && el.closest('[data-no-i18n]')) return;
       var ck = '__en_'+attr;
       if (el[ck] == null) el[ck] = enOf(el.getAttribute(attr));
       var en = el[ck];
@@ -1792,15 +1833,16 @@ function retranslate() {
   var nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach(function(node) {
     var p = node.parentNode; if (!p) return;
-    if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE') return;
+    if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE' || (p.closest && p.closest('[data-no-i18n]'))) return;
     var trimmed = (node.nodeValue || '').trim(); if (!trimmed) return;
     if (node.__en == null) node.__en = enOf(trimmed);
     var en = node.__en;
     var lead = node.nodeValue.match(/^\s*/)[0], tail = node.nodeValue.match(/\s*$/)[0];
     if (d[en]) node.nodeValue = lead + d[en] + tail;
   });
-  ['placeholder','title'].forEach(function(attr) {
+  ['placeholder','title','aria-label'].forEach(function(attr) {
     document.querySelectorAll('['+attr+']').forEach(function(el) {
+      if (el.closest && el.closest('[data-no-i18n]')) return;
       var ck = '__en_'+attr;
       if (el[ck] == null) el[ck] = enOf(el.getAttribute(attr));
       if (d[el[ck]]) el.setAttribute(attr, d[el[ck]]);
@@ -1851,7 +1893,7 @@ function toggleAddAgentForm() {
     var csel = document.getElementById('new-corner');
     if (storeCorners.length > 1) {
       var opts = '<option value="">- none -</option>';
-      storeCorners.forEach(function(c) { opts += '<option value="' + c.id + '">' + esc(c.code) + '</option>'; });
+      storeCorners.forEach(function(c) { opts += '<option data-no-i18n value="' + c.id + '">' + esc(c.code) + '</option>'; });
       csel.innerHTML = opts;
       cfld.style.display = '';
     } else {
@@ -1887,7 +1929,7 @@ async function init() {
   enhanceDateInputs();
   new MutationObserver(enhanceDateInputs).observe(document.body, { childList: true, subtree: true });
   installRetranslateHooks();
-  switchLang(CURRENT_LANG);
+  await switchLang(CURRENT_LANG);
   updateWeekLabel();
   updateMonthlyLabel();
   showLoader();
@@ -3487,7 +3529,7 @@ function renderCornerTabs() {
                '" onclick="switchCornerView(null)">All</button>';
     sorted.forEach(function(c) {
       html += '<button class="corner-tab' + (currentCornerView === c.id ? ' active' : '') +
-              '" onclick="switchCornerView(\'' + c.id + '\')">' + esc(c.code) + '</button>';
+              '" data-no-i18n onclick="switchCornerView(\'' + c.id + '\')">' + esc(c.code) + '</button>';
     });
     box.innerHTML = html;
   });
@@ -3940,7 +3982,7 @@ function forecastYear(year) {
 var MONTH_NAMES = ['January','February','March','April','May','June',
                    'July','August','September','October','November','December'];
 
-async function renderTraffic() {
+async function renderTraffic(localeOnly) {
   var box = document.getElementById('traffic-content');
   if (!box) return;
   if (!currentStoreId) {
@@ -3950,7 +3992,7 @@ async function renderTraffic() {
   }
 
   var year = currentWeekMonday.getFullYear();
-  await loadTraffic(year);
+  if (!localeOnly) await loadTraffic(year);
 
   var totalN2 = 0, totalLY = 0, totalCY = 0;
   for (var m = 1; m <= 12; m++) {
@@ -4045,7 +4087,7 @@ async function renderTraffic() {
       var rec2 = trafficDaily[ds] || {};
       var isM  = !!rec2.is_manual;
       var clo  = getDayClosureType(ds);
-      var head = DAY_SHORT[(d.getDay() + 6) % 7] + ' ' + d.getDate();
+      var head = t(DAY_SHORT[(d.getDay() + 6) % 7]) + ' ' + d.getDate();
 
       if (clo) {
         var why = (clo === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
@@ -4225,7 +4267,7 @@ function initHourlyCurve(keepValues) {
 
 function resetHourlyCurve() {
   if (!curveHours.length) return;
-  if (!confirm('Reset the hourly curve to a flat shape?')) return;
+  if (!confirm(t('Reset the hourly curve to a flat shape?'))) return;
   var flat = 100 / curveHours.length;
   curveValues = curveHours.map(function(){ return flat; });
   initHourlyCurve(true);
@@ -4831,7 +4873,7 @@ function renderIntraday(ds) {
     storeCorners.slice().sort(function(x,y){ return cWi(y.id)-cWi(x.id); }).forEach(function(c){
       if (currentCornerView && c.id !== currentCornerView) return;
       var here = working.filter(function(a){ return poolOf(a)==='sales' && effCorner(a)===c.id; });
-      if (here.length) groups.push({ title:c.code.toUpperCase(), list:here });
+      if (here.length) groups.push({ title:c.code.toUpperCase(), cornerCode:true, list:here });
     });
     var placedI = {};
     groups.forEach(function(g){ g.list.forEach(function(a){ placedI[a.id]=true; }); });
@@ -4859,7 +4901,7 @@ function renderIntraday(ds) {
   var intradayExportRows = [];
   groups.forEach(function(grp) {
     var list = grp.list;
-    rowsHtml += '<div class="it-group"><div class="it-role">' + esc(grp.title) + '</div>';
+    rowsHtml += '<div class="it-group"><div class="it-role"' + (grp.cornerCode ? ' data-no-i18n' : '') + '>' + esc(grp.title) + '</div>';
     list.forEach(function(a) {
       var sh = shiftInfo[a.id];
       var sH = sh.startMin / 60, eH = sh.endMin / 60;
@@ -4909,7 +4951,7 @@ function renderIntraday(ds) {
         agentId: a.id,
         name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
         role: (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '',
-        group: grp.title,
+        group: grp.title, groupIsCorner: !!grp.cornerCode,
         code: sh.code, tone: sh.tone || 'close', startH: sH, endH: eH,
         blocks: exportBlocks
       });
@@ -5361,7 +5403,7 @@ function openCellEditor(agentId, ds, evt) {
     html += '<div class="ce-sep"></div><div class="ce-cnr-lbl">Corner</div><div class="ce-cnr">';
     storeCorners.forEach(function(c) {
       html += '<button class="ce-cnr-opt' + (curCnr === c.id ? ' is-current' : '') +
-              '" onclick="applyCornerOverride(\'' + c.id + '\')">' + esc(c.code) + '</button>';
+              '" data-no-i18n onclick="applyCornerOverride(\'' + c.id + '\')">' + esc(c.code) + '</button>';
     });
     if (curCnr) {
       html += '<button class="ce-cnr-opt ce-reset" onclick="applyCornerOverride(null)">Auto</button>';
@@ -5406,7 +5448,7 @@ function closeCellEditor() {
 function toggleCellAdjustMode(cb) {
   if (cb.checked && !adjustWarned) {
     adjustWarned = true;
-    if (!confirm('While this is on, each change you make will recompute the whole planning for every advisor (past days stay untouched). Continue?')) {
+    if (!confirm(t('While this is on, each change you make will recompute the whole planning for every advisor (past days stay untouched). Continue?'))) {
       cb.checked = false;
       return;
     }
@@ -5742,7 +5784,7 @@ function cornerBreakdownHtml(cornerPresence) {
   if (!codes.length) return '';
   codes.sort(function(a, b){ return cornerPresence[b] - cornerPresence[a]; });
   var chips = codes.map(function(code){
-    return '<span class="cnr-chip"><span class="cnr-chip-code">' + esc(code) +
+    return '<span class="cnr-chip"><span class="cnr-chip-code" data-no-i18n>' + esc(code) +
            '</span><span class="cnr-chip-n">' + cornerPresence[code] + '</span></span>';
   }).join('');
   return '<div class="cnr-breakdown">' + chips + '</div>';
@@ -6968,7 +7010,7 @@ function renderMonthlyPlanning() {
       return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + esc(res.code) + '</span></span>';
     }
     if (res.corner) {
-      return '<span class="sh-cnr"><span class="sh-cnr-tag">' + esc(res.corner) + '</span>' +
+      return '<span class="sh-cnr"><span class="sh-cnr-tag" data-no-i18n>' + esc(res.corner) + '</span>' +
              '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span></span>';
     }
     return '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span>';
@@ -7027,7 +7069,9 @@ function renderMonthlyPlanning() {
 
   // Planning table
   var todayStr = toDateStr(new Date());
-  var rhCols = ['O','C','OFF','DIM','FER','CP'];
+  // Counter columns: short code in English, translated word in other languages
+  var rhCols = ['O','C','OFF','SUN','HOL','LV'];
+  var RH_FULL = { SUN:'Sun', HOL:'Holiday', LV:'Leave' };
 
   function dayCls(d) {
     var c = 'c-day';
@@ -7143,14 +7187,18 @@ function renderMonthlyPlanning() {
       if (d.dow === 1) cls += ' wk-start';
       if (d.dow === 0 || d.dow === 6) cls += ' is-weekend';
       if (d.ds === todayStr) cls += ' is-today';
-      var dl = ['S','M','T','W','T','F','S'][d.dow];
+      var dl = new Date(d.ds + 'T12:00:00').toLocaleDateString(dLoc(), { weekday:CURRENT_LANG === 'en' ? 'narrow' : 'short' });
       var dayIssues = withEvents ? issueByDs[d.ds] : null;
       if (dayIssues) cls += ' has-issue';
       var tip = dayIssues ? ' title="' + esc(dayIssues.join('\n')) + '"' : '';
       h += '<th class="' + cls + '" data-col="' + i + '"' + tip + '>' +
            '<span class="dow">' + dl + '</span><span class="dnum">' + d.num + '</span></th>';
     });
-    rhCols.forEach(function(c){ h += '<th class="c-rh">' + c + '</th>'; });
+    rhCols.forEach(function(c){
+      var full = RH_FULL[c];
+      h += '<th class="c-rh" data-no-i18n' + (full ? ' title="' + esc(t(full)) + '"' : '') + '>' +
+        (full && CURRENT_LANG !== 'en' ? esc(t(full)) : c) + '</th>';
+    });
     h += '</tr>';
 
     // Event rows
@@ -7214,13 +7262,13 @@ function renderMonthlyPlanning() {
       var reinforcements = agents.filter(function(a){
         return poolOf(a) === 'sales' && a.home_corner_id !== viewCorner.id && reinforcesView(a);
       });
-      ordered.push({ group: viewCorner.code });
+      ordered.push({ group: viewCorner.code, isCode:true });
       here.forEach(function(a){ ordered.push(a); placed[a.id] = true; });
       reinforcements.forEach(function(a){ ordered.push(a); placed[a.id] = true; });
     } else {
       cornersSorted.forEach(function(c) {
         var hc = agents.filter(function(a){ return poolOf(a) === 'sales' && a.home_corner_id === c.id; });
-        ordered.push({ group: c.code });
+        ordered.push({ group: c.code, isCode:true });
         hc.forEach(function(a){ ordered.push(a); placed[a.id] = true; });
       });
       var noHome = agents.filter(function(a){ return poolOf(a) === 'sales' && !placed[a.id]; });
@@ -7242,7 +7290,7 @@ function renderMonthlyPlanning() {
 
   ordered.forEach(function(a) {
     if (a.group) {
-      html += '<tr class="mth-group"><td class="c-agent mth-group-lbl">' + lblPair(a.group, GROUP_SHORT[a.group] || a.group) +
+      html += '<tr class="mth-group"><td class="c-agent mth-group-lbl"' + (a.isCode ? ' data-no-i18n' : '') + '>' + lblPair(a.group, GROUP_SHORT[a.group] || a.group) +
               '</td><td colspan="' + (nDayCols + 6) + '"></td></tr>';
       return;
     }
@@ -7252,11 +7300,11 @@ function renderMonthlyPlanning() {
     html += '<tr>';
     html += '<td class="c-agent">' +
       '<span style="display:inline-flex;align-items:center;gap:10px;">' +
-        '<span class="avatar" title="' + esc(name + ' - ' + stInfo.label) + '" style="background:' + retailAvatarColor(name) + ';">' +
+        '<span class="avatar" title="' + esc(name + ' - ' + t(stInfo.label)) + '" style="background:' + retailAvatarColor(name) + ';">' +
           retailInitials(a.first_name, a.last_name) + '</span>' +
         '<span class="ag-txt">' +
           '<span style="font-weight:400;">' + esc(name) + '</span>' +
-          '<span style="font-size:11px;color:var(--tx-3);">' + esc(stInfo.label) +
+          '<span style="font-size:11px;color:var(--tx-3);">' + esc(t(stInfo.label)) +
             (pct < 100 ? ' - ' + pct + '%' : '') + '</span>' +
         '</span></span></td>';
     agentRows[a.id].forEach(function(rc, i) {
@@ -7356,7 +7404,7 @@ function renderAgents() {
       '<span class="ag-id">' + av +
         '<span class="ag-txt">' +
           '<span class="ag-name">' + esc(name.trim()) + '</span>' +
-          '<span class="ag-sub">' + esc(agentSubLabel(a)) + '</span>' +
+          '<span class="ag-sub" data-no-i18n>' + esc(agentSubLabel(a)) + '</span>' +
         '</span></span>' +
       '<span class="ag-meta">' +
         '<span class="pill pill-neutral">' + esc(stInfo.label) + '</span>' +
@@ -7463,7 +7511,7 @@ function openAgentEditor(agentId) {
     cSec.style.display = 'block';
     var opts = '<option value="">- none -</option>';
     storeCorners.forEach(function(c) {
-      opts += '<option value="' + c.id + '"' + (a.home_corner_id === c.id ? ' selected' : '') + '>' + c.code + '</option>';
+      opts += '<option data-no-i18n value="' + c.id + '"' + (a.home_corner_id === c.id ? ' selected' : '') + '>' + c.code + '</option>';
     });
     document.getElementById('ae-home-corner').innerHTML = opts;
     renderSkillChips(a.corner_skills || []);
@@ -7555,7 +7603,7 @@ async function saveAgentEditor() {
 
 async function deleteAgentFromEditor() {
   if (!agentEditorId) return;
-  if (!confirm('Delete this agent? This cannot be undone.')) return;
+  if (!confirm(t('Delete this agent? This cannot be undone.'))) return;
   var id = agentEditorId;
   clearTimeout(agentSaveTimer); agentSaveTimer = null;
   await agentSaveInFlight.catch(function() {});
@@ -7667,12 +7715,12 @@ function sendInfo(view) {
   var scopeSuffix = currentCornerView ? '_' + planningFilePart(scope) : '';
   if (view === 'monthly') {
     var y = monthlyRef.getFullYear(), m = monthlyRef.getMonth() + 1;
-    return { storeName: storeName, kind: 'Monthly', scope: scope,
-             period: MONTH_NAMES[m - 1] + ' ' + y, bodyId: 'planning-monthly-body',
+    return { storeName: storeName, kind: 'Monthly', scope: scope, scopeIsCorner:!!currentCornerView,
+             period: new Date(y, m - 1, 1).toLocaleDateString(dLoc(), { month:'long', year:'numeric' }), bodyId: 'planning-monthly-body',
              file: 'CAST_' + store + '_Monthly_' + y + '-' + String(m).padStart(2, '0') + scopeSuffix + '.pdf' };
   }
   var ds = currentIntradayDate || toDateStr(new Date());
-  return { storeName: storeName, kind: 'Intraday', scope: scope,
+  return { storeName: storeName, kind: 'Intraday', scope: scope, scopeIsCorner:!!currentCornerView,
            period: formatDateDisplay(ds), bodyId: 'planning-intraday-body',
            file: 'CAST_' + store + '_Intraday_' + ds + scopeSuffix + '.pdf' };
 }
@@ -7682,7 +7730,7 @@ async function buildPlanningPdf(view) {
   var info = sendInfo(view);
   var box = document.createElement('div');
   box.className = 'pdf-shot' + (view === 'intraday' ? ' is-intraday' : '');
-  box.innerHTML = '<div class="pdf-shot-head"><b>CAST - ' + esc(info.storeName + ' - ' + info.kind + ' - ' + info.scope) + '</b><span>' + esc(info.period) + '</span></div>' +
+  box.innerHTML = '<div class="pdf-shot-head"><b>CAST - ' + esc(info.storeName + ' - ' + t(info.kind) + ' - ' + planningScopeLabel(info.scope, info.scopeIsCorner)) + '</b><span>' + esc(info.period) + '</span></div>' +
     '<div class="card' + (view === 'monthly' ? ' pdf-grid-only' : '') + '">' +
     document.getElementById(info.bodyId).innerHTML.replace(/ id="[^"]*"/g, '') + '</div>';
   document.body.appendChild(box);
@@ -7727,7 +7775,8 @@ async function buildPlanningPdf(view) {
   } finally { box.remove(); }
 }
 function sendText(info) { return tf("Hello, please find attached the team's planning for {period}.", { period: info.period }); }
-function sendSubject(info) { return tf('Planning {store} - {scope} - {period}', { store: info.storeName, scope: t(info.scope), period: info.period }); }
+function planningScopeLabel(scope, isCorner) { return isCorner ? scope : t('All'); }
+function sendSubject(info) { return tf('Planning {store} - {scope} - {period}', { store: info.storeName, scope: planningScopeLabel(info.scope, info.scopeIsCorner), period: info.period }); }
 
 // Send menu: PDF is prepared first, so the share window opens right away
 async function openSendMenu(ev, view) {
@@ -7791,17 +7840,17 @@ async function openSendMenu(ev, view) {
 }
 
 function exportMonthlyPDF() {
-  var mn = MONTH_NAMES[monthlyRef.getMonth()] + ' ' + monthlyRef.getFullYear();
+  var mn = monthlyRef.toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   // One page: names and shift cells only (no counters, no coverage table), fitted to the page width.
   printableExport('<div class="card pdf-grid-only">' + document.getElementById('planning-monthly-body').innerHTML + '</div>',
-    tf('Monthly - {scope} - {period}', { scope: t(scope), period: mn }), true);
+    tf('Monthly - {scope} - {period}', { scope: planningScopeLabel(scope, !!currentCornerView), period: mn }), true);
 }
 
 function exportIntradayPDF() {
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   printableExport('<div class="card">' + document.getElementById('planning-intraday-body').innerHTML + '</div>',
-    tf('Intraday - {scope} - {date}', { scope: t(scope), date: currentIntradayDate || '' }));
+    tf('Intraday - {scope} - {date}', { scope: planningScopeLabel(scope, !!currentCornerView), date: currentIntradayDate ? formatDateDisplay(currentIntradayDate) : '' }));
 }
 
 // Download menu: Excel or PDF
@@ -7952,7 +8001,7 @@ function exportMonthly() {
 
   var totalCols = 2 + nDays + 3;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
-  var titleRow = [ cell('CAST  -  Retail Planning', { align:'left', bold:true, sz:16, tx:'1E3A8A' }) ];
+  var titleRow = [ cell(t('CAST  -  Retail Planning'), { align:'left', bold:true, sz:16, tx:'1E3A8A' }) ];
   for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
   rows.push(titleRow);
   var metaRow = [ cell(currentStoreName + '   ' + monthName, { align:'left', bold:true, sz:11, tx:'6B7280', underline:'rule' }) ];
@@ -7962,10 +8011,10 @@ function exportMonthly() {
 
   // Same style for every row label
   var LBL = { tx:'52525B', bold:true, sz:9, align:'left' };
-  function lbl(txt, bg) { return cell(String(txt).toUpperCase(), Object.assign({ bg:bg }, LBL)); }
+  function lbl(txt, bg, isCode) { return cell(String(isCode ? txt : t(txt)).toUpperCase(), Object.assign({ bg:bg }, LBL)); }
   var hRow = [ lbl('Agent', HEAD.bg), lbl('Role', HEAD.bg) ];
   days.forEach(function(d){
-    hRow.push(cell(DOWL[d.dow] + ' ' + d.num, { bg:(d.dow===0||d.dow===6)?'F1F2F4':HEAD.bg, tx:HEAD.tx, bold:true, sz:9, grid:true }));
+    hRow.push(cell(new Date(d.ds + 'T12:00:00').toLocaleDateString(dLoc(), { weekday:CURRENT_LANG === 'en' ? 'narrow' : 'short' }) + ' ' + d.num, { bg:(d.dow===0||d.dow===6)?'F1F2F4':HEAD.bg, tx:HEAD.tx, bold:true, sz:9, grid:true }));
   });
   hRow.push(cell('O',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
   hRow.push(cell('C',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
@@ -7977,7 +8026,7 @@ function exportMonthly() {
   var evtMerges = [];
   ['local', 'national', 'training'].forEach(function(cat) {
     eventLanes(cat).forEach(function(lane, li) {
-      var r = [ lbl(li === 0 ? cat : ''), cell('',{}) ];
+      var r = [ lbl(li === 0 ? cat.charAt(0).toUpperCase() + cat.slice(1) : ''), cell('',{}) ];
       var di = 0;
       while (di < days.length) {
         var d = days[di];
@@ -8021,7 +8070,7 @@ function exportMonthly() {
         var rf = agents.filter(function(a){ return poolOf(a)==='sales' && a.home_corner_id!==c.id && reinf(a); });
         here = here.concat(rf);
       }
-      if (here.length) { xlGroups.push({ label:c.code, pool:'sales', list:here }); here.forEach(function(a){ placedX[a.id]=true; }); }
+      if (here.length) { xlGroups.push({ label:c.code, isCode:true, pool:'sales', list:here }); here.forEach(function(a){ placedX[a.id]=true; }); }
     });
     if (!currentCornerView) {
       var noHx = agents.filter(function(a){ return poolOf(a)==='sales' && !placedX[a.id]; });
@@ -8038,14 +8087,14 @@ function exportMonthly() {
 
   xlGroups.forEach(function(grp){
     var inBlock = grp.list;
-    var blkRow = [ lbl(grp.label, BLK.bg) ];
+    var blkRow = [ lbl(grp.label, BLK.bg, grp.isCode) ];
     for (var i=1;i<totalCols;i++) blkRow.push(cell('',{bg:BLK.bg}));
     rows.push(blkRow);
 
     inBlock.forEach(function(a){
       var role = (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '';
       var nm = a.first_name + ' ' + (a.last_name||'').charAt(0) + '.';
-      var r = [ cell(nm,{align:'left',bold:true}), cell(role,{align:'left',tx:'6B7280',sz:9}) ];
+      var r = [ cell(nm,{align:'left',bold:true}), cell(t(role),{align:'left',tx:'6B7280',sz:9}) ];
       var cntO=0,cntC=0,cntOff=0;
       days.forEach(function(d){
         var res = (monthlyResult[d.ds] || {})[a.id];
@@ -8082,7 +8131,7 @@ function exportMonthly() {
 
   function sumRow(label, map, opt) {
     opt = opt || {};
-    var r = [ cell(label,{align:'left',bold:true,tx:opt.tx||'6B7280',sz:9,bg:opt.bg||'FCFCFD'}),
+    var r = [ cell(t(label),{align:'left',bold:true,tx:opt.tx||'6B7280',sz:9,bg:opt.bg||'FCFCFD'}),
               cell('',{bg:opt.bg||'FCFCFD'}) ];
     days.forEach(function(d){
       r.push(cell(d.closure?'':(map[d.ds]||0),{bold:true,sz:9,tx:opt.tx||'3F3F46',bg:opt.bg||'FCFCFD',grid:true,
@@ -8188,7 +8237,7 @@ function exportIntraday() {
   var totalCols = 3 + nQ;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
 
-  var titleRow = [ cell('CAST  -  Intraday Planning', {align:'left',bold:true,sz:16,tx:'1E3A8A'}) ];
+  var titleRow = [ cell(t('CAST  -  Intraday Planning'), {align:'left',bold:true,sz:16,tx:'1E3A8A'}) ];
   for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
   rows.push(titleRow);
   var metaRow = [ cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280',rule:true}) ];
@@ -8196,9 +8245,9 @@ function exportIntraday() {
   rows.push(metaRow);
   rows.push(blankRow());
 
-  var hRow = [ cell('Agent',{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
-               cell('Role',{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
-               cell('Shift',{bg:'FAFAFB',tx:'6B7280',bold:true}) ];
+  var hRow = [ cell(t('Agent'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
+               cell(t('Role'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
+               cell(t('Shift'),{bg:'FAFAFB',tx:'6B7280',bold:true}) ];
   for (var q=0; q<nQ; q++) {
     var isHour = (q % 4 === 0);
     hRow.push(cell(isHour ? String(openH + q/4) + 'H' : '', { bg:'FAFAFB', tx:'6B7280', bold:true, sz:8, grid:true, lHour:isHour }));
@@ -8211,14 +8260,14 @@ function exportIntraday() {
   intradayExport.rows.forEach(function(r, ri) {
     if (r.group && r.group !== lastGroup) {
       lastGroup = r.group;
-      var gr = [ cell(r.group, {bg:'F4F5F7',tx:'52525B',bold:true,align:'left'}) ];
+      var gr = [ cell(r.groupIsCorner ? r.group : t(r.group), {bg:'F4F5F7',tx:'52525B',bold:true,align:'left'}) ];
       for (var gi=1; gi<totalCols; gi++) gr.push(cell('',{bg:'F4F5F7'}));
       rows.push(gr);
     }
     var head = SHIFT_HEAD[r.tone] || SHIFT_HEAD.close;
     var rowIndex = rows.length;
     var row = [ cell(r.name,{align:'left',bold:true}),
-                cell(r.role,{align:'left',tx:'6B7280',sz:9}),
+                cell(t(r.role),{align:'left',tx:'6B7280',sz:9}),
                 cell(r.code,{bg:head.bg,tx:head.tx,bold:true}) ];
     var tone = TONE_XL[r.tone] || TONE_XL.close;
 
@@ -8243,7 +8292,7 @@ function exportIntraday() {
     for (var q=0; q<nQ; q++) {
       var qc = qcells[q];
       if (qc.mission) {
-        row.push(cell(qc.first ? qc.mission.full : '', { bg:qc.mission.bg, tx:qc.mission.tx, bold:true, sz:9 }));
+        row.push(cell(qc.first ? (qc.mission.full.charAt(0) === '\u2192' ? qc.mission.full : t(qc.mission.full)) : '', { bg:qc.mission.bg, tx:qc.mission.tx, bold:true, sz:9 }));
       } else {
         row.push(cell('', { bg:qc.bg }));
       }
@@ -8259,7 +8308,7 @@ function exportIntraday() {
   });
 
   rows.push(blankRow());
-  var legRow = [ cell('Legend',{align:'left',bold:true,tx:'6B7280',sz:10}) ];
+  var legRow = [ cell(t('Legend'),{align:'left',bold:true,tx:'6B7280',sz:10}) ];
   for (var i=1;i<totalCols;i++) legRow.push(cell(''));
   rows.push(legRow);
   var MISSION_DESC = { MB: 'Morning brief', Welcome: 'Welcome mission' };
@@ -8275,7 +8324,7 @@ function exportIntraday() {
     });
   });
   legends.forEach(function(lg){
-    var lr = [ cell(lg[0],{bg:lg[2],tx:lg[3],bold:true}), cell(lg[1],{align:'left',tx:'6B7280',sz:9}) ];
+    var lr = [ cell(lg[0].charAt(0) === '\u2192' ? lg[0] : t(lg[0]),{bg:lg[2],tx:lg[3],bold:true}), cell(lg[1].charAt(0) === '\u2192' ? lg[1] : t(lg[1]),{align:'left',tx:'6B7280',sz:9}) ];
     for (var i=2;i<totalCols;i++) lr.push(cell(''));
     rows.push(lr);
   });
@@ -8407,7 +8456,10 @@ function renderAnnualCalendar() {
     html += '<div class="cal-mini">';
     html += '<div class="cal-mini-title">' + MONTHS[mo] + '</div>';
     html += '<div class="cal-mini-grid">';
-    ['M','T','W','T','F','S','S'].forEach(function(d){ html += '<div class="cal-mini-dow">'+d+'</div>'; });
+    for (var wd = 0; wd < 7; wd++) {
+      var dowLabel = new Date(2026, 0, 5 + wd).toLocaleDateString(dLoc(), { weekday:CURRENT_LANG === 'en' ? 'narrow' : 'short' });
+      html += '<div class="cal-mini-dow">' + esc(dowLabel) + '</div>';
+    }
 
     var first = new Date(year, mo, 1);
     var startDow = (first.getDay() + 6) % 7;
@@ -8465,7 +8517,7 @@ function renderMonthlyCalendar() {
   var laneCount = Math.max(1, lanes.length);
 
   var grid = '<div class="cal-grid">';
-  CAL_DOW.forEach(function(d){ grid += '<div class="cal-dow">'+d+'</div>'; });
+  CAL_DOW.forEach(function(d){ grid += '<div class="cal-dow">'+esc(t(d))+'</div>'; });
 
   cells.forEach(function(day){
     if (!day) { grid += '<div class="cal-cell empty"></div>'; return; }
@@ -8548,7 +8600,7 @@ async function saveLeave() {
 
 async function deleteLeavePrompt(leaveId, event) {
   event.stopPropagation();
-  if (!confirm('Remove this absence?')) return;
+  if (!confirm(t('Remove this absence?'))) return;
   var { error } = await sb.from('retail_agent_leave').delete().eq('id', leaveId);
   if (error) { showToast('Failed to remove: '+error.message, 'error'); return; }
   agentLeaves = agentLeaves.filter(function(l){return l.id !== leaveId;});
