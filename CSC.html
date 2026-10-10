@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v2.0.1</title>
+  <title>CAST v2.0.2</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -524,6 +524,20 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tone-chip { width:30px; height:30px; border-radius:5px; cursor:pointer; border:2px solid transparent; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
 .tone-chip:hover { transform:translateY(-1px); }
 .tone-chip.on { border-color:var(--tx-1); }
+.tr-month { font-weight:700; min-width:120px; text-align:center; }
+.tr-legend { display:flex; flex-wrap:wrap; gap:8px 18px; margin:var(--s4) 0 var(--s3); font-size:12px; color:var(--tx-2); }
+.tr-leg { display:inline-flex; align-items:center; gap:6px; }
+.tr-leg i { width:12px; height:12px; border-radius:3px; border:1px solid; }
+.tr-leg b { color:var(--tx-1); }
+.tr-leg-total { margin-left:auto; }
+.tr-chart { display:flex; align-items:flex-end; gap:4px; height:180px; padding:0 0 18px; margin-bottom:var(--s4); border-bottom:1px solid var(--line); }
+.tr-col { flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; position:relative; }
+.tr-stack { flex:1; width:100%; max-width:26px; display:flex; flex-direction:column-reverse; }
+.tr-stack i { display:block; width:100%; }
+.tr-col span { position:absolute; bottom:-18px; font-size:10px; color:var(--tx-3); }
+.tr-col.is-closed .tr-stack { opacity:.35; }
+.tr-target input { width:64px; }
+.tr-table, .tr-target { min-width:560px; }
 .tr-days { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
 .tr-day { border:1px solid var(--line); border-radius:5px; padding:10px; background:var(--bg-base-2); }
 .tr-day.is-manual { border-color:#8CBFA5; background:#ECF5F0; }
@@ -616,6 +630,12 @@ textarea { resize:vertical; line-height:1.5; }
 .it-info .sh { font-size:9px; min-width:24px; height:22px; flex-shrink:0; }
 .it-person { display:block; min-width:0; line-height:1.4; }
 .it-person small { display:block; font-size:11px; font-weight:400; color:var(--tx-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.it-task { position:absolute; top:14px; height:24px; display:flex; align-items:center; justify-content:center; overflow:hidden; white-space:nowrap; font-size:10px; font-weight:700; border-right:1px solid var(--bg-base); cursor:pointer; }
+.it-track .it-blk { z-index:2; }
+.mm-sec { padding:8px 10px 4px; font-size:11px; font-weight:700; color:var(--tx-2); }
+.mm-tasks { display:flex; flex-wrap:wrap; gap:6px; padding:4px 10px 8px; }
+.mm-tasks .mm-chip { border:0; cursor:pointer; }
+.mm-auto { background:var(--bg-base-3); color:var(--tx-2); }
 .it-closed-zone { position:absolute; top:0; bottom:0; background:#F7F9FC; pointer-events:none; }
 .it-track .it-shift { position:absolute; top:14px; height:24px; border-radius:4px; border:1px solid #DCE3EC; background:#EEF1F5; color:#52647B; display:flex; align-items:center; justify-content:space-between; padding:0 5px; font-size:10px; font-weight:400; overflow:hidden; }
 .it-track .it-shift.pre { border-radius:4px 0 0 4px; opacity:1; background:#F5F7FA; }
@@ -684,7 +704,7 @@ textarea { resize:vertical; line-height:1.5; }
   .tab-content { padding-left:40px; padding-right:40px; }
   #topbar { padding-left:40px; padding-right:40px; }
   .it-row, .it-track { min-height:56px; }
-  .it-track .it-shift, .it-track .it-blk { top:16px; }
+  .it-track .it-shift, .it-track .it-blk, .it-task { top:16px; }
 }
 @media (max-width:1199px) {
   .cal-year-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -822,6 +842,8 @@ textarea { resize:vertical; line-height:1.5; }
   .traffic-month-table { min-width:560px; }
   .traffic-month-table input { height:40px; font-size:16px; }
   .tr-days { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .tr-chart { gap:2px; }
+  .tr-col:nth-child(even) span { display:none; }
   .tr-day input { height:44px; font-size:16px; }
   .cal-year-grid { grid-template-columns:1fr; }
   .cal-cell { min-height:90px; padding:7px 4px; }
@@ -1862,16 +1884,16 @@ var SETTINGS_HELP = {
       'Coverage & headcount, under the planning, shows how many people are present each day.'],
     important: 'Your manual changes are always kept. "Reset manual changes" in the ⋯ menu removes all of them for this month.' },
   intraday: { n: null, title: 'Intraday planning', stepsTitle: 'How to use it',
-    what: 'The detail of one day, hour by hour: who works when, breaks and missions. CAST places breaks inside the configured windows when possible and tries to keep corners and busy hours covered.',
+    what: 'The detail of one day, half hour by half hour: who works when, on which task, with breaks and missions. CAST fills every half hour with the highest priority work each person is allowed to do.',
     warn: null,
     steps: [
       'Choose the day with the arrows or the date at the top right.',
-      'Each line is one person. The colored bar shows their working hours.',
-      'Breaks (lunch and short breaks) are placed automatically within the windows set in Settings when possible. To maintain opening and closing coverage, an automatic break may move outside its window. Drag a break to move it.',
-      'Click on a bar to add a mission, like the morning brief (MB) or Welcome.',
-      'Set lunch and break windows in Settings.',
-      'Excel and PDF: export the day.'],
-    important: 'Breaks avoid the busiest hours when possible.' }
+      'Each line is one person. Each colored block is a task: calls and chats first, then the other tasks by priority, then the filler.',
+      'Calls and chats follow the hourly volume. Mails, back office and fraud are handled when people are free; what is not done moves to the next day.',
+      'Click a task to change it for that half hour, or to add a mission (MB, Training). Choose Auto to give the half hour back to CAST.',
+      'Breaks are placed automatically within the windows set in Settings. Drag a break to move it.',
+      'Who can do each task: the task pills on the Client Advisors page.'],
+    important: 'Your manual changes are always kept.' }
 };
 function helpSeen() {
   try { return JSON.parse(localStorage.getItem('cora_help_seen') || '{}'); } catch (e) { return {}; }
@@ -2114,7 +2136,7 @@ async function saveShiftConfig() {
 async function saveShiftConfigNow() {
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
   var maxDaily = regulations.max_daily_hours || 8;
-  var rows = [], problem = null, seen = {};
+  var rows = [], problem = null, warn = null, seen = {};
   var counters = { sales: 0, stock: 0 };
   document.querySelectorAll('.sh-row').forEach(function(tr) {
     if (problem) return;
@@ -2127,10 +2149,8 @@ async function saveShiftConfigNow() {
     if (seen[code]) { problem = 'Duplicate code: ' + code; return; }
     seen[code] = true;
     if (end <= start) { problem = fill('{code}: end must be after start', { code: code }); return; }
-    if ((end - start) / 60 > maxDaily) {
-      problem = fill('{code} lasts {duration}, over the {limit}h legal limit',
-                { code: code, duration: durLabel(end - start), limit: maxDaily });
-      return;
+    if ((end - start) / 60 > maxDaily && !warn) {
+      warn = fill('{code} lasts {duration}, over the {limit}h legal limit', { code: code, duration: durLabel(end - start), limit: maxDaily });
     }
     counters[grid]++;
     rows.push({
@@ -2155,7 +2175,7 @@ async function saveShiftConfigNow() {
   if (del.error) { showToast('Save failed: ' + del.error.message, 'error'); return; }
   if (storeId !== currentRegionId) return;
   await loadShiftConfig();
-  showToast('Saved \u2713');
+  showToast(warn ? 'Saved - ' + warn : 'Saved \u2713', warn ? 'error' : undefined);
   renderRegulations();
   renderMonthlyPlanning();
 }
@@ -2165,15 +2185,6 @@ function rrow(label, hint, inputHtml, unit) {
     '<span class="set-rule-lbl-wrap"><span class="set-rule-lbl">' + label + '</span>' +
       '<span class="set-rule-hint">' + hint + '</span></span>' +
     '<span class="set-rule-field">' + inputHtml + (unit ? '<span class="set-rule-unit">' + unit + '</span>' : '') + '</span>' +
-    '</div>';
-}
-function rrowToggle(label, hint, id, handler, checked, helpKey) {
-  return '<div class="set-rule">' +
-    '<span class="set-rule-lbl-wrap"><span class="set-rule-lbl">' + label + '</span>' +
-      '<span class="set-rule-hint">' + hint + '</span></span>' +
-    '<span class="set-rule-field"><label class="toggle"><input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') +
-      ' onchange="' + handler + '(this)"><span class="toggle-slider"></span></label>' +
-      (helpKey ? helpBtnHtml(helpKey) : '') + '</span>' +
     '</div>';
 }
 function renderRegulations() {
@@ -2270,6 +2281,10 @@ async function loadTasksAndTags() {
   tasks = tr.data || [];
   agentTags = {};
   (gr.data || []).forEach(function(r) { (agentTags[r.agent_id] = agentTags[r.agent_id] || []).push(r.tag); });
+}
+function taskShort(name) {
+  var w = String(name).split(/[-\s]+/).filter(Boolean);
+  return w.length > 1 ? w.map(function(x) { return x.charAt(0); }).join('') : String(name).charAt(0);
 }
 function tasksInOrder() {
   return tasks.slice().sort(function(a, b) { return (a.priority - b.priority) || a.name.localeCompare(b.name); });
@@ -3066,26 +3081,6 @@ function spreadMonthToDays(year, month, total) {
   closedDays.forEach(function(ds) { out[ds] = 0; });
   return out;
 }
-async function recomputeMonthDaily(year, month) {
-  if (!currentRegionId) return;
-  var rec   = trafficMonthly[monthKey(year, month)];
-  var total = rec ? (rec.current_year != null ? rec.current_year : 0) : 0;
-  var spread = spreadMonthToDays(year, month, total);
-  var rows = Object.keys(spread).map(function(ds) {
-    var existing = trafficDaily[ds];
-    return {
-      region_id:  currentRegionId,
-      date:      ds,
-      traffic:   spread[ds],
-      is_manual: !!(existing && existing.is_manual)
-    };
-  });
-  if (!rows.length) return;
-  var res = await sb.from('retail_traffic_daily')
-    .upsert(rows, { onConflict: 'region_id,date' });
-  if (res.error) { showToast('Traffic save failed', 'error'); return; }
-  rows.forEach(function(r) { trafficDaily[r.date] = r; });
-}
 // Traffic forecast
 // Forecast engine
 function openDaysInMonth(year, month) {
@@ -3096,193 +3091,107 @@ function openDaysInMonth(year, month) {
   }
   return open;
 }
-function computeTrend(year) {
-  var ratios = [], months = [];
-  for (var m = 1; m <= 12; m++) {
-    var r = trafficMonthly[monthKey(year, m)];
-    if (!r) continue;
-    var cy = r.current_year, ly = r.last_year;
-    if (cy == null || cy <= 0 || !ly || ly <= 0) continue;
-    if (r.source === 'forecast') continue;
-    ratios.push(cy / ly);
-    months.push(m);
-  }
-  if (!ratios.length) return { pct: 0, n: 0, months: [] };
-  var avg = ratios.reduce(function(s, v) { return s + v; }, 0) / ratios.length;
-  return { pct: (avg - 1) * 100, n: ratios.length, months: months };
-}
-function forecastYear(year) {
-  var out = {};
-  var ly = [];
-  for (var m = 1; m <= 12; m++) {
-    var rec = trafficMonthly[monthKey(year, m)];
-    ly.push(rec ? (rec.last_year || 0) : 0);
-  }
-  var totalLY = ly.reduce(function(s, v) { return s + v; }, 0);
-  if (totalLY <= 0) return out;
-  var totalOpen = 0, openPerMonth = [];
-  for (var m2 = 1; m2 <= 12; m2++) {
-    var o = openDaysInMonth(year, m2);
-    openPerMonth.push(o);
-    totalOpen += o;
-  }
-  if (totalOpen <= 0) return out;
-  var perOpenDay = totalLY / totalOpen;
-  var trend = computeTrend(year);
-  var factor = 1 + (trend.pct / 100);
-  for (var m3 = 1; m3 <= 12; m3++) {
-    var rec3 = trafficMonthly[monthKey(year, m3)];
-    if (rec3 && rec3.current_year != null && rec3.current_year > 0 &&
-        rec3.source !== 'forecast') {
-      out[m3] = rec3.current_year;
-      continue;
-    }
-    var refLY = ly[m3 - 1];
-    var open  = openPerMonth[m3 - 1];
-    var base;
-    if (refLY > 0 && open > 0) {
-      var lyOpen = openDaysInMonth(year - 1, m3) || open;
-      base = (refLY / lyOpen) * open;
-    } else {
-      base = perOpenDay * open;
-    }
-    var smooth = 0.88 * base + 0.12 * (perOpenDay * open);
-    out[m3] = Math.max(0, Math.round(smooth * factor));
-  }
-  return out;
-}
 // Traffic page
 var MONTH_NAMES = ['January','February','March','April','May','June',
                    'July','August','September','October','November','December'];
-async function renderTraffic(localeOnly) {
-  var el = document.getElementById('traffic-content');
-  if (el) el.innerHTML = '<div class="card"><p style="color:var(--tx-3)">The Client Service traffic page arrives in the next version.</p></div>';
-  return;
+var trafficRef = (function() { var d = new Date(); d.setDate(1); return d; })();
+function trafficMonthShift(dir) { trafficRef.setMonth(trafficRef.getMonth() + dir); renderTraffic(); }
+// Traffic: volume of each task per day, from last year with the trend, plus the monthly targets
+async function renderTraffic() {
   var box = document.getElementById('traffic-content');
   if (!box) return;
-  if (!currentRegionId) {
-    box.innerHTML = '<div class="card"><p style="color:var(--tx-3)">' +
-      'Select a region to manage traffic.</p></div>';
-    return;
+  if (!currentRegionId) { box.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Select a region to view traffic.</p></div>'; return; }
+  var y = trafficRef.getFullYear(), m = trafficRef.getMonth() + 1;
+  if (trafficYearLoaded !== y) await loadTraffic(y);
+  var ord = tasksInOrder().filter(function(t) { return !t.is_filler; });
+  var n = new Date(y, m, 0).getDate(), days = [], tot = {}, top = 1;
+  for (var d = 1; d <= n; d++) {
+    var ds = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0'), v = cscVol[ds] || {}, sum = 0, work = 0;
+    ord.forEach(function(t) { var x = v[t.name] ? v[t.name].total : 0; sum += x; work += x * (t.aht_minutes || 0); tot[t.name] = (tot[t.name] || 0) + x; });
+    top = Math.max(top, sum);
+    days.push({ ds: ds, num: d, dow: new Date(ds + 'T12:00:00').getDay(), v: v, sum: sum, work: work, closed: !!getDayClosureType(ds) });
   }
-  var year = currentWeekMonday.getFullYear();
-  if (!localeOnly) await loadTraffic(year);
-  var totalN2 = 0, totalLY = 0, totalCY = 0;
-  for (var m = 1; m <= 12; m++) {
-    var r = trafficMonthly[monthKey(year, m)] || {};
-    totalN2 += (r.n_2 || 0);
-    totalLY += (r.last_year || 0);
-    totalCY += (r.current_year || 0);
-  }
-  var delta = totalLY > 0 ? Math.round(((totalCY - totalLY) / totalLY) * 100) : 0;
-  var html = '';
-  // Card 1: monthly traffic
-  var tr = computeTrend(year);
-  html += '<div class="card" onchange="saveMonthlyTraffic(event)">';
-  html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<h2 class="page-title">' + 'Monthly traffic' + ' ' + year + '</h2>';
-  html +=   '</div>';
-  if (tr.n > 0) {
-    var sign = tr.pct >= 0 ? '+' : '';
-    var cls  = tr.pct >= 0 ? 'pill-ok' : 'pill-dang';
-    html += '<div class="trend-box">' +
-      '<span class="pill ' + cls + '">' + sign + tr.pct.toFixed(1) + '%</span>' +
-      '<span class="trend-txt">Year-on-year trend</span>' +
-      '</div>';
-  } else {
-    html += '<div class="trend-box">' +
-      '<span class="pill pill-neutral">No trend yet</span>' +
-      '<span class="trend-txt">Enter your first months to reveal the trend</span>' +
-      '</div>';
-  }
-  html += '<div class="table-scroll"><table class="tbl tbl-framed traffic-month-table"><thead><tr>' +
-          '<th>Month</th>' +
-          '<th style="text-align:right">N-2</th>' +
-          '<th style="text-align:right">N-1</th>' +
-          '<th style="text-align:right">This year</th>' +
-          '<th style="text-align:right">Variation</th></tr></thead><tbody>';
-  for (var mm = 1; mm <= 12; mm++) {
-    var rec = trafficMonthly[monthKey(year, mm)] || {};
-    var n2  = rec.n_2 || 0;
-    var ly  = rec.last_year || 0;
-    var cy  = (rec.current_year != null) ? rec.current_year : '';
-    var vr  = (ly > 0 && cy !== '') ? Math.round(((cy - ly) / ly) * 100) : null;
-    var vrTxt = vr === null ? '<span style="color:var(--tx-3)">-</span>'
-      : '<span class="pill ' + (vr >= 0 ? 'pill-ok' : 'pill-dang') + '">' +
-        (vr > 0 ? '+' : '') + vr + '%</span>';
-    html += '<tr>' +
-      '<td>' + MONTH_NAMES[mm - 1] + '</td>' +
-      '<td style="text-align:right;color:var(--tx-3)">' + (n2 ? n2.toLocaleString('en-US') : '-') + '</td>' +
-      '<td style="text-align:right;color:var(--tx-2)">' + (ly ? ly.toLocaleString('en-US') : '-') + '</td>' +
-      '<td style="text-align:right">' +
-        '<input type="number" class="tr-cy" data-month="' + mm + '" value="' + cy +
-        '" min="0" step="100" style="width:110px;text-align:right"></td>' +
-      '<td style="text-align:right">' + vrTxt + '</td>' +
-      '</tr>';
-  }
-  html += '<tr style="background:var(--bg-base-2);font-weight:700">' +
-    '<td>Total</td>' +
-    '<td style="text-align:right;color:var(--tx-3)">' + totalN2.toLocaleString('en-US') + '</td>' +
-    '<td style="text-align:right">' + totalLY.toLocaleString('en-US') + '</td>' +
-    '<td style="text-align:right">' + totalCY.toLocaleString('en-US') + '</td>' +
-    '<td style="text-align:right">' + (totalCY ? ((delta > 0 ? '+' : '') + delta + '%') : '-') + '</td>' +
-    '</tr>';
-  html += '</tbody></table></div></div>';
-  // Card 2: daily split of the month
-  var mIdx  = currentWeekMonday.getMonth() + 1;
-  var mName = MONTH_NAMES[mIdx - 1];
-  var recM  = trafficMonthly[monthKey(year, mIdx)] || {};
-  var spread = spreadMonthToDays(year, mIdx, recM.current_year || 0);
-  var keys   = Object.keys(spread).sort();
-  html += '<div class="card" onchange="saveDailyTraffic()">';
-  html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<div><h2 class="page-title">' + 'Daily breakdown' + ' - ' + mName + '</h2>';
-  html +=     '<div class="card-sub">Computed from the monthly total. ' +
-              'Edit any day to override it - the rest adjusts around it.</div></div>';
-  html +=     '<div style="display:flex;gap:var(--s3)">';
-  html +=       '<button class="btn btn-ghost btn-sm" onclick="resetDailyOverrides()">' + 'Reset daily edits' + '</button>';
-  html +=     '</div>';
-  html +=   '</div>';
-  if (!keys.length) {
-    html += '<p style="color:var(--tx-3);font-size:13px">No open day this month.</p>';
-  } else {
-    html += '<div class="tr-days">';
-    keys.forEach(function(ds) {
-      var d    = new Date(ds + 'T12:00:00');
-      var rec2 = trafficDaily[ds] || {};
-      var isM  = !!rec2.is_manual;
-      var clo  = getDayClosureType(ds);
-      var head = DAY_SHORT[(d.getDay() + 6) % 7] + ' ' + d.getDate();
-      if (clo) {
-        var why = (clo === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
-        html += '<div class="tr-day is-closed" title="' + why.replace(/"/g,'') + '">' +
-          '<div class="tr-day-h">' + head + '</div>' +
-          '<div class="tr-closed">CLOSED</div>' +
-          '</div>';
-        return;
-      }
-      html += '<div class="tr-day' + (isM ? ' is-manual' : '') + '">' +
-        '<div class="tr-day-h">' + head + '</div>' +
-        '<input type="number" class="tr-d" data-date="' + ds + '" value="' + spread[ds] +
-        '" min="0" step="10">' +
-        '</div>';
-    });
-    html += '</div>';
-  }
-  html += '</div>';
-  // Card 3: hourly traffic curve
-  html += '<div class="card">';
-  html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<div><h2 class="page-title">Hourly traffic curve</h2>';
-  html +=     '<div class="card-sub">' + 'Drag any point to reshape the day. The rest adjusts to keep the total at 100%.' + '</div></div>';
-  html +=     '<div style="display:flex;gap:var(--s3)">';
-  html +=       '<button class="btn btn-ghost btn-sm" onclick="resetHourlyCurve()">Reset curve</button>';
-  html +=     '</div>';
-  html +=   '</div>';
-  html +=   '<div class="curve-scroll"><div id="curve-host"></div></div>';
-  html += '</div>';
-  box.innerHTML = html;
-  initHourlyCurve();
+  ord = ord.filter(function(t) { return tot[t.name] > 0; });
+  var r0 = function(x) { return Math.round(x).toLocaleString('en-GB'); };
+  var chart = '<div class="tr-chart">' + days.map(function(dd) {
+    var segs = ord.map(function(t) {
+      var x = dd.v[t.name] ? dd.v[t.name].total : 0;
+      return x ? '<i style="height:' + (x / top * 100) + '%;background:' + t.color_bg + ';border-top:1px solid ' + t.color_text + '"></i>' : '';
+    }).join('');
+    var tip = formatDateDisplay(dd.ds) + (dd.closed ? ' - closed' : ' - ' + r0(dd.sum) + ' contacts') +
+      ord.map(function(t) { var x = dd.v[t.name] ? dd.v[t.name].total : 0; return x ? '\n' + t.name + ': ' + r0(x) : ''; }).join('');
+    return '<div class="tr-col' + (dd.closed ? ' is-closed' : '') + '" title="' + esc(tip) + '"><div class="tr-stack">' + segs + '</div><span>' + dd.num + '</span></div>';
+  }).join('') + '</div>';
+  var legend = '<div class="tr-legend">' + ord.map(function(t) {
+    return '<span class="tr-leg"><i style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' + esc(t.name) + '<b>' + r0(tot[t.name] || 0) + '</b></span>';
+  }).join('') + '<span class="tr-leg tr-leg-total">Total<b>' + r0(ord.reduce(function(s2, t) { return s2 + (tot[t.name] || 0); }, 0)) + '</b></span></div>';
+  var head = '<tr><th>Day</th>' + ord.map(function(t) { return '<th class="col-num">' + esc(t.name) + '</th>'; }).join('') +
+    '<th class="col-num">Total</th><th class="col-num">Workload</th></tr>';
+  var rows = days.map(function(dd) {
+    var lbl = new Date(dd.ds + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit' });
+    if (dd.closed) return '<tr class="rest-day"><td>' + lbl + '</td><td colspan="' + (ord.length + 2) + '" style="color:var(--tx-3)">Closed</td></tr>';
+    return '<tr><td>' + lbl + '</td>' + ord.map(function(t) { var x = dd.v[t.name] ? dd.v[t.name].total : 0; return '<td class="col-num">' + (x ? r0(x) : '-') + '</td>'; }).join('') +
+      '<td class="col-num"><b>' + r0(dd.sum) + '</b></td><td class="col-num">' + durLabel(Math.round(dd.work)) + '</td></tr>';
+  }).join('');
+  var tgtTasks = tasks.filter(function(t) { return t.name === 'BACK-OFFICE' || t.name === 'FRAUD' ||
+    Object.keys(cscBoTargets).some(function(k) { return k.split('|')[1] === t.name; }); });
+  var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var tgt = '<div class="table-scroll"><table class="tbl tbl-framed tr-target"><thead><tr><th>Task</th>' +
+    MN.map(function(x) { return '<th class="col-num">' + x + '</th>'; }).join('') + '</tr></thead><tbody>' +
+    tgtTasks.map(function(t) {
+      return '<tr><td style="font-weight:700">' + esc(t.name) + '</td>' + MN.map(function(x, mi) {
+        return '<td><input type="number" class="in-num" min="0" step="1" value="' + (cscBoTargets[(mi + 1) + '|' + t.name] || 0) +
+          '" onchange="saveMonthlyTarget(this,\'' + esc(t.name) + '\',' + (mi + 1) + ')"></td>';
+      }).join('') + '</tr>';
+    }).join('') + '</tbody></table></div>';
+  var monthLbl = trafficRef.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  box.innerHTML =
+    '<div class="card">' +
+      '<div class="page-head set-head"><div><h2 class="set-title">Daily traffic</h2>' +
+        '<div class="card-sub">Contacts to handle each day, by task: last year\'s volume on the same weekday, with your trend. Mails received when the center is closed move to the next open day.</div></div>' +
+        '<div class="head-actions"><button class="btn btn-ghost btn-sm" onclick="trafficMonthShift(-1)">‹</button>' +
+        '<span class="tr-month">' + esc(monthLbl) + '</span><button class="btn btn-ghost btn-sm" onclick="trafficMonthShift(1)">›</button></div></div>' +
+      '<div class="set-rules">' + rrow('Trend vs last year', 'Change of volume you expect compared with last year',
+        '<input type="number" id="reg-trend" class="set-rule-input" value="' + (Number(regulations.trend_pct) || 0) + '" min="-90" max="300" step="1">', '%').replace('onchange="saveRegulations()"', 'onchange="saveTrend(this)"') + '</div>' +
+      legend + chart +
+      '<div class="table-scroll"><table class="tbl tbl-framed tr-table"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>' +
+    '</div>' +
+    '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">' + fill('Monthly targets {year}', { year: y }) + '</h2>' +
+      '<div class="card-sub">Back office and fraud volumes for each month. CAST spreads them over the open days.</div></div></div>' + tgt + '</div>';
+}
+async function saveTrend(inp) {
+  var v = parseFloat(inp.value);
+  if (isNaN(v)) { showToast('Enter a number', 'error'); return; }
+  regulations.trend_pct = v;
+  queueRegionSave();
+  await loadTraffic(trafficRef.getFullYear());
+  renderTraffic();
+  renderMonthlyPlanning();
+}
+async function saveMonthlyTarget(inp, task, month) {
+  var regionId = currentRegionId, y = trafficRef.getFullYear(), v = Math.max(0, parseInt(inp.value, 10) || 0);
+  var ex = await sb.from('monthly_bo_targets').select('id').eq('region_id', regionId).eq('year', y).eq('month', month).eq('task', task);
+  if (ex.error) { showToast('Save failed: ' + ex.error.message, 'error'); return; }
+  var res = ex.data && ex.data.length
+    ? await sb.from('monthly_bo_targets').update({ volume: v }).eq('id', ex.data[0].id)
+    : await sb.from('monthly_bo_targets').insert({ region_id: regionId, year: y, month: month, task: task, volume: v });
+  if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return; }
+  if (regionId !== currentRegionId) return;
+  showToast('Saved ✓');
+  await loadTraffic(y);
+  renderTraffic();
+  renderMonthlyPlanning();
+}
+async function runForecast() {
+  var btn = document.getElementById('btn-forecast');
+  if (!currentRegionId || !btn) return;
+  btn.disabled = true;
+  await loadTraffic(trafficRef.getFullYear());
+  await new Promise(function(r) { setTimeout(r, 480); });
+  btn.disabled = false;
+  renderTraffic();
+  renderMonthlyPlanning();
+  showToast('Forecast updated ✓');
 }
 function weekOpenSpan() {
   var dh = regulations.day_hours || {};
@@ -3302,134 +3211,6 @@ function weekOpenSpan() {
 // Curve indices use the clock labels shown in Traffic, not a day's opening time.
 function hourlyCurveIndex(minute) {
   return Math.floor(minute / 60) - weekOpenSpan().open;
-}
-var curveValues = [];
-var curveHours  = [];
-function initHourlyCurve(keepValues) {
-  var host = document.getElementById('curve-host');
-  if (!host) return;
-  var span = weekOpenSpan();
-  curveHours = [];
-  for (var h = span.open; h <= span.close; h++) curveHours.push(h);
-  var N = curveHours.length;
-  if (!keepValues) {
-    var saved = regionSettings && regionSettings.hourly_curve;
-    if (saved && Array.isArray(saved) && saved.length === N) {
-      curveValues = saved.slice();
-    } else {
-      curveValues = curveHours.map(function(){ return 100 / N; });
-    }
-  }
-  // Width follows the card; height stays 260
-  var W = Math.max(500, Math.round(host.clientWidth || 680)), H = 260, padL = 34, padR = 18, padT = 28, padB = 32;
-  var plotW = W - padL - padR, plotH = H - padT - padB;
-  var maxPct = Math.max(22, Math.ceil(Math.max.apply(null, curveValues) + 4));
-  host.innerHTML =
-    '<svg id="curve-svg" viewBox="0 0 '+W+' '+H+'" style="width:100%;min-width:500px;height:auto;display:block;'+
-      'touch-action:none;user-select:none;">'+
-      '<g id="cv-grid"></g>'+
-      '<path id="cv-area" fill="#2F7D58" fill-opacity="0.12"></path>'+
-      '<path id="cv-line" fill="none" stroke="#2F7D58" stroke-width="2.5" '+
-        'stroke-linejoin="round" stroke-linecap="round"></path>'+
-      '<g id="cv-points"></g><g id="cv-values"></g><g id="cv-labels"></g>'+
-    '</svg>'+
-    '<div style="display:flex;justify-content:flex-end;margin-top:10px;">'+
-      '<span style="font-size:12px;color:var(--tx-3)">Total '+
-      '<span id="cv-total" style="color:#166534;font-weight:700">100%</span></span></div>';
-  var svg = document.getElementById('curve-svg');
-  function xAt(i){ return padL + (plotW * i / (N - 1)); }
-  function yAt(v){ return padT + plotH - (plotH * (v / maxPct)); }
-  var grid = '';
-  for (var p = 0; p <= maxPct; p += 5) {
-    var gy = yAt(p);
-    grid += '<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="#E7EDF5"></line>'+
-            '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" '+
-            'fill="#52647B" style="font-family:var(--font)">'+p+'%</text>';
-  }
-  document.getElementById('cv-grid').innerHTML = grid;
-  function smooth(pts, close) {
-    if (pts.length < 2) return '';
-    var d = 'M ' + pts[0][0] + ' ' + pts[0][1];
-    for (var i=0;i<pts.length-1;i++){
-      var p0=pts[i>0?i-1:0], p1=pts[i], p2=pts[i+1], p3=pts[i+2<pts.length?i+2:pts.length-1], t=0.16;
-      d += ' C '+(p1[0]+(p2[0]-p0[0])*t)+' '+(p1[1]+(p2[1]-p0[1])*t)+' '+
-           (p2[0]-(p3[0]-p1[0])*t)+' '+(p2[1]-(p3[1]-p1[1])*t)+' '+p2[0]+' '+p2[1];
-    }
-    if (close) d += ' L '+pts[pts.length-1][0]+' '+(padT+plotH)+' L '+pts[0][0]+' '+(padT+plotH)+' Z';
-    return d;
-  }
-  function draw() {
-    var pts = curveValues.map(function(v,i){ return [xAt(i), yAt(v)]; });
-    document.getElementById('cv-line').setAttribute('d', smooth(pts, false));
-    document.getElementById('cv-area').setAttribute('d', smooth(pts, true));
-    var ph='', vh='', lh='';
-    for (var i=0;i<N;i++){
-      var x=xAt(i), y=yAt(curveValues[i]);
-      ph += '<circle class="cv-hit" data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="6.5" fill="#fff" '+
-            'stroke="#2F7D58" stroke-width="2.5" style="cursor:grab"></circle>' +
-            '<circle data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="15" fill="transparent" style="cursor:grab"></circle>';
-      var ly = y-14; if (ly < padT-4) ly = y+20;
-      vh += '<text x="'+x+'" y="'+ly+'" text-anchor="middle" font-size="11" '+
-            'font-weight="bold" fill="#2F7D58" style="font-family:var(--font);pointer-events:none">'+
-            curveValues[i].toFixed(1)+'%</text>';
-      lh += '<text x="'+x+'" y="'+(H-padB+16)+'" text-anchor="middle" font-size="11" '+
-            'fill="#52647B" style="font-family:var(--font)">'+String(curveHours[i]).padStart(2,'0')+'h</text>';
-    }
-    document.getElementById('cv-points').innerHTML = ph;
-    document.getElementById('cv-values').innerHTML = vh;
-    document.getElementById('cv-labels').innerHTML = lh;
-    document.getElementById('cv-total').textContent =
-      Math.round(curveValues.reduce(function(a,b){return a+b;},0)) + '%';
-    bind();
-  }
-  function setValue(idx, nv) {
-    nv = Math.max(0.5, Math.min(maxPct, nv));
-    var others = 0;
-    for (var i=0;i<N;i++) if (i!==idx) others += curveValues[i];
-    var remaining = 100 - nv;
-    if (others <= 0) { var e=remaining/(N-1); for (var j=0;j<N;j++) curveValues[j]=(j===idx)?nv:e; }
-    else { var s=remaining/others; for (var k=0;k<N;k++) curveValues[k]=(k===idx)?nv:curveValues[k]*s; }
-  }
-  var dragging = null;
-  function toPct(evt){
-    var r = svg.getBoundingClientRect();
-    var cy = (evt.touches ? evt.touches[0].clientY : evt.clientY);
-    return (padT + plotH - (cy - r.top) * (H / r.height)) / plotH * maxPct;
-  }
-  function bind(){
-    svg.querySelectorAll('#cv-points circle').forEach(function(c){
-      c.addEventListener('mousedown', start); c.addEventListener('touchstart', start, {passive:false});
-    });
-  }
-  function start(e){ e.preventDefault(); dragging = parseInt(e.target.getAttribute('data-i'),10); }
-  function move(e){ if (dragging===null) return; e.preventDefault(); setValue(dragging, toPct(e)); draw(); }
-  function end(){ if (dragging !== null) { dragging = null; saveHourlyCurve(); } }
-  if (curveListeners) curveListeners.abort();
-  curveListeners = new AbortController();
-  var sig = curveListeners.signal;
-  window.addEventListener('mousemove', move, { signal: sig });
-  window.addEventListener('touchmove', move, { passive: false, signal: sig });
-  window.addEventListener('mouseup', end, { signal: sig });
-  window.addEventListener('touchend', end, { signal: sig });
-  draw();
-}
-function resetHourlyCurve() {
-  if (!curveHours.length) return;
-  if (!confirm('Reset the hourly curve to a flat shape?')) return;
-  var flat = 100 / curveHours.length;
-  curveValues = curveHours.map(function(){ return flat; });
-  initHourlyCurve(true);
-  saveHourlyCurve();
-}
-function saveHourlyCurve() {
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
-  var rounded = curveValues.map(function(v){ return Math.round(Number(v) * 10) / 10; });
-  if (!rounded.length || rounded.some(function(v){ return !isFinite(v) || v < 0; })) {
-    showToast('Enter valid traffic values', 'error'); return;
-  }
-  if (!regionSettings) regionSettings = {};
-  regionSettings.hourly_curve = rounded;
-  queueRegionSave();
 }
 function intradayPickDate(v) {
   if (!v) return;
@@ -3459,13 +3240,18 @@ async function loadAndRenderIntraday(ds) {
   var ov = {}, am = {};
   if (storeId) {
     var res = await sb.from('csc_intraday_overrides')
-      .select('agent_id, slot_key, value')
-      .eq('region_id', storeId).eq('date', ds).eq('kind', 'break');
+      .select('agent_id, kind, slot_key, value')
+      .eq('region_id', storeId).eq('date', ds);
     var mis = await sb.from('csc_intraday_missions')
       .select('*')
       .eq('region_id', storeId).eq('date', ds);
     if (seq !== intradayLoadSeq || storeId !== currentRegionId || ds !== currentIntradayDate) return;
-    (!res.error && res.data || []).forEach(function(r) { ov[r.agent_id + ':' + r.slot_key] = parseInt(r.value, 10); });
+    var tov = {};
+    (!res.error && res.data || []).forEach(function(r) {
+      if (r.kind === 'task') (tov[r.agent_id] = tov[r.agent_id] || {})[parseInt(r.slot_key, 10)] = r.value;
+      else ov[r.agent_id + ':' + r.slot_key] = parseInt(r.value, 10);
+    });
+    taskOverrides = tov;
     (!mis.error && mis.data || []).forEach(function(r) {
       (am[r.agent_id] = am[r.agent_id] || []).push({ id:r.id, type:r.mission_type, start:r.start_min/60, dur:r.duration_min || null });
     });
@@ -3473,6 +3259,124 @@ async function loadAndRenderIntraday(ds) {
   intradayOverrides = ov;
   addedMissions = am;
   renderIntraday(ds);
+}
+// Tasks of one day, half hour by half hour: real time first, then the other tasks by priority, then the filler
+var taskOverrides = {};
+function cscStockCarryIn(ds) {
+  var carry = {}, stock = tasksInOrder().filter(function(t) { return !t.is_realtime && !t.is_filler; });
+  var brk = (regulations.breaks || []).reduce(function(m, b) { return m + (b.duration || 0); }, 0);
+  for (var d = addDaysStr(ds, -7); d < ds; d = addDaysStr(d, 1)) {
+    if (getDayClosureType(d) || !monthlyResult[d]) continue;
+    var vol = cscVol[d] || {}, cap = 0, rt = 0;
+    agents.forEach(function(a) {
+      var r = monthlyResult[d][a.id]; if (!r || r.special) return;
+      var w = workHoursOf(a, d, r); if (w) cap += Math.max(0, w.end - w.start - brk);
+    });
+    tasks.forEach(function(t) { if (t.is_realtime && vol[t.name]) rt += vol[t.name].total * t.aht_minutes; });
+    var free = Math.max(0, cap - rt);
+    stock.forEach(function(t) {
+      var need = (carry[t.name] || 0) + (vol[t.name] ? vol[t.name].total * t.aht_minutes : 0), done = Math.min(need, free);
+      free -= done; carry[t.name] = need - done;
+    });
+  }
+  return carry;
+}
+function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH) {
+  var vol = cscVol[ds] || {}, carry = cscStockCarryIn(ds), ord = tasksInOrder();
+  var rt = ord.filter(function(t) { return t.is_realtime; });
+  var stock = ord.filter(function(t) { return !t.is_realtime && !t.is_filler; });
+  var filler = ord.find(function(t) { return t.is_filler; });
+  var left = {};
+  stock.forEach(function(t) { left[t.name] = (carry[t.name] || 0) + (vol[t.name] ? vol[t.name].total * t.aht_minutes : 0); });
+  var busy = {}, slots = {}, equity = {}, t0 = 1440, t1 = 0;
+  working.forEach(function(a) {
+    var si = shiftInfo[a.id];
+    busy[a.id] = blocksFor(a).map(function(b) { return [b[0] * 60, (b[0] + b[1]) * 60]; })
+      .concat((addedMissions[a.id] || []).map(function(m) { return [m.start * 60, (m.start + missionDurH(m)) * 60]; }));
+    slots[a.id] = []; t0 = Math.min(t0, si.startMin); t1 = Math.max(t1, si.endMin);
+  });
+  for (var s = Math.floor(t0 / 30) * 30; s < t1; s += 30) {
+    var e = s + 30, h = Math.floor(s / 60), open = s < closeH * 60 && e > openH * 60, am = s < 720;
+    var pool = [];
+    working.forEach(function(a) {
+      var si = shiftInfo[a.id], fs = Math.max(s, si.startMin), fe = Math.min(e, si.endMin);
+      if (fe <= fs) return;
+      var free = fe - fs - busy[a.id].reduce(function(m, b) { return m + Math.max(0, Math.min(b[1], fe) - Math.max(b[0], fs)); }, 0);
+      var slot = { k: s, s: fs, e: fe, task: null };
+      slots[a.id].push(slot);
+      if (free >= 10) pool.push({ a: a, slot: slot, free: free });
+    });
+    pool.sort(function(x, y) { return ((equity[x.a.id] || 0) - (equity[y.a.id] || 0)) || (x.a.id < y.a.id ? -1 : 1); });
+    var take = function(p, t) { p.slot.task = t.name; pool.splice(pool.indexOf(p), 1); };
+    if (open) {
+      rt.forEach(function(t) {
+        var need = ((vol[t.name] && vol[t.name].hours[h]) || 0) / 2 * t.aht_minutes;
+        pool.filter(function(p) { return agentCanDo(p.a.id, t); }).forEach(function(p) {
+          if (need <= 0) return;
+          take(p, t); need -= p.free; equity[p.a.id] = (equity[p.a.id] || 0) + p.free;
+        });
+      });
+      // The line is never left empty during opening hours
+      var lineOn = working.some(function(a) { var sl = slots[a.id][slots[a.id].length - 1];
+        return sl && sl.k === s && rt.some(function(t) { return t.name === sl.task; }); });
+      if (!lineOn) rt.some(function(t) {
+        var p = pool.find(function(x) { return agentCanDo(x.a.id, t); });
+        if (p) { take(p, t); equity[p.a.id] = (equity[p.a.id] || 0) + p.free; }
+        return !!p;
+      });
+    }
+    stock.forEach(function(t) {
+      if (t.morning_only && !am) return;
+      pool.filter(function(p) { return agentCanDo(p.a.id, t); }).forEach(function(p) {
+        if (left[t.name] <= 0) return;
+        take(p, t); left[t.name] -= p.free;
+      });
+    });
+    pool.slice().forEach(function(p) {
+      var t = filler && agentCanDo(p.a.id, filler) ? filler : ord.find(function(x) {
+        return agentCanDo(p.a.id, x) && (!x.is_realtime || open) && !(x.morning_only && !am);
+      });
+      if (t) take(p, t);
+    });
+  }
+  // Manual choices always win
+  var segs = {};
+  working.forEach(function(a) {
+    var ov = taskOverrides[a.id] || {}, list = segs[a.id] = [];
+    slots[a.id].forEach(function(sl) {
+      var task = ov[sl.k] || sl.task;
+      if (!task) return;
+      // Cut the half hour around breaks and missions
+      var parts = [[sl.s, sl.e]];
+      busy[a.id].forEach(function(b) {
+        parts = parts.reduce(function(out, p) {
+          if (b[1] <= p[0] || b[0] >= p[1]) out.push(p);
+          else { if (b[0] > p[0]) out.push([p[0], b[0]]); if (b[1] < p[1]) out.push([b[1], p[1]]); }
+          return out;
+        }, []);
+      });
+      parts.forEach(function(p) {
+        if (p[1] - p[0] < 1) return;
+        var last = list[list.length - 1];
+        if (last && last.task === task && Math.abs(last.e - p[0]) < 0.01) last.e = p[1];
+        else list.push({ s: p[0], e: p[1], task: task });
+      });
+    });
+  });
+  return { segs: segs, left: left, carry: carry };
+}
+async function setSlotTask(agentId, slotMin, task) {
+  var regionId = currentRegionId, ds = currentIntradayDate;
+  closeMissionMenu();
+  var q = sb.from('csc_intraday_overrides');
+  var res = task
+    ? await q.upsert({ region_id: regionId, date: ds, agent_id: agentId, kind: 'task', slot_key: String(slotMin), value: task }, { onConflict: 'agent_id,date,kind,slot_key' })
+    : await q.delete().eq('agent_id', agentId).eq('date', ds).eq('kind', 'task').eq('slot_key', String(slotMin));
+  if (res.error) { showToast('Not saved: ' + res.error.message, 'error'); return; }
+  var ov = taskOverrides[agentId] = taskOverrides[agentId] || {};
+  if (task) ov[slotMin] = task; else delete ov[slotMin];
+  showToast('Saved ✓');
+  if (regionId === currentRegionId && ds === currentIntradayDate) renderIntraday(ds);
 }
 function renderIntraday(ds) {
   intradayExport = null;
@@ -3488,7 +3392,7 @@ function renderIntraday(ds) {
   var closure = getDayClosureType(ds);
   if (closure) {
     var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
-    body.innerHTML = '<p class="plan-empty">' + fill('{date} - center closed ({reason}).', { date: formatDateDisplay(ds), reason: why }) + '</p>';
+    body.innerHTML = '<p class="plan-empty">' + (why === 'Closed' ? fill('{date} - center closed.', { date: formatDateDisplay(ds) }) : fill('{date} - center closed ({reason}).', { date: formatDateDisplay(ds), reason: why })) + '</p>';
     return;
   }
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
@@ -3935,35 +3839,7 @@ function renderIntraday(ds) {
     }
   }
   var welcomePlan = {};
-  if (curve && curve.length) {
-    var avgCurveVal = curve.reduce(function(s, v){ return s + v; }, 0) / curve.length;
-    function overlapsMission(missionH, missionDur, h) {
-      if (missionH == null) return false;
-      return missionH < h + 1 && (missionH + missionDur) > h;
-    }
-    for (var ph = Math.floor(openH); ph < Math.ceil(closeH); ph++) {
-      var ci = hourlyCurveIndex(ph * 60);
-      if (ci < 0 || ci >= curve.length) continue;
-      if (curve[ci] <= avgCurveVal) continue;
-      var cand = working.filter(function(a) {
-        var si = shiftInfo[a.id];
-        if (!si) return false;
-        var sH = si.startMin / 60, eH = si.endMin / 60;
-        if (sH > ph || eH < ph + 1) return false;
-        if (overlapsMission(mbPlan[a.id], 0.25, ph)) return false;
-        if (overlapsTaken(a.id, ph, 1)) return false;
-        return true;
-      });
-      if (!cand.length) continue;
-      cand.sort(function(x, y) {
-        return (welcomePlan[x.id] ? welcomePlan[x.id].length : 0) -
-               (welcomePlan[y.id] ? welcomePlan[y.id].length : 0);
-      });
-      var chosen = cand[0];
-      if (!welcomePlan[chosen.id]) welcomePlan[chosen.id] = [];
-      welcomePlan[chosen.id].push(ph);
-    }
-  }
+
   function fmtH(m) {
     var h = Math.floor(m / 60), mn = m % 60;
     return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
@@ -4012,13 +3888,9 @@ function renderIntraday(ds) {
   }
   var rowsHtml = '';
   var intradayExportRows = [];
-  groups.forEach(function(grp) {
-    var list = grp.list;
-    rowsHtml += '<div class="it-group"><div class="it-role"' + (grp.cornerCode ? '' : '') + '>' + esc(grp.title) + '</div>';
-    list.forEach(function(a) {
+  function blocksFor(a) {
       var sh = shiftInfo[a.id];
       var sH = sh.startMin / 60, eH = sh.endMin / 60;
-      var toneCls = 'sh-' + (sh.tone || 'close');
       var blocks = [];
       function withOverride(agentId, type, calcStart, durH) {
         var ov = intradayOverrides[agentId + ':' + type];
@@ -4045,6 +3917,17 @@ function renderIntraday(ds) {
           blocks.push([withOverride(a.id, 'wel' + wi, wh, 1), 1, 'wel' + wi, 'Welcome']);
         });
       }
+      return blocks;
+  }
+  var taskPlan = cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH);
+  groups.forEach(function(grp) {
+    var list = grp.list;
+    rowsHtml += '<div class="it-group"><div class="it-role"' + (grp.cornerCode ? '' : '') + '>' + esc(grp.title) + '</div>';
+    list.forEach(function(a) {
+      var sh = shiftInfo[a.id];
+      var sH = sh.startMin / 60, eH = sh.endMin / 60;
+      var toneCls = 'sh-' + (sh.tone || 'close');
+      var blocks = blocksFor(a);
       var exportBlocks = blocks.map(function(b){
         return { start:b[0], dur:b[1], type:b[2], label:b[3],
                  color: (b[4] && b[4].indexOf('bc-') === 0) ? b[4].slice(3) : null };
@@ -4058,7 +3941,7 @@ function renderIntraday(ds) {
         exportBlocks.push({ start: m.start, dur: m.dur, type: 'reinf', label: '\u2192' + m.toCode, color: null });
       });
       intradayExportRows.push({
-        agentId: a.id,
+        agentId: a.id, tasks: taskPlan.segs[a.id] || [],
         name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
         role: (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '',
         group: grp.title, groupIsCorner: !!grp.cornerCode,
@@ -4076,12 +3959,17 @@ function renderIntraday(ds) {
       // Before opening: light bar, then the normal bar
       if (sH < openH) {
         var preEnd = Math.min(eH, openH);
-        track += '<div class="it-shift pre ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(preEnd) - pct(sH)) + '%"><span>' + fmtH(sh.startMin) + '</span></div>';
+        track += '<div class="it-shift pre ' + toneCls + '" style="left:' + pct(sH) + '%;width:' + (pct(preEnd) - pct(sH)) + '%"></div>';
       }
       var floorStart = Math.max(sH, openH);
       if (eH > floorStart) {
-        track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(floorStart) + '%;width:' + (pct(eH) - pct(floorStart)) + '%"><span' + (sH < openH ? ' class="alt-start"' : '') + '>' + fmtH(sh.startMin) + '</span><span>' + fmtH(sh.endMin) + '</span></div>';
+        track += '<div class="it-shift ' + toneCls + '" style="left:' + pct(floorStart) + '%;width:' + (pct(eH) - pct(floorStart)) + '%"></div>';
       }
+      (taskPlan.segs[a.id] || []).forEach(function(sg) {
+        var t = tasks.find(function(x) { return x.name === sg.task; }) || {};
+        track += '<div class="it-task" data-full="' + esc(sg.task) + '" data-short="' + esc(taskShort(sg.task)) + '" title="' + esc(sg.task + ' ' + fmtH(sg.s) + ' - ' + fmtH(sg.e)) +
+          '" style="left:' + pct(sg.s / 60) + '%;width:' + wpct((sg.e - sg.s) / 60) + '%;background:' + (t.color_bg || '#E8E9EB') + ';color:' + (t.color_text || '#4C586A') + '">' + esc(sg.task) + '</div>';
+      });
       blocks.forEach(function(bl) {
         var visualCls = bl[4] || ('b-' + String(bl[2]).replace(/[0-9]+$/, ''));
         track += '<div class="it-blk ' + visualCls + '" draggable="false"' +
@@ -4115,7 +4003,7 @@ function renderIntraday(ds) {
       var roleLabel = ((RETAIL_STATUS[retailStatusOf(a)] || {}).label || '');
       var info = '<div class="it-info" title="' + esc(nm + ' - ' + roleLabel) + '">' +
         '<span class="sh ' + toneCls + '">' + esc(sh.code) + '</span>' +
-        '<span class="it-person"><span class="it-nm">' + esc(nm) + '</span><small>' + esc(roleLabel) + '</small>' +
+        '<span class="it-person"><span class="it-nm">' + esc(nm) + '</span><small>' + fmtH(sh.startMin) + ' - ' + fmtH(sh.endMin) + '</small>' +
         '<span class="person-initials">' + esc(retailInitials(a.first_name, a.last_name)) + '</span></span></div>';
       rowsHtml += '<div class="it-row">' + info + track + '</div>';
     });
@@ -4196,7 +4084,7 @@ function initIntradayDrag(root, T0, span, ds) {
 }
 function openMissionMenu(ev, agentId) {
   if (ev.target.closest('.it-blk')) return;
-  if (!ev.target.classList.contains('it-shift')) return;
+  if (!ev.target.classList.contains('it-shift') && !ev.target.classList.contains('it-task')) return;
   ev.stopPropagation();
   closeMissionMenu();
   var track = ev.currentTarget;
@@ -4212,7 +4100,13 @@ function openMissionMenu(ev, agentId) {
   menu.className = 'mission-menu';
   menu.id = 'mission-menu';
   menu.onclick = function(e) { e.stopPropagation(); };
-  menu.innerHTML = '<div class="mm-list">' + missionDefs().map(function(m) {
+  var slotMin = Math.floor(clickMin / 30) * 30;
+  var taskBtns = tasksInOrder().filter(function(t) { return agentCanDo(agentId, t); }).map(function(t) {
+    return '<button type="button" class="mm-chip" style="background:' + t.color_bg + ';color:' + t.color_text + '" onclick="setSlotTask(\'' + agentId + '\',' + slotMin + ',\'' + esc(t.name) + '\')">' + esc(t.name) + '</button>';
+  }).join('') + ((taskOverrides[agentId] || {})[slotMin] ? '<button type="button" class="mm-chip mm-auto" onclick="setSlotTask(\'' + agentId + '\',' + slotMin + ',null)">Auto</button>' : '');
+  menu.innerHTML = '<div class="mm-sec">' + fill('Task {from} - {to}', { from: minToTimeInput(slotMin), to: minToTimeInput(slotMin + 30) }) + '</div>' +
+    '<div class="mm-tasks">' + taskBtns + '</div><div class="mm-sec">Add a mission</div>' +
+    '<div class="mm-list">' + missionDefs().map(function(m) {
       return '<div class="mission-menu-item" data-type="' + esc(m.type) + '" onclick="pickMissionType(this)">' +
         '<span class="mm-chip ' + m.cls + '">' + esc(m.short) + '</span>' + esc(m.label) +
         (m.free ? '' : '<span class="mm-dur">' + durLabel(m.dur) + '</span>') + '</div>';
@@ -4305,117 +4199,7 @@ async function saveIntradayOverride(ds, agentId, blockType, startMin) {
   if (currentRegionId === storeId) intradayOverrides[agentId + ':' + blockType] = startMin;
   showToast('Moved \u2713');
 }
-async function saveMonthlyTraffic(ev) {
-  var inp = ev && ev.target;
-  if (!currentRegionId || !inp || !inp.classList || !inp.classList.contains('tr-cy')) return;
-  var storeId = currentRegionId, year = currentWeekMonday.getFullYear();
-  var m  = parseInt(inp.dataset.month, 10);
-  var v  = inp.value === '' ? null : parseInt(inp.value, 10);
-  var ex = trafficMonthly[monthKey(year, m)] || {};
-  var row = {
-    region_id: storeId, year: year, month: m,
-    n_2: ex.n_2 || 0,
-    last_year: ex.last_year || 0,
-    current_year: v,
-    source: v == null ? 'empty' : 'manual'
-  };
-  showLoader();
-  var res = await sb.from('retail_traffic_monthly').upsert([row], { onConflict: 'region_id,year,month' });
-  if (res.error) { hideLoader(); showToast('Save failed', 'error'); return; }
-  if (storeId !== currentRegionId) { hideLoader(); return; }
-  await loadTraffic(year);
-  await recomputeMonthDaily(year, m);
-  hideLoader();
-  showToast('Saved \u2713');
-  renderTraffic();
-}
-async function saveDailyTraffic() {
-  if (!currentRegionId) return;
-  var rows = [];
-  document.querySelectorAll('.tr-d').forEach(function(inp) {
-    var ds  = inp.dataset.date;
-    var val = parseInt(inp.value) || 0;
-    var ex  = trafficDaily[ds] || {};
-    var changed = (ex.traffic == null) || (val !== ex.traffic);
-    rows.push({
-      region_id: currentRegionId, date: ds, traffic: val,
-      is_manual: ex.is_manual || changed
-    });
-  });
-  if (!rows.length) return;
-  showLoader();
-  var res = await sb.from('retail_traffic_daily')
-    .upsert(rows, { onConflict: 'region_id,date' });
-  hideLoader();
-  if (res.error) { showToast('Save failed', 'error'); return; }
-  rows.forEach(function(r) { trafficDaily[r.date] = r; });
-  showToast('Saved \u2713');
-  renderTraffic();
-}
-async function resetDailyOverrides() {
-  if (!currentRegionId) return;
-  var year = currentWeekMonday.getFullYear();
-  var mIdx = currentWeekMonday.getMonth() + 1;
-  var first = toDateStr(new Date(year, mIdx - 1, 1));
-  var last  = toDateStr(new Date(year, mIdx, 0));
-  if (!confirm(fill('Reset daily edits for {month}?', { month: MONTH_NAMES[mIdx - 1] }))) return;
-  showLoader();
-  var res = await sb.from('retail_traffic_daily')
-    .delete().eq('region_id', currentRegionId).gte('date', first).lte('date', last);
-  if (res.error) { hideLoader(); showToast('Reset failed', 'error'); return; }
-  Object.keys(trafficDaily).forEach(function(ds) {
-    if (ds >= first && ds <= last) delete trafficDaily[ds];
-  });
-  await recomputeMonthDaily(year, mIdx);
-  hideLoader();
-  showToast('Daily edits cleared \u2713');
-  renderTraffic();
-}
 // Forecast button
-async function runForecast() {
-  if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
-  var year = currentWeekMonday.getFullYear();
-  await loadTraffic(year);
-  var btn = document.getElementById('btn-forecast');
-  var steps = [
-    'Analysing historical patterns\u2026',
-    'Detecting seasonality\u2026',
-    'Modelling the trend\u2026',
-    'Generating projection\u2026'
-  ];
-  btn.disabled = true;
-  var original = btn.innerHTML;
-  for (var i = 0; i < steps.length; i++) {
-    btn.innerHTML = '<span class="spin"></span><span>' + steps[i] + '</span>';
-    await new Promise(function(r) { setTimeout(r, 480); });
-  }
-  var proj = forecastYear(year);
-  if (!Object.keys(proj).length) {
-    btn.disabled = false; btn.innerHTML = original;
-    showToast('Not enough history to forecast', 'error');
-    return;
-  }
-  var rows = [];
-  for (var m = 1; m <= 12; m++) {
-    var ex = trafficMonthly[monthKey(year, m)] || {};
-    if (ex.source === 'manual') continue;
-    rows.push({
-      region_id: currentRegionId, year: year, month: m,
-      n_2: ex.n_2 || 0,
-      last_year: ex.last_year || 0,
-      current_year: proj[m],
-      source: 'forecast'
-    });
-  }
-  var res = await sb.from('retail_traffic_monthly')
-    .upsert(rows, { onConflict: 'region_id,year,month' });
-  btn.disabled = false; btn.innerHTML = original;
-  if (res.error) { showToast('Forecast could not be saved', 'error'); return; }
-  await loadTraffic(year);
-  for (var m3 = 1; m3 <= 12; m3++) await recomputeMonthDaily(year, m3);
-  showToast('Forecast generated \u2713');
-  renderTraffic();
-}
 // Manual changes on the planning
 async function loadPlanningOverrides() {
   var sid = currentRegionId;
@@ -6281,20 +6065,6 @@ function renderDayChips(selected, boxId) {
   }).join('');
 }
 var CORNER_SKILLS = ['PRF', 'LG', 'RTW', 'MEN', 'WMN'];
-function renderSkillChips(selected) {
-  var box = document.getElementById('ae-skills');
-  if (!box) return;
-  box.innerHTML = CORNER_SKILLS.map(function(s) {
-    var on = (selected || []).indexOf(s) !== -1;
-    return '<button type="button" class="day-chip' + (on ? ' on' : '') +
-           '" data-skill="' + s + '" onclick="toggleDayChip(this)">' + s + '</button>';
-  }).join('');
-}
-function readSkillChips() {
-  return Array.prototype.slice
-    .call(document.querySelectorAll('#ae-skills .day-chip.on'))
-    .map(function(b) { return b.dataset.skill; });
-}
 function toggleDayChip(btn) { btn.classList.toggle('on'); }
 function updateFixedSectionVisibility() {
   var status = document.getElementById('ae-status').value;
@@ -7647,12 +7417,12 @@ function fitExportEventLabels(root) {
 function fitMissionLabels(root) {
   if(!root || !root.getClientRects().length)return;
   var context=document.createElement('canvas').getContext('2d');
-  root.querySelectorAll('.it-blk').forEach(function(blk){
+  root.querySelectorAll('.it-blk, .it-task').forEach(function(blk){
     if(blk.dataset.designLabel==null)blk.dataset.designLabel=blk.dataset.full||blk.textContent;
     var style=getComputedStyle(blk);
     context.font=style.fontWeight+' '+style.fontSize+' '+style.fontFamily;
-    var label=blk.dataset.designLabel, first=label.charAt(0);
-    // Full text if it fits, else the first letter, else nothing
+    var label=blk.dataset.designLabel, first=blk.dataset.short||label.charAt(0);
+    // Full text if it fits, else the short text, else nothing
     blk.textContent=context.measureText(label).width+10<=blk.clientWidth?label:
       (first && context.measureText(first).width+4<=blk.clientWidth?first:'');
   });
