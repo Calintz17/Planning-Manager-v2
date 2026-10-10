@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.1.1</title>
+  <title>CAST v9.1.2</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -72,7 +72,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .it-blk { position:absolute; top:14px; height:24px; border-radius:3px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; cursor:grab; }
 .it-blk-label { min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .it-blk:hover { box-shadow:inset 0 0 0 1px currentColor; }
-.b-mb { background:#DBEAFE; color:#1E407A; box-shadow:none; }
+.b-mb { background:#183C74; color:#FFFFFF; box-shadow:none; }
 .bc-yellow { background:#F9E8B5; color:#61470B; }
 .bc-blue { background:#DBEAFE; color:#1E407A; }
 .bc-pink { background:#F6DDE7; color:#82334E; }
@@ -102,6 +102,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
   border:1px solid #D4DEEB; border-radius:7px; box-shadow:0 8px 30px #192D491C; padding:6px; width:242px; max-width:calc(100vw - 20px); }
 .more-menu.open { display:block; }
 .more-menu .mission-menu-item { cursor:pointer; font-family:var(--font); }
+.more-menu .mission-menu-item:disabled { opacity:.5; cursor:default; background:transparent; }
 .xm-item { width:100%; border:0; background:transparent; text-align:left; font-family:var(--font); }
 .xm-item:focus-visible { outline:2px solid var(--nav-active-bg); outline-offset:-2px; }
 .xm-item:disabled { opacity:.45; cursor:default; }
@@ -277,7 +278,7 @@ tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:700
 .btn-sq:hover { background:#FECACA; }
 .toggle { position:relative; display:inline-block; width:40px; height:22px; }
 .toggle input { opacity:0; width:0; height:0; }
-.toggle-slider { position:absolute; inset:0; background:var(--bg-disabled); border-radius:var(--r-pill); transition:.2s; cursor:pointer; }
+.toggle-slider { position:absolute; inset:0; background:#BDC9D9; border-radius:var(--r-pill); transition:.2s; cursor:pointer; }
 .toggle-slider:before { content:""; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:var(--sh-1); }
 input:checked + .toggle-slider { background:var(--nav-active-bg); }
 input:checked + .toggle-slider:before { transform:translateX(18px); }
@@ -1039,7 +1040,7 @@ textarea { resize:vertical; line-height:1.5; }
             <button class="btn btn-ghost more-btn" id="more-btn" aria-haspopup="menu" aria-expanded="false" title="More actions" aria-label="More actions" onclick="toggleMoreMenu(event)"><svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
             <div class="more-menu" id="more-menu" role="menu" onclick="event.stopPropagation()">
               <button type="button" class="mission-menu-item" role="menuitem" onclick="closeMoreMenu();recalcFromToday()">Recalculate from today</button>
-              <button type="button" id="btn-reset-manual" class="mission-menu-item" role="menuitem" onclick="closeMoreMenu();clearMonthOverrides()" style="display:none">Reset manual changes</button>
+              <button type="button" id="btn-reset-manual" class="mission-menu-item" role="menuitem" onclick="closeMoreMenu();clearMonthOverrides()" disabled>Reset manual changes</button>
             </div>
           </div>
         </div>
@@ -2302,7 +2303,7 @@ function applyRegulationsForm() {
 var SETTINGS_HELP = {
   labor: { n: 1, title: 'Labor rules',
     sub: 'The legal and HR rules of your store: working time limits and minimum staffing. CAST follows them when it builds the planning.',
-    what: 'These are the legal and HR rules of your store: working time limits and minimum staffing. CAST follows them when it builds the planning. A staffing or rest issue can mark the date in the AGENT header in orange, with details on hover. Your manual changes are always kept.',
+    what: 'These are the legal and HR rules of your store: working time limits and minimum staffing. CAST follows them when it builds the planning. Your manual changes are always kept.',
     warn: null,
     steps: [
       'Max working days / week: how many days one person can work in a week.',
@@ -6899,7 +6900,7 @@ function renderMonthlyPlanning() {
     });
   });
 
-  // Day alerts: orange day + tooltip only
+  // Day checks kept for reference only: nothing is shown
   var issueByDs = {};
   function addIssue(ds, txt) { (issueByDs[ds] = issueByDs[ds] || []).push(txt); }
   issues.forEach(function(i) {
@@ -6922,7 +6923,7 @@ function renderMonthlyPlanning() {
   var mcTxt = (CURRENT_LANG === 'en' && nOverrides === 1) ? '1 manual change' : tf('{count} manual changes', { count: nOverrides });
   setPlanMeta('monthly-meta', nOverrides ? mcTxt : '');
   var resetBtn = document.getElementById('btn-reset-manual');
-  if (resetBtn) resetBtn.style.display = nOverrides ? '' : 'none';
+  if (resetBtn) resetBtn.disabled = !nOverrides;
 
   // Full label on screen, short one on phone
   var GROUP_SHORT = { Management:'MGT', Stock:'STK', Unassigned:'-' };
@@ -6939,7 +6940,7 @@ function renderMonthlyPlanning() {
       if (d.dow === 0 || d.dow === 6) cls += ' is-weekend';
       if (d.ds === todayStr) cls += ' is-today';
       var dl = new Date(d.ds + 'T12:00:00').toLocaleDateString(dLoc(), { weekday:CURRENT_LANG === 'en' ? 'narrow' : 'short' });
-      var dayIssues = withEvents ? issueByDs[d.ds] : null;
+      var dayIssues = null; // Day alerts removed (v9.1.2)
       if (dayIssues) cls += ' has-issue';
       var tip = dayIssues ? ' title="' + esc(dayIssues.join('\n')) + '"' : '';
       h += '<th class="' + cls + '" data-col="' + i + '"' + tip + '>' +
@@ -7936,7 +7937,7 @@ function exportIntraday() {
 
   var TONE_XL = { open:{bar:'E8EFF8'}, mid:{bar:'E8EFF8'}, close:{bar:'E8EFF8'}, late:{bar:'E8EFF8'}, teal:{bar:'E8EFF8'}, pink:{bar:'E8EFF8'}, slate:{bar:'E8EFF8'}, open_stock:{bar:'E8EFF8'} };
   var MISSION_XL = {
-    mb:{bg:'DBEAFE',tx:'1E407A',full:'MB'},
+    mb:{bg:'183C74',tx:'FFFFFF',full:'MB'},
     lun:{bg:'F9E8B5',tx:'61470B',full:'Lunch'},
     wel:{bg:'CCECE4',tx:'13574B',full:'Welcome'},
     train:{bg:'E8E0F5',tx:'583981',full:'Training'},
