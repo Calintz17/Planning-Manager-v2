@@ -561,5 +561,11 @@
   "Week -": "週 -",
   "loc": "店舗",
   "nat": "全国",
-  "tra": "研修"
+  "tra": "研修",
+  "Open planning": "プランニングを開く",
+  "Corner at a glance": "コーナーの配置状況",
+  "Staffing": "人員配置",
+  "Breaks & missions": "休憩・業務",
+  "Shifts": "シフト",
+  "The suggestion appears on the advisor's line in the intraday planning. Drag it to move it, or click it and choose Delete.": "候補はアドバイザーの行に表示されます。ドラッグで移動できます。削除するには、クリックして「削除」を選びます。"
 }
