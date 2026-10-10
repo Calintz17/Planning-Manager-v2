@@ -561,5 +561,11 @@
   "Week -": "周 -",
   "loc": "门店",
   "nat": "全国",
-  "tra": "培训"
+  "tra": "培训",
+  "Open planning": "打开排班表",
+  "Corner at a glance": "区域人员安排",
+  "Staffing": "人员配置",
+  "Breaks & missions": "休息与工作任务",
+  "Shifts": "班次",
+  "The suggestion appears on the advisor's line in the intraday planning. Drag it to move it, or click it and choose Delete.": "建议任务会显示在顾问的日内排班行中。可拖动调整时间，或点击后选择删除。"
 }
