@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v2.0.3</title>
+  <title>CAST v2.0.4</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -557,12 +557,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tr-dot { display:inline-block; width:10px; height:10px; border-radius:3px; border:1px solid; margin-right:6px; vertical-align:-1px; }
 .tr-leg small { color:var(--tx-3); }
 .tr-ly { font-size:10px; color:var(--tx-3); text-align:center; margin-top:5px; }
-.tr-hours { display:flex; gap:6px; align-items:flex-end; overflow-x:auto; padding-bottom:4px; }
-.tr-hr { flex:1; min-width:46px; display:flex; flex-direction:column; align-items:center; gap:6px; }
-.tr-hr-bar { width:100%; max-width:30px; height:120px; display:flex; flex-direction:column-reverse; }
-.tr-hr-bar i { display:block; width:100%; }
-.tr-hr-in { width:100%; height:30px; text-align:center; font-size:12px; padding:0 2px; }
-.tr-hr span { font-size:10px; color:var(--tx-3); }
+
 .tr-days { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
 .tr-day { border:1px solid var(--line); border-radius:5px; padding:10px; background:var(--bg-base-2); }
 .tr-day.is-manual { border-color:#8CBFA5; background:#ECF5F0; }
@@ -1921,7 +1916,8 @@ var SETTINGS_HELP = {
       'Choose the day with the arrows or the date at the top right.',
       'Each line is one person. Each colored block is a task: calls and chats first, then the other tasks by priority, then the filler.',
       'Calls and chats follow the hourly volume. Mails, back office and fraud are handled when people are free; what is not done moves to the next day.',
-      'Click a task to change it for that half hour, or to add a mission (MB, Training). Choose Auto to give the half hour back to CAST.',
+      'Drag a task to move it, drag its edge to make it longer or shorter (computer). Click a task to change it, delete it, or add a mission (MB, Training). Auto gives the time back to CAST.',
+      'When you move a break or a mission, the tasks keep their order around it.',
       'Breaks are placed automatically within the windows set in Settings. Drag a break to move it.',
       'Who can do each task: the task pills on the Client Advisors page.'],
     important: 'Your manual changes are always kept.' }
@@ -3212,17 +3208,6 @@ async function renderTraffic() {
       '<input type="number" class="tr-d" min="0" step="1" value="' + Math.round(v) + '" onchange="saveDailyForecast(this,\'' + esc(t.name) + '\',\'' + dd.ds + '\')">' +
       '<div class="tr-ly">' + (ly != null ? 'Last year ' + fmtVol(ly) : '&nbsp;') + '</div></div>';
   }).join('');
-  var sh = hourShares(t, days.find(function(dd) { return !dd.closed; }) ? days.find(function(dd) { return !dd.closed; }).ds : days[0].ds);
-  var span = weekOpenSpan(), h0 = 24, h1 = 0;
-  sh.forEach(function(v, h) { if (v > 0) { h0 = Math.min(h0, h); h1 = Math.max(h1, h + 1); } });
-  h0 = Math.min(h0, span.open); h1 = Math.max(h1, span.close);
-  var topSh = Math.max.apply(null, sh.concat([0.01]));
-  var bars = '';
-  for (var h = h0; h < h1; h++) {
-    var pctv = Math.round(sh[h] * 1000) / 10;
-    bars += '<div class="tr-hr"><div class="tr-hr-bar"><i style="height:' + (sh[h] / topSh * 100) + '%;background:' + t.color_bg + ';border-top:1px solid ' + t.color_text + '"></i></div>' +
-      '<input type="number" class="tr-hr-in" data-h="' + h + '" min="0" max="100" step="0.5" value="' + pctv + '" onchange="saveTaskCurve(\'' + t.id + '\')"><span>' + h + 'h</span></div>';
-  }
   html += '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">' + fill('{task} - monthly forecast {year}', { task: t.name, year: y }) + '</h2>' +
       '<div class="card-sub">' + (hasHist ? 'Last year\'s volume with your trend. Type a number to replace a month; empty it to come back to the calculation.' :
         'No history for this task: type the volume expected each month.') + '</div></div></div>' +
@@ -3235,10 +3220,109 @@ async function renderTraffic() {
       '<div class="card-sub">The month spread over the days with the weekday profile of the history. Change a day to set it by hand.</div></div>' + monthNav + '</div>' +
       '<div class="tr-days">' + dCards + '</div></div>' +
     '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">Hourly profile</h2>' +
-      '<div class="card-sub">' + (t.hourly_curve ? 'Your profile: share of the day received each hour.' : (cscHist.hour[t.name] ? 'From the history: share of the day received each hour.' : 'No hourly history: the day is spread evenly over the open hours.')) + '</div></div>' +
+      '<div class="card-sub">' + (t.hourly_curve ? 'Your profile: drag a point to change the share of the day received at that hour.' : (cscHist.hour[t.name] ? 'From the history: drag a point to change the share of the day received at that hour.' : 'No hourly history: the day is spread evenly over the open hours. Drag a point to change it.')) + '</div></div>' +
       (t.hourly_curve ? '<div class="head-actions"><button class="btn btn-ghost btn-sm" onclick="resetTaskCurve(\'' + t.id + '\')">Back to history</button></div>' : '') + '</div>' +
-      '<div class="tr-hours" id="tr-hours">' + bars + '</div></div>';
+      '<div id="curve-host"></div></div>';
   box.innerHTML = html;
+  initTaskCurve(t, days.find(function(dd) { return !dd.closed; }) ? days.find(function(dd) { return !dd.closed; }).ds : days[0].ds);
+}
+// Same hours for every task: the open hours and every hour where a task receives contacts
+function curveSpan(ds) {
+  var sp = weekOpenSpan(), h0 = sp.open, h1 = sp.close;
+  tasks.forEach(function(t) {
+    if (t.is_filler) return;
+    hourShares(t, ds).forEach(function(v, h) { if (v > 0) { h0 = Math.min(h0, h); h1 = Math.max(h1, h + 1); } });
+  });
+  return { h0: h0, h1: h1 };
+}
+// Editable hourly curve, same format as Retail, in the color of the task
+function initTaskCurve(t, ds) {
+  var host = document.getElementById('curve-host');
+  if (!host) return;
+  var sp = curveSpan(ds), sh = hourShares(t, ds), hours = [], vals = [];
+  for (var h = sp.h0; h < sp.h1; h++) { hours.push(h); vals.push(sh[h] * 100); }
+  var N = hours.length;
+  var W = Math.max(500, Math.round(host.clientWidth || 680)), H = 260, padL = 34, padR = 18, padT = 28, padB = 32;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var maxPct = Math.max(10, Math.ceil(Math.max.apply(null, vals) + 4));
+  var line = t.color_text || '#4C586A', fillC = t.color_bg || '#E8E9EB';
+  host.innerHTML = '<svg id="curve-svg" viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;min-width:500px;height:auto;display:block;touch-action:none;user-select:none;">' +
+    '<g id="cv-grid"></g><path id="cv-area" fill="' + fillC + '" fill-opacity="0.75"></path>' +
+    '<path id="cv-line" fill="none" stroke="' + line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></path>' +
+    '<g id="cv-points"></g><g id="cv-values"></g><g id="cv-labels"></g></svg>' +
+    '<div style="display:flex;justify-content:flex-end;margin-top:10px;"><span style="font-size:12px;color:var(--tx-3)">Total ' +
+    '<span id="cv-total" style="color:var(--ok-tx);font-weight:700">100%</span></span></div>';
+  var svg = document.getElementById('curve-svg');
+  function xAt(i) { return padL + (plotW * i / Math.max(1, N - 1)); }
+  function yAt(v) { return padT + plotH - (plotH * (v / maxPct)); }
+  var grid = '';
+  for (var p = 0; p <= maxPct; p += 5) {
+    var gy = yAt(p);
+    grid += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="#E7EDF5"></line>' +
+      '<text x="' + (padL - 8) + '" y="' + (gy + 3) + '" text-anchor="end" font-size="11" fill="#52647B" style="font-family:var(--font)">' + p + '%</text>';
+  }
+  document.getElementById('cv-grid').innerHTML = grid;
+  function smooth(pts, close) {
+    if (pts.length < 2) return '';
+    var d = 'M ' + pts[0][0] + ' ' + pts[0][1];
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i > 0 ? i - 1 : 0], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2 < pts.length ? i + 2 : pts.length - 1], k = 0.16;
+      d += ' C ' + (p1[0] + (p2[0] - p0[0]) * k) + ' ' + Math.min(padT + plotH, p1[1] + (p2[1] - p0[1]) * k) + ' ' +
+        (p2[0] - (p3[0] - p1[0]) * k) + ' ' + Math.min(padT + plotH, p2[1] - (p3[1] - p1[1]) * k) + ' ' + p2[0] + ' ' + p2[1];
+    }
+    if (close) d += ' L ' + pts[pts.length - 1][0] + ' ' + (padT + plotH) + ' L ' + pts[0][0] + ' ' + (padT + plotH) + ' Z';
+    return d;
+  }
+  function draw() {
+    var pts = vals.map(function(v, i) { return [xAt(i), yAt(v)]; });
+    document.getElementById('cv-line').setAttribute('d', smooth(pts, false));
+    document.getElementById('cv-area').setAttribute('d', smooth(pts, true));
+    var ph = '', vh = '', lh = '';
+    for (var i = 0; i < N; i++) {
+      var x = xAt(i), y = yAt(vals[i]), ly = y - 14 < padT - 4 ? y + 20 : y - 14;
+      ph += '<circle data-i="' + i + '" cx="' + x + '" cy="' + y + '" r="6.5" fill="#fff" stroke="' + line + '" stroke-width="2.5" style="cursor:grab"></circle>' +
+        '<circle data-i="' + i + '" cx="' + x + '" cy="' + y + '" r="15" fill="transparent" style="cursor:grab"></circle>';
+      vh += '<text x="' + x + '" y="' + ly + '" text-anchor="middle" font-size="11" font-weight="bold" fill="' + line + '" style="font-family:var(--font);pointer-events:none">' + vals[i].toFixed(1) + '%</text>';
+      lh += '<text x="' + x + '" y="' + (H - padB + 16) + '" text-anchor="middle" font-size="11" fill="#52647B" style="font-family:var(--font)">' + String(hours[i]).padStart(2, '0') + 'h</text>';
+    }
+    document.getElementById('cv-points').innerHTML = ph;
+    document.getElementById('cv-values').innerHTML = vh;
+    document.getElementById('cv-labels').innerHTML = lh;
+    document.getElementById('cv-total').textContent = Math.round(vals.reduce(function(a, b) { return a + b; }, 0)) + '%';
+    svg.querySelectorAll('#cv-points circle').forEach(function(c) {
+      c.addEventListener('mousedown', start); c.addEventListener('touchstart', start, { passive: false });
+    });
+  }
+  function setValue(idx, nv) {
+    nv = Math.max(0, Math.min(maxPct, nv));
+    var others = 0;
+    for (var i = 0; i < N; i++) if (i !== idx) others += vals[i];
+    var rest = 100 - nv;
+    for (var j = 0; j < N; j++) vals[j] = j === idx ? nv : (others > 0 ? vals[j] * rest / others : rest / (N - 1));
+  }
+  var dragging = null;
+  function toPct(evt) {
+    var r = svg.getBoundingClientRect(), cy = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    return (padT + plotH - (cy - r.top) * (H / r.height)) / plotH * maxPct;
+  }
+  function start(e) { e.preventDefault(); dragging = parseInt(e.target.getAttribute('data-i'), 10); }
+  function move(e) { if (dragging === null) return; e.preventDefault(); setValue(dragging, toPct(e)); draw(); }
+  function end() {
+    if (dragging === null) return;
+    dragging = null;
+    var c = [];
+    for (var h2 = 0; h2 < 24; h2++) c.push(0);
+    hours.forEach(function(hh, i) { c[hh] = Math.round(vals[i] * 10) / 10; });
+    updateTask(t.id, { hourly_curve: c });
+  }
+  if (curveListeners) curveListeners.abort();
+  curveListeners = new AbortController();
+  var sig = curveListeners.signal;
+  window.addEventListener('mousemove', move, { signal: sig });
+  window.addEventListener('touchmove', move, { passive: false, signal: sig });
+  window.addEventListener('mouseup', end, { signal: sig });
+  window.addEventListener('touchend', end, { signal: sig });
+  draw();
 }
 async function refreshTraffic() {
   await loadTraffic(trafficRef.getFullYear());
@@ -3278,13 +3362,6 @@ function saveTaskTrend(inp, taskId) {
   var v = parseFloat(inp.value);
   if (isNaN(v)) { showToast('Enter a number', 'error'); return; }
   updateTask(taskId, { trend_pct: v });
-}
-function saveTaskCurve(taskId) {
-  var c = [];
-  for (var h = 0; h < 24; h++) c.push(0);
-  document.querySelectorAll('#tr-hours .tr-hr-in').forEach(function(inp) { c[+inp.dataset.h] = Math.max(0, parseFloat(inp.value) || 0); });
-  if (!c.some(function(v) { return v > 0; })) { showToast('At least one hour must be above 0', 'error'); return; }
-  updateTask(taskId, { hourly_curve: c });
 }
 function resetTaskCurve(taskId) { updateTask(taskId, { hourly_curve: null }); }
 async function runForecast() {
@@ -3414,43 +3491,52 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH) {
     });
     pool.sort(function(x, y) { return ((equity[x.a.id] || 0) - (equity[y.a.id] || 0)) || (x.a.id < y.a.id ? -1 : 1); });
     var take = function(p, t) { p.slot.task = t.name; pool.splice(pool.indexOf(p), 1); };
+    var can = function(p, t) { return agentCanDo(p.a.id, t) && p.ov !== '!' + t.name; };
+    var need = {};
+    rt.forEach(function(t) { need[t.name] = open ? ((vol[t.name] && vol[t.name].hours[h]) || 0) / 2 * t.aht_minutes / (regionSettings.call_occupancy || 0.75) : 0; });
+    pool.forEach(function(p) { p.ov = (taskOverrides[p.a.id] || {})[s]; });
+    // Manual choices always win, and count as work done
+    pool.filter(function(p) { return p.ov && p.ov.charAt(0) !== '!'; }).forEach(function(p) {
+      var t = tasks.find(function(x) { return x.name === p.ov; }) || { name: p.ov };
+      take(p, t);
+      if (need[t.name] != null) { need[t.name] -= p.free; equity[p.a.id] = (equity[p.a.id] || 0) + p.free; }
+      else if (left[t.name] != null) left[t.name] -= p.free;
+    });
     if (open) {
       rt.forEach(function(t) {
-        var need = ((vol[t.name] && vol[t.name].hours[h]) || 0) / 2 * t.aht_minutes / (regionSettings.call_occupancy || 0.75);
-        pool.filter(function(p) { return agentCanDo(p.a.id, t); }).forEach(function(p) {
-          if (need <= 0) return;
-          take(p, t); need -= p.free; equity[p.a.id] = (equity[p.a.id] || 0) + p.free;
+        pool.filter(function(p) { return can(p, t); }).forEach(function(p) {
+          if (need[t.name] <= 0) return;
+          take(p, t); need[t.name] -= p.free; equity[p.a.id] = (equity[p.a.id] || 0) + p.free;
         });
       });
       // The line is never left empty during opening hours
       var lineOn = working.some(function(a) { var sl = slots[a.id][slots[a.id].length - 1];
         return sl && sl.k === s && rt.some(function(t) { return t.name === sl.task; }); });
       if (!lineOn) rt.some(function(t) {
-        var p = pool.find(function(x) { return agentCanDo(x.a.id, t); });
+        var p = pool.find(function(x) { return can(x, t); });
         if (p) { take(p, t); equity[p.a.id] = (equity[p.a.id] || 0) + p.free; }
         return !!p;
       });
     }
     stock.forEach(function(t) {
       if (t.morning_only && !am) return;
-      pool.filter(function(p) { return agentCanDo(p.a.id, t); }).forEach(function(p) {
+      pool.filter(function(p) { return can(p, t); }).forEach(function(p) {
         if (left[t.name] <= 0) return;
         take(p, t); left[t.name] -= p.free;
       });
     });
     pool.slice().forEach(function(p) {
-      var t = filler && agentCanDo(p.a.id, filler) ? filler : ord.find(function(x) {
-        return agentCanDo(p.a.id, x) && (!x.is_realtime || open) && !(x.morning_only && !am);
+      var t = filler && can(p, filler) ? filler : ord.find(function(x) {
+        return can(p, x) && (!x.is_realtime || open) && !(x.morning_only && !am);
       });
       if (t) take(p, t);
     });
   }
-  // Manual choices always win
   var segs = {};
   working.forEach(function(a) {
-    var ov = taskOverrides[a.id] || {}, list = segs[a.id] = [];
+    var list = segs[a.id] = [];
     slots[a.id].forEach(function(sl) {
-      var task = ov[sl.k] || sl.task;
+      var task = sl.task;
       if (!task) return;
       // Cut the half hour around breaks and missions
       var parts = [[sl.s, sl.e]];
@@ -3471,18 +3557,99 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH) {
   });
   return { segs: segs, left: left, carry: carry };
 }
-async function setSlotTask(agentId, slotMin, task) {
-  var regionId = currentRegionId, ds = currentIntradayDate;
-  closeMissionMenu();
+function slotKeys(sMin, eMin) { var k = []; for (var x = Math.floor(sMin / 30) * 30; x < eMin; x += 30) k.push(x); return k; }
+// Save the task of several half hours: a task name, "!TASK" to remove a task, or null to give them back to CAST
+async function saveTaskSlots(agentId, map) {
+  var regionId = currentRegionId, ds = currentIntradayDate, keys = Object.keys(map);
+  if (!keys.length) return true;
+  var up = keys.filter(function(k) { return map[k] != null; }).map(function(k) {
+    return { region_id: regionId, date: ds, agent_id: agentId, kind: 'task', slot_key: String(k), value: map[k] };
+  });
+  var del = keys.filter(function(k) { return map[k] == null; });
   var q = sb.from('csc_intraday_overrides');
-  var res = task
-    ? await q.upsert({ region_id: regionId, date: ds, agent_id: agentId, kind: 'task', slot_key: String(slotMin), value: task }, { onConflict: 'agent_id,date,kind,slot_key' })
-    : await q.delete().eq('agent_id', agentId).eq('date', ds).eq('kind', 'task').eq('slot_key', String(slotMin));
-  if (res.error) { showToast('Not saved: ' + res.error.message, 'error'); return; }
+  var r1 = up.length ? await q.upsert(up, { onConflict: 'agent_id,date,kind,slot_key' }) : { error: null };
+  var r2 = del.length ? await sb.from('csc_intraday_overrides').delete().eq('agent_id', agentId).eq('date', ds).eq('kind', 'task').in('slot_key', del.map(String)) : { error: null };
+  if (r1.error || r2.error) { showToast('Not saved: ' + (r1.error || r2.error).message, 'error'); return false; }
   var ov = taskOverrides[agentId] = taskOverrides[agentId] || {};
-  if (task) ov[slotMin] = task; else delete ov[slotMin];
-  showToast('Saved ✓');
-  if (regionId === currentRegionId && ds === currentIntradayDate) renderIntraday(ds);
+  keys.forEach(function(k) { if (map[k] == null) delete ov[k]; else ov[k] = map[k]; });
+  return true;
+}
+async function setSegTask(agentId, sMin, eMin, value) {
+  closeMissionMenu();
+  var map = {};
+  slotKeys(sMin, eMin).forEach(function(k) { map[k] = value; });
+  if (await saveTaskSlots(agentId, map)) { showToast('Saved \u2713'); renderIntraday(currentIntradayDate); }
+}
+// After a break or a mission moves, the tasks keep their order around it
+function rippleTaskSlots(oldSegs, busy, sMin, eMin) {
+  var seq = [], at = {}, i = 0, out = {};
+  oldSegs.slice().sort(function(a, b) { return a.s - b.s; }).forEach(function(sg) { for (var m = sg.s; m < sg.e; m++) seq.push(sg.task); });
+  for (var m = sMin; m < eMin; m++) {
+    if (busy.some(function(b) { return m >= b[0] && m < b[1]; })) continue;
+    if (i < seq.length) at[m] = seq[i++];
+  }
+  slotKeys(sMin, eMin).forEach(function(k) {
+    var cnt = {};
+    for (var m2 = k; m2 < k + 30; m2++) if (at[m2]) cnt[at[m2]] = (cnt[at[m2]] || 0) + 1;
+    var best = Object.keys(cnt).sort(function(a, b) { return cnt[b] - cnt[a]; })[0];
+    if (best) out[k] = best;
+  });
+  return out;
+}
+async function rippleAfterBlockChange(agentId, matchFn, newStart, newDur) {
+  var row = intradayExport && intradayExport.rows.find(function(r) { return r.agentId === agentId; });
+  if (!row) return;
+  var busy = row.blocks.map(function(b) {
+    var st = Math.round(b.start * 60), du = Math.round(b.dur * 60);
+    if (matchFn(b)) { st = newStart; if (newDur) du = newDur; }
+    return [st, st + du];
+  });
+  await saveTaskSlots(agentId, rippleTaskSlots(row.tasks, busy, Math.round(row.startH * 60), Math.round(row.endH * 60)));
+}
+// Tasks: drag to move, drag an edge to resize (mouse); click to change, delete or add a mission
+function initTaskDrag(root, T0, span, ds) {
+  root.querySelectorAll('.it-task').forEach(function(el) {
+    el.addEventListener('pointermove', function(e) {
+      if (e.buttons || e.pointerType === 'touch') return;
+      var r = el.getBoundingClientRect();
+      el.style.cursor = (e.clientX - r.left < 7 || r.right - e.clientX < 7) ? 'col-resize' : 'grab';
+    });
+    el.addEventListener('pointerdown', function(e) {
+      if (e.pointerType === 'touch' || e.button !== 0) return;
+      e.preventDefault();
+      var track = el.parentElement, tw = track.getBoundingClientRect().width, r = el.getBoundingClientRect();
+      var mode = e.clientX - r.left < 7 ? 'l' : r.right - e.clientX < 7 ? 'r' : 'm';
+      var s0 = +el.dataset.s, e0 = +el.dataset.e, smin = +track.dataset.smin, emin = +track.dataset.emin;
+      var ns = s0, ne = e0, x0 = e.clientX, moved = false;
+      var toPct = function(m) { return ((m / 60 - T0) / span) * 100; };
+      el.setPointerCapture(e.pointerId);
+      el.style.zIndex = '20';
+      function onMove(ev) {
+        var d = Math.round(((ev.clientX - x0) / tw * span * 60) / 30) * 30;
+        if (mode === 'm') { d = Math.max(smin - s0, Math.min(emin - e0, d)); ns = s0 + d; ne = e0 + d; }
+        if (mode === 'l') ns = Math.max(smin, Math.min(e0 - 15, s0 + d));
+        if (mode === 'r') ne = Math.min(emin, Math.max(s0 + 15, e0 + d));
+        if (ns !== s0 || ne !== e0) moved = true;
+        el.style.left = toPct(ns) + '%';
+        el.style.width = (toPct(ne) - toPct(ns)) + '%';
+      }
+      async function onUp() {
+        el.releasePointerCapture(e.pointerId);
+        el.removeEventListener('pointermove', onMove);
+        el.removeEventListener('pointerup', onUp);
+        el.style.zIndex = '';
+        if (!moved) return;
+        el.dataset.dragged = '1';
+        var task = el.dataset.task, map = {}, inNew = {};
+        slotKeys(ns, ne).forEach(function(k) { map[k] = task; inNew[k] = true; });
+        slotKeys(s0, e0).forEach(function(k) { if (!inNew[k]) map[k] = '!' + task; });
+        if (await saveTaskSlots(el.dataset.agent, map)) showToast('Saved \u2713');
+        renderIntraday(ds);
+      }
+      el.addEventListener('pointermove', onMove);
+      el.addEventListener('pointerup', onUp);
+    });
+  });
 }
 function renderIntraday(ds) {
   intradayExport = null;
@@ -4040,7 +4207,7 @@ function renderIntraday(ds) {
       });
       (addedMissions[a.id] || []).forEach(function(m) {
         var md = missionDef(m.type);
-        exportBlocks.push({ start: m.start, dur: missionDurH(m), type: m.type.indexOf('brk:') === 0 ? 'brk' : m.type,
+        exportBlocks.push({ mid: m.id, start: m.start, dur: missionDurH(m), type: m.type.indexOf('brk:') === 0 ? 'brk' : m.type,
                             label: md.label, color: md.color || null });
       });
       (reinforceMissions[a.id] || []).forEach(function(m) {
@@ -4073,7 +4240,7 @@ function renderIntraday(ds) {
       }
       (taskPlan.segs[a.id] || []).forEach(function(sg) {
         var t = tasks.find(function(x) { return x.name === sg.task; }) || {};
-        track += '<div class="it-task" data-full="' + esc(sg.task) + '" data-short="' + esc(taskShort(sg.task)) + '" title="' + esc(sg.task + ' ' + fmtH(sg.s) + ' - ' + fmtH(sg.e)) +
+        track += '<div class="it-task" data-agent="' + a.id + '" data-s="' + sg.s + '" data-e="' + sg.e + '" data-task="' + esc(sg.task) + '" data-full="' + esc(sg.task) + '" data-short="' + esc(taskShort(sg.task)) + '" title="' + esc(sg.task + ' ' + fmtH(sg.s) + ' - ' + fmtH(sg.e)) +
           '" style="left:' + pct(sg.s / 60) + '%;width:' + wpct((sg.e - sg.s) / 60) + '%;background:' + (t.color_bg || '#E8E9EB') + ';color:' + (t.color_text || '#4C586A') + '">' + esc(sg.task) + '</div>';
       });
       blocks.forEach(function(bl) {
@@ -4123,6 +4290,7 @@ function renderIntraday(ds) {
   setPlanMeta('intraday-meta', fill('{date} - {count} present', { date: formatDateDisplay(ds), count: working.length }));
   intradayExport = { ds: ds, storeId: currentRegionId, openH: T0, closeH: T1, rows: intradayExportRows };
   initIntradayDrag(body, T0, span, ds);
+  initTaskDrag(body, T0, span, ds);
   bindMissionEditors(body);
 }
 // Drag and drop in intraday
@@ -4138,7 +4306,10 @@ function initIntradayDrag(root, T0, span, ds) {
       var sMin  = parseInt(blk.dataset.smin);
       var eMin  = parseInt(blk.dataset.emin);
       var startX = e.clientX;
-      var startLeftPct = parseFloat(blk.style.left);
+      var startLeftPct = parseFloat(blk.style.left), startWPct = parseFloat(blk.style.width);
+      var br = blk.getBoundingClientRect();
+      var edge = blk.dataset.mid && e.pointerType !== 'touch' ? (e.clientX - br.left < 7 ? 'l' : br.right - e.clientX < 7 ? 'r' : '') : '';
+      var startH = pctToH(startLeftPct);
       blk.style.cursor = 'grabbing';
       blk.style.zIndex = '20';
       blk.setPointerCapture(e.pointerId);
@@ -4147,6 +4318,14 @@ function initIntradayDrag(root, T0, span, ds) {
       function onMove(ev) {
         var dx = ev.clientX - startX;
         var dPct = (dx / trackRect.width) * 100;
+        if (edge) {
+          var dh = Math.round(dx / trackRect.width * span * 4) / 4, a = startH, b = startH + dur;
+          if (edge === 'l') a = Math.max(sMin / 60, Math.min(b - 0.25, startH + dh));
+          else b = Math.min(eMin / 60, Math.max(a + 0.25, startH + dur + dh));
+          blk.style.left = hToPct(a) + '%'; blk.style.width = (hToPct(b) - hToPct(a)) + '%';
+          blk.dataset.curH = a; blk.dataset.curDur = b - a;
+          return;
+        }
         var newLeftPct = startLeftPct + dPct;
         var newH = pctToH(newLeftPct);
         newH = Math.round(newH * 4) / 4;
@@ -4161,7 +4340,8 @@ function initIntradayDrag(root, T0, span, ds) {
         blk.removeEventListener('pointerup', onUp);
         blk.style.cursor = 'grab';
         blk.style.zIndex = '';
-        var finalH = parseFloat(blk.dataset.curH);
+        var finalH = parseFloat(blk.dataset.curH), finalDur = parseFloat(blk.dataset.curDur);
+        if (!isNaN(finalDur)) dur = finalDur;
         if (!isNaN(finalH)) {
           var clash = Array.prototype.some.call(track.querySelectorAll('.it-blk'), function(o) {
             if (o === blk) return false;
@@ -4169,18 +4349,20 @@ function initIntradayDrag(root, T0, span, ds) {
             return finalH < oS + oD - 1e-6 && finalH + dur > oS + 1e-6;
           });
           if (clash) {
-            blk.style.left = startLeftPct + '%';
-            delete blk.dataset.curH;
+            blk.style.left = startLeftPct + '%'; blk.style.width = startWPct + '%';
+            delete blk.dataset.curH; delete blk.dataset.curDur;
             showToast('Tasks cannot overlap', 'error');
             return;
           }
         }
         if (!isNaN(finalH)) {
-          if (blk.dataset.mid) {
-            saveAddedMissionPos(blk.dataset.mid, Math.round(finalH * 60));
-          } else {
-            saveIntradayOverride(ds, blk.dataset.agent, blk.dataset.type, Math.round(finalH * 60));
-          }
+          var ns = Math.round(finalH * 60), nd = Math.round(dur * 60), mid = blk.dataset.mid, type = blk.dataset.type;
+          (async function() {
+            if (mid) await saveAddedMissionPos(mid, ns, isNaN(finalDur) ? null : nd);
+            else await saveIntradayOverride(ds, blk.dataset.agent, type, ns);
+            await rippleAfterBlockChange(blk.dataset.agent, function(b) { return mid ? b.mid === mid : (!b.mid && b.type === type); }, ns, isNaN(finalDur) ? null : nd);
+            renderIntraday(ds);
+          })();
         }
       }
       blk.addEventListener('pointermove', onMove);
@@ -4191,6 +4373,7 @@ function initIntradayDrag(root, T0, span, ds) {
 function openMissionMenu(ev, agentId) {
   if (ev.target.closest('.it-blk')) return;
   if (!ev.target.classList.contains('it-shift') && !ev.target.classList.contains('it-task')) return;
+  if (ev.target.dataset.dragged) { delete ev.target.dataset.dragged; return; }
   ev.stopPropagation();
   closeMissionMenu();
   var track = ev.currentTarget;
@@ -4206,12 +4389,17 @@ function openMissionMenu(ev, agentId) {
   menu.className = 'mission-menu';
   menu.id = 'mission-menu';
   menu.onclick = function(e) { e.stopPropagation(); };
-  var slotMin = Math.floor(clickMin / 30) * 30;
-  var taskBtns = tasksInOrder().filter(function(t) { return agentCanDo(agentId, t); }).map(function(t) {
-    return '<button type="button" class="mm-chip" style="background:' + t.color_bg + ';color:' + t.color_text + '" onclick="setSlotTask(\'' + agentId + '\',' + slotMin + ',\'' + esc(t.name) + '\')">' + esc(t.name) + '</button>';
-  }).join('') + ((taskOverrides[agentId] || {})[slotMin] ? '<button type="button" class="mm-chip mm-auto" onclick="setSlotTask(\'' + agentId + '\',' + slotMin + ',null)">Auto</button>' : '');
-  menu.innerHTML = '<div class="mm-sec">' + fill('Task {from} - {to}', { from: minToTimeInput(slotMin), to: minToTimeInput(slotMin + 30) }) + '</div>' +
-    '<div class="mm-tasks">' + taskBtns + '</div><div class="mm-sec">Add a mission</div>' +
+  var tEl = ev.target.classList.contains('it-task') ? ev.target : null;
+  var segS = tEl ? +tEl.dataset.s : Math.floor(clickMin / 30) * 30, segE = tEl ? +tEl.dataset.e : segS + 30;
+  var segArgs = '\'' + agentId + '\',' + segS + ',' + segE;
+  var ovr = taskOverrides[agentId] || {};
+  var taskBtns = tasksInOrder().filter(function(t) { return agentCanDo(agentId, t) && (!tEl || t.name !== tEl.dataset.task); }).map(function(t) {
+    return '<button type="button" class="mm-chip" style="background:' + t.color_bg + ';color:' + t.color_text + '" onclick="setSegTask(' + segArgs + ',\'' + esc(t.name) + '\')">' + esc(t.name) + '</button>';
+  }).join('') + (slotKeys(segS, segE).some(function(k) { return ovr[k]; }) ? '<button type="button" class="mm-chip mm-auto" onclick="setSegTask(' + segArgs + ',null)">Auto</button>' : '');
+  menu.innerHTML = '<div class="mm-sec">' + esc((tEl ? tEl.dataset.task + ' ' : 'Task ') + minToTimeInput(segS) + ' - ' + minToTimeInput(segE)) + '</div>' +
+    '<div class="mm-tasks">' + taskBtns + '</div>' +
+    (tEl ? '<button type="button" class="mission-menu-item" onclick="setSegTask(' + segArgs + ',\'!' + esc(tEl.dataset.task) + '\')">Delete this task</button>' : '') +
+    '<div class="mm-sec">Add a mission</div>' +
     '<div class="mm-list">' + missionDefs().map(function(m) {
       return '<div class="mission-menu-item" data-type="' + esc(m.type) + '" onclick="pickMissionType(this)">' +
         '<span class="mm-chip ' + m.cls + '">' + esc(m.short) + '</span>' + esc(m.label) +
@@ -4278,12 +4466,14 @@ async function removeAddedMission(ev, missionId) {
   showToast('Saved \u2713');
   loadAndRenderIntraday(currentIntradayDate);
 }
-async function saveAddedMissionPos(missionId, startMin) {
+async function saveAddedMissionPos(missionId, startMin, durMin) {
   (Object.keys(addedMissions)).forEach(function(aid) {
-    (addedMissions[aid] || []).forEach(function(m) { if (m.id === missionId) m.start = startMin / 60; });
+    (addedMissions[aid] || []).forEach(function(m) { if (m.id === missionId) { m.start = startMin / 60; if (durMin) m.dur = durMin; } });
   });
   if (!currentRegionId) return;
-  var res = await sb.from('csc_intraday_missions').update({ start_min: startMin }).eq('id', missionId);
+  var upd = { start_min: startMin };
+  if (durMin) upd.duration_min = durMin;
+  var res = await sb.from('csc_intraday_missions').update(upd).eq('id', missionId);
   if (res.error) { showToast('Not saved: ' + (res.error.message || 'error'), 'error'); return; }
   showToast('Saved \u2713');
 }
