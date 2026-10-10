@@ -561,5 +561,11 @@
   "Week -": "週 -",
   "loc": "門市",
   "nat": "全國",
-  "tra": "培訓"
+  "tra": "培訓",
+  "Open planning": "開啟排班表",
+  "Corner at a glance": "區域人員配置",
+  "Staffing": "人員配置",
+  "Breaks & missions": "休息與工作任務",
+  "Shifts": "班次",
+  "The suggestion appears on the advisor's line in the intraday planning. Drag it to move it, or click it and choose Delete.": "建議任務會顯示在顧問的單日班表中。可拖曳調整時間，或點選後選擇刪除。"
 }
