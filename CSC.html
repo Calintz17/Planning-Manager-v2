@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v2.0.2</title>
+  <title>CAST v2.0.3</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -58,20 +58,25 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .it-grid i { flex:1; border-left:1px solid #DCE3EC; background:repeating-linear-gradient(to right,transparent 0,transparent calc(25% - 1px),#EEF2F7 calc(25% - 1px),#EEF2F7 25%); }
 .it-blk { position:absolute; top:14px; height:24px; border-radius:3px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; cursor:grab; }
 .it-blk:hover { box-shadow:inset 0 0 0 1px currentColor; }
-.b-mb { background:#DBEAFE; color:#1E407A; box-shadow:none; }
+.b-mb { background:#DDE1F5; color:#3B4785; box-shadow:none; }
 .bc-yellow { background:#F5EBCB; color:#6B5622; }
 .bc-blue { background:#DBEAFE; color:#1E407A; }
 .bc-pink { background:#F6DDE7; color:#82334E; }
 .bc-green { background:#DCEBDF; color:#2D5841; }
 .bc-violet { background:#E4DDF0; color:#5C467A; }
 .bc-slate { background:#E8E9EB; color:#4C586A; }
-.bc-teal { background:#DCEBDF; color:#2D5841; }
+.bc-teal { background:#D5ECEA; color:#22625E; }
+.bc-orange { background:#F8E1D0; color:#8A4B22; }
+.bc-indigo { background:#DDE1F5; color:#3B4785; }
+.bc-lime { background:#E5EED2; color:#4F6127; }
+.bc-sky { background:#D6EDF7; color:#22607A; }
+.bc-sand { background:#EBE3DA; color:#5E4B3A; }
 .color-pop { display:none; position:fixed; z-index:700; gap:8px; padding:10px; flex-wrap:wrap; max-width:calc(100vw - 16px); background:var(--bg-base); border:1px solid #D4DEEB; border-radius:7px; box-shadow:0 8px 30px #192D491C; }
 .color-pop.open { display:flex; }
 .b-wel { background:#E8E9EB; color:#4C586A; box-shadow:none; }
 .it-blk-added { overflow:hidden; }
 .it-blk-reinf { background:#FFFFFF; color:#1E407A; border:1px dashed #1E407A; }
-.b-train { background:#DCEBDF; color:#2D5841; box-shadow:none; }
+.b-train { background:#E5EED2; color:#4F6127; box-shadow:none; }
 .b-cli { background:#E4DDF0; color:#5C467A; box-shadow:none; }
 .mm-list { max-height:260px; overflow-y:auto; }
 .mission-menu-item.is-on { background:var(--bg-base-3); box-shadow:inset 3px 0 0 var(--brand); }
@@ -153,9 +158,11 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .hero-spark { display:flex; align-items:flex-end; height:170px; margin-top:16px; }
 .hero-days { display:flex; gap:14px; width:100%; align-items:flex-end; }
 .hero-days > div { flex:1; display:flex; flex-direction:column; justify-content:flex-end; }
-.hero-days .bar { width:100%; background:#D3E8DC; border-radius:4px 4px 0 0; min-height:4px; }
+.hero-days .bar-stack { width:100%; display:flex; flex-direction:column-reverse; border-radius:4px 4px 0 0; overflow:hidden; min-height:4px; }
+.hero-days .bar-stack i { display:flex; align-items:center; justify-content:center; font-style:normal; font-size:10px; font-weight:700; }
+.hero-days .bar-stack.today { box-shadow:0 0 0 2px var(--brand); }
+.metric-card span small { display:block; margin-top:4px; font-size:11px; color:var(--tx-3); }
 .hero-days .bar-val { text-align:center; font-size:11px; color:var(--tx-2); margin-bottom:7px; height:14px; }
-.hero-days .bar.today { background:#2F7D58; }
 .hero-days .lbl { text-align:center; font-size:11px; color:var(--tx-2); margin-top:9px; }
 .hero-days .lbl-date { display:block; font-size:10px; color:var(--tx-2); margin-top:2px; }
 .dash-card-label { font-size:16px; font-weight:700; color:var(--tx-1); margin-bottom:16px; }
@@ -459,8 +466,14 @@ input[type=date][data-dp] { display:none; }
 .ag-sub { font-size:12px; color:var(--tx-3); }
 .ag-meta { display:flex; align-items:center; gap:var(--s3); flex-shrink:0; }
 .ag-pills { display:flex; gap:6px; flex-shrink:0; }
-.task-pill { width:92px; height:28px; border:1px dashed var(--line-2); border-radius:999px; background:var(--bg-base); color:var(--tx-3); font-size:11px; font-weight:700; cursor:pointer; }
-.task-pill.on { border:1px solid transparent; }
+.ag-head { padding-top:4px; padding-bottom:10px; font-size:11px; font-weight:700; color:var(--tx-2); }
+.ag-head:hover { background:none; }
+.ag-cell { width:84px; display:flex; justify-content:center; text-align:center; }
+.task-cell { width:28px; height:28px; padding:0; border:1px solid var(--line-2); border-radius:4px; background:var(--bg-base); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.task-cell .ic { width:15px; height:15px; }
+.tc-lbl { display:none; }
+.ag-meta { width:170px; justify-content:flex-end; }
+.ag-edit-sp { width:34px; flex-shrink:0; }
 .ag-pct { font-size:13px; font-weight:700; color:var(--tx-2); min-width:44px; text-align:right; font-variant-numeric:tabular-nums; }
 #add-agent-form { display:none; background:var(--bg-base-2); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s4); margin-bottom:var(--s4); }
 #add-agent-form.open { display:block; }
@@ -525,7 +538,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tone-chip:hover { transform:translateY(-1px); }
 .tone-chip.on { border-color:var(--tx-1); }
 .tr-month { font-weight:700; min-width:120px; text-align:center; }
-.tr-legend { display:flex; flex-wrap:wrap; gap:8px 18px; margin:var(--s4) 0 var(--s3); font-size:12px; color:var(--tx-2); }
+.tr-legend { display:flex; flex-wrap:wrap; gap:8px 18px; margin:var(--s4) 0 var(--s5); font-size:12px; color:var(--tx-2); }
 .tr-leg { display:inline-flex; align-items:center; gap:6px; }
 .tr-leg i { width:12px; height:12px; border-radius:3px; border:1px solid; }
 .tr-leg b { color:var(--tx-1); }
@@ -536,8 +549,20 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tr-stack i { display:block; width:100%; }
 .tr-col span { position:absolute; bottom:-18px; font-size:10px; color:var(--tx-3); }
 .tr-col.is-closed .tr-stack { opacity:.35; }
-.tr-target input { width:64px; }
-.tr-table, .tr-target { min-width:560px; }
+.tr-table { min-width:560px; }
+.tr-table input { width:90px; }
+.tr-table input.is-manual, .tr-table td.is-manual { color:var(--brand); font-weight:700; }
+.tr-table tr.is-cur td { background:var(--bg-base-2); }
+.tr-tabs { margin-bottom:18px; }
+.tr-dot { display:inline-block; width:10px; height:10px; border-radius:3px; border:1px solid; margin-right:6px; vertical-align:-1px; }
+.tr-leg small { color:var(--tx-3); }
+.tr-ly { font-size:10px; color:var(--tx-3); text-align:center; margin-top:5px; }
+.tr-hours { display:flex; gap:6px; align-items:flex-end; overflow-x:auto; padding-bottom:4px; }
+.tr-hr { flex:1; min-width:46px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.tr-hr-bar { width:100%; max-width:30px; height:120px; display:flex; flex-direction:column-reverse; }
+.tr-hr-bar i { display:block; width:100%; }
+.tr-hr-in { width:100%; height:30px; text-align:center; font-size:12px; padding:0 2px; }
+.tr-hr span { font-size:10px; color:var(--tx-3); }
 .tr-days { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
 .tr-day { border:1px solid var(--line); border-radius:5px; padding:10px; background:var(--bg-base-2); }
 .tr-day.is-manual { border-color:#8CBFA5; background:#ECF5F0; }
@@ -833,7 +858,12 @@ textarea { resize:vertical; line-height:1.5; }
   .dp-btn { min-width:0; max-width:100%; height:40px; }
   .agent-row { padding:12px 0; gap:10px; align-items:flex-start; flex-wrap:wrap; }
   .ag-pills { order:3; width:100%; flex-wrap:wrap; }
-  .task-pill { width:auto; padding:0 10px; }
+  .ag-head { display:none; }
+  .ag-cell { width:auto; }
+  .task-cell { width:auto; padding:0 8px; }
+  .task-cell .ic { display:none; }
+  .tc-lbl { display:inline; font-size:10px; font-weight:700; color:inherit; }
+  .ag-meta { width:auto; }
   .ag-id { gap:8px; }
   .ag-meta { gap:8px; flex-wrap:wrap; max-width:90px; justify-content:flex-end; }
   .ag-pct { font-size:12px; }
@@ -1255,7 +1285,6 @@ function clearMultiSelect() {
 }
 let intradayExport = null;
 let agentPrefs        = {};
-let trafficMonthly    = {};
 let trafficDaily      = {};
 let currentWeekMonday = getMondayOfCurrentWeek();
 let monthlyRef = new Date();
@@ -1605,12 +1634,12 @@ async function seedRegulations() {
   });
   await sb.from('regulations').upsert(rows, { onConflict: 'region_id,rule_key' });
 }
-var BREAK_COLORS = ['yellow', 'blue', 'pink', 'green', 'violet', 'teal', 'slate'];
-var BREAK_PICKER_COLORS = ['yellow','teal','blue','violet','pink','slate'];
+var BREAK_COLORS = ['blue','violet','yellow','slate','pink','green','teal','orange','indigo','lime','sky','sand'];
+var BREAK_PICKER_COLORS = BREAK_COLORS;
 function breakColorOf(b, i) {
   if (b && b.color && BREAK_COLORS.indexOf(b.color) >= 0) return b.color;
-  if (b && /lunch|dej/i.test(b.name || '')) return 'yellow';
-  return 'pink';
+  if (b && /lunch|dej/i.test(b.name || '')) return 'orange';
+  return 'teal';
 }
 function breakColorBtnHtml(sel) {
   return '<button type="button" class="tone-chip bc-' + sel + '" data-color="' + sel +
@@ -1623,7 +1652,7 @@ function openBreakColorPop(btn, evt) {
   var cur = btn.getAttribute('data-color');
   var pop = document.getElementById('color-pop');
   pop.innerHTML = BREAK_PICKER_COLORS.map(function(k) {
-    return '<button type="button" class="tone-chip bc-' + k + (k === cur || (cur === 'green' && k === 'teal') ? ' on' : '') +
+    return '<button type="button" class="tone-chip bc-' + k + (k === cur ? ' on' : '') +
       '" onclick="pickBreakColor(\'' + k + '\')">A</button>';
   }).join('');
   pop.classList.add('open');
@@ -1641,7 +1670,6 @@ function pickBreakColor(k) {
   var btn = colorPopTarget;
   closeColorPop();
   if (!btn) return;
-  if (k === 'teal') k = 'green';
   btn.className = 'tone-chip bc-' + k;
   btn.setAttribute('data-color', k);
   if (btn.dataset.task) saveTask(btn); else saveRegulations();
@@ -1690,7 +1718,7 @@ async function toggleDayOpen(cb) {
 function snapshotRegionSettings(regionId) {
   var ss = regionSettings || REGION_SETTINGS_DEFAULT;
   return { region_id: regionId, min_opening: ss.min_opening, min_closing: ss.min_closing,
-           closing_ratio: ss.closing_ratio, updated_at: new Date().toISOString() };
+           closing_ratio: ss.closing_ratio, call_occupancy: ss.call_occupancy, updated_at: new Date().toISOString() };
 }
 function regulationRows(storeId) {
   var r = regulations;
@@ -1766,6 +1794,7 @@ function applyRegulationsForm() {
   var mo    = num('thr-open',  function(v){ return parseInt(v, 10); });
   var mc    = num('thr-close', function(v){ return parseInt(v, 10); });
   var rr    = num('thr-ratio', function(v){ return parseInt(v, 10); });
+  var occ   = num('thr-occ', function(v){ return parseInt(v, 10); });
   var dayHours = {}, hoursOk = true;
   DAY_KEYS.forEach(function(k) {
     var openEl = document.getElementById('reg-open-' + k), closeEl = document.getElementById('reg-close-' + k);
@@ -1800,6 +1829,7 @@ function applyRegulationsForm() {
   if (document.getElementById('thr-open'))  regionSettings.min_opening   = (isNaN(mo) || mo < 0) ? 1 : mo;
   if (document.getElementById('thr-close')) regionSettings.min_closing   = (isNaN(mc) || mc < 0) ? 1 : mc;
   if (document.getElementById('thr-ratio')) regionSettings.closing_ratio = (isNaN(rr) || rr < 0 || rr > 100) ? 0.70 : rr / 100;
+  if (document.getElementById('thr-occ')) regionSettings.call_occupancy = (isNaN(occ) || occ < 30 || occ > 100) ? 0.75 : occ / 100;
   Object.keys(dayHours).forEach(function(k) { regulations.day_hours[k] = dayHours[k]; });
   regulations.breaks = newBreaks;
   return true;
@@ -1815,7 +1845,8 @@ var SETTINGS_HELP = {
       'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract. The lunch break is not counted.',
       'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.',
       'Opening minimum and Closing minimum: how many people must be there, at least, during the first hour and the last hour of the day.',
-      'Late shifts target: the share of your advisors who start in the later half of your shifts. Example: 70% means about 7 out of 10 start late. CAST then picks the exact shifts that best follow your workload.'],
+      'Late shifts target: the share of your advisors who start in the later half of your shifts. Example: 70% means about 7 out of 10 start late. CAST then picks the exact shifts that best follow your workload.',
+      'Call occupancy target: calls arrive in waves, so nobody can answer calls 100% of the time. At 75%, CAST puts enough people on the lines for each of them to be busy about 45 minutes per hour.'],
     important: 'Changes are saved automatically. Ask HR if you are not sure about a legal number.' },
   hours: { n: 2, title: 'Operating hours',
     sub: 'The days and hours your center is open to clients.',
@@ -2239,6 +2270,8 @@ function renderRegulations() {
           '<input type="number" id="thr-close" class="set-rule-input" value="' + ((regionSettings && regionSettings.min_closing != null) ? regionSettings.min_closing : 1) + '" min="0" max="20" step="1">', 'CA') +
         rrow('Late shifts target', 'Share of advisors who start in the later half of your shifts',
           '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((regionSettings && regionSettings.closing_ratio != null) ? regionSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5">', '%') +
+        rrow('Call occupancy target', 'Share of time an advisor on calls or chats is busy. Lower means more people on the lines',
+          '<input type="number" id="thr-occ" class="set-rule-input" value="' + Math.round((regionSettings.call_occupancy || 0.75) * 100) + '" min="30" max="100" step="5">', '%') +
       '</div>' + helpOverlayHtml('labor') +
     '</div>' +
     // Block 2: Operating hours
@@ -2271,7 +2304,8 @@ function renderRegulations() {
 // Tasks of the region and the pills of each agent
 var tasks = [], agentTags = {};
 var TASK_COLORS = { blue:['#DBEAFE','#1E407A'], violet:['#E4DDF0','#5C467A'], yellow:['#F5EBCB','#6B5622'],
-  slate:['#E8E9EB','#4C586A'], pink:['#F6DDE7','#82334E'], green:['#DCEBDF','#2D5841'] };
+  slate:['#E8E9EB','#4C586A'], pink:['#F6DDE7','#82334E'], green:['#DCEBDF','#2D5841'], teal:['#D5ECEA','#22625E'],
+  orange:['#F8E1D0','#8A4B22'], indigo:['#DDE1F5','#3B4785'], lime:['#E5EED2','#4F6127'], sky:['#D6EDF7','#22607A'], sand:['#EBE3DA','#5E4B3A'] };
 async function loadTasksAndTags() {
   var sid = currentRegionId;
   var tr = await sb.from('tasks').select('*').eq('region_id', sid);
@@ -2284,7 +2318,7 @@ async function loadTasksAndTags() {
 }
 function taskShort(name) {
   var w = String(name).split(/[-\s]+/).filter(Boolean);
-  return w.length > 1 ? w.map(function(x) { return x.charAt(0); }).join('') : String(name).charAt(0);
+  return w.length > 1 ? w.map(function(x) { return x.charAt(0); }).join('') : String(name).slice(0, 2);
 }
 function tasksInOrder() {
   return tasks.slice().sort(function(a, b) { return (a.priority - b.priority) || a.name.localeCompare(b.name); });
@@ -2609,7 +2643,7 @@ function timeInputToMin(v) {
   return h * 60 + mn;
 }
 var regionSettings = null;
-var REGION_SETTINGS_DEFAULT = { min_opening: 1, min_closing: 1, closing_ratio: 0.70, sunday_single_shift: false };
+var REGION_SETTINGS_DEFAULT = { min_opening: 1, min_closing: 1, closing_ratio: 0.70, call_occupancy: 0.75, sunday_single_shift: false };
 async function loadRegionSettings() {
   var sid = currentRegionId;
   regionSettings = Object.assign({}, REGION_SETTINGS_DEFAULT);
@@ -2617,7 +2651,7 @@ async function loadRegionSettings() {
   var res = await sb.from('csc_settings').select('*').eq('region_id', currentRegionId);
   if (sid !== currentRegionId) return;
   if (res.error || !res.data || !res.data.length) return;
-  ['min_opening', 'min_closing', 'closing_ratio'].forEach(function(k) {
+  ['min_opening', 'min_closing', 'closing_ratio', 'call_occupancy'].forEach(function(k) {
     if (res.data[0][k] != null) regionSettings[k] = res.data[0][k];
   });
 }
@@ -2831,78 +2865,119 @@ function attachCrossHighlight() {
   });
   tbl.addEventListener('mouseleave', clear);
 }
-var DOW_WEIGHT = { 1: 0.982, 2: 0.959, 3: 0.915, 4: 0.959, 5: 1.080, 6: 1.221, 0: 0.885 };
 var CLOSING_BIAS = 2.3;
-function monthKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
 var trafficLoadSeq = 0;
-// CSC workload per day and per hour, from last year's volume of the same weekday, with the trend
-var cscVol = {}, cscBoTargets = {};
+// CSC traffic: forecast of each task from the history (month, weekday profile, hourly profile), with the manager's changes
+var cscVol = {}, cscFc = {}, cscHist = null, cscHistRegion = null, cscManM = {}, cscManD = {};
 function dayHoursFor(ds) {
   if (calHours[ds]) return calHours[ds];
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
   return (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
 }
 function addDaysStr(ds, n) { var d = new Date(ds + 'T12:00:00'); d.setDate(d.getDate() + n); return toDateStr(d); }
+function ymKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
+async function loadHistory(regionId, seq) {
+  if (cscHistRegion === regionId && cscHist) return true;
+  var rows = [];
+  for (var page = 0; ; page++) {
+    var res = await sb.from('historical_volume').select('date,hour,task,volume').eq('region_id', regionId)
+      .order('date').range(page * 1000, page * 1000 + 999);
+    if (seq !== trafficLoadSeq || regionId !== currentRegionId) return false;
+    if (res.error) { showToast('Traffic not loaded: ' + res.error.message, 'error'); return false; }
+    rows = rows.concat(res.data || []);
+    if (!res.data || res.data.length < 1000) break;
+  }
+  var H = { day: {}, month: {}, hour: {}, dow: {}, last: null };
+  rows.forEach(function(r) {
+    var t = r.task, v = r.volume || 0, mk = r.date.slice(0, 7);
+    (H.day[t] = H.day[t] || {})[r.date] = (H.day[t][r.date] || 0) + v;
+    (H.month[t] = H.month[t] || {})[mk] = (H.month[t][mk] || 0) + v;
+    (H.hour[t] = H.hour[t] || [])[r.hour] = (H.hour[t][r.hour] || 0) + v;
+    if (!H.last || r.date > H.last) H.last = r.date;
+  });
+  // Weekday profile: average volume of each weekday over the last 12 months of history
+  Object.keys(H.day).forEach(function(t) {
+    var sum = [0, 0, 0, 0, 0, 0, 0], cnt = [0, 0, 0, 0, 0, 0, 0];
+    for (var d = addDaysStr(H.last, -363); d <= H.last; d = addDaysStr(d, 1)) {
+      var w = new Date(d + 'T12:00:00').getDay(); sum[w] += H.day[t][d] || 0; cnt[w]++;
+    }
+    H.dow[t] = sum.map(function(x, k) { return cnt[k] ? x / cnt[k] : 0; });
+  });
+  cscHist = H; cscHistRegion = regionId;
+  return true;
+}
+function histMonth(task, y, m) { var mm = cscHist && cscHist.month[task]; return mm ? mm[ymKey(y, m)] : undefined; }
+function forecastMonth(t, y, m) {
+  var man = cscManM[y + '|' + m + '|' + t.name];
+  if (man != null) return man;
+  for (var yy = y - 1; yy >= y - 5; yy--) {
+    var b = histMonth(t.name, yy, m);
+    if (b != null) return b * (1 + (Number(t.trend_pct) || 0) / 100);
+  }
+  return 0;
+}
+function dayWeight(t, ds) {
+  if (t.is_realtime && getDayClosureType(ds)) return 0;
+  var prof = cscHist && cscHist.dow[t.name], w = new Date(ds + 'T12:00:00').getDay();
+  if (prof && prof.some(function(x) { return x > 0; })) return prof[w];
+  return getDayClosureType(ds) ? 0 : 1;
+}
+var weightMemo = {};
+function forecastDay(t, ds) {
+  var man = cscManD[ds + '|' + t.name];
+  if (man != null) return man;
+  var y = +ds.slice(0, 4), m = +ds.slice(5, 7), key = t.name + '|' + y + '|' + m;
+  if (weightMemo[key] == null) {
+    var n = new Date(y, m, 0).getDate(), tot = 0;
+    for (var d = 1; d <= n; d++) tot += dayWeight(t, ymKey(y, m) + '-' + String(d).padStart(2, '0'));
+    weightMemo[key] = tot;
+  }
+  return weightMemo[key] ? forecastMonth(t, y, m) * dayWeight(t, ds) / weightMemo[key] : 0;
+}
+// Share of each hour: the manager's profile, else the history, else even over the open hours
+function hourShares(t, ds) {
+  var c = (t.hourly_curve && t.hourly_curve.length === 24) ? t.hourly_curve : (cscHist && cscHist.hour[t.name]) || null;
+  var out = [], tot = 0, h;
+  if (c) for (h = 0; h < 24; h++) { out[h] = +c[h] || 0; tot += out[h]; }
+  if (!tot) {
+    var dh = dayHoursFor(ds), oh = Math.floor(dh.open), ch = Math.ceil(dh.close);
+    if (t.morning_only) ch = Math.min(ch, 12);
+    for (h = 0; h < 24; h++) { out[h] = h >= oh && h < ch ? 1 : 0; tot += out[h]; }
+  }
+  return out.map(function(x) { return tot ? x / tot : 0; });
+}
 async function loadTraffic(year) {
   var regionId = currentRegionId, seq = ++trafficLoadSeq;
-  trafficMonthly = {};
-  if (!regionId) { trafficDaily = {}; cscVol = {}; trafficYearLoaded = null; return; }
-  var last = await sb.from('historical_volume').select('date').eq('region_id', regionId).order('date', { ascending: false }).limit(1);
-  var bo = await sb.from('monthly_bo_targets').select('*').eq('region_id', regionId).eq('year', year);
-  if (seq !== trafficLoadSeq || regionId !== currentRegionId) return;
-  if (last.error || bo.error) { showToast('Traffic not loaded: ' + ((last.error || bo.error).message || ''), 'error'); return; }
-  var maxDs = last.data && last.data[0] ? last.data[0].date : null;
-  function srcOf(ds) {
-    if (!maxDs) return null;
-    var src = addDaysStr(ds, -364);
-    while (src > maxDs) src = addDaysStr(src, -364);
-    return src;
-  }
+  if (!regionId) { trafficDaily = {}; cscVol = {}; cscFc = {}; trafficYearLoaded = null; return; }
+  if (!(await loadHistory(regionId, seq))) return;
   var first = addDaysStr(year + '-01-01', -7), lastDs = year + '-12-31';
-  var hist = {};
-  if (maxDs) {
-    var from = srcOf(first) < srcOf(lastDs) ? srcOf(first) : addDaysStr(srcOf(lastDs), -371);
-    for (var page = 0; ; page++) {
-      var res = await sb.from('historical_volume').select('date,hour,task,volume').eq('region_id', regionId)
-        .gte('date', from).lte('date', maxDs).order('date').range(page * 1000, page * 1000 + 999);
-      if (seq !== trafficLoadSeq || regionId !== currentRegionId) return;
-      if (res.error) { showToast('Traffic not loaded: ' + res.error.message, 'error'); return; }
-      (res.data || []).forEach(function(r) {
-        var d = hist[r.date] = hist[r.date] || {};
-        (d[r.task] = d[r.task] || {})[r.hour] = (d[r.task][r.hour] || 0) + (r.volume || 0);
-      });
-      if (!res.data || res.data.length < 1000) break;
-    }
-  }
-  cscBoTargets = {};
-  (bo.data || []).forEach(function(r) { cscBoTargets[r.month + '|' + r.task] = r.volume || 0; });
-  var trend = 1 + (Number(regulations.trend_pct) || 0) / 100;
-  var vol = {}, carry = {}, td = {};
+  var mm = await sb.from('csc_traffic_monthly').select('*').eq('region_id', regionId).gte('year', year - 1).lte('year', year);
+  var dd = await sb.from('csc_traffic_daily').select('*').eq('region_id', regionId).gte('date', first).lte('date', lastDs);
+  if (seq !== trafficLoadSeq || regionId !== currentRegionId) return;
+  if (mm.error || dd.error) { showToast('Traffic not loaded: ' + ((mm.error || dd.error).message || ''), 'error'); return; }
+  cscManM = {}; cscManD = {}; weightMemo = {};
+  (mm.data || []).forEach(function(r) { cscManM[r.year + '|' + r.month + '|' + r.task] = +r.volume; });
+  (dd.data || []).forEach(function(r) { cscManD[r.date + '|' + r.task] = +r.volume; });
+  var vol = {}, fc = {}, carry = {}, td = {};
   for (var ds = first; ds <= lastDs; ds = addDaysStr(ds, 1)) {
     var open = !getDayClosureType(ds), dh = dayHoursFor(ds);
-    var oh = Math.floor(dh.open), ch = Math.ceil(dh.close);
-    var src = hist[srcOf(ds)] || {}, day = {};
+    var oh = Math.floor(dh.open), ch = Math.ceil(dh.close), day = {}, rec = {};
     tasks.forEach(function(t) {
-      var hours = {}, add = function(h, v) { if (v) hours[h] = (hours[h] || 0) + v; };
-      var rows = src[t.name] || {};
+      var total = forecastDay(t, ds), hours = {}, add = function(h, v) { if (v) hours[h] = (hours[h] || 0) + v; };
+      rec[t.name] = total;
       if (open && carry[t.name]) { add(oh, carry[t.name]); carry[t.name] = 0; }
-      Object.keys(rows).forEach(function(hs) {
-        var h = +hs, v = rows[hs] * trend;
+      if (total) hourShares(t, ds).forEach(function(sh, h) {
+        var v = total * sh;
+        if (!v) return;
         if (open && h >= oh && h < ch) add(h, v);
         else if (t.is_realtime) return;
         else if (open && h < oh) add(oh, v);
         else carry[t.name] = (carry[t.name] || 0) + v;
       });
-      var m = parseInt(ds.slice(5, 7), 10), target = cscBoTargets[m + '|' + t.name];
-      if (open && target && ds.slice(0, 4) === String(year)) {
-        var endH = t.morning_only ? Math.min(12, ch) : ch, span = Math.max(1, endH - oh);
-        var daily = target / Math.max(1, openDaysInMonth(year, m));
-        for (var h = oh; h < oh + span; h++) add(h, daily / span);
-      }
-      var total = Object.keys(hours).reduce(function(s2, h2) { return s2 + hours[h2]; }, 0);
-      if (total) day[t.name] = { total: total, hours: hours };
+      var sum = Object.keys(hours).reduce(function(s2, h2) { return s2 + hours[h2]; }, 0);
+      if (sum) day[t.name] = { total: sum, hours: hours };
     });
-    vol[ds] = day;
+    vol[ds] = day; fc[ds] = rec;
     var work = tasks.reduce(function(s2, t) { return s2 + (day[t.name] ? day[t.name].total * (t.aht_minutes || 0) : 0); }, 0);
     if (ds.slice(0, 4) === String(year)) td[ds] = { date: ds, traffic: Math.round(work), is_manual: true };
   }
@@ -2922,7 +2997,7 @@ async function loadTraffic(year) {
   });
   var top = Math.max.apply(null, curve.concat([1]));
   regionSettings.hourly_curve = curve.map(function(v) { return Math.round(v / top * 100); });
-  cscVol = vol; trafficDaily = td; trafficYearLoaded = year;
+  cscVol = vol; cscFc = fc; trafficDaily = td; trafficYearLoaded = year;
 }
 var eventEditorState = { id: null, cat: null };
 var eventSaving = false;
@@ -3045,147 +3120,178 @@ async function loadPlanningEvents() {
     return false;
   }
 }
-function spreadMonthToDays(year, month, total) {
-  var nDays = new Date(year, month, 0).getDate();
-  var days  = [];
-  var closedDays = [];
-  for (var d = 1; d <= nDays; d++) {
-    var dt = new Date(year, month - 1, d);
-    var ds = toDateStr(dt);
-    if (getDayClosureType(ds)) { closedDays.push(ds); continue; }
-    days.push({ ds: ds, dow: dt.getDay() });
-  }
-  if (!days.length) {
-    var empty = {};
-    closedDays.forEach(function(ds) { empty[ds] = 0; });
-    return empty;
-  }
-  var manualTotal = 0;
-  var autoDays    = [];
-  days.forEach(function(d) {
-    var rec = trafficDaily[d.ds];
-    if (rec && rec.is_manual) manualTotal += (rec.traffic || 0);
-    else autoDays.push(d);
-  });
-  var remaining = Math.max(0, (total || 0) - manualTotal);
-  var weightSum = autoDays.reduce(function(s, d) {
-    return s + (DOW_WEIGHT[d.dow] || 1);
-  }, 0);
-  var out = {};
-  days.forEach(function(d) {
-    var rec = trafficDaily[d.ds];
-    if (rec && rec.is_manual) { out[d.ds] = rec.traffic || 0; return; }
-    var w = (DOW_WEIGHT[d.dow] || 1);
-    out[d.ds] = weightSum > 0 ? Math.round(remaining * w / weightSum) : 0;
-  });
-  closedDays.forEach(function(ds) { out[ds] = 0; });
-  return out;
-}
 // Traffic forecast
 // Forecast engine
-function openDaysInMonth(year, month) {
-  var n = new Date(year, month, 0).getDate(), open = 0;
-  for (var d = 1; d <= n; d++) {
-    var ds = toDateStr(new Date(year, month - 1, d));
-    if (!getDayClosureType(ds)) open++;
-  }
-  return open;
-}
 // Traffic page
 var MONTH_NAMES = ['January','February','March','April','May','June',
                    'July','August','September','October','November','December'];
 var trafficRef = (function() { var d = new Date(); d.setDate(1); return d; })();
+var trafficTask = 'ALL';
 function trafficMonthShift(dir) { trafficRef.setMonth(trafficRef.getMonth() + dir); renderTraffic(); }
-// Traffic: volume of each task per day, from last year with the trend, plus the monthly targets
+function trafficPick(task) { trafficTask = task; renderTraffic(); }
+var MONTHS3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtVol(x) { return x == null ? '-' : Math.round(x).toLocaleString('en-GB'); }
+function workH(min) { return Math.round(min / 60).toLocaleString('en-GB') + ' h'; }
+// Traffic: monthly, daily and hourly forecast of each task, with the history to compare
 async function renderTraffic() {
   var box = document.getElementById('traffic-content');
   if (!box) return;
   if (!currentRegionId) { box.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Select a region to view traffic.</p></div>'; return; }
   var y = trafficRef.getFullYear(), m = trafficRef.getMonth() + 1;
   if (trafficYearLoaded !== y) await loadTraffic(y);
+  if (!cscHist) return;
   var ord = tasksInOrder().filter(function(t) { return !t.is_filler; });
-  var n = new Date(y, m, 0).getDate(), days = [], tot = {}, top = 1;
-  for (var d = 1; d <= n; d++) {
-    var ds = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0'), v = cscVol[ds] || {}, sum = 0, work = 0;
-    ord.forEach(function(t) { var x = v[t.name] ? v[t.name].total : 0; sum += x; work += x * (t.aht_minutes || 0); tot[t.name] = (tot[t.name] || 0) + x; });
-    top = Math.max(top, sum);
-    days.push({ ds: ds, num: d, dow: new Date(ds + 'T12:00:00').getDay(), v: v, sum: sum, work: work, closed: !!getDayClosureType(ds) });
-  }
-  ord = ord.filter(function(t) { return tot[t.name] > 0; });
-  var r0 = function(x) { return Math.round(x).toLocaleString('en-GB'); };
-  var chart = '<div class="tr-chart">' + days.map(function(dd) {
-    var segs = ord.map(function(t) {
-      var x = dd.v[t.name] ? dd.v[t.name].total : 0;
-      return x ? '<i style="height:' + (x / top * 100) + '%;background:' + t.color_bg + ';border-top:1px solid ' + t.color_text + '"></i>' : '';
-    }).join('');
-    var tip = formatDateDisplay(dd.ds) + (dd.closed ? ' - closed' : ' - ' + r0(dd.sum) + ' contacts') +
-      ord.map(function(t) { var x = dd.v[t.name] ? dd.v[t.name].total : 0; return x ? '\n' + t.name + ': ' + r0(x) : ''; }).join('');
-    return '<div class="tr-col' + (dd.closed ? ' is-closed' : '') + '" title="' + esc(tip) + '"><div class="tr-stack">' + segs + '</div><span>' + dd.num + '</span></div>';
+  var cur = ord.find(function(t) { return t.name === trafficTask; });
+  if (!cur) trafficTask = 'ALL';
+  var tabs = '<div class="corner-tabs tr-tabs">' + [{ name: 'ALL' }].concat(ord).map(function(t) {
+    return '<button class="corner-tab' + (t.name === trafficTask ? ' active' : '') + '" onclick="trafficPick(\'' + esc(t.name) + '\')">' +
+      (t.color_bg ? '<i class="tr-dot" style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' : '') + esc(t.name === 'ALL' ? 'All tasks' : t.name) + '</button>';
   }).join('') + '</div>';
-  var legend = '<div class="tr-legend">' + ord.map(function(t) {
-    return '<span class="tr-leg"><i style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' + esc(t.name) + '<b>' + r0(tot[t.name] || 0) + '</b></span>';
-  }).join('') + '<span class="tr-leg tr-leg-total">Total<b>' + r0(ord.reduce(function(s2, t) { return s2 + (tot[t.name] || 0); }, 0)) + '</b></span></div>';
-  var head = '<tr><th>Day</th>' + ord.map(function(t) { return '<th class="col-num">' + esc(t.name) + '</th>'; }).join('') +
-    '<th class="col-num">Total</th><th class="col-num">Workload</th></tr>';
-  var rows = days.map(function(dd) {
-    var lbl = new Date(dd.ds + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit' });
-    if (dd.closed) return '<tr class="rest-day"><td>' + lbl + '</td><td colspan="' + (ord.length + 2) + '" style="color:var(--tx-3)">Closed</td></tr>';
-    return '<tr><td>' + lbl + '</td>' + ord.map(function(t) { var x = dd.v[t.name] ? dd.v[t.name].total : 0; return '<td class="col-num">' + (x ? r0(x) : '-') + '</td>'; }).join('') +
-      '<td class="col-num"><b>' + r0(dd.sum) + '</b></td><td class="col-num">' + durLabel(Math.round(dd.work)) + '</td></tr>';
-  }).join('');
-  var tgtTasks = tasks.filter(function(t) { return t.name === 'BACK-OFFICE' || t.name === 'FRAUD' ||
-    Object.keys(cscBoTargets).some(function(k) { return k.split('|')[1] === t.name; }); });
-  var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var tgt = '<div class="table-scroll"><table class="tbl tbl-framed tr-target"><thead><tr><th>Task</th>' +
-    MN.map(function(x) { return '<th class="col-num">' + x + '</th>'; }).join('') + '</tr></thead><tbody>' +
-    tgtTasks.map(function(t) {
-      return '<tr><td style="font-weight:700">' + esc(t.name) + '</td>' + MN.map(function(x, mi) {
-        return '<td><input type="number" class="in-num" min="0" step="1" value="' + (cscBoTargets[(mi + 1) + '|' + t.name] || 0) +
-          '" onchange="saveMonthlyTarget(this,\'' + esc(t.name) + '\',' + (mi + 1) + ')"></td>';
-      }).join('') + '</tr>';
-    }).join('') + '</tbody></table></div>';
+  var n = new Date(y, m, 0).getDate(), days = [];
+  for (var d = 1; d <= n; d++) { var ds = ymKey(y, m) + '-' + String(d).padStart(2, '0'); days.push({ ds: ds, num: d, closed: !!getDayClosureType(ds) }); }
   var monthLbl = trafficRef.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-  box.innerHTML =
-    '<div class="card">' +
-      '<div class="page-head set-head"><div><h2 class="set-title">Daily traffic</h2>' +
-        '<div class="card-sub">Contacts to handle each day, by task: last year\'s volume on the same weekday, with your trend. Mails received when the center is closed move to the next open day.</div></div>' +
-        '<div class="head-actions"><button class="btn btn-ghost btn-sm" onclick="trafficMonthShift(-1)">‹</button>' +
-        '<span class="tr-month">' + esc(monthLbl) + '</span><button class="btn btn-ghost btn-sm" onclick="trafficMonthShift(1)">›</button></div></div>' +
-      '<div class="set-rules">' + rrow('Trend vs last year', 'Change of volume you expect compared with last year',
-        '<input type="number" id="reg-trend" class="set-rule-input" value="' + (Number(regulations.trend_pct) || 0) + '" min="-90" max="300" step="1">', '%').replace('onchange="saveRegulations()"', 'onchange="saveTrend(this)"') + '</div>' +
-      legend + chart +
-      '<div class="table-scroll"><table class="tbl tbl-framed tr-table"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>' +
-    '</div>' +
-    '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">' + fill('Monthly targets {year}', { year: y }) + '</h2>' +
-      '<div class="card-sub">Back office and fraud volumes for each month. CAST spreads them over the open days.</div></div></div>' + tgt + '</div>';
+  var monthNav = '<div class="head-actions"><button class="btn btn-ghost btn-sm" onclick="trafficMonthShift(-1)">‹</button>' +
+    '<span class="tr-month">' + esc(monthLbl) + '</span><button class="btn btn-ghost btn-sm" onclick="trafficMonthShift(1)">›</button></div>';
+  var html = tabs;
+  if (!cur) {
+    // All tasks: workload of the month, then the days stacked by task
+    var mTot = {}, mWork = 0, top = 1;
+    days.forEach(function(dd) {
+      dd.sum = 0;
+      ord.forEach(function(t) { var v = (cscFc[dd.ds] || {})[t.name] || 0; mTot[t.name] = (mTot[t.name] || 0) + v; dd.sum += v; });
+      top = Math.max(top, dd.sum);
+    });
+    ord.forEach(function(t) { mWork += (mTot[t.name] || 0) * (t.aht_minutes || 0); });
+    var sumAll = ord.reduce(function(s2, t) { return s2 + (mTot[t.name] || 0); }, 0);
+    html += '<div class="metric-grid">' +
+      '<div class="metric-card"><span>Contacts in ' + esc(monthLbl) + '</span><strong>' + fmtVol(sumAll) + '</strong></div>' +
+      '<div class="metric-card"><span>Workload in ' + esc(monthLbl) + '</span><strong>' + workH(mWork) + '</strong></div>' +
+      '<div class="metric-card"><span>Same month last year</span><strong>' + fmtVol(ord.reduce(function(s2, t) { return s2 + (histMonth(t.name, y - 1, m) || 0); }, 0)) + '</strong></div>' +
+    '</div>';
+    var chart = '<div class="tr-chart">' + days.map(function(dd) {
+      var segs = ord.map(function(t) { var v = (cscFc[dd.ds] || {})[t.name] || 0;
+        return v ? '<i style="height:' + (v / top * 100) + '%;background:' + t.color_bg + ';border-top:1px solid ' + t.color_text + '"></i>' : ''; }).join('');
+      var tip = formatDateDisplay(dd.ds) + ' - ' + fmtVol(dd.sum) + ' contacts' + ord.map(function(t) { var v = (cscFc[dd.ds] || {})[t.name] || 0; return v ? '\n' + t.name + ': ' + fmtVol(v) : ''; }).join('');
+      return '<div class="tr-col' + (dd.closed ? ' is-closed' : '') + '" title="' + esc(tip) + '"><div class="tr-stack">' + segs + '</div><span>' + dd.num + '</span></div>';
+    }).join('') + '</div>';
+    var legend = '<div class="tr-legend">' + ord.map(function(t) {
+      return '<span class="tr-leg"><i style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' + esc(t.name) + '<b>' + fmtVol(mTot[t.name] || 0) + '</b>' +
+        '<small>' + workH((mTot[t.name] || 0) * (t.aht_minutes || 0)) + '</small></span>';
+    }).join('') + '</div>';
+    var yRows = MONTHS3.map(function(mn, mi) {
+      var w = 0, cells = ord.map(function(t) { var v = forecastMonth(t, y, mi + 1); w += v * (t.aht_minutes || 0);
+        return '<td class="col-num' + (cscManM[y + '|' + (mi + 1) + '|' + t.name] != null ? ' is-manual' : '') + '">' + fmtVol(v) + '</td>'; }).join('');
+      return '<tr' + (mi + 1 === m ? ' class="is-cur"' : '') + '><td>' + mn + '</td>' + cells + '<td class="col-num"><b>' + workH(w) + '</b></td></tr>';
+    }).join('');
+    html += '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">Daily traffic</h2>' +
+        '<div class="card-sub">Contacts expected each day, by task. Hover a day to see the detail.</div></div>' + monthNav + '</div>' +
+        legend + chart + '</div>' +
+      '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">' + fill('Forecast {year}', { year: y }) + '</h2>' +
+        '<div class="card-sub">Contacts per month and per task, and the hours of work they need. Open a task to change its numbers.</div></div></div>' +
+        '<div class="table-scroll"><table class="tbl tbl-framed tr-table"><thead><tr><th>Month</th>' + ord.map(function(t) { return '<th class="col-num">' + esc(t.name) + '</th>'; }).join('') +
+        '<th class="col-num">Workload</th></tr></thead><tbody>' + yRows + '</tbody></table></div></div>';
+    box.innerHTML = html;
+    return;
+  }
+  // One task: monthly forecast against history, daily split, hourly profile
+  var t = cur, hasHist = !!(cscHist.month[t.name] && Object.keys(cscHist.month[t.name]).length);
+  var mRows = MONTHS3.map(function(mn, mi) {
+    var mo = mi + 1, n1 = histMonth(t.name, y - 1, mo), n2 = histMonth(t.name, y - 2, mo), fcv = forecastMonth(t, y, mo);
+    var man = cscManM[y + '|' + mo + '|' + t.name] != null;
+    var diff = n1 ? Math.round((fcv - n1) / n1 * 100) : null;
+    return '<tr' + (mo === m ? ' class="is-cur"' : '') + '><td>' + mn + '</td><td class="col-num">' + fmtVol(n2) + '</td><td class="col-num">' + fmtVol(n1) + '</td>' +
+      '<td><input type="number" class="in-num' + (man ? ' is-manual' : '') + '" min="0" step="1" value="' + Math.round(fcv) + '" placeholder="' + Math.round(fcv) + '"' +
+        ' onchange="saveMonthlyForecast(this,\'' + esc(t.name) + '\',' + y + ',' + mo + ')"></td>' +
+      '<td class="col-num">' + (diff == null ? '-' : (diff > 0 ? '+' : '') + diff + '%') + '</td>' +
+      '<td class="col-num">' + workH(fcv * (t.aht_minutes || 0)) + '</td></tr>';
+  }).join('');
+  var dCards = days.map(function(dd) {
+    var v = forecastDay(t, dd.ds), man = cscManD[dd.ds + '|' + t.name] != null, ly = cscHist.day[t.name] ? cscHist.day[t.name][addDaysStr(dd.ds, -364)] : null;
+    var lbl = new Date(dd.ds + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit' });
+    return '<div class="tr-day' + (man ? ' is-manual' : '') + (dd.closed ? ' is-closed' : '') + '"><div class="tr-day-h">' + lbl + '</div>' +
+      '<input type="number" class="tr-d" min="0" step="1" value="' + Math.round(v) + '" onchange="saveDailyForecast(this,\'' + esc(t.name) + '\',\'' + dd.ds + '\')">' +
+      '<div class="tr-ly">' + (ly != null ? 'Last year ' + fmtVol(ly) : '&nbsp;') + '</div></div>';
+  }).join('');
+  var sh = hourShares(t, days.find(function(dd) { return !dd.closed; }) ? days.find(function(dd) { return !dd.closed; }).ds : days[0].ds);
+  var span = weekOpenSpan(), h0 = 24, h1 = 0;
+  sh.forEach(function(v, h) { if (v > 0) { h0 = Math.min(h0, h); h1 = Math.max(h1, h + 1); } });
+  h0 = Math.min(h0, span.open); h1 = Math.max(h1, span.close);
+  var topSh = Math.max.apply(null, sh.concat([0.01]));
+  var bars = '';
+  for (var h = h0; h < h1; h++) {
+    var pctv = Math.round(sh[h] * 1000) / 10;
+    bars += '<div class="tr-hr"><div class="tr-hr-bar"><i style="height:' + (sh[h] / topSh * 100) + '%;background:' + t.color_bg + ';border-top:1px solid ' + t.color_text + '"></i></div>' +
+      '<input type="number" class="tr-hr-in" data-h="' + h + '" min="0" max="100" step="0.5" value="' + pctv + '" onchange="saveTaskCurve(\'' + t.id + '\')"><span>' + h + 'h</span></div>';
+  }
+  html += '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">' + fill('{task} - monthly forecast {year}', { task: t.name, year: y }) + '</h2>' +
+      '<div class="card-sub">' + (hasHist ? 'Last year\'s volume with your trend. Type a number to replace a month; empty it to come back to the calculation.' :
+        'No history for this task: type the volume expected each month.') + '</div></div></div>' +
+      (hasHist ? '<div class="set-rules">' + rrow('Trend vs last year', 'Change of volume you expect compared with last year, for this task',
+        '<input type="number" id="trend-' + t.id + '" class="set-rule-input" value="' + (Number(t.trend_pct) || 0) + '" min="-90" max="300" step="1">', '%')
+        .replace('onchange="saveRegulations()"', 'onchange="saveTaskTrend(this,\'' + t.id + '\')"') + '</div>' : '') +
+      '<div class="table-scroll"><table class="tbl tbl-framed tr-table"><thead><tr><th>Month</th><th class="col-num">' + (y - 2) + '</th><th class="col-num">' + (y - 1) +
+        '</th><th class="col-num">' + fill('Forecast {year}', { year: y }) + '</th><th class="col-num">vs ' + (y - 1) + '</th><th class="col-num">Workload</th></tr></thead><tbody>' + mRows + '</tbody></table></div></div>' +
+    '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">Daily split</h2>' +
+      '<div class="card-sub">The month spread over the days with the weekday profile of the history. Change a day to set it by hand.</div></div>' + monthNav + '</div>' +
+      '<div class="tr-days">' + dCards + '</div></div>' +
+    '<div class="card"><div class="page-head set-head"><div><h2 class="set-title">Hourly profile</h2>' +
+      '<div class="card-sub">' + (t.hourly_curve ? 'Your profile: share of the day received each hour.' : (cscHist.hour[t.name] ? 'From the history: share of the day received each hour.' : 'No hourly history: the day is spread evenly over the open hours.')) + '</div></div>' +
+      (t.hourly_curve ? '<div class="head-actions"><button class="btn btn-ghost btn-sm" onclick="resetTaskCurve(\'' + t.id + '\')">Back to history</button></div>' : '') + '</div>' +
+      '<div class="tr-hours" id="tr-hours">' + bars + '</div></div>';
+  box.innerHTML = html;
 }
-async function saveTrend(inp) {
-  var v = parseFloat(inp.value);
-  if (isNaN(v)) { showToast('Enter a number', 'error'); return; }
-  regulations.trend_pct = v;
-  queueRegionSave();
+async function refreshTraffic() {
   await loadTraffic(trafficRef.getFullYear());
   renderTraffic();
   renderMonthlyPlanning();
 }
-async function saveMonthlyTarget(inp, task, month) {
-  var regionId = currentRegionId, y = trafficRef.getFullYear(), v = Math.max(0, parseInt(inp.value, 10) || 0);
-  var ex = await sb.from('monthly_bo_targets').select('id').eq('region_id', regionId).eq('year', y).eq('month', month).eq('task', task);
-  if (ex.error) { showToast('Save failed: ' + ex.error.message, 'error'); return; }
-  var res = ex.data && ex.data.length
-    ? await sb.from('monthly_bo_targets').update({ volume: v }).eq('id', ex.data[0].id)
-    : await sb.from('monthly_bo_targets').insert({ region_id: regionId, year: y, month: month, task: task, volume: v });
+async function saveMonthlyForecast(inp, task, y, m) {
+  var regionId = currentRegionId, q = sb.from('csc_traffic_monthly'), raw = inp.value.trim();
+  var res = raw === ''
+    ? await q.delete().eq('region_id', regionId).eq('year', y).eq('month', m).eq('task', task)
+    : await q.upsert({ region_id: regionId, year: y, month: m, task: task, volume: Math.max(0, parseFloat(raw) || 0) }, { onConflict: 'region_id,year,month,task' });
   if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return; }
   if (regionId !== currentRegionId) return;
   showToast('Saved ✓');
-  await loadTraffic(y);
-  renderTraffic();
-  renderMonthlyPlanning();
+  refreshTraffic();
 }
+async function saveDailyForecast(inp, task, ds) {
+  var regionId = currentRegionId, q = sb.from('csc_traffic_daily'), raw = inp.value.trim();
+  var res = raw === ''
+    ? await q.delete().eq('region_id', regionId).eq('date', ds).eq('task', task)
+    : await q.upsert({ region_id: regionId, date: ds, task: task, volume: Math.max(0, parseFloat(raw) || 0) }, { onConflict: 'region_id,date,task' });
+  if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return; }
+  if (regionId !== currentRegionId) return;
+  showToast('Saved ✓');
+  refreshTraffic();
+}
+async function updateTask(taskId, upd) {
+  var t = tasks.find(function(x) { return x.id === taskId; });
+  if (!t) return;
+  var res = await sb.from('tasks').update(upd).eq('id', taskId);
+  if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return; }
+  Object.assign(t, upd);
+  showToast('Saved ✓');
+  refreshTraffic();
+}
+function saveTaskTrend(inp, taskId) {
+  var v = parseFloat(inp.value);
+  if (isNaN(v)) { showToast('Enter a number', 'error'); return; }
+  updateTask(taskId, { trend_pct: v });
+}
+function saveTaskCurve(taskId) {
+  var c = [];
+  for (var h = 0; h < 24; h++) c.push(0);
+  document.querySelectorAll('#tr-hours .tr-hr-in').forEach(function(inp) { c[+inp.dataset.h] = Math.max(0, parseFloat(inp.value) || 0); });
+  if (!c.some(function(v) { return v > 0; })) { showToast('At least one hour must be above 0', 'error'); return; }
+  updateTask(taskId, { hourly_curve: c });
+}
+function resetTaskCurve(taskId) { updateTask(taskId, { hourly_curve: null }); }
 async function runForecast() {
   var btn = document.getElementById('btn-forecast');
   if (!currentRegionId || !btn) return;
   btn.disabled = true;
+  cscHist = null;
   await loadTraffic(trafficRef.getFullYear());
   await new Promise(function(r) { setTimeout(r, 480); });
   btn.disabled = false;
@@ -3310,7 +3416,7 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH) {
     var take = function(p, t) { p.slot.task = t.name; pool.splice(pool.indexOf(p), 1); };
     if (open) {
       rt.forEach(function(t) {
-        var need = ((vol[t.name] && vol[t.name].hours[h]) || 0) / 2 * t.aht_minutes;
+        var need = ((vol[t.name] && vol[t.name].hours[h]) || 0) / 2 * t.aht_minutes / (regionSettings.call_occupancy || 0.75);
         pool.filter(function(p) { return agentCanDo(p.a.id, t); }).forEach(function(p) {
           if (need <= 0) return;
           take(p, t); need -= p.free; equity[p.a.id] = (equity[p.a.id] || 0) + p.free;
@@ -4442,17 +4548,6 @@ async function deleteHighlight(id) {
   regionHighlights = regionHighlights.filter(function(h){ return h.id !== id; });
   renderDashboard();
 }
-function dailyTrafficFor(ds) {
-  if (getDayClosureType(ds)) return 0;
-  var rec = trafficDaily[ds];
-  if (rec && rec.is_manual) return rec.traffic || 0;
-  var dt = new Date(ds + 'T12:00:00');
-  var y = dt.getFullYear(), m = dt.getMonth() + 1;
-  var mRec = trafficMonthly[monthKey(y, m)];
-  var total = mRec && mRec.current_year != null ? mRec.current_year : 0;
-  var spread = spreadMonthToDays(y, m, total);
-  return spread[ds] || 0;
-}
 // Weekly dashboard
 function renderDashboard() {
   var body = document.getElementById('dashboard-body');
@@ -4466,18 +4561,27 @@ function renderDashboard() {
   var todayStr = toDateStr(new Date());
   var DOW3 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  var vols = days.map(function(d){ return dailyTrafficFor(toDateStr(d)); });
-  var weekTotal = vols.reduce(function(s,v){ return s+v; }, 0);
-  var maxVol = Math.max.apply(null, vols.concat([1]));
+  var dOrd = tasksInOrder().filter(function(t) { return !t.is_filler; });
+  var wkTot = {}, weekTotal = 0, weekWork = 0, dayTot = days.map(function(d) {
+    var f = cscFc[toDateStr(d)] || {}, sum = 0;
+    dOrd.forEach(function(t) { var v = f[t.name] || 0; sum += v; wkTot[t.name] = (wkTot[t.name] || 0) + v; weekWork += v * (t.aht_minutes || 0); });
+    weekTotal += sum; return sum;
+  });
+  var maxVol = Math.max.apply(null, dayTot.concat([1]));
   var spark = '';
   days.forEach(function(d, i) {
-    var ds = toDateStr(d);
-    var h = maxVol > 0 ? Math.round(vols[i] / maxVol * 112) : 4;
-    var isToday = (ds === todayStr);
-    spark += '<div><div class="bar-val">' + (vols[i] > 0 ? vols[i] : '') + '</div>' +
-             '<div class="bar' + (isToday ? ' today' : '') + '" style="height:' + Math.max(4,h) + 'px"></div>' +
+    var ds = toDateStr(d), f = cscFc[ds] || {}, hpx = Math.round(dayTot[i] / maxVol * 130);
+    var segs = dOrd.map(function(t) {
+      var v = f[t.name] || 0, px = dayTot[i] ? v / dayTot[i] * hpx : 0;
+      return v ? '<i style="height:' + px + 'px;background:' + t.color_bg + ';color:' + t.color_text + ';border-top:1px solid ' + t.color_text + '" title="' + esc(t.name + ': ' + fmtVol(v)) + '">' + (px >= 15 ? fmtVol(v) : '') + '</i>' : '';
+    }).join('');
+    spark += '<div><div class="bar-val">' + (dayTot[i] > 0 ? fmtVol(dayTot[i]) : '') + '</div>' +
+             '<div class="bar-stack' + (ds === todayStr ? ' today' : '') + '">' + segs + '</div>' +
              '<div class="lbl">' + DOW3[d.getDay()] + '<span class="lbl-date">' + d.getDate() + '</span></div></div>';
   });
+  var dLegend = '<div class="tr-legend">' + dOrd.filter(function(t) { return wkTot[t.name] > 0; }).map(function(t) {
+    return '<span class="tr-leg"><i style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' + esc(t.name) + '<b>' + fmtVol(wkTot[t.name]) + '</b></span>';
+  }).join('') + '</div>';
   var poolAgents = { mgmt:[], sales:[], stock:[] };
   var todayInWeek = days.some(function(d){ return toDateStr(d) === todayStr; });
   var presDs = todayInWeek ? todayStr : toDateStr(days[0]);
@@ -4542,13 +4646,13 @@ function renderDashboard() {
       '<button class="btn btn-primary" onclick="switchPlanningView(\'monthly\')">' + 'Open planning' + '</button>' +
     '</div>' +
     '<div class="metric-grid">' +
-      '<div class="metric-card"><span>' + 'Forecast traffic - this week' + '</span><strong>' + weekTotal.toLocaleString('en-GB') + '</strong></div>' +
+      '<div class="metric-card"><span>Contacts this week<small>' + workH(weekWork) + ' of work</small></span><strong>' + fmtVol(weekTotal) + '</strong></div>' +
       '<div class="metric-card"><span>' + fill('On the floor {date}', { date: presLabel }) + '</span><strong>' + (poolAgents.mgmt.length + poolAgents.sales.length + poolAgents.stock.length) + '</strong></div>' +
       '<div class="metric-card"><span>' + 'Absences this week' + '</span><strong>' + absences.length + '</strong></div>' +
     '</div>' +
     '<div class="dash-grid">' +
       '<div class="dash-col">' +
-        '<div class="hero"><div class="hero-eyebrow">' + 'Traffic' + '</div><div class="hero-spark"><div class="hero-days">' + spark + '</div></div></div>' +
+        '<div class="hero"><div class="hero-eyebrow">Traffic by task</div>' + dLegend + '<div class="hero-spark"><div class="hero-days">' + spark + '</div></div></div>' +
         '<div class="card">' +
           '<div class="dash-card-label">Highlights &amp; reminders</div>' +
           '<div class="hl-list">' + (hls.length ? hls.map(hlItemHtml).join('') :
@@ -4566,9 +4670,7 @@ function renderDashboard() {
         '<div class="card">' +
           '<div class="dash-card-label">' + 'My center at a glance' + '</div>' +
           poolBlockHtml('Management', poolAgents.mgmt) +
-          poolBlockHtml('Sales', poolAgents.sales) +
-          (storeCorners.length > 1 ? cornerBreakdownHtml(cornerPresence) : '') +
-          poolBlockHtml('Stock', poolAgents.stock) +
+          poolBlockHtml('Client Advisors', poolAgents.sales) +
           '<div class="dash-card-label" style="margin-top:var(--s6)">Absences this week</div>' +
           (absences.length ? absences.map(function(a){
             return '<div class="mini-item"><span class="dot abs"></span><span class="nm">' + esc(a.name) + '</span>&nbsp;- ' + a.range + '</div>';
@@ -4580,16 +4682,6 @@ function renderDashboard() {
         '</div>' +
       '</div>' +
     '</div>';
-}
-function cornerBreakdownHtml(cornerPresence) {
-  var codes = Object.keys(cornerPresence);
-  if (!codes.length) return '';
-  codes.sort(function(a, b){ return cornerPresence[b] - cornerPresence[a]; });
-  var chips = codes.map(function(code){
-    return '<span class="cnr-chip"><span class="cnr-chip-code">' + esc(code) +
-           '</span><span class="cnr-chip-n">' + cornerPresence[code] + '</span></span>';
-  }).join('');
-  return '<div class="cnr-breakdown">' + chips + '</div>';
 }
 function poolBlockHtml(title, list) {
   var head = '<div class="pool-row"><span class="pool-name">' + title + '</span>' +
@@ -6001,7 +6093,9 @@ function renderAgents() {
     container.innerHTML = '<p style="color:var(--tx-3)">No client advisors yet. Click Add CA above.</p>';
     return;
   }
-  container.innerHTML = agents.map(function(a) {
+  container.innerHTML = '<div class="agent-row ag-head"><span class="ag-id">Client advisor</span><span class="ag-pills">' +
+    tasksInOrder().map(function(t) { return '<span class="ag-cell">' + esc(t.name) + '</span>'; }).join('') +
+    '</span><span class="ag-meta">Role</span><span class="ag-edit-sp"></span></div>' + agents.map(function(a) {
     var pct    = a.work_pct || 100;
     var stInfo = RETAIL_STATUS[retailStatusOf(a)];
     var name   = (a.first_name || '') + ' ' + (a.last_name || '');
@@ -6016,9 +6110,10 @@ function renderAgents() {
         '</span></span>' +
       '<span class="ag-pills">' + tasksInOrder().map(function(t) {
         var on = agentCanDo(a.id, t);
-        return '<button type="button" class="task-pill' + (on ? ' on' : '') + '"' +
-          (on ? ' style="background:' + t.color_bg + ';color:' + t.color_text + '"' : '') +
-          ' title="' + esc(t.name) + (on ? ': allowed' : ': not allowed') + '" onclick="toggleAgentTask(\'' + a.id + '\',\'' + t.id + '\')">' + esc(t.name) + '</button>';
+        return '<span class="ag-cell"><button type="button" class="task-cell' + (on ? ' on' : '') + '"' +
+          (on ? ' style="background:' + t.color_bg + ';border-color:' + t.color_text + ';color:' + t.color_text + '"' : '') +
+          ' title="' + esc(t.name) + (on ? ': allowed' : ': not allowed') + '" onclick="toggleAgentTask(\'' + a.id + '\',\'' + t.id + '\')">' +
+          (on ? '<svg class=\"ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg>' : '') + '<span class="tc-lbl">' + esc(taskShort(t.name)) + '</span></button></span>';
       }).join('') + '</span>' +
       '<span class="ag-meta">' +
         '<span class="pill pill-neutral">' + esc(stInfo.label) + '</span>' +
@@ -6736,19 +6831,15 @@ function exportIntraday() {
   var openH = intradayExport.openH, closeH = intradayExport.closeH;
   var nQ = Math.round((closeH - openH) * 4);
   var MISSION_XL = {
-    mb:{bg:'DBEAFE',tx:'1E407A',full:'MB'},
+    mb:{bg:'DDE1F5',tx:'3B4785',full:'MB'},
     lun:{bg:'F5EBCB',tx:'6B5622',full:'Lunch'},
     wel:{bg:'E8E9EB',tx:'4C586A',full:'Welcome'},
-    train:{bg:'DCEBDF',tx:'2D5841',full:'Training'},
+    train:{bg:'E5EED2',tx:'4F6127',full:'Training'},
     cli:{bg:'E4DDF0',tx:'5C467A',full:'Clienteling'},
     reinf:{bg:'FFFFFF',tx:'1E407A',full:'Reinforcement'}
   };
-  var BREAK_XL = {
-    yellow:{bg:'F5EBCB',tx:'6B5622'}, blue:{bg:'DBEAFE',tx:'1E407A'},
-    pink:{bg:'F6DDE7',tx:'82334E'},   green:{bg:'DCEBDF',tx:'2D5841'},
-    violet:{bg:'E4DDF0',tx:'5C467A'}, teal:{bg:'DCEBDF',tx:'2D5841'},
-    slate:{bg:'E8E9EB',tx:'4C586A'}
-  };
+  var BREAK_XL = {};
+  Object.keys(TASK_COLORS).forEach(function(k) { BREAK_XL[k] = { bg: TASK_COLORS[k][0].slice(1), tx: TASK_COLORS[k][1].slice(1) }; });
   function exportBlockStyle(b) {
     var tone = BREAK_XL[b.color];
     if (tone) return { bg: tone.bg, tx: tone.tx, full: b.label || '' };
