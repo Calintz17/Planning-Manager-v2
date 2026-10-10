@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.1.5</title>
+  <title>CAST v9.1.6</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -115,6 +115,11 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .pdf-shot.is-intraday { width:max-content; min-width:1200px; }
 .pdf-shot-head { display:flex; justify-content:space-between; gap:var(--s4); font-size:13px; color:var(--tx-2); margin-bottom:var(--s3); }
 .pdf-shot-head b { color:var(--tx-1); }
+.pdf-cov-title { font-size:14px; font-weight:700; color:var(--ink, #17283E); margin:18px 0 8px; }
+.pdf-brand { display:flex; flex-direction:column; gap:4px; }
+.pdf-brand img { height:30px; width:auto; display:block; }
+.pdf-brand span { font-size:9px; line-height:1.4; color:#52647B; }
+.pdf-shot-head { align-items:flex-end; }
 .xm-logo { width:18px; height:18px; object-fit:contain; flex-shrink:0; display:block; }
 .xm-fb { display:inline-flex; align-items:center; justify-content:center; border-radius:3px; font-size:10px; font-weight:700; color:var(--tx-2); background:var(--bg-base-3); width:20px; height:20px; }
 .xm-xl { background:var(--ok); }
@@ -1903,7 +1908,20 @@ async function onStoreChange() {
   currentStoreName = st ? st.name : '';
   currentStoreCity = st ? (st.city || st.location || '') : '';
 
-  if (!currentStoreId) return;
+  if (!currentStoreId) {
+    // No store selected: empty every page
+    agents = []; monthlyResult = {}; intradayExport = null; lastCoverage = null;
+    renderMonthlyPlanning(); renderDashboard();
+    var ids = { 'planning-intraday-body':'<p class="plan-empty">Select a store to view the intraday planning.</p>',
+      'agent-list':'<p style="color:var(--tx-3)">Select a store to view agents.</p>',
+      'calendar-annual':'<p style="color:var(--tx-3)">Select a store to view the calendar.</p>',
+      'calendar-monthly':'<p style="color:var(--tx-3)">Select a store to view the calendar.</p>',
+      'regulations-content':'<div class="card"><p style="color:var(--tx-3)">Select a store to view settings.</p></div>' };
+    Object.keys(ids).forEach(function(id) { var el = document.getElementById(id); if (el) el.innerHTML = ids[id]; });
+    if (typeof renderTraffic === 'function') renderTraffic();
+    if (CURRENT_LANG !== 'en') retranslate();
+    return;
+  }
   var sid = currentStoreId;
 
   currentCornerView = null;
@@ -3301,6 +3319,7 @@ function setPlanMeta(id, text, isHtml) {
   if (!el) return;
   if (isHtml) el.innerHTML = text; else el.textContent = text;
 }
+var lastCoverage = null;
 function setPlanCoverage(html) {
   var el = document.getElementById('planning-coverage-body');
   if (el) el.innerHTML = html;
@@ -7145,6 +7164,7 @@ function renderMonthlyPlanning() {
     return r + '</tr>';
   }
 
+  lastCoverage = { totPres: totPres, totOff: totOff, totO: totO, totC: totC, pools: poolDayCount, rh: rh };
   html2 += sumRow('Total present', totPres, 'tot');
   html2 += sumRow('Off',           totOff,  'tot');
   html2 += sumRow('Opening',       totO,    'tot');
@@ -7442,7 +7462,7 @@ function printableExport(contentHtml, titleText, fitWidth) {
   var printCss =
     '@page { size:landscape; margin:8mm; }' +
     'body { background:#fff; margin:0; padding:14px 16px; font-family:var(--font); }' +
-    '.pdf-head { display:flex; align-items:baseline; justify-content:space-between;' +
+    '.pdf-head { display:flex; align-items:flex-end; justify-content:space-between;' +
       ' margin-bottom:14px; padding-bottom:10px; border-bottom:2px solid var(--nav-active-bg); }' +
     '.pdf-title { font-size:16px; font-weight:700; color:var(--tx-1); }' +
     '.pdf-meta { font-size:11px; color:var(--tx-2); }' +
@@ -7455,8 +7475,8 @@ function printableExport(contentHtml, titleText, fitWidth) {
   w.document.write('<!DOCTYPE html><html lang="' + docLang() + '"><head><meta charset="utf-8">' +
     '<title>' + stamp + '</title>' +
     '<style>' + siteCss + '</style><style>' + printCss + '</style></head><body>' +
-    '<div class="pdf-head"><span class="pdf-title">' + stamp + '</span>' +
-    '<span class="pdf-meta">CAST - ' + new Date().toLocaleDateString(dLoc()) + '</span></div>' +
+    '<div class="pdf-head">' + pdfBrandHtml() + '<div style="text-align:right"><div class="pdf-title">' + stamp + '</div>' +
+    '<div class="pdf-meta">' + new Date().toLocaleDateString(dLoc()) + '</div></div></div>' +
     '<div class="tab-content active" style="display:block;padding:0;">' + contentHtml + '</div>' +
     '</body></html>');
   w.document.close();
@@ -7514,12 +7534,12 @@ async function buildPlanningPdf(view) {
   var info = sendInfo(view);
   var box = document.createElement('div');
   box.className = 'pdf-shot' + (view === 'intraday' ? ' is-intraday' : '');
-  box.innerHTML = '<div class="pdf-shot-head"><b>CAST - ' + esc(info.storeName + ' - ' + t(info.kind) + ' - ' + planningScopeLabel(info.scope, info.scopeIsCorner)) + '</b><span>' + esc(info.period) + '</span></div>' +
+  box.innerHTML = '<div class="pdf-shot-head">' + pdfBrandHtml() + '<div style="text-align:right"><b>' + esc(info.storeName + ' - ' + t(info.kind) + ' - ' + planningScopeLabel(info.scope, info.scopeIsCorner)) + '</b><br><span>' + esc(info.period) + '</span></div></div>' +
     '<div class="card' + (view === 'monthly' ? ' pdf-grid-only' : '') + '">' +
     planningExportHtml(view).replace(/ id="[^"]*"/g, '') + '</div>';
   var exportDays = view === 'monthly' ? new Date(monthlyRef.getFullYear(), monthlyRef.getMonth() + 1, 0).getDate() : 0;
   var exportSpan = intradayAxis ? intradayAxis.T1 - intradayAxis.T0 : 12;
-  box.style.width = (view === 'monthly' ? 184 + exportDays * 32 + 80 : 184 + Math.max(680, exportSpan * 72) + 80) + 'px';
+  box.style.width = (view === 'monthly' ? 184 + exportDays * 32 + 190 + 80 : 184 + Math.max(680, exportSpan * 72) + 80) + 'px';
   document.body.appendChild(box);
   if(view === 'intraday')fitMissionLabels(box);
   else fitExportEventLabels(box);
@@ -7545,15 +7565,20 @@ async function buildPlanningPdf(view) {
       g.drawImage(canvas, 0, y0, c.width, y1 - y0, 0, hh, c.width, y1 - y0);
       return c;
     }
+    // Coverage & headcount starts a new page when it does not fit, without the planning header
+    var covEl = box.querySelector('.pdf-cov-title');
+    var covY = covEl ? Math.round((covEl.getBoundingClientRect().top - top - 6) * k) : Infinity;
     var pages = [], y = 0, first = true;
     while (y < canvas.height) {
-      var limit = y + room - (first ? 0 : Math.round(headEnd * k));
+      var head = !first && y < covY;
+      var limit = y + room - (head ? Math.round(headEnd * k) : 0);
       var end = canvas.height;
       if (end > limit) {
         var fit = cuts.map(function(b) { return Math.round(b * k); }).filter(function(b) { return b > y && b <= limit; });
         end = fit.length ? fit[fit.length - 1] : limit;
+        if (covY > y && covY <= limit && end > covY) end = covY;
       }
-      pages.push(slice(y, end, !first));
+      pages.push(slice(y, end, head));
       y = end; first = false;
     }
     pages.forEach(function(c, i) {
@@ -7764,7 +7789,7 @@ function exportMonthly() {
     var c = { v:(v==null?'':(num?Number(v):v)), t:num?'n':'s' };
     var s = {
       alignment:{ horizontal:o.align||'center', vertical:'center', wrapText:!!o.wrap },
-      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, italic:!!o.italic, color:{rgb:o.tx||'17283E'},
+      font:{ name:o.font||'Arial', sz:o.sz||10, bold:!!o.bold, italic:!!o.italic, color:{rgb:o.tx||'17283E'},
              underline:!!o.underline }
     };
     if (o.grid) {
@@ -7788,11 +7813,14 @@ function exportMonthly() {
   var rows = [];
   var DOWL = ['S','M','T','W','T','F','S'];
 
-  var totalCols = 2 + nDays + 3;
+  var totalCols = 2 + nDays + 5;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
-  var titleRow = [ cell(t('CAST  -  Retail Planning'), { align:'left', bold:true, sz:16, tx:'1E407A' }) ];
-  for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
-  rows.push(titleRow);
+  // Logo line and tagline, like the app
+  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'183C74' }],
+   ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
+   ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) {
+    var br = [ cell(b[0], b[1]) ]; for (var i=1;i<totalCols;i++) br.push(cell('')); rows.push(br);
+  });
   var metaRow = [ cell(currentStoreName + '   ' + monthName, { align:'left', bold:true, sz:11, tx:'6B7280', underline:'rule' }) ];
   for (var i=1;i<totalCols;i++) metaRow.push(cell('', { underline:'rule' }));
   rows.push(metaRow);
@@ -7808,6 +7836,8 @@ function exportMonthly() {
   hRow.push(cell('O',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
   hRow.push(cell('C',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
   hRow.push(cell('OFF',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+  hRow.push(cell(CURRENT_LANG === 'en' ? 'SUN' : t('Sun'),{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+  hRow.push(cell(CURRENT_LANG === 'en' ? 'ABS' : t('Absence'),{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
   rows.push(hRow);
 
 
@@ -7882,9 +7912,9 @@ function exportMonthly() {
 
     inBlock.forEach(function(a){
       var role = (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '';
-      var nm = a.first_name + ' ' + (a.last_name||'').charAt(0) + '.';
+      var nm = ((a.first_name || '') + ' ' + (a.last_name || '')).trim();
       var r = [ cell(nm,{align:'left',bold:true}), cell(t(role),{align:'left',tx:'6B7280',sz:9}) ];
-      var cntO=0,cntC=0,cntOff=0;
+      var cntO=0,cntC=0,cntOff=0,cntSun=0,cntAbs=0;
       days.forEach(function(d){
         var res = (monthlyResult[d.ds] || {})[a.id];
         var code = res ? res.code : '';
@@ -7906,11 +7936,17 @@ function exportMonthly() {
         if (kd.open)  { if (code !== 'D') cntO++; if (!isStk) perDay.open[d.ds]++; }
         if (kd.close) { if (code !== 'D') cntC++; if (!isStk) perDay.close[d.ds]++; }
         if (code==='OFF') cntOff++;
+        if (res && res.special === 'leave') cntAbs++;
+        if (res && !res.special && d.dow === 0) cntSun++;
         if (code && code!=='OFF' && code!=='A') perDay[grp.pool][d.ds]++;
       });
       r.push(cell(cntO||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
       r.push(cell(cntC||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
       r.push(cell(cntOff||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+      // Same counters as the screen when available
+      var sc = lastCoverage && lastCoverage.rh && lastCoverage.rh[a.id];
+      r.push(cell((sc ? sc.dim : cntSun)||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
+      r.push(cell((sc ? sc.cp : cntAbs)||'-',{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
       rows.push(r);
     });
   });
@@ -7926,33 +7962,44 @@ function exportMonthly() {
       r.push(cell(d.closure?'':(map[d.ds]||0),{bold:true,sz:9,tx:opt.tx||'3F3F46',bg:opt.bg||'FCFCFD',grid:true,
         bBottom:opt.last?'medium':'thin', bBottomColor:opt.last?'1E407A':'ECEDEF'}));
     });
-    r.push(cell('',{bg:opt.bg||'FCFCFD'})); r.push(cell('',{bg:opt.bg||'FCFCFD'})); r.push(cell('',{bg:opt.bg||'FCFCFD'}));
+    for (var k=0;k<5;k++) r.push(cell('',{bg:opt.bg||'FCFCFD'}));
     return r;
   }
-  rows.push(sumRow('Management', perDay.mgmt));
-  rows.push(sumRow('Sales', perDay.sales));
-  rows.push(sumRow('Stock', perDay.stock));
-  rows.push(sumRow('Opening', perDay.open, {bg:'F3F6FB',tx:'1E407A'}));
-  rows.push(sumRow('Closing', perDay.close, {bg:'F3F6FB',tx:'1E407A',last:true}));
+  // Coverage & headcount: same list and order as the screen
+  var cv = lastCoverage || {};
+  var covHead = [ cell(t('Indicator').toUpperCase(),{align:'left',bold:true,tx:'52647B',sz:9,bg:HEAD.bg}), cell('',{bg:HEAD.bg}) ];
+  days.forEach(function(d){ covHead.push(cell(hRow[covHead.length] ? hRow[covHead.length].v : d.num, { bg:(d.dow===0||d.dow===6)?'F1F2F4':HEAD.bg, tx:HEAD.tx, bold:true, sz:9, grid:true })); });
+  for (var k=0;k<5;k++) covHead.push(cell('',{bg:HEAD.bg}));
+  rows.push(covHead);
+  rows.push(sumRow('Total present', cv.totPres || {}));
+  rows.push(sumRow('Off', cv.totOff || {}));
+  rows.push(sumRow('Opening', cv.totO || perDay.open, {bg:'F3F6FB',tx:'1E407A'}));
+  rows.push(sumRow('Closing', cv.totC || perDay.close, {bg:'F3F6FB',tx:'1E407A',last:true}));
+  rows.push(sumRow('Management', (cv.pools && cv.pools.mgmt) || perDay.mgmt));
+  rows.push(sumRow('Sales', (cv.pools && cv.pools.sales) || perDay.sales));
+  rows.push(sumRow('Stock', (cv.pools && cv.pools.stock) || perDay.stock));
 
   var ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:Math.min(6,totalCols-1)} },
-    { s:{r:1,c:0}, e:{r:1,c:Math.min(6,totalCols-1)} }
+    { s:{r:0,c:0}, e:{r:0,c:Math.min(12,totalCols-1)} },
+    { s:{r:1,c:0}, e:{r:1,c:Math.min(12,totalCols-1)} },
+    { s:{r:2,c:0}, e:{r:2,c:Math.min(12,totalCols-1)} },
+    { s:{r:3,c:0}, e:{r:3,c:Math.min(12,totalCols-1)} }
   ].concat(evtMerges.map(function(m) { return { s:{r:m.rowIdx,c:m.c0}, e:{r:m.rowIdx,c:m.c1} }; }));
   var cols = [{wch:20},{wch:11}];
   for (var c=0;c<nDays;c++) cols.push({wch:4.2});
-  cols.push({wch:5}); cols.push({wch:5}); cols.push({wch:6});
+  cols.push({wch:5}); cols.push({wch:5}); cols.push({wch:6}); cols.push({wch:6}); cols.push({wch:6});
   ws['!cols'] = cols;
   var rowHeights = rows.map(function(r, i) {
-    if (i === 0) return { hpx: 30 };
-    if (i === 1) return { hpx: 20 };
-    if (i === 2) return { hpx: 6 };
+    if (i === 0) return { hpx: 66 };
+    if (i === 1 || i === 2) return { hpx: 14 };
+    if (i === 3) return { hpx: 22 };
+    if (i === 4) return { hpx: 6 };
     return { hpx: 32 };
   });
   ws['!rows'] = rowHeights;
-  ws['!freeze'] = { xSplit:2, ySplit:4, topLeftCell:'C5', activePane:'bottomRight', state:'frozen' };
-  ws['!panes']  = [{ xSplit:2, ySplit:4, topLeftCell:'C5', activePane:'bottomRight', state:'frozen' }];
+  ws['!freeze'] = { xSplit:2, ySplit:6, topLeftCell:'C7', activePane:'bottomRight', state:'frozen' };
+  ws['!panes']  = [{ xSplit:2, ySplit:6, topLeftCell:'C7', activePane:'bottomRight', state:'frozen' }];
   ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:0 };
   ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
 
@@ -8007,7 +8054,7 @@ function exportIntraday() {
     var c = { v:(v==null?'':v), t:'s' };
     var s = {
       alignment:{ horizontal:o.align||'center', vertical:'center' },
-      font:{ name:'Arial', sz:o.sz||10, bold:!!o.bold, color:{rgb:o.tx||'17283E'}, underline:!!o.underline }
+      font:{ name:o.font||'Arial', sz:o.sz||10, bold:!!o.bold, italic:!!o.italic, color:{rgb:o.tx||'17283E'}, underline:!!o.underline }
     };
     if (o.grid) {
       s.border = { left:{ style:o.lHour?'thin':'hair', color:{rgb:o.lHour?'D8DADE':'ECEDEF'} } };
@@ -8024,9 +8071,11 @@ function exportIntraday() {
   var totalCols = 3 + nQ;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
 
-  var titleRow = [ cell(t('CAST  -  Intraday Planning'), {align:'left',bold:true,sz:16,tx:'1E407A'}) ];
-  for (var i=1;i<totalCols;i++) titleRow.push(cell(''));
-  rows.push(titleRow);
+  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'183C74' }],
+   ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
+   ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) {
+    var br = [ cell(b[0], b[1]) ]; for (var i=1;i<totalCols;i++) br.push(cell('')); rows.push(br);
+  });
   var metaRow = [ cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280',rule:true}) ];
   for (var i=1;i<totalCols;i++) metaRow.push(cell('',{rule:true}));
   rows.push(metaRow);
@@ -8118,8 +8167,10 @@ function exportIntraday() {
 
   var ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:Math.min(10,totalCols-1)} },
-    { s:{r:1,c:0}, e:{r:1,c:Math.min(10,totalCols-1)} }
+    { s:{r:0,c:0}, e:{r:0,c:Math.min(14,totalCols-1)} },
+    { s:{r:1,c:0}, e:{r:1,c:Math.min(14,totalCols-1)} },
+    { s:{r:2,c:0}, e:{r:2,c:Math.min(14,totalCols-1)} },
+    { s:{r:3,c:0}, e:{r:3,c:Math.min(14,totalCols-1)} }
   ].concat(merges);
   var cols = [{wch:18},{wch:11},{wch:7}];
   for (var q=0;q<nQ;q++) cols.push({wch:2.4});
@@ -8127,15 +8178,16 @@ function exportIntraday() {
   var spacerSet = {};
   spacerIdx.forEach(function(i){ spacerSet[i] = true; });
   ws['!rows'] = rows.map(function(r, i) {
-    if (i === 0) return { hpx: 30 };
-    if (i === 1) return { hpx: 20 };
-    if (i === 2) return { hpx: 6 };
+    if (i === 0) return { hpx: 66 };
+    if (i === 1 || i === 2) return { hpx: 14 };
     if (i === 3) return { hpx: 22 };
+    if (i === 4) return { hpx: 6 };
+    if (i === 5) return { hpx: 22 };
     if (spacerSet[i]) return { hpx: 7 };
     return { hpx: 43 };
   });
-  ws['!freeze'] = { xSplit:3, ySplit:4, topLeftCell:'D5', activePane:'bottomRight', state:'frozen' };
-  ws['!panes']  = [{ xSplit:3, ySplit:4, topLeftCell:'D5', activePane:'bottomRight', state:'frozen' }];
+  ws['!freeze'] = { xSplit:3, ySplit:6, topLeftCell:'D7', activePane:'bottomRight', state:'frozen' };
+  ws['!panes']  = [{ xSplit:3, ySplit:6, topLeftCell:'D7', activePane:'bottomRight', state:'frozen' }];
   ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:1 };
   ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
 
@@ -8667,19 +8719,37 @@ function intradayLegendHtml() {
   }).join('')+'</div>';
 }
 // Export a stable grid width, independent of the viewport and hidden HR columns.
+// CAST logo and tagline for exported files
+function pdfBrandHtml() {
+  var img = document.querySelector('#sidebar .sb-wordmark');
+  var logo = (img && img.complete && img.naturalWidth && !img.classList.contains('is-off'))
+    ? '<img src="' + img.src + '" alt="CAST">' : '<b style="font-size:24px;color:#183C74">CAST</b>';
+  return '<div class="pdf-brand">' + logo + '<span>CELINE AUTOMATED<br>SCHEDULING TOOL</span></div>';
+}
 function planningExportHtml(view) {
   var source=document.getElementById(view==='monthly'?'planning-monthly-body':'planning-intraday-body');
   if(!source)return '';
   var copy=source.cloneNode(true);
+  // The screen moves header rows while scrolling: the export must not
+  copy.querySelectorAll('.mth thead > tr:first-child > th, .it-axis').forEach(function(el) {
+    el.style.removeProperty('transform');
+    el.style.removeProperty('z-index');
+  });
   if(view==='monthly') {
     var table=copy.querySelector('.mth');
-    if(table) {
-      var days=table.querySelectorAll('thead > tr:first-child > th.c-day').length;
-      table.querySelectorAll('.c-rh').forEach(function(cell){cell.remove();});
-      var counters=table.querySelector('colgroup > col:last-child');
-      if(counters && counters.getAttribute('span')==='5')counters.remove();
-      table.style.width=(184+days*32)+'px';
-      table.style.minWidth=(184+days*32)+'px';
+    var days=table ? table.querySelectorAll('thead > tr:first-child > th.c-day').length : 0;
+    var w=(184+days*32+5*38)+'px';
+    if(table) { table.style.width=w; table.style.minWidth=w; }
+    // Coverage & headcount under the planning, always open
+    var cov=document.querySelector('#planning-coverage-body .mth-wrap');
+    if(cov) {
+      var c2=cov.cloneNode(true);
+      c2.querySelectorAll('thead > tr:first-child > th').forEach(function(el){ el.style.removeProperty('transform'); el.style.removeProperty('z-index'); });
+      var t2=c2.querySelector('.mth'); if(t2) { t2.style.width=w; t2.style.minWidth=w; }
+      var wrap=document.createElement('div');
+      wrap.innerHTML='<div class="pdf-cov-title">'+esc(t('Coverage & headcount'))+'</div>';
+      wrap.appendChild(c2);
+      copy.appendChild(wrap);
     }
   }
   return copy.innerHTML;
