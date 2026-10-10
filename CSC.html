@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v2.0.6</title>
+  <title>CAST v2.0.7</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
-/* CAST Retail design system V2. Visual changes only; stored model unchanged. */
+/* CAST CSC uses the Retail V2 design system. */
 :root {
   --font:Arial, Helvetica, sans-serif; --bg-app:#F5F7FA; --bg-base:#FFFFFF; --bg-base-2:#FAFBFD; --bg-base-3:#EDF2F8; --brand:#086842; --brand-hover:#054D30;
   --brand-on:#FFFFFF; --tx-1:#17283E; --tx-2:#52647B; --tx-3:#52647B; --line:#DCE3EC; --line-2:#BDC9D9; --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5;
@@ -179,7 +179,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .hl-text { display:flex; align-items:center; flex-wrap:wrap; gap:8px; min-width:0; overflow-wrap:anywhere; font-size:13px; color:var(--tx-1); flex:1; }
 .hl-del { background:none; border:none; color:var(--tx-3); cursor:pointer; padding:2px 6px; font-size:16px; line-height:1; }
 .hl-del:hover { color:var(--dang); }
-.hl-add { display:grid; grid-template-columns:1fr 1fr 2fr auto; gap:12px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); align-items:end; }
+.hl-add { display:grid; grid-template-columns:minmax(160px,1fr) minmax(160px,1fr) minmax(0,2fr) auto; gap:12px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); align-items:end; }
 .hl-field { display:flex; flex-direction:column; gap:4px; }
 .hl-field-grow { min-width:0; }
 .hl-field label { font-size:11px; font-weight:700; color:var(--tx-2); }
@@ -209,7 +209,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .plan-head { align-items:flex-start; margin-bottom:var(--s4); gap:var(--s4); flex-wrap:wrap; }
 .plan-head-l { display:flex; flex-direction:column; gap:16px; min-width:0; }
 .plan-head .set-title-row { min-height:36px; }
-.plan-head .corner-tabs { margin-bottom:0; }
 .head-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .plan-empty { color:var(--tx-3); font-size:13px; padding:var(--s3) 0; }
 .set-rule-field .help-q, .ce-adjust-row .help-q { margin-left:var(--s2); }
@@ -270,8 +269,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .pt-type-opt.active { background:var(--bg-base); color:var(--tx-1); box-shadow:0 1px 2px rgba(16,24,40,.12); }
 .pill { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:400; padding:3px 9px; border-radius:var(--r-pill); line-height:1.5; }
 .pill-neutral { background:var(--bg-base-3); color:var(--tx-2); }
-.pill-ok { background:var(--ok-soft); color:var(--ok-tx); }
-.pill-dang { background:var(--dang-soft); color:var(--dang-tx); }
 .avatar { width:34px; height:34px; min-width:34px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#0B5A3A; background:#EAF0F8; flex-shrink:0; line-height:1; }
 .tbl { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
 .tbl th { background:var(--bg-base-2); color:var(--tx-2); font-size:11px; font-weight:700; text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); }
@@ -320,10 +317,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth thead th.c-agent, .mth tr.evt-row th.evt-row-label, .mth-group td.mth-group-lbl, .mth tr.blk td.c-agent { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; padding-left:12px; }
 .lbl-s { display:none; }
 .ag-txt { display:flex; flex-direction:column; line-height:1.3; min-width:0; }
-.cnr-breakdown { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 2px; padding-left:2px; }
-.cnr-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:var(--r-sm); background:var(--bg-base-2); border:1px solid var(--line); font-size:11px; }
-.cnr-chip-code { font-weight:700; color:var(--tx-2); }
-.cnr-chip-n { font-weight:700; color:var(--accent-strong); }
 .sh-half { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:25px; border-radius:3px; overflow:hidden; font-size:10px; font-weight:700; z-index:0; }
 .sh-half::after { content:""; position:absolute; inset:0; z-index:0; background:repeating-linear-gradient(135deg,#E9EAEE 0 4px,#F3F4F6 4px 8px); }
 .sh-half-pm::after { clip-path:polygon(0 0, 0 100%, 100% 100%); }
@@ -521,8 +514,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 #btn-forecast:disabled::before,
 #btn-forecast:disabled::after { animation-duration:1.1s; opacity:1; }
 .ai-star { animation:aiPulse 2.6s ease-in-out infinite; }
-.trend-box { display:flex; align-items:flex-start; gap:var(--s3); padding:var(--s3) var(--s4); background:var(--bg-base-2); border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:var(--s4); }
-.trend-txt { font-size:13px; color:var(--tx-2); line-height:1.45; }
 .tone-picker { display:flex; gap:var(--s2); flex-wrap:wrap; }
 .tone-chip { width:30px; height:30px; border-radius:5px; cursor:pointer; border:2px solid transparent; font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
 .tone-chip:hover { transform:translateY(-1px); }
@@ -532,7 +523,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tr-leg { display:inline-flex; align-items:center; gap:6px; }
 .tr-leg i { width:12px; height:12px; border-radius:3px; border:1px solid; }
 .tr-leg b { color:var(--tx-1); }
-.tr-leg-total { margin-left:auto; }
 .tr-chart { display:flex; align-items:flex-end; gap:4px; height:180px; padding:0 0 18px; margin-bottom:var(--s4); border-bottom:1px solid var(--line); }
 .tr-col { flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; position:relative; }
 .tr-stack { flex:1; width:100%; max-width:26px; display:flex; flex-direction:column-reverse; }
@@ -543,8 +533,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tr-table input { width:90px; }
 .tr-table input.is-manual, .tr-table td.is-manual { color:var(--brand); font-weight:700; }
 .tr-table tr.is-cur td { background:var(--bg-base-2); }
-.tr-tabs { margin-bottom:18px; }
-.tr-dot { display:inline-block; width:10px; height:10px; border-radius:3px; border:1px solid; margin-right:6px; vertical-align:-1px; }
+.tr-dot { display:inline-block; width:10px; height:10px; border-radius:3px; border:1px solid; }
 .tr-leg small { color:var(--tx-3); }
 .tr-ly { font-size:10px; color:var(--tx-3); text-align:center; margin-top:5px; }
 
@@ -552,7 +541,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tr-day { border:1px solid var(--line); border-radius:5px; padding:10px; background:var(--bg-base-2); }
 .tr-day.is-manual { border-color:#8CBFA5; background:#ECF5F0; }
 .tr-day.is-closed { background:var(--bg-base-3); border-style:dashed; opacity:.75; }
-.tr-closed { height:30px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--tx-3); text-transform:uppercase; }
 .tr-day-h { font-size:11px; font-weight:700; color:var(--tx-2); margin-bottom:7px; text-align:center; }
 .tr-day input { width:100%; height:32px; text-align:center; font-size:13px; padding:0 4px; }
 .spin { width:14px; height:14px; border-radius:50%; flex-shrink:0; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spinner .7s linear infinite; display:inline-block; }
@@ -576,11 +564,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-reset .ce-lbl { font-size:11px; color:var(--tx-2); }
 .ce-sep { height:1px; background:var(--line); margin:var(--s2) 0; }
 .ae-fixed-note { font-size:11px; color:var(--tx-3); line-height:1.4; display:block; }
-.corner-tabs { display:flex; gap:0; flex-wrap:wrap; margin-bottom:0; width:fit-content; border-radius:6px; padding:3px; background:#EAF0F6; }
-.corner-tabs:empty { display:none; }
-.corner-tab { height:30px; padding:0 14px; border:0; background:transparent; border-radius:4px; font-size:12px; font-weight:400; color:var(--tx-2); }
-.corner-tab:hover { background:var(--bg-base-3); }
-.corner-tab.active { background:var(--bg-base); color:var(--brand); font-weight:700; }
 button { cursor:pointer; }
 button:disabled { cursor:default; opacity:.55; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
@@ -604,12 +587,27 @@ textarea { resize:vertical; line-height:1.5; }
 .settings-tabs { display:flex; gap:22px; overflow-x:auto; flex-wrap:nowrap; border-bottom:1px solid var(--line); margin-bottom:20px; }
 .settings-tabs button { flex-shrink:0; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--tx-2); font-size:12px; padding:0 0 12px; min-height:40px; }
 .settings-tabs button.active { color:var(--brand); border-bottom-color:var(--brand); font-weight:700; }
+.traffic-tabs button { display:inline-flex; align-items:center; gap:7px; min-height:44px; }
+.traffic-tabs .tr-dot { flex-shrink:0; }
+.task-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:24px; margin:4px 0 12px; }
+.task-summary-item { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; padding:7px 0; border-bottom:1px solid var(--line); }
+.task-summary-name { display:flex; align-items:center; gap:8px; min-width:0; font-size:12px; color:var(--tx-2); }
+.task-summary-name i { width:10px; height:10px; flex-shrink:0; border:1px solid; border-radius:3px; }
+.task-summary-value { font-size:14px; font-weight:700; color:var(--tx-1); font-variant-numeric:tabular-nums; }
+@media (max-width:600px) { .task-summary { grid-template-columns:1fr; } .task-summary-item { min-height:40px; }
+  .pool-agent { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 8px; padding:7px 0; }
+  .pa-name { grid-column:1; grid-row:1; overflow-wrap:anywhere; }
+  .pa-meta { display:contents; }
+  .pa-role { grid-column:1; grid-row:2; font-weight:400; }
+  .pa-shift { grid-column:2; grid-row:1 / span 2; align-self:center; }
+}
 .dash-col .card { margin:0; }
 .metric-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-bottom:18px; }
 .metric-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:22px; min-height:102px; background:var(--bg-base); border:1px solid var(--line); border-radius:8px; }
 .metric-card span { font-size:13px; color:var(--tx-2); }
 .metric-card strong { font-size:32px; color:#2F7D58; font-weight:700; line-height:1.1; }
 .hl-add .dp-btn, .hl-add input[type=text] { width:100%; min-width:0; height:36px; }
+.hl-add .dp-btn { white-space:nowrap; }
 .mini-empty, .pool-empty { font-size:12px; color:var(--tx-2); padding:8px 0; }
 .mth th.c-day.is-today, .mth td.c-day.is-today { background:#E4F1EA; }
 .mth tbody tr:hover td.is-today { background:#E4F1EA; }
@@ -1201,7 +1199,15 @@ function trimLogo(img) {
 
 <div id="status-bar"><span id="status-sign">© Roman Inc.</span></div>
 
-<script>async function cscSaveTaskRange(st, start, end, name) {
+<script>function cscLiveTasks(ds) {
+  var rt = tasksInOrder().filter(function(t) { return t.is_realtime && !t.is_filler; });
+  var active = rt.filter(function(t) {
+    return (cscVol[ds] && cscVol[ds][t.name] && cscVol[ds][t.name].total > 0)
+      || forecastMonth(t,+ds.slice(0,4),+ds.slice(5,7)) > 0;
+  });
+  return active.length ? active : rt;
+}
+async function cscSaveTaskRange(st, start, end, name) {
   var row=intradayExport&&intradayExport.rows.find(function(r){return r.agentId===st.agentId;}),task=tasks.find(function(t){return t.name===name;}),dh=dayHoursFor(currentIntradayDate);
   if (!row || !task || !agentCanDo(st.agentId,task) || !(end>start) || start<st.smin || end>st.emin || row.blocks.some(function(b){return start<(b.start+b.dur)*60-.01&&end>b.start*60+.01;}) || task.is_realtime&&(start<dh.open*60||end>dh.close*60) || task.morning_only&&end>720) { showToast('Choose available times inside the shift','error');return false; }
   var map={},lo=Math.min(start,st.segS),hi=Math.max(end,st.segE);
@@ -1287,8 +1293,6 @@ function computeIntradayDay(ds, dayPlan, carry, state) {
   T1 = Math.ceil(Math.max(T1, closeH));
   var span = T1 - T0;
 
-  function pct(h) { return ((h - T0) / span) * 100; }
-  function wpct(h) { return (h / span) * 100; }
   var curve = (regionSettings && regionSettings.hourly_curve) || null;
   var breaks = (regulations.breaks || []);
   var lunch = breaks.find(function(b) { return /lunch|dej/i.test(b.name); }) || breaks[0] || null;
@@ -1739,8 +1743,6 @@ let intradayOverrides = {};
 let addedMissions = {};
 let dismissedReinf = {};
 let currentRegionId    = null;
-let storeCorners         = [];
-let currentCornerView    = null;
 let cornerTrafficMonthly = {};
 let currentRegionName  = '';
 let regionHighlights   = [];
@@ -2009,11 +2011,10 @@ async function onRegionChange() {
     if (typeof renderTraffic === 'function') renderTraffic();
       return;
   }
-  closeExportMenu(); closeMissionMenu(); closeCellEditor();
+  closeExportMenu(); closeMissionMenu(); closeCellEditor(); closeDayOpenPopup(); closeLeavePopup(); closeColorPop(); closeDatePop();
   var sid = currentRegionId;
   cscSavedDays = {}; cscIntradayDays = {}; cscCarryCache = {}; cscTrafficFrom = ""; cscContextRegion = null;
   taskOverrides = {}; intradayOverrides = {}; addedMissions = {}; intradayExport = null; trafficYearLoaded = null;
-  currentCornerView = null;
   planningEventsLoadSeq++;
   planningEvents = [];
   closeEventEditor();
@@ -2197,13 +2198,14 @@ async function toggleDayOpen(cb) {
   }
   if (currentRegionId) {
     queueRegionSave();
-    renderMonthlyPlanning();
+    await refreshTraffic();
+    renderCalendar();
   }
 }
 function snapshotRegionSettings(regionId) {
   var ss = regionSettings || REGION_SETTINGS_DEFAULT;
   return { region_id: regionId, min_opening: ss.min_opening, min_closing: ss.min_closing,
-           call_occupancy: ss.call_occupancy, updated_at: new Date().toISOString() };
+           closing_ratio: ss.closing_ratio, call_occupancy: ss.call_occupancy, updated_at: new Date().toISOString() };
 }
 function regulationRows(storeId) {
   var r = regulations;
@@ -2257,11 +2259,13 @@ async function drainSettingsJobs() {
   }
 }
 
-function saveRegulations() {
+async function saveRegulations() {
   if (!currentRegionId) { showToast('Select a region first', 'error'); return; }
+  var beforeHours = JSON.stringify(regulations.day_hours);
   if (!applyRegulationsForm()) return;
   queueRegionSave();
-  renderMonthlyPlanning();
+  if (beforeHours !== JSON.stringify(regulations.day_hours)) { await refreshTraffic(); renderCalendar(); }
+  else renderMonthlyPlanning();
 }
 function applyRegulationsForm() {
   function num(id, parse) { var el = document.getElementById(id); return el ? parse(el.value) : NaN; }
@@ -2273,6 +2277,7 @@ function applyRegulationsForm() {
   var wh    = num('reg-weekly-hours', parseFloat);
   var mo    = num('thr-open',  function(v){ return parseInt(v, 10); });
   var mc    = num('thr-close', function(v){ return parseInt(v, 10); });
+  var ratio = num('thr-ratio', parseFloat);
   var occ   = num('thr-occ', function(v){ return parseInt(v, 10); });
   var dayHours = {}, hoursOk = true;
   DAY_KEYS.forEach(function(k) {
@@ -2307,6 +2312,7 @@ function applyRegulationsForm() {
   if (!regionSettings) regionSettings = {};
   if (document.getElementById('thr-open'))  regionSettings.min_opening   = (isNaN(mo) || mo < 0) ? 1 : mo;
   if (document.getElementById('thr-close')) regionSettings.min_closing   = (isNaN(mc) || mc < 0) ? 1 : mc;
+  if (document.getElementById('thr-ratio')) regionSettings.closing_ratio = isNaN(ratio) ? 0.70 : Math.max(0,Math.min(100,ratio)) / 100;
   if (document.getElementById('thr-occ')) regionSettings.call_occupancy = (isNaN(occ) || occ < 30 || occ > 100) ? 0.75 : occ / 100;
   Object.keys(dayHours).forEach(function(k) { regulations.day_hours[k] = dayHours[k]; });
   regulations.breaks = newBreaks;
@@ -2323,11 +2329,12 @@ var SETTINGS_HELP = {
       'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract. The lunch break is not counted.',
       'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.',
       'Opening minimum and Closing minimum: how many people must be there, at least, during the first hour and the last hour of the day.',
+      'Late shifts target: the share of client advisors in the later half of the shift list. The middle shift counts as late when the list has an odd number of shifts. Manual and fixed shifts count toward the target. Minima, skills and rest take precedence.',
       'Call occupancy target: calls arrive in waves, so nobody can answer calls 100% of the time. At 75%, CAST puts enough people on the lines for each of them to be busy about 45 minutes per hour.'],
     important: 'Changes are saved automatically. Ask HR if you are not sure about a legal number.' },
   hours: { n: 2, title: 'Operating hours',
     sub: 'The days and hours your center is open to clients.',
-    what: 'Tell CAST when your center is open. Nobody will be planned when the center is closed. Calls and chats are only handled during opening hours.',
+    what: 'Tell CAST when your center is open. Calls and chats are only handled during opening hours. After changing opening days or hours, use Recalculate from today in the planning menu to update the saved roster. Past days and manual changes are kept.',
     warn: null,
     steps: [
       'For each day, use the switch to set the center Open or Closed.',
@@ -2735,6 +2742,8 @@ function renderRegulations() {
         rrow('Closing minimum', 'How many advisors are needed at minimum during the last hour',
           '<input type="number" id="thr-close" class="set-rule-input" value="' + ((regionSettings && regionSettings.min_closing != null) ? regionSettings.min_closing : 1) + '" min="0" max="20" step="1">', 'CA') +
 
+        rrow('Late shifts target', 'Share of client advisors in the later half of the shift list. Opening and closing minima remain separate',
+          '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((regionSettings && regionSettings.closing_ratio != null) ? regionSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="1">', '%') +
         rrow('Call occupancy target', 'Share of time an advisor on calls or chats is busy. Lower means more people on the lines',
           '<input type="number" id="thr-occ" class="set-rule-input" value="' + Math.round((regionSettings.call_occupancy || 0.75) * 100) + '" min="30" max="100" step="5">', '%') +
       '</div>' + helpOverlayHtml('labor') +
@@ -2859,7 +2868,6 @@ async function loadWeekData() {
     if (ra !== rb) return ra - rb;
     return (a.last_name || '').localeCompare(b.last_name || '');
   });
-  storeCorners = [];
   cornerTrafficMonthly = {};
   availLoaded = null;
   await loadTasksAndTags();
@@ -3111,7 +3119,7 @@ function timeInputToMin(v) {
   return h * 60 + mn;
 }
 var regionSettings = null;
-var REGION_SETTINGS_DEFAULT = { min_opening: 1, min_closing: 1, call_occupancy: 0.75, sunday_single_shift: false };
+var REGION_SETTINGS_DEFAULT = { min_opening: 1, min_closing: 1, closing_ratio: 0.70, call_occupancy: 0.75, sunday_single_shift: false };
 async function loadRegionSettings() {
   var sid = currentRegionId;
   regionSettings = Object.assign({}, REGION_SETTINGS_DEFAULT);
@@ -3119,7 +3127,7 @@ async function loadRegionSettings() {
   var res = await sb.from('csc_settings').select('*').eq('region_id', currentRegionId);
   if (sid !== currentRegionId) return;
   if (res.error || !res.data || !res.data.length) return;
-  ['min_opening', 'min_closing', 'call_occupancy'].forEach(function(k) {
+  ['min_opening', 'min_closing', 'closing_ratio', 'call_occupancy'].forEach(function(k) {
     if (res.data[0][k] != null) regionSettings[k] = res.data[0][k];
   });
 }
@@ -3384,20 +3392,20 @@ function hourShares(t, ds) {
 }
 async function loadTraffic(year) {
   var regionId = currentRegionId, seq = ++trafficLoadSeq;
-  if (!regionId) { trafficDaily = {}; cscVol = {}; cscFc = {}; trafficYearLoaded = null; return; }
-  if (!(await loadHistory(regionId, seq))) return;
+  if (!regionId) { trafficDaily = {}; cscVol = {}; cscFc = {}; trafficYearLoaded = null; return false; }
+  if (!(await loadHistory(regionId, seq))) return false;
   var known = Object.keys(cscSavedDays).sort()[0], base = Math.min(year,monthlyRef.getFullYear()) + '-01-01';
   var first = addDaysStr(known && known < base ? known : base, -7), lastDs = Math.max(year,monthlyRef.getFullYear()) + '-12-31';
   var mm = await sb.from('csc_traffic_monthly').select('*').eq('region_id', regionId).gte('year', +first.slice(0, 4)).lte('year', +lastDs.slice(0,4));
   var dd = { data: [], error: null };
   for (var page = 0; ; page++) {
     var part = await sb.from('csc_traffic_daily').select('*').eq('region_id',regionId).gte('date',first).lte('date',lastDs).order('date').order('task').range(page*1000,page*1000+999);
-    if (seq !== trafficLoadSeq || regionId !== currentRegionId) return;
+    if (seq !== trafficLoadSeq || regionId !== currentRegionId) return false;
     if (part.error) { dd.error = part.error; break; }
     dd.data = dd.data.concat(part.data || []); if (!part.data || part.data.length < 1000) break;
   }
-  if (seq !== trafficLoadSeq || regionId !== currentRegionId) return;
-  if (mm.error || dd.error) { showToast('Traffic not loaded: ' + ((mm.error || dd.error).message || ''), 'error'); return; }
+  if (seq !== trafficLoadSeq || regionId !== currentRegionId) return false;
+  if (mm.error || dd.error) { showToast('Traffic not loaded: ' + ((mm.error || dd.error).message || ''), 'error'); return false; }
   cscManM = {}; cscManD = {}; weightMemo = {};
   (mm.data || []).forEach(function(r) { cscManM[r.year + '|' + r.month + '|' + r.task] = +r.volume; });
   (dd.data || []).forEach(function(r) { cscManD[r.date + '|' + r.task] = +r.volume; });
@@ -3408,12 +3416,12 @@ async function loadTraffic(year) {
     tasks.forEach(function(t) {
       var total = forecastDay(t, ds), hours = {}, add = function(h, v) { if (v) hours[h] = (hours[h] || 0) + v; };
       rec[t.name] = total;
-      if (open && carry[t.name]) { add(oh, carry[t.name]); carry[t.name] = 0; }
+      if (open && carry[t.name]) { add(0, carry[t.name]); carry[t.name] = 0; }
       if (total) hourShares(t, ds).forEach(function(sh, h) {
         var v = total * sh;
-        if (!v) return;
+        if (!v) return false;
         if (open && h >= oh && h < ch) add(h, v);
-        else if (t.is_realtime) return;
+        else if (t.is_realtime) return false;
         else if (open && h < oh) add(h, v);
         else carry[t.name] = (carry[t.name] || 0) + v;
       });
@@ -3430,7 +3438,7 @@ async function loadTraffic(year) {
   Object.keys(td).forEach(function(d) {
     var dh2 = dayHoursFor(d), oh2 = Math.floor(dh2.open), ch2 = Math.ceil(dh2.close);
     tasks.forEach(function(t) {
-      var v = vol[d][t.name]; if (!v) return;
+      var v = vol[d][t.name]; if (!v) return false;
       Object.keys(v.hours).forEach(function(hs) {
         var w = v.hours[hs] * (t.aht_minutes || 0);
         var i2 = +hs - span.open; if (i2 >= 0 && i2 < curve.length) curve[i2] += w;
@@ -3439,7 +3447,7 @@ async function loadTraffic(year) {
   });
   var top = Math.max.apply(null, curve.concat([1]));
   regionSettings.hourly_curve = curve.map(function(v) { return Math.round(v / top * 100); });
-  cscVol = vol; cscFc = fc; trafficDaily = td; trafficYearLoaded = year; cscTrafficFrom = first; invalidateCscPlans();
+  cscVol = vol; cscFc = fc; trafficDaily = td; trafficYearLoaded = year; cscTrafficFrom = first; invalidateCscPlans(); return true;
 }
 var eventEditorState = { id: null, cat: null };
 var eventSaving = false;
@@ -3585,8 +3593,8 @@ async function renderTraffic() {
   var ord = tasksInOrder().filter(function(t) { return !t.is_filler; });
   var cur = ord.find(function(t) { return t.name === trafficTask; });
   if (!cur) trafficTask = 'ALL';
-  var tabs = '<div class="corner-tabs tr-tabs">' + [{ name: 'ALL' }].concat(ord).map(function(t) {
-    return '<button class="corner-tab' + (t.name === trafficTask ? ' active' : '') + '" onclick="trafficPick(\'' + esc(t.name) + '\')">' +
+  var tabs = '<div class="settings-tabs traffic-tabs" role="tablist" aria-label="Traffic tasks">' + [{ name: 'ALL' }].concat(ord).map(function(t) {
+    return '<button type="button" role="tab" aria-selected="' + (t.name === trafficTask) + '" class="traffic-tab' + (t.name === trafficTask ? ' active' : '') + '" onclick="trafficPick(\'' + esc(t.name) + '\')">' +
       (t.color_bg ? '<i class="tr-dot" style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' : '') + esc(t.name === 'ALL' ? 'All tasks' : t.name) + '</button>';
   }).join('') + '</div>';
   var n = new Date(y, m, 0).getDate(), days = [];
@@ -3775,7 +3783,7 @@ function initTaskCurve(t, ds) {
   draw();
 }
 async function refreshTraffic() {
-  var regionId = currentRegionId; await loadTraffic(trafficRef.getFullYear());
+  var regionId = currentRegionId; if (!(await loadTraffic(trafficRef.getFullYear()))) return false;
   if (regionId !== currentRegionId) return;
   renderMonthlyPlanning(); renderDashboard();
   if (trafficRef.getFullYear() === trafficYearLoaded) renderTraffic();
@@ -3975,7 +3983,9 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
           var nx = ord.filter(function(q) { return allowed(x, q); }).length;
           var ny = ord.filter(function(q) { return allowed(y, q); }).length;
           var kx = lastTask[x.a.id] === t.name ? 0 : 1, ky = lastTask[y.a.id] === t.name ? 0 : 1;
-          return (nx - ny) || (kx - ky) || (t.is_realtime ? (equity[x.a.id] || 0) - (equity[y.a.id] || 0) : 0) || x.a.id.localeCompare(y.a.id);
+          var held = (slotTask[x.a.id] === t.name ? 0 : 1) - (slotTask[y.a.id] === t.name ? 0 : 1);
+          var fair = t.is_realtime ? held || (equity[x.a.id] || 0) - (equity[y.a.id] || 0) : 0;
+          return (nx - ny) || fair || (kx - ky) || x.a.id.localeCompare(y.a.id);
         });
       }
       pool.slice().forEach(function(p) {
@@ -3984,15 +3994,9 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
         if (t && permitted(p.a, t, st, en)) take(p, t);
         else invalid.push({ agent: p.a.id, start: st, end: en, task: p.ov });
       });
-      // Inside a half hour, an advisor keeps the task already started
-      pool.slice().forEach(function(p) {
-        if (p.ov) return;
-        var t = slotTask[p.a.id] && ord.find(function(q) { return q.name === slotTask[p.a.id]; });
-        if (t && allowed(p, t)) take(p, t);
-      });
       // Keep the configured boundary minimum on an active line, then follow task priorities.
       if (open) {
-        var active = rt.filter(function(t) { return (vol[t.name] && vol[t.name].total > 0) || forecastMonth(t, +ds.slice(0, 4), +ds.slice(5, 7)) > 0; });
+        var active = cscLiveTasks(ds);
         var floor = 1;
         if (st < (openH + 1) * 60) floor = Math.max(floor,+regionSettings.min_opening || 0);
         if (en > (closeH - 1) * 60) floor = Math.max(floor,+regionSettings.min_closing || 0);
@@ -4010,7 +4014,7 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
       working.forEach(function(a) {
         var si = shiftInfo[a.id];
         if (st >= si.startMin && en <= si.endMin && !busy[a.id].some(function(b) { return st < b[1] && en > b[0]; })) append(a, st, en, assigned[a.id] || 'Available');
-        if (assigned[a.id]) { lastTask[a.id] = assigned[a.id]; if (!slotTask[a.id]) slotTask[a.id] = assigned[a.id]; }
+        if (assigned[a.id]) { lastTask[a.id] = assigned[a.id]; slotTask[a.id] = assigned[a.id]; }
       });
     }
   }
@@ -4487,12 +4491,15 @@ function toggleCellAdjustMode(cb) {
 async function recalcFromToday() {
   if (!currentRegionId) return;
   if (!confirm('Recalculate the planning from today? Past days and your manual changes are kept.')) return;
+  var sid = currentRegionId;
+  if (!(await loadTraffic(monthlyRef.getFullYear()))) return;
+  if (sid !== currentRegionId) return;
   if (planSnapshot) planSnapshot.writeBlocked = false;
   lastSnapSave = null;
   forceRecalc = true;
   try { renderMonthlyPlanning(); } finally { forceRecalc = false; }
   var ok = lastSnapSave ? await lastSnapSave : !!(planSnapshot && planSnapshot.ok);
-  if (ok) showToast('Planning recalculated \u2713');
+  if (ok) { invalidateCscPlans(); renderDashboard(); showToast('Planning recalculated \u2713'); }
   else if (!lastSnapSave) showToast('Planning recalculated, but it could not be saved', 'error');
 }
 function renderWithAdjustMode() {
@@ -4632,15 +4639,14 @@ function renderDashboard() {
              '<div class="bar-stack' + (ds === todayStr ? ' today' : '') + '">' + segs + '</div>' +
              '<div class="lbl">' + DOW3[d.getDay()] + '<span class="lbl-date">' + d.getDate() + '</span></div></div>';
   });
-  var dLegend = '<div class="tr-legend">' + dOrd.filter(function(t) { return wkTot[t.name] > 0; }).map(function(t) {
-    return '<span class="tr-leg"><i style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' + esc(t.name) + '<b>' + fmtVol(wkTot[t.name]) + '</b></span>';
+  var dLegend = '<div class="task-summary" aria-label="Weekly contacts by task">' + dOrd.filter(function(t) { return wkTot[t.name] > 0; }).map(function(t) {
+    return '<div class="task-summary-item"><span class="task-summary-name"><i aria-hidden="true" style="background:' + t.color_bg + ';border-color:' + t.color_text + '"></i>' + esc(t.name) + '</span> <b class="task-summary-value">' + fmtVol(wkTot[t.name]) + '</b></div>';
   }).join('') + '</div>';
   var poolAgents = { mgmt:[], sales:[], stock:[] };
   var todayInWeek = days.some(function(d){ return toDateStr(d) === todayStr; });
   var presDs = todayInWeek ? todayStr : toDateStr(days[0]);
   var presLabel = todayInWeek ? 'today' : DOW3[days[0].getDay()];
   var res = monthlyResult[presDs];
-  var cornerPresence = {};
   if (res) {
     agents.forEach(function(a) {
       var r = res[a.id];
@@ -5376,23 +5382,35 @@ function renderMonthlyPlanning() {
         }
         if (!list.length) return;
       }
-      var mid = (dh.open + dh.close) / 2;
-      function avgCurve(fromH, toH) {
-        if (!curveArr || !curveArr.length) return 1;
-        var sum = 0, n = 0;
-        for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
-          var ci = hourlyCurveIndex(h * 60);
-          if (ci >= 0 && ci < curveArr.length) { sum += curveArr[ci]; n++; }
-        }
-        return n ? sum / n : 1;
-      }
       var frozen = d.past;
 
       var minOpen  = frozen ? 1 : ((regionSettings && regionSettings.min_opening != null) ? regionSettings.min_opening : 1);
       var minClose = frozen ? 1 : ((regionSettings && regionSettings.min_closing != null) ? regionSettings.min_closing : 1);
       function restOk(a, s) { return !s || restAllows(a, d.ds, s.code); }
+      // Manual shifts count toward the target and are never reassigned.
+      list = list.filter(function(a) {
+        var ov = (planningOverrides[a.id] || {})[d.ds];
+        if (!ov) return true;
+        plan[a.id] = ov; return false;
+      });
       // Early and late halves of the shift list (middle shift goes late)
       var byStart = grid.slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
+      var halfAt = Math.floor(byStart.length / 2), isLate = {};
+      byStart.forEach(function(s,k) { isLate[s.code] = byStart.length > 1 && k >= halfAt; });
+      var fixedProduction = Object.keys(plan).filter(function(id) {
+        var a = agents.find(function(x) { return x.id === id; });
+        return a && poolOf(a) === 'sales' && workHoursOf(a,d.ds,{code:plan[id]});
+      });
+      var nTotal = list.length + fixedProduction.length;
+      var ratio = Math.max(0,Math.min(1,regionSettings.closing_ratio == null ? 0.70 : +regionSettings.closing_ratio));
+      var nLate = byStart.length > 1 ? Math.round(nTotal * ratio) : 0;
+      var left = { early:nTotal-nLate, late:nLate };
+      fixedProduction.forEach(function(id) {
+        var a = agents.find(function(x) { return x.id === id; }), wh = workHoursOf(a,d.ds,{code:plan[id]});
+        var late = isLate[plan[id]] || (plan[id] === 'PT' && byStart.length > 1 && wh.start >= byStart[halfAt].startMin);
+        left[late ? 'late' : 'early']--;
+      });
+      function roomFor(s) { return left[isLate[s.code] ? 'late' : 'early'] > 0; }
       // Hourly traffic of the day, in 15 min slots
       var hm = dayMinutes(d.ds), slots = [];
       for (var tm = hm.open; tm < hm.close; tm += 15) {
@@ -5429,19 +5447,21 @@ function renderMonthlyPlanning() {
       function place(a, s) {
         plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start:s.startMin,end:s.endMin,agentId:a.id });
         shiftUse[s.code] = use(s) + 1;
+        left[isLate[s.code] ? 'late' : 'early']--;
         pool.splice(pool.indexOf(a), 1);
       }
       // Hard needs first: someone for the first hour, someone for the last hour
       function cover(key, need) {
-        var have = placed.filter(function(w) { var ag=agents.find(function(a){return a.id===w.agentId;}); return ag && poolOf(ag)!=='mgmt' && tasks.some(function(t){return t.is_realtime && agentCanDo(ag.id,t);}) && coverOfHours(w.start,w.end,hm)[key]; }).length;
+        var have = placed.filter(function(w) { var ag=agents.find(function(a){return a.id===w.agentId;}); return ag && poolOf(ag)!=='mgmt' && cscLiveTasks(d.ds).some(function(t){return agentCanDo(ag.id,t);}) && coverOfHours(w.start,w.end,hm)[key]; }).length;
         var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
         while (have < need && shifts.length) {
           var done = false;
           for (var k = 0; k < pool.length && !done; k++) {
-            if (!tasks.some(function(t) { return t.is_realtime && agentCanDo(pool[k].id,t); })) continue;
+            if (!cscLiveTasks(d.ds).some(function(t) { return agentCanDo(pool[k].id,t); })) continue;
             var ok = shifts.filter(function(s) { return restOk(pool[k], s); });
             if (!ok.length) continue;
-            place(pool[k], best(ok)); have++; done = true;
+            var inRoom = ok.filter(roomFor);
+            place(pool[k], best(inRoom.length ? inRoom : ok)); have++; done = true;
           }
           if (!done) break;
         }
@@ -5453,7 +5473,8 @@ function renderMonthlyPlanning() {
         var a = pool[0];
         var okS = byStart.filter(function(s) { return restOk(a, s); });
         if (!okS.length) okS = byStart;
-        place(a, best(okS));
+        var inRoom = okS.filter(roomFor);
+        place(a, best(inRoom.length ? inRoom : okS));
       }
       list.forEach(function(a) {
         var cur = grid.find(function(s) { return s.code === plan[a.id]; });
@@ -5556,7 +5577,7 @@ function renderMonthlyPlanning() {
             var wh = workHoursOf(a, d.ds, res);
             if (!wh) return;
             var cv = coverOfHours(wh.start, wh.end, hm);
-            var qualified=poolOf(a)!=='mgmt'&&tasks.some(function(t){return t.is_realtime&&agentCanDo(a.id,t);});
+            var qualified=poolOf(a)!=='mgmt'&&cscLiveTasks(d.ds).some(function(t){return agentCanDo(a.id,t);});
             if (qualified&&cv.open) o++; if (qualified&&cv.close) c++;
             hours.push(wh);
           });
@@ -5616,7 +5637,9 @@ function renderMonthlyPlanning() {
   var newSnap = {};
   function autoLayer(agent, day) {
     var saved = (snapPlan[day.ds] || {})[agent.id];
-    var res = (saved && (!recalcFromToday || day.ds < todayDs)) ? Object.assign({}, saved) : autoFor(agent, day);
+    var unopened = snapLoaded && Object.keys(snapPlan).length && !snapPlan[day.ds] && !recalcFromToday;
+    var res = (saved && (!recalcFromToday || day.ds < todayDs)) ? Object.assign({}, saved)
+      : unopened ? { code:'OFF', special:'off' } : autoFor(agent, day);
     (newSnap[day.ds] = newSnap[day.ds] || {})[agent.id] = res;
     return res;
   }
@@ -6146,18 +6169,16 @@ function planningFilePart(value) {
 function sendInfo(view) {
   var storeName = currentRegionName || 'Store';
   var store = planningFilePart(storeName);
-  var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
-  var scopeSuffix = currentCornerView ? '_' + planningFilePart(scope) : '';
   if (view === 'monthly') {
     var y = monthlyRef.getFullYear(), m = monthlyRef.getMonth() + 1;
-    return { storeName: storeName, kind: 'Monthly', scope: scope, scopeIsCorner:!!currentCornerView,
+    return { storeName: storeName, kind: 'Monthly', 
              period: new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month:'long', year:'numeric' }), bodyId: 'planning-monthly-body',
-             file: 'CAST_' + store + '_Monthly_' + y + '-' + String(m).padStart(2, '0') + scopeSuffix + '.pdf' };
+             file: 'CAST_' + store + '_Monthly_' + y + '-' + String(m).padStart(2, '0') + '.pdf' };
   }
   var ds = currentIntradayDate || toDateStr(new Date());
-  return { storeName: storeName, kind: 'Intraday', scope: scope, scopeIsCorner:!!currentCornerView,
+  return { storeName: storeName, kind: 'Intraday', 
            period: formatDateDisplay(ds), bodyId: 'planning-intraday-body',
-           file: 'CAST_' + store + '_Intraday_' + ds + scopeSuffix + '.pdf' };
+           file: 'CAST_' + store + '_Intraday_' + ds + '.pdf' };
 }
 // Same content as the PDF export, landscape A4; too tall = more pages, header repeated
 async function buildPlanningPdf(view) {
@@ -6165,7 +6186,7 @@ async function buildPlanningPdf(view) {
   var info = sendInfo(view);
   var box = document.createElement('div');
   box.className = 'pdf-shot' + (view === 'intraday' ? ' is-intraday' : '');
-  box.innerHTML = '<div class="pdf-shot-head">' + pdfBrandHtml() + '<div style="text-align:right"><b>' + esc(info.storeName + ' - ' + info.kind + ' - ' + planningScopeLabel(info.scope, info.scopeIsCorner)) + '</b><br><span>' + esc(info.period) + '</span></div></div>' +
+  box.innerHTML = '<div class="pdf-shot-head">' + pdfBrandHtml() + '<div style="text-align:right"><b>' + esc(info.storeName + ' - ' + info.kind + ' - ' + 'All') + '</b><br><span>' + esc(info.period) + '</span></div></div>' +
     '<div class="card">' +
     planningExportHtml(view).replace(/ id="[^"]*"/g, '') + '</div>';
   var exportDays = view === 'monthly' ? new Date(monthlyRef.getFullYear(), monthlyRef.getMonth() + 1, 0).getDate() : 0;
@@ -6223,8 +6244,8 @@ async function buildPlanningPdf(view) {
   } finally { box.remove(); }
 }
 function sendText(info) { return fill("Hello, please find attached the team's planning for {period}.", { period: info.period }); }
-function planningScopeLabel(scope, isCorner) { return isCorner ? scope : 'All'; }
-function sendSubject(info) { return fill('Planning {store} - {scope} - {period}', { store: info.storeName, scope: planningScopeLabel(info.scope, info.scopeIsCorner), period: info.period }); }
+
+function sendSubject(info) { return fill('Planning {store} - {scope} - {period}', { store: info.storeName, scope: 'All', period: info.period }); }
 // Send menu: PDF is prepared first, so the share window opens right away
 async function openSendMenu(ev, view) {
   ev.stopPropagation();
@@ -6286,15 +6307,13 @@ async function openSendMenu(ev, view) {
 }
 function exportMonthlyPDF() {
   var mn = monthlyRef.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
-  var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   // Monthly planning and coverage, fitted to the page width.
   printableExport('<div class="card">' + planningExportHtml('monthly') + '</div>',
-    fill('Monthly - {scope} - {period}', { scope: planningScopeLabel(scope, !!currentCornerView), period: mn }), true);
+    fill('Monthly - {scope} - {period}', { scope: 'All', period: mn }), true);
 }
 function exportIntradayPDF() {
-  var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   printableExport('<div class="card">' + planningExportHtml('intraday') + '</div>',
-    fill('Intraday - {scope} - {date}', { scope: planningScopeLabel(scope, !!currentCornerView), date: currentIntradayDate ? formatDateDisplay(currentIntradayDate) : '' }));
+    fill('Intraday - {scope} - {date}', { scope: 'All', date: currentIntradayDate ? formatDateDisplay(currentIntradayDate) : '' }));
 }
 // Download menu: Excel or PDF
 function openExportMenu(ev, view) {
@@ -6335,10 +6354,7 @@ function onExportMenuKey(ev) {
   closeExportMenu();
   if (trigger) trigger.focus({ preventScroll:true });
 }
-function cornerCodeById(cid) {
-  for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === cid) return storeCorners[i].code;
-  return 'All';
-}
+
 // xlsx-js-style 1.2.0 does not serialize !freeze, !panes or !pageSetup.
 // Use its bundled ZIP writer to insert those worksheet properties.
 function planningWorkbookBytes(wb) {
@@ -6504,12 +6520,7 @@ function exportMonthly() {
         var disp = (res && res.corner) ? (res.corner + '\n' + code) : code;
         if (d.closure && !code) { r.push(cell('-',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
         var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
-        var hideCell = currentCornerView && storeCorners.length > 1 && poolOf(a) === 'sales' &&
-          res && !res.special && code && code !== 'OFF' && code !== 'A' &&
-          (res.corner || cornerCodeById(a.home_corner_id)) !== cornerCodeById(currentCornerView);
-        if (hideCell) {
-          r.push(cell('',{grid:true}));
-        } else if (res && res.half) {
+        if (res && res.half) {
           r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,diag:(res.half==='pm')?'up':'down',wrap:!!(res&&res.corner)}));
         } else {
           r.push(cell(disp,{bg:t.bg,tx:t.tx,bold:true,grid:true,sz:(res&&res.corner)?8:10,wrap:!!(res&&res.corner)}));
@@ -7047,16 +7058,19 @@ function closeDayOpenPopup(){
   document.removeEventListener('click', closeDayOpenOnOutside);
 }
 async function applyDayOpen(ds, isOpen) {
+  var sid = currentRegionId;
   var row = { region_id: currentRegionId, date: ds, is_open: isOpen };
   if (calHours[ds]) { row.open_time = calHours[ds].open; row.close_time = calHours[ds].close; }
   var { error } = await sb.from('calendar_overrides').upsert([row], { onConflict: 'region_id,date' });
   if (error) { showToast('Failed: '+error.message, 'error'); return; }
+  if (sid !== currentRegionId) return;
   calOverrides[ds] = isOpen;
   showToast(isOpen ? 'Marked open \u2713' : 'Marked closed \u2713');
   renderCalendar();
-  renderMonthlyPlanning();
+  await refreshTraffic();
 }
 async function saveDayHours() {
+  var sid = currentRegionId;
   var ds = dayOpenPickerDate;
   if (!ds) return;
   var o = parseFloat(document.getElementById('dayopen-open-time').value);
@@ -7065,23 +7079,26 @@ async function saveDayHours() {
   var row = { region_id: currentRegionId, date: ds, is_open: (calOverrides[ds] === true), open_time: o, close_time: c };
   var { error } = await sb.from('calendar_overrides').upsert([row], { onConflict: 'region_id,date' });
   if (error) { showToast('Failed: '+error.message, 'error'); return; }
+  if (sid !== currentRegionId) return;
   calHours[ds] = { open: o, close: c };
   showToast('Saved \u2713');
-  renderMonthlyPlanning();
+  await refreshTraffic();
 }
 async function clearDayHours() {
+  var sid = currentRegionId;
   var ds = dayOpenPickerDate;
   if (!ds) return;
   var row = { region_id: currentRegionId, date: ds, is_open: (calOverrides[ds] === true), open_time: null, close_time: null };
   var { error } = await sb.from('calendar_overrides').upsert([row], { onConflict: 'region_id,date' });
   if (error) { showToast('Failed: '+error.message, 'error'); return; }
+  if (sid !== currentRegionId) return;
   delete calHours[ds];
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
   var base = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
   document.getElementById('dayopen-open-time').value  = base.open;
   document.getElementById('dayopen-close-time').value = base.close;
   showToast('Hours reset \u2713');
-  renderMonthlyPlanning();
+  await refreshTraffic();
 }
 function toggleWeekPicker(event) {
   event.stopPropagation();
