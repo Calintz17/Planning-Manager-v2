@@ -1,79 +1,45 @@
-# CORA - Client Operations Rostering Assistant
+CAST
+CELINE Automated Scheduling Tool..
 
-Browser-based workforce planning tool. Two modules, same idea : kill the manual Excel scheduling and let an engine build the plan from workload, agent availability, and local rules.
+Browser-based workforce planning. Two modules, same idea: kill the manual Excel scheduling and build a plan from workload, available people and local rules.
+The engine plans week by week. Monthly is the view, not a monthly work quota.
 
-Two flavors :
-- **CSC** (`index.html`) - the call center module. Six global hubs : Paris, New York, Shanghai, Seoul, Tokyo, Singapore. Plans calls, chats, mails, back-office, fraud, clienteling.
-- **Retail** (`retail.html`) - the boutique module. Same engine spirit, but for store floors : sales, management, stock. Navy for retail, red for CSC, an iOS-style toggle in the footer jumps between the two.
+Retail
+- Monthly planning for sales, management and stock, with separate corners.
+- Shifts chosen against hourly traffic, with opening and closing coverage by corner.
+- Fixed or flexible part-time, absences, rest days and manual shift changes.
+- Intraday missions: morning brief, welcome, training and clienteling, plus lunch and breaks.
+- Editable traffic: Monthly > Daily > Hourly, with history and draggable hourly profiles.
+- English, Japanese, Korean, Simplified Chinese and Traditional Chinese. Translations live in i18n/.
+  
+Client Service
+- Monthly staffing based on workload: forecast volume × handling time.
+- CALL, CHAT, MAIL, BACK-OFFICE, FRAUD and CLIENTELING. Priorities, handling times, skills and colors are editable.
+- Clickable task permissions on each agent's row. Team Leaders take tasks according to their permissions.
+- Intraday tasks in 30-minute slots, around pauses and missions. Calls/chats are shared across eligible agents, with a configurable occupancy target.
+- Projected unfinished MAIL, BACK-OFFICE and FRAUD carry forward, including across months. CALL and CHAT never carry forward.
+- Traffic by task: Monthly > Daily > Hourly, historical comparisons, editable forecasts and trends. Dashboard bars split by task, with volumes and workload hours kept separate.
+- English only.
+  
+Shared tools
+- Dashboard, Monthly, Intraday, Client Advisors, Traffic, Calendar and Settings.
+- Custom shifts, opening/closing minimums, late-shift target, opening hours by day, calendar exceptions, contract rules, rest and part-time. Settings autosave.
+- Saved monthly plans stay frozen until Recalculate from today. Manual changes are preserved; Reset manual changes clears them.
+- Intraday blocks can be added, changed, deleted, moved and resized. Desktop drag controls; tap menus on mobile.
+- Download: Excel or PDF. Send: native PDF sharing when supported, otherwise a downloaded PDF and a prefilled email. The email attachment is added manually.
+Short on people? CAST does its best with what's there. No gap panels or coverage alerts. Skills stay strict; staffing targets remain subject to availability, manual choices and local rules.
 
-Each region / store has its own agents, its own traffic, its own rules, its own planning. You only ever see the scope you selected.
+Stack and files
+- Plain HTML, CSS and JavaScript: one HTML file per module.
+- Supabase: Postgres and browser API. Shared reference tables, retail_ tables for Retail and csc_ tables for CSC state and forecasts.
+- GitHub Pages hosting. Logos in logo/, Retail dictionaries in i18n/.
+- CDN libraries: supabase-js, xlsx-js-style, html2canvas and jsPDF. Public holidays use the Nager.Date API.
 
----
+- 
+Apply the matching SQL migrations, keep the pages and asset folders together, then publish over HTTPS. GitHub's web editor is enough for routine updates. Initialization scripts can reset settings; use the reviewed migrations for existing data.
+Browser uses the public anon key only. Never put service_role in the front end. No per-user authentication yet; current RLS policies are permissive. Selecting a store or region is not access control.
 
-## What it does
-
-1. You feed it the traffic (call volume for CSC, footfall for Retail), or let it auto-forecast.
-2. It looks at who's available, their working %, their skills, and the local rules.
-3. It spits out a weekly plan and an hour-by-hour intraday timeline.
-4. Not enough people ? It doesn't crash. It schedules what it has, flags the gap, and moves the unmet work to the next day. Always does its best with what's there.
-
-Tabs : Planning (Dashboard + Weekly + Intraday), Agents, Calendar, Settings, Regulations.
-
----
-
-## Tech stack
-
-no framework
-
-- **Front** : one single HTML file per module. 
-- **Back** : Supabase (Postgres + auto API). Retail tables are prefixed `retail_`
-- **Hosting** : GitHub Pages
-- **Libs** (CDN, nothing installed) : `supabase-js` to talk to the DB, `xlsx-js-style` for the Excel exports, Nager.
-
-Everything is edited through the GitHub web UI. No terminal, no local setup. 
-
-Anon public key only. `service_role` never touches the front.
-
----
-
-## Links
-
-- Repo : https://github.com/Calintz17/Planning-Manager-v2
-- Supabase : https://miawersffeosiovqdokw.supabase.co
-
----
-
-## Rules
-
-The non-obvious stuff baked into the engine.
-
-- **Never blocks.** Needs 4, has 3 ? Schedules 3, raises an alert, moves on.
-- **Strict skills / pills.** An agent only ever does tasks they're tagged for. No silent switching. Unmet work carries to the next day.
-- **Everything is weekly.** No monthly quota, that was a myth I killed. The month view is just display, the engine thinks in weeks.
-- **Presence, not gaps.** Agents open (morning) or close (afternoon), no mid-day hole. The engine picks morning vs afternoon based on where the traffic is heaviest.
-- **Rest days : exactly 2 a week.** Min and max. Placed on the quiet days.
-- **Holidays are neutral.** They don't eat rest days, they're offered on top.
-- **Absences replace a worked day**, not a rest day.
-
----
-
-## Retail specifics
-
-The retail module has its own flavor on top of the shared idea.
-
-- **Three pools** : management, sales, stock. Each ventilated week by week on the traffic.
-- **Shifts** : Opening (O), Middle (M), Closing (C), Sunday/holiday (D). Stock has its own : OS / MS / CS.
-- **70-30 closing bias.** More people on the close than the open, because that's where the traffic sits.
-- **Part-time, two kinds.** Fixed : works set contractual days and hours. Flexible (volant) : the engine spreads them on the busiest days at their % of a full week. Half a day can land in the mix, shown as a diagonal half-cell.
-- **Intraday missions** : morning brief, lunch, welcome. Drag to move, click the bar to add one, hover to remove.
-- **Excel exports** : monthly and intraday, A4-ready, colors matching the screen.
-- **Half-hour opening times** : stores can close at 19:30, not just on the hour.
-
----
-
-## Database
-
-All in Supabase, RLS on every table with an allow-all policy (single trusted internal app, no per-user auth yet). CSC tables plain, retail tables prefixed `retail_`.
-
-Core tables : regions / countries / stores (the hierarchy), agents (with `work_pct`), agent skills, availability, leave, traffic (daily + monthly), tasks, regulations, calendar overrides, planning overrides, shift config, store settings, intraday overrides, intraday missions, highlights.
-
+Links
+- Repository
+- Retail
+- Client Service
