@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v2.0.7</title>
+  <title>CAST v2.0.8</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -2343,7 +2343,7 @@ var SETTINGS_HELP = {
     important: 'Changes are saved automatically. For one special day (holiday, event), use the Calendar page instead.' },
   tasks: { n: 3, title: 'Tasks',
     sub: 'The work your team handles (calls, chats, mails, back office, fraud) and the order CAST follows to plan it.',
-    what: 'Each task is a type of work. CAST fills each half hour of the day with tasks, from the highest priority to the lowest, with the people allowed to do them.',
+    what: 'Each task is a type of work. Advisors allowed on calls or chats stay on that line all day and handle mails between calls. When calls are low, up to 75% of them switch to mail focus for one hour at least. Back office advisors follow the task priorities.',
     warn: null,
     steps: [
       'Priority: 1 is planned first. Two tasks can share the same priority.',
@@ -2399,7 +2399,7 @@ var SETTINGS_HELP = {
       'Coverage & headcount, under the planning, shows how many people are present each day.'],
     important: 'Your manual changes are always kept. "Reset manual changes" in the ⋯ menu removes all of them for this month.' },
   intraday: { n: null, title: 'Intraday planning', stepsTitle: 'How to use it',
-    what: 'The detail of one day, half hour by half hour: who works when, on which task, with breaks and missions. CAST fills every half hour with the highest priority work each person is allowed to do.',
+    what: 'The detail of one day, half hour by half hour: who works when, on which task, with breaks and missions. Advisors on calls or chats keep the same line all day, with mail focus blocks when calls are low. The line and mail focus turn from one day to the next.',
     warn: null,
     steps: [
       'Choose the day with the arrows or the date at the top right.',
@@ -3919,7 +3919,7 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
   var rt = ord.filter(function(t) { return t.is_realtime && !t.is_filler; });
   var stock = ord.filter(function(t) { return !t.is_realtime && !t.is_filler; });
   var filler = ord.filter(function(t) { return t.is_filler; });
-  var left = {}, processed = {}, invalid = [], busy = {}, manual = {}, segs = {}, equity = {};
+  var left = {}, processed = {}, invalid = [], busy = {}, manual = {}, segs = {};
   overrides = overrides || taskOverrides; missions = missions || addedMissions;
   stock.forEach(function(t) { left[t.name] = Math.max(0, (carry[t.name] || 0) + (vol[t.name] ? vol[t.name].total * t.aht_minutes : 0)); processed[t.name] = 0; });
   var t0 = 1440, t1 = 0;
@@ -3940,11 +3940,36 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
     else list.push({ s: s, e: e, task: task });
   }
   var occupancy = Math.max(0.30, Math.min(1, +regionSettings.call_occupancy || 0.75));
-  var lastTask = {}, slotTask = {};
-  // Thirty-minute task slots are cut at actual shift, pause and manual boundaries.
+  // Line of the day: an advisor stays on one line (CALL or CHAT) all day. Who goes where turns from one day to the next.
+  var live = cscLiveTasks(ds), dayN = Math.floor(Date.parse(ds + 'T12:00:00Z') / 864e5);
+  function rotate(list) {
+    list = list.slice().sort(function(x, y) { return x.id.localeCompare(y.id); });
+    var k = list.length ? dayN % list.length : 0;
+    return list.slice(k).concat(list.slice(0, k));
+  }
+  var lineAgents = rotate(working.filter(function(a) { return live.some(function(t) { return agentCanDo(a.id, t); }); }));
+  var work = {}, totalWork = 0, seats = {}, lineTask = {};
+  live.forEach(function(t) {
+    work[t.name] = 0;
+    for (var h = Math.floor(openH); h < Math.ceil(closeH); h++) work[t.name] += ((vol[t.name] && vol[t.name].hours[h]) || 0) * t.aht_minutes;
+    totalWork += work[t.name];
+  });
+  live.forEach(function(t) {
+    seats[t.name] = totalWork ? Math.round(lineAgents.length * work[t.name] / totalWork) : 0;
+    if (work[t.name] > 0 && !seats[t.name]) seats[t.name] = 1;
+  });
+  function canLive(a) { return live.filter(function(t) { return agentCanDo(a.id, t); }); }
+  lineAgents.forEach(function(a) { var c = canLive(a); if (c.length === 1) { lineTask[a.id] = c[0].name; seats[c[0].name]--; } });
+  lineAgents.forEach(function(a) {
+    if (lineTask[a.id]) return;
+    var c = canLive(a), pick = c.filter(function(t) { return seats[t.name] > 0; })[0] || c[0];
+    lineTask[a.id] = pick.name; seats[pick.name]--;
+  });
+  // Stock focus (mail): up to 75% of the line when no call comes in, none when the line is full. One hour at least.
+  var FOCUS_MIN = 60, FOCUS_SHARE = 0.75, focusOn = {}, focusDone = {}, focusEnd = {}, lastTask = {}, lastEnd = {};
+  var cuts0 = [openH * 60, closeH * 60, (openH + 1) * 60, (closeH - 1) * 60, 720];
   for (var s = Math.floor(t0 / 30) * 30; s < t1; s += 30) {
-    slotTask = {};
-    var end = Math.min(t1, s + 30), cuts = [s, end, openH * 60, closeH * 60, (openH + 1) * 60, (closeH - 1) * 60, 720];
+    var end = Math.min(t1, s + 30), cuts = cuts0.concat([s, end]);
     working.forEach(function(a) {
       var si = shiftInfo[a.id]; cuts.push(si.startMin, si.endMin);
       busy[a.id].forEach(function(b) { cuts.push(b[0], b[1]); });
@@ -3955,8 +3980,11 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
     for (var ci = 0; ci < cuts.length - 1; ci++) {
       var st = cuts[ci], en = cuts[ci + 1], minutes = en - st, h = Math.floor(st / 60), pool = [], assigned = {}, need = {};
       if (!(minutes > 0)) continue;
-      var open = st >= openH * 60 && en <= closeH * 60;
-      rt.forEach(function(t) { need[t.name] = open ? ((vol[t.name] && vol[t.name].hours[h]) || 0) * minutes / 60 * t.aht_minutes / occupancy : 0; });
+      var open = st >= openH * 60 && en <= closeH * 60, callWork = 0;
+      rt.forEach(function(t) {
+        var w = open ? ((vol[t.name] && vol[t.name].hours[h]) || 0) * minutes / 60 * t.aht_minutes : 0;
+        need[t.name] = w / occupancy; callWork += w;
+      });
       working.forEach(function(a) {
         var si = shiftInfo[a.id];
         if (st < si.startMin || en > si.endMin || busy[a.id].some(function(b) { return st < b[1] && en > b[0]; })) return;
@@ -3964,48 +3992,72 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
         pool.push({ a: a, ov: ov ? ov.task : null });
       });
       function allowed(p, t) { return permitted(p.a, t, st, en) && p.ov !== '!' + t.name; }
-      function take(p, t) {
-        assigned[p.a.id] = t.name; pool.splice(pool.indexOf(p), 1);
-        if (t.is_realtime) { need[t.name] -= minutes; equity[p.a.id] = (equity[p.a.id] || 0) + minutes; }
-        else if (!t.is_filler) {
-          var done = Math.min(minutes, stockAvailable(t)); left[t.name] -= done; processed[t.name] += done;
-        }
-      }
       function stockAvailable(t) {
         var incoming = vol[t.name] && vol[t.name].hours || {}, released = carry[t.name] || 0;
         // Work arrives through the hour, not all at once at the start of it
         Object.keys(incoming).forEach(function(hour) { var f = +hour < h ? 1 : +hour === h ? Math.min(1, (en - h * 60) / 60) : 0; released += incoming[hour] * f * t.aht_minutes; });
         return Math.max(0, Math.min(left[t.name] || 0, released - (processed[t.name] || 0)));
       }
-      function candidates(t) {
-        return pool.filter(function(p) { return allowed(p, t); }).sort(function(x, y) {
-          // Keep advisors with scarce permissions available for their only task.
-          var nx = ord.filter(function(q) { return allowed(x, q); }).length;
-          var ny = ord.filter(function(q) { return allowed(y, q); }).length;
-          var kx = lastTask[x.a.id] === t.name ? 0 : 1, ky = lastTask[y.a.id] === t.name ? 0 : 1;
-          var held = (slotTask[x.a.id] === t.name ? 0 : 1) - (slotTask[y.a.id] === t.name ? 0 : 1);
-          var fair = t.is_realtime ? held || (equity[x.a.id] || 0) - (equity[y.a.id] || 0) : 0;
-          return (nx - ny) || fair || (kx - ky) || x.a.id.localeCompare(y.a.id);
-        });
+      function doStock(t, m) { var d = Math.min(m, stockAvailable(t)); left[t.name] -= d; processed[t.name] += d; return d; }
+      function take(p, t) {
+        assigned[p.a.id] = t.name; pool.splice(pool.indexOf(p), 1);
+        if (t.is_realtime) need[t.name] -= minutes;
+        else if (!t.is_filler) doStock(t, minutes);
       }
+      function stockTask(p) { return stock.find(function(t) { return allowed(p, t) && stockAvailable(t) > 0.0001; }); }
+      // Manual choices first
       pool.slice().forEach(function(p) {
         if (!p.ov || p.ov.charAt(0) === '!') return;
         var t = ord.find(function(q) { return q.name === p.ov; });
         if (t && permitted(p.a, t, st, en)) take(p, t);
         else invalid.push({ agent: p.a.id, start: st, end: en, task: p.ov });
       });
-      // Keep the configured boundary minimum on an active line, then follow task priorities.
       if (open) {
-        var active = cscLiveTasks(ds);
-        var floor = 1;
-        if (st < (openH + 1) * 60) floor = Math.max(floor,+regionSettings.min_opening || 0);
-        if (en > (closeH - 1) * 60) floor = Math.max(floor,+regionSettings.min_closing || 0);
-        function liveCount() { return Object.keys(assigned).filter(function(id) { return rt.some(function(t) { return assigned[id] === t.name; }); }).length; }
-        while (liveCount() < floor && active.some(function(t) { var p=candidates(t)[0]; if(p)take(p,t); return !!p; })) {}
+        var linePool = pool.filter(function(p) {
+          var t = rt.find(function(q) { return q.name === lineTask[p.a.id]; });
+          return t && allowed(p, t);
+        });
+        var onLine = Object.keys(assigned).filter(function(id) { return rt.some(function(t) { return assigned[id] === t.name; }); }).length;
+        var present = linePool.length + onLine, needA = callWork / occupancy / minutes;
+        var floorN = 1;
+        if (st < (openH + 1) * 60) floorN = Math.max(floorN, +regionSettings.min_opening || 0);
+        if (en > (closeH - 1) * 60) floorN = Math.max(floorN, +regionSettings.min_closing || 0);
+        var hard = Math.max(0, present - Math.max(Math.ceil(needA - 1e-6), floorN));
+        var soft = Math.floor(present * FOCUS_SHARE * Math.max(0, 1 - needA / Math.max(1, present)) + 1e-6);
+        // Advisors already on focus stay at least one hour, then leave when the line needs them
+        // Changes happen when an advisor comes back from a break or starts the shift
+        function fresh(a) { return lastEnd[a.id] !== st; }
+        var keep = [];
+        linePool.filter(function(p) { return focusOn[p.a.id]; })
+          .sort(function(x, y) { return (fresh(x.a) - fresh(y.a)) || (focusDone[x.a.id] - focusDone[y.a.id]); })
+          .forEach(function(p) {
+            var done = focusDone[p.a.id] >= FOCUS_MIN;
+            if (!stockTask(p) || keep.length >= hard || (done && keep.length >= soft)) { focusOn[p.a.id] = false; focusEnd[p.a.id] = st; }
+            else keep.push(p);
+          });
+        lineAgents.slice().sort(function(x, y) { return fresh(y) - fresh(x); }).forEach(function(a) {
+          if (keep.length >= Math.min(soft, hard) || focusOn[a.id]) return;
+          var p = linePool.find(function(q) { return q.a === a; });
+          if (!p || shiftInfo[a.id].endMin - st < FOCUS_MIN || st - (focusEnd[a.id] == null ? -1e9 : focusEnd[a.id]) < FOCUS_MIN || !stockTask(p)) return;
+          focusOn[a.id] = true; focusDone[a.id] = 0; keep.push(p);
+        });
+        keep.forEach(function(p) {
+          var t = stockTask(p);
+          if (t) { take(p, t); focusDone[p.a.id] += minutes; } else { focusOn[p.a.id] = false; focusEnd[p.a.id] = st; }
+        });
+        // Everyone else is on the line and handles stock between calls
+        linePool.forEach(function(p) { if (pool.indexOf(p) !== -1) take(p, rt.find(function(q) { return q.name === lineTask[p.a.id]; })); });
+        var idle = Math.max(0, Object.keys(assigned).filter(function(id) { return rt.some(function(t) { return assigned[id] === t.name; }); }).length * minutes - callWork);
+        stock.forEach(function(t) {
+          if (idle > 0 && working.some(function(a) { return lineTask[a.id] && assigned[a.id] && agentCanDo(a.id, t); })) idle -= doStock(t, idle);
+        });
       }
-      ord.filter(function(t) { return !t.is_filler; }).forEach(function(t) {
-        var unmet = function() { return t.is_realtime ? need[t.name] > 0.0001 : stockAvailable(t) > 0.0001; };
-        candidates(t).forEach(function(p) { if (pool.indexOf(p) !== -1 && unmet()) take(p, t); });
+      // Back office and time outside opening hours: tasks by priority, the same task as before when possible
+      stock.forEach(function(t) {
+        pool.filter(function(p) { return allowed(p, t); }).sort(function(x, y) {
+          var nx = stock.filter(function(q) { return allowed(x, q); }).length, ny = stock.filter(function(q) { return allowed(y, q); }).length;
+          return (nx - ny) || ((lastTask[x.a.id] === t.name ? 0 : 1) - (lastTask[y.a.id] === t.name ? 0 : 1)) || x.a.id.localeCompare(y.a.id);
+        }).forEach(function(p) { if (stockAvailable(t) > 0.0001) take(p, t); });
       });
       pool.slice().forEach(function(p) {
         var t = filler.find(function(q) { return allowed(p, q); }) || ord.find(function(q) { return allowed(p, q); });
@@ -4014,7 +4066,7 @@ function cscTaskPlan(ds, working, shiftInfo, blocksFor, openH, closeH, carryIn, 
       working.forEach(function(a) {
         var si = shiftInfo[a.id];
         if (st >= si.startMin && en <= si.endMin && !busy[a.id].some(function(b) { return st < b[1] && en > b[0]; })) append(a, st, en, assigned[a.id] || 'Available');
-        if (assigned[a.id]) { lastTask[a.id] = assigned[a.id]; slotTask[a.id] = assigned[a.id]; }
+        if (assigned[a.id]) { lastTask[a.id] = assigned[a.id]; lastEnd[a.id] = en; }
       });
     }
   }
