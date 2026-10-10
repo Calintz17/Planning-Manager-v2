@@ -3,28 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.1.6</title>
+  <title>CAST v9.1.9</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
 /* CAST Retail design system V2. Visual changes only; stored model unchanged. */
-:root { /* Typographie */
-  --font:Arial, Helvetica, sans-serif; --weight-normal:400; --weight-bold:700; --tracking:normal; --leading-body:1.5; --leading-title:1.25; --leading-card:1.35; /* Surfaces */
-  --bg-app:#F5F7FA; --bg-base:#FFFFFF; --bg-base-2:#FAFBFD; --bg-base-3:#EDF2F8; --bg-nav-active:#EAF0FA; --bg-menu-hover:#F0F4FA; --bg-group:#F2F5F9; --bg-weekend:#FAFBFD; --bg-closed:#EDF2F8; --bg-today:#E7EFFC; --bg-selection:#EDF3FC; --bg-person:#EAF0F8; --bg-expander:#F1F5FB; --bg-segment:#EAF0F6; --bg-chip-active:#EEF3FB; /* Marque et texte */
-  --brand:#183C74; --brand-hover:#102F5E; --brand-soft:#EAF0FA; --brand-on:#FFFFFF; --tx-1:#17283E; --tx-2:#52647B; --tx-3:#52647B; --tx-on:#FFFFFF; --tx-person:#304D74; --tx-metric:#507BAD; --tx-curve-value:#345D8E; /* Bordures */
-  --line:#DCE3EC; --line-2:#BDC9D9; --line-row:#E8EDF3; --line-day:#EDF0F5; --line-month-row:#E6ECF3; --line-sticky:#D4DEEB; --line-hover:#B9C8DB; --line-selection:#B8CCE6; --line-manual:#91ACD2; --line-chip-active:#CBD9EC; --line-expander:#B8C7D9; --line-menu:#D4DEEB; --line-tooltip:#C5D3E4; --line-modal:#CFDAE8; --line-block:#00000016; --line-swatch:#0000001A; --line-week:#536D8E; --line-calendar-today:#88A6CE; --focus:#4A75AD; --cross-highlight:rgba(24, 60, 116, 0.045); /* Six familles de blocs */
-  --amber-bg:#F9E8B5; --amber-tx:#61470B; --teal-bg:#CCECE4; --teal-tx:#13574B; --blue-bg:#DBEAFE; --blue-tx:#1E407A; --violet-bg:#E8E0F5; --violet-tx:#583981; --rose-bg:#F6DDE7; --rose-tx:#82334E; --slate-bg:#E2E8F0; --slate-tx:#334155; /* Shifts:couleurs indépendantes des règles de calcul */
-  --shift-open-bg: #DBEAFE; --shift-open-tx:#1E407A; --shift-mid-bg:#F5EBCB; --shift-mid-tx:#6B5622; --shift-close-bg:#DCEBDF; --shift-close-tx:#2D5841; --shift-late-bg:#F5EBCB; --shift-late-tx:#6B5622; --shift-off-bg:#E8E9EB; --shift-off-tx:#4C586A; --shift-absence-bg:#F6DDE7; --shift-absence-tx:#82334E; --shift-hover-line:#849EBD; /* Intraday */
-  --track-shift-bg:#E8EFF8; --track-shift-line:#D4DFED; --track-shift-tx:#3B5270; --track-quarter-line:#EEF2F7; --track-hour-line:#D4DEEA; --track-outside-open:#F7F9FC; --block-focus:#183C7440; /* Graphiques */
-  --chart-light:#D6E3F5; --chart-accent:#6F93C3; --curve-line:#507BAD; --curve-area:#E9F0FA; --curve-grid:#E7EDF5; --trend-positive-bg:#E3F0EB; --trend-positive-tx:#275A49; /* Actions et messages existants */
-  --danger-tx:#92384D; --danger-line:#D9BBC1; --danger-bg:#F6DDE7; --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5; --warn-tx:#61470B; --dang-soft:#F6DDE7; --dang-tx:#82334E; --info-soft:#DBEAFE; --info-tx:#1E407A; --overlay:#12263E44; --disabled-opacity:0.5; /* Rayons */
-  --r-shift:3px; --r-block:3px; --r-small:4px; --r-input:5px; --r-avatar:5px; --r-button:6px; --r-tooltip:6px; --r-menu:7px; --r-segment:7px; --r-card:8px; --r-modal:10px; --r-toggle:999px; /* Espaces */
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --gap-nav:4px; --gap-subnav:2px; --gap-icon:8px; --gap-menu:11px; --gap-field:6px; --gap-toolbar:16px; --gap-actions:8px; --gap-section:20px; --gap-metrics:18px; --gap-tabs:20px; --gap-legend:17px; --gap-form:16px; --page-top:28px; --page-side:32px; --page-bottom:40px; --page-heading-bottom:24px; --card-head-y:20px; --card-side:22px; --card-bottom:22px; --menu-padding:6px; --menu-item-padding:10px; --popover-gap:6px; --viewport-menu-margin:10px; --viewport-tooltip-margin:12px; /* Tailles de texte */
-  --fs-brand:32px; --fs-brand-sub:11px; --fs-page:26px; --fs-card:18px; --fs-section:14px; --fs-body:14px; --fs-nav:13px; --fs-subnav:12px; --fs-button:13px; --fs-field:13px; --fs-label:12px; --fs-secondary:12px; --fs-caption:11px; --fs-small:10px; --fs-mini:9px; --fs-metric:30px; --fs-menu:12px; /* Géométrie */
-  --sb-w:216px; --content-max:1664px; --topbar-h:65px; --staff-w:184px; --day-w:32px; --rh-w:38px; --nav-h:42px; --subnav-h:35px; --btn-h:40px; --input-h:40px; --touch-target:44px; --icon:18px; --icon-nav:19px; --icon-action-mobile:15px; --avatar-size:34px; --month-row-h:42px; --month-head-h:48px; --month-group-h:28px; --month-event-h:26px; --shift-h:25px; --intraday-row-h:52px; --intraday-axis-h:42px; --intraday-bar-h:24px; --intraday-bar-top:14px; --metric-card-h:102px; --metric-card-padding:22px; --menu-w:242px; --menu-item-h:40px; --tooltip-max:300px; --dialog-w:460px; --dialog-large-w:580px; --overlay-padding:20px; --expander-size:24px; --swatch-size:30px; --curve-max-w:960px; --curve-mobile-min-w:500px; --focus-width:3px; --focus-offset:3px; /* Ombres */
-  --shadow-card:none; --shadow-segment:0 1px 3px #162D4B0D; --shadow-menu:0 8px 30px #192D491C; --shadow-tooltip:0 5px 22px #162D4B18; --shadow-modal:0 16px 56px #11243B26; --shadow-toast:0 5px 24px #162D4B26; /* Exception Forecast with AI */
-  --forecast-violet:#6366F1; --forecast-light-violet:#A78BFA; --forecast-blue:#60A5FA; --forecast-glow-violet:#6366F14D; --forecast-glow-light-violet:#A78BFA47; --forecast-glow-blue:#60A5FA42; --button-transition:120ms; --forecast-duration:3.2s; --forecast-hover-duration:1.9s; /* Couches */
-  --z-staff:4; --z-month-header:5; --z-intraday-header:7; --z-sticky-corner:8; --z-sidebar:20; --z-menu:50; --z-modal:60; --z-tooltip:70; --z-toast:80; --sb-w:216px; --content-max-wide:1664px; --name-col:184px; --sq-w:26px; --sq-h:25px; --time-w:136px; --num-w:110px; --r-sm:6px; --r-md:8px; --r-lg:8px; --r-xl:10px; --r-pill:999px; --sh-1:none; --sh-2:0 8px 30px #192D491C; --nav-active-bg:#183C74; --nav-active-tx:#183C74; --accent-strong:#183C74; --s1:4px; --ok:#215C4B; --dang:#AC304B; --info:#507BAD; }
+:root {
+  --font:Arial, Helvetica, sans-serif; --bg-app:#F5F7FA; --bg-base:#FFFFFF; --bg-base-2:#FAFBFD; --bg-base-3:#EDF2F8; --brand:#183C74; --brand-hover:#102F5E;
+  --brand-on:#FFFFFF; --tx-1:#17283E; --tx-2:#52647B; --tx-3:#52647B; --line:#DCE3EC; --line-2:#BDC9D9; --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5;
+  --warn-tx:#61470B; --dang-soft:#F6DDE7; --dang-tx:#82334E; --info-soft:#DBEAFE; --info-tx:#1E407A; --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
+  --s6:24px; --sb-w:216px; --content-max:1664px; --day-w:32px; --name-col:184px; --sq-w:26px; --sq-h:25px; --time-w:136px; --num-w:110px; --r-sm:6px;
+  --r-md:8px; --r-lg:8px; --r-pill:999px; --sh-1:none; --sh-2:0 8px 30px #192D491C; --nav-active-bg:#183C74; --accent-strong:#183C74; --ok:#215C4B;
+  --dang:#AC304B; --info:#507BAD; }
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { min-height:100%; width:100%; }
 button, input, select, textarea { font-family:var(--font); letter-spacing:normal; font-style:normal; }
@@ -37,8 +27,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 #sidebar { position:fixed; inset:0 auto 0 0; width:var(--sb-w); height:100dvh; background:var(--bg-base); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:26px 16px 18px; z-index:100; overflow-y:auto; overflow-x:hidden; }
 #main { margin-left:var(--sb-w); min-height:100vh; min-width:0; }
 .sb-brand { display:flex; flex-direction:column; align-items:flex-start; padding:0 12px 24px; gap:9px; }
-.sb-name-txt { display:block; font-size:32px; font-weight:700; color:var(--brand); line-height:1; }
-.sb-name-txt.is-on { display:inline; }
 .sb-nav { display:flex; flex-direction:column; gap:3px; }
 .nav-item { display:flex; align-items:center; gap:11px; width:100%; min-height:40px; height:auto; padding:9px 12px; border:0; border-radius:6px; background:transparent; color:var(--tx-2); font-size:13px; font-weight:400; text-align:left; transition:background .15s,color .15s; }
 .nav-item .ic { width:18px; height:18px; color:var(--tx-2); }
@@ -65,12 +53,10 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .it-row { display:flex; align-items:stretch; min-height:52px; border-bottom:1px solid #E8EDF3; }
 .it-info { width:184px; flex:0 0 184px; display:flex; align-items:center; gap:9px; min-width:0; position:sticky; left:0; z-index:3; background:var(--bg-base); padding:7px 12px; border-right:1px solid var(--line); border-left:3px solid #88A6CE; }
 .it-nm { display:block; min-width:0; font-size:12px; font-weight:700; color:var(--tx-1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.it-hrs { font-size:10px; color:var(--tx-3); white-space:nowrap; flex-shrink:0; }
 .it-track { position:relative; flex:1; min-width:var(--axis-width, 920px); min-height:52px; }
 .it-grid { position:absolute; inset:0; display:flex; }
 .it-grid i { flex:1; border-left:1px solid #DCE3EC; background:repeating-linear-gradient(to right,transparent 0,transparent calc(25% - 1px),#EEF2F7 calc(25% - 1px),#EEF2F7 25%); }
 .it-blk { position:absolute; top:14px; height:24px; border-radius:3px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; cursor:grab; }
-.it-blk-label { min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .it-blk:hover { box-shadow:inset 0 0 0 1px currentColor; }
 .b-mb { background:#DBEAFE; color:#1E407A; box-shadow:none; }
 .bc-yellow { background:#F5EBCB; color:#6B5622; }
@@ -113,13 +99,12 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .pdf-shot .mth .c-agent, .pdf-shot .mth thead th { position:static; }
 .pdf-shot .mth thead th, .pdf-shot .mth td { box-shadow:none; }
 .pdf-shot.is-intraday { width:max-content; min-width:1200px; }
-.pdf-shot-head { display:flex; justify-content:space-between; gap:var(--s4); font-size:13px; color:var(--tx-2); margin-bottom:var(--s3); }
+.pdf-shot-head { display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s4); font-size:13px; color:var(--tx-2); margin-bottom:var(--s3); }
 .pdf-shot-head b { color:var(--tx-1); }
-.pdf-cov-title { font-size:14px; font-weight:700; color:var(--ink, #17283E); margin:18px 0 8px; }
+.pdf-cov-title { font-size:14px; font-weight:700; color:var(--tx-1); margin:18px 0 8px; }
 .pdf-brand { display:flex; flex-direction:column; gap:4px; }
 .pdf-brand img { height:30px; width:auto; display:block; }
 .pdf-brand span { font-size:9px; line-height:1.4; color:#52647B; }
-.pdf-shot-head { align-items:flex-end; }
 .xm-logo { width:18px; height:18px; object-fit:contain; flex-shrink:0; display:block; }
 .xm-fb { display:inline-flex; align-items:center; justify-content:center; border-radius:3px; font-size:10px; font-weight:700; color:var(--tx-2); background:var(--bg-base-3); width:20px; height:20px; }
 .xm-xl { background:var(--ok); }
@@ -159,9 +144,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .dash-eyebrow { font-size:12px; color:var(--tx-2); margin-bottom:8px; font-weight:400; }
 .dash-title { font-size:26px; font-weight:700; line-height:1.25; color:var(--tx-1); }
 .dash-sub { font-size:13px; color:var(--tx-2); margin-top:7px; }
-.dash-store { text-align:right; }
-.dash-store .nm { font-size:16px; font-weight:700; }
-.dash-store .loc { font-size:12px; color:var(--tx-3); }
 .dash-grid { display:grid; grid-template-columns:2fr 1fr; gap:18px; align-items:start; }
 .dash-col { display:flex; flex-direction:column; gap:18px; min-width:0; }
 .dash-col-right .card { height:auto; }
@@ -213,7 +195,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .mini-item .nm { color:var(--tx-1); font-weight:400; }
 .mini-empty { font-size:13px; color:var(--tx-3); font-style:normal; padding:var(--s2) 0; }
 .card-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap; }
-.card-title { font-size:16px; font-weight:700; line-height:1.35; color:var(--tx-1); }
 .card-sub { font-size:13px; color:var(--tx-2); margin-top:2px; }
 .set-head { align-items:flex-start; margin-bottom:var(--s4); }
 .set-title-row { display:flex; align-items:center; gap:var(--s2); }
@@ -276,8 +257,6 @@ tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:700
 .btn-ghost:hover { background:var(--bg-base-3); }
 .btn-danger { background:var(--dang-soft); color:var(--dang-tx); }
 .btn-danger:hover { background:#FECACA; }
-.btn-save { background:var(--ok-soft); color:var(--ok-tx); }
-.btn-save:hover { background:#BBF7D0; }
 .btn-sm { min-height:32px; padding:6px 11px; font-size:12px; }
 .btn-sq { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border:1px solid var(--line); border-radius:5px; font-size:12px; font-weight:700; background:var(--bg-base); color:var(--tx-2); }
 .btn-sq:hover { background:#FECACA; }
@@ -316,9 +295,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth thead th .dnum { display:block; font-size:12px; color:var(--tx-1); font-weight:700; }
 .mth thead th.is-weekend { background:var(--bg-base-3); }
 .mth thead th.is-today .dnum { color:var(--nav-active-bg); }
-.mth thead th.has-issue .dnum { color:var(--warn-tx); }
-.pdf-grid-only .mth thead th.has-issue { background:var(--bg-base-2); box-shadow:none; }
-.pdf-grid-only .mth thead th.has-issue .dnum { color:var(--tx-1); }
 .mth td { border-bottom:1px solid var(--line); }
 .mth tbody tr:last-child td { border-bottom:none; }
 .mth td.is-weekend { background:var(--bg-base-2); }
@@ -341,7 +317,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth.xh thead th.col-hl { background:#E3EAF5; }
 .sh { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:25px; padding:0 3px; border-radius:3px; font-size:10px; font-weight:700; white-space:nowrap; }
 .sh-cnr { position:relative; display:inline-flex; align-items:center; justify-content:center; }
-.sh-cnr-tag { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:1px; font-size:8px; font-weight:700; color:var(--accent-strong); letter-spacing:normal; line-height:1; white-space:nowrap; }
+.sh-cnr-tag { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:1px; font-size:8px; font-weight:700; color:var(--accent-strong); letter-spacing:normal; line-height:1; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 .mth-group td { height:28px; background:#F2F5F9; border-bottom:1px solid var(--line); padding:0; }
 .mth-group td.mth-group-lbl { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; padding:6px 12px; }
 .mth thead th.c-agent, .mth tr.evt-row th.evt-row-label, .mth-group td.mth-group-lbl, .mth tr.blk td.c-agent { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; padding-left:12px; }
@@ -447,7 +423,6 @@ input[type=date][data-dp] { display:none; }
 .wkp-day.today { font-weight:700; }
 .wkp-day.in-selected-week { background:var(--info-soft); color:var(--info-tx); }
 .set-rules { display:flex; flex-direction:column; gap:0; }
-.set-rules-2col { display:grid; grid-template-columns:1fr 1fr; gap:0 var(--s6); }
 .day-open-lbl { margin-left:8px; font-size:12px; color:var(--tx-2); }
 .set-rule { display:grid; grid-template-columns:1fr 150px; align-items:center; gap:12px; min-height:64px; padding:16px 0; border-bottom:1px solid var(--line); font-size:13px; color:var(--tx-1); }
 .set-rule-lbl-wrap { display:flex; flex-direction:column; gap:2px; }
@@ -457,7 +432,6 @@ input[type=date][data-dp] { display:none; }
 .set-rule:last-child { border-bottom:none; }
 .set-rule-lbl { font-size:13px; font-weight:700; }
 .set-rule-input { width:100px; min-width:100px; height:36px; text-align:right; }
-.set-rule-ro { font-weight:700; }
 .set-rule-unit { color:var(--tx-3); font-size:13px; }
 .set-note { font-size:13px; color:var(--tx-2); margin-bottom:var(--s3); }
 .hours-table { width:100%; border-collapse:separate; border-spacing:0; border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; }
@@ -466,7 +440,6 @@ input[type=date][data-dp] { display:none; }
 .hours-table tr:last-child td { border-bottom:none; }
 .hours-table tr.rest-day td { opacity:.5; }
 .hours-table tr.rest-day td:first-child { opacity:1; }
-.toggle-label { font-size:13px; color:var(--tx-2); }
 .tbl-framed { border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; }
 .cal-nav { display:inline-flex; align-items:center; gap:var(--s2); }
 .cal-nav-btn { width:36px; height:36px; border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--bg-base); color:var(--tx-2); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-size:16px; line-height:1; padding:0; transition:background .15s, color .15s; }
@@ -558,8 +531,6 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .spin { width:14px; height:14px; border-radius:50%; flex-shrink:0; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spinner .7s linear infinite; display:inline-block; }
 .modal-sec { font-size:11px; font-weight:700; letter-spacing:normal; text-transform:uppercase; color:var(--tx-3); margin:var(--s5) 0 var(--s3); padding-top:var(--s4); border-top:1px solid var(--line); }
 .day-chips { display:flex; gap:6px; flex-wrap:wrap; }
-.ae-toggle-row { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--tx-2); }
-.ae-toggle-row input { width:auto; margin:0; cursor:pointer; }
 .day-chip { width:38px; height:32px; border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--bg-base); color:var(--tx-2); cursor:pointer; font-family:var(--font); font-size:12px; font-weight:400; display:inline-flex; align-items:center; justify-content:center; transition:background .12s, color .12s, border-color .12s; }
 .day-chip:hover { background:var(--bg-base-3); }
 .day-chip.on { background:var(--dang-soft); color:var(--dang-tx); border-color:#FCA5A5; font-weight:700; }
@@ -596,9 +567,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .sb-tagline { font-size:11px; font-weight:400; line-height:1.5; color:var(--tx-2); }
 /* Logo image, tagline below */
 .sb-logo-row { display:flex; align-items:center; gap:10px; }
-.sb-logo { width:40px; height:40px; object-fit:contain; flex-shrink:0; display:block; }
-.sb-logo-fb { display:none; width:40px; height:40px; border-radius:7px; background:var(--brand); color:#fff;
-  align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
 .sb-wordmark { height:34px; width:auto; display:block; flex-shrink:0; }
 .sb-wordmark.is-off { display:none; }
 .sb-logo-txt { display:none; font-size:28px; font-weight:700; color:var(--brand); line-height:1; white-space:nowrap; }
@@ -623,7 +591,6 @@ textarea { resize:vertical; line-height:1.5; }
 .hl-add .dp-btn, .hl-add input[type=text] { width:100%; min-width:0; height:36px; }
 .mini-empty, .pool-empty { font-size:12px; color:var(--tx-2); padding:8px 0; }
 .mth th.c-day.is-today, .mth td.c-day.is-today { background:#E7EFFC; }
-.mth thead th.c-day.has-issue { background:#F9E8B5; color:#61470B; box-shadow:none; cursor:help; }
 .mth tbody tr:hover td.is-today { background:#E7EFFC; }
 .mth .mth-group td.c-day { height:28px; }
 .mth-group td.c-agent { background:#F2F5F9; }
@@ -650,9 +617,6 @@ textarea { resize:vertical; line-height:1.5; }
 .it-track .it-shift { position:absolute; top:14px; height:24px; border-radius:4px; border:1px solid #DCE3EC; background:#EEF1F5; color:#52647B; display:flex; align-items:center; justify-content:space-between; padding:0 5px; font-size:10px; font-weight:400; overflow:hidden; }
 .it-track .it-shift.pre { border-radius:4px 0 0 4px; opacity:1; background:#F5F7FA; }
 .it-track .it-shift.pre + .it-shift { border-radius:0 4px 4px 0; }
-.it-legend { display:flex; align-items:center; flex-wrap:wrap; gap:10px 18px; padding:16px 0 0; }
-.it-legend-item { display:inline-flex; align-items:center; gap:7px; font-size:11px; color:var(--tx-2); }
-.it-legend-swatch { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:24px; padding:0 5px; border-radius:3px; font-size:10px; font-weight:700; }
 .mm-form .fld { flex:1 1 0; min-width:0; }
 .mm-form .fld:first-child { flex:0 0 auto; }
 .mm-form .hm-pair { width:auto; }
@@ -664,7 +628,6 @@ textarea { resize:vertical; line-height:1.5; }
 #agent-editor .modal { max-width:580px; }
 #ce-body { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
 .ce-sep, .ce-cnr-lbl, .ce-cnr, .ce-adjust-row { grid-column:1 / -1; }
-#tap-tip { display:none; position:fixed; z-index:1200; max-width:min(300px,calc(100vw - 16px)); background:var(--bg-base); border:1px solid #C5D3E4; border-radius:6px; box-shadow:0 5px 22px #162D4B18; padding:11px 13px; font-size:12px; color:var(--tx-1); white-space:pre-line; }
 .table-scroll { overflow-x:auto; max-width:100%; }
 .traffic-month-table { min-width:640px; }
 .curve-scroll { overflow:auto; }
@@ -690,13 +653,9 @@ textarea { resize:vertical; line-height:1.5; }
 .pdf-shot .it-info { width:184px; flex-basis:184px; position:static; text-align:left; justify-content:flex-start; padding:7px 12px; border-left-width:3px; }
 .pdf-shot .it-info .sh { display:inline-flex; }
 .pdf-shot .it-role { font-size:11px; padding-left:12px; }
-.pdf-shot .it-legend { gap:10px 18px; }
-.pdf-shot .it-legend-item { font-size:11px; }
 .pdf-shot .it-person { text-align:left; }
 .pdf-shot .it-person .person-initials { display:none; }
 .pdf-shot .it-person .it-nm, .pdf-shot .it-person small { display:block; }
-.pdf-grid-only .mth thead th.c-day.has-issue { background:var(--bg-base-2); box-shadow:none; }
-.pdf-grid-only .mth thead th.c-day.has-issue .dnum { color:var(--tx-1); }
 @keyframes help-pop {  from { transform:scale(.3); opacity:0; } to { transform:scale(1); opacity:1; }  }
 @keyframes gateFade {  from { opacity:0; } to { opacity:1; }  }
 @keyframes gateRise {  from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; }  }
@@ -824,8 +783,6 @@ textarea { resize:vertical; line-height:1.5; }
   .it-info .sh, .it-person .it-nm, .it-person small { display:none; }
   .it-person .person-initials { display:block; font-size:10px; }
   .it-role { font-size:10px; padding-left:8px; }
-  .it-legend { gap:8px 12px; }
-  .it-legend-item { font-size:10px; }
   .modal-overlay { padding:10px; }
   .modal { max-height:calc(100dvh - 20px); }
   .modal-head { padding:18px; }
@@ -887,8 +844,6 @@ textarea { resize:vertical; line-height:1.5; }
   .lbl-s { display:none; }
   .lbl-l { display:inline; }
   .mth thead th { position:static; }
-  .mth thead th.c-day.has-issue { background:var(--bg-base-2); box-shadow:none; }
-  .mth thead th.has-issue .dnum { color:var(--tx-1); }
   .it-info { position:static; width:184px; flex-basis:184px; }
   .it-person .it-nm, .it-person small, .it-info .sh { display:block; }
   .it-person .person-initials { display:none; }
@@ -918,7 +873,6 @@ function trimLogo(img) {
     img.src = o.toDataURL('image/png');
   } catch (e) {}
 }
-
 </script>
 </head>
 <body>
@@ -928,7 +882,7 @@ function trimLogo(img) {
 
 <div id="store-gate">
   <div class="gate-card">
-    <div class="gate-logo"><img src="CAST_LOGO_TEXTE.png" alt="CAST" class="gate-wordmark" onload="trimLogo(this)" onerror="this.outerHTML='CAST'"></div>
+    <div class="gate-logo"><img src="logo/CAST_LOGO_TEXTE.png" alt="CAST" class="gate-wordmark" onload="trimLogo(this)" onerror="this.outerHTML='CAST'"></div>
     <div class="gate-title">Select your store</div>
     <div class="gate-sub">To navigate your workspace, please choose a region, a country and a store.</div>
     <div id="scope-modal-slot"></div>
@@ -948,7 +902,7 @@ function trimLogo(img) {
 
 <!-- SIDEBAR -->
 <nav id="sidebar">
-  <div class="sb-brand" data-no-i18n><div class="sb-logo-row"><img src="CAST_LOGO_TEXTE.png" alt="CAST" class="sb-wordmark" onload="trimLogo(this)" onerror="this.classList.add('is-off');this.nextElementSibling.classList.add('is-on');"><span class="sb-logo-txt">CAST</span></div><span class="sb-tagline">CELINE AUTOMATED<br>SCHEDULING TOOL</span></div>
+  <div class="sb-brand" data-no-i18n><div class="sb-logo-row"><img src="logo/CAST_LOGO_TEXTE.png" alt="CAST" class="sb-wordmark" onload="trimLogo(this)" onerror="this.classList.add('is-off');this.nextElementSibling.classList.add('is-on');"><span class="sb-logo-txt">CAST</span></div><span class="sb-tagline">CELINE AUTOMATED<br>SCHEDULING TOOL</span></div>
 
   
   <div class="sb-nav">
@@ -1236,15 +1190,12 @@ var LANGS = {
   'zh-Hant': { label: '繁體', loc: 'zh-TW', html: 'zh-Hant', file: 'i18n/zh-Hant.json' }
 };
 var I18N = {};
-
 // Translation engine
 var CURRENT_LANG = 'en';
 try { CURRENT_LANG = localStorage.getItem('cora_lang') || 'en'; } catch(e) {}
 if (!LANGS[CURRENT_LANG]) CURRENT_LANG = 'en';
-
 function dLoc() { return (LANGS[CURRENT_LANG] || LANGS.en).loc; }
 function docLang() { return (LANGS[CURRENT_LANG] || LANGS.en).html; }
-
 var LANG_LOADS = Object.create(null), LANG_SWITCH_SEQ = 0;
 // Keep one request per language; only the latest choice updates the screen.
 function loadLang(lang) {
@@ -1269,7 +1220,6 @@ function switchLang(lang) {
     return ok;
   });
 }
-
 function t(en) {
   if (CURRENT_LANG === 'en' || !en) return en;
   var d = I18N[CURRENT_LANG];
@@ -1282,18 +1232,15 @@ function t(en) {
   if (pre) return pre + (pre.slice(-1) === '\uff1a' ? '' : ' ') + k.slice(i + 2);
   return en;
 }
-
 // Translate a sentence with holes, then fill them: tf('Week {week}', { week: 42 })
 function tf(en, vals) {
   return t(en).replace(/\{(\w+)\}/g, function(m, k) { return (vals && vals[k] != null) ? vals[k] : m; });
 }
-
 function applyLang(lang) {
   CURRENT_LANG = lang;
   try { localStorage.setItem('cora_lang', lang); } catch(e) {}
   document.documentElement.setAttribute('lang', docLang());
   var d = I18N[lang] || null;
-
   if (typeof currentStoreId !== 'undefined' && currentStoreId) {
     if (typeof renderMonthlyPlanning === 'function') renderMonthlyPlanning();
     if (typeof renderDashboard === 'function') renderDashboard();
@@ -1327,7 +1274,6 @@ function applyLang(lang) {
       category: t(category.charAt(0).toUpperCase() + category.slice(1))
     });
   }
-
   var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
   var nodes = [];
   while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -1343,7 +1289,6 @@ function applyLang(lang) {
     if (lang === 'en') { node.nodeValue = lead + en + tail; return; }
     if (d && d[en]) node.nodeValue = lead + d[en] + tail;
   });
-
   ['placeholder','title','aria-label'].forEach(function(attr) {
     document.querySelectorAll('['+attr+']').forEach(function(el) {
       if (el.closest && el.closest('[data-no-i18n]')) return;
@@ -1354,11 +1299,9 @@ function applyLang(lang) {
       if (d && d[en]) el.setAttribute(attr, d[en]);
     });
   });
-
   var cur = document.getElementById('lang-current');
   if (cur) cur.textContent = (LANGS[lang] || LANGS.en).label;
 }
-
 function toggleLangMenu(e) {
   e.stopPropagation();
   var m = document.getElementById('lang-menu');
@@ -1377,7 +1320,6 @@ function pickLang(lang, e) {
   if (m) m.classList.remove('open');
   switchLang(lang);
 }
-
 function installRetranslateHooks() {
   ['renderTraffic','renderDashboard','renderCalendar','renderRegulations',
    'renderAgents','renderIntraday','renderAnnualCalendar','renderMonthlyCalendar','renderMonthlyPlanning']
@@ -1392,17 +1334,14 @@ function installRetranslateHooks() {
     };
   });
 }
-
 // Supabase connection
 const SUPABASE_URL = 'https://miawersffeosiovqdokw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pYXdlcnNmZmVvc2lvdnFkb2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMDY4NTYsImV4cCI6MjA3Njc4Mjg1Nn0.ixCX8Zh8QLxJrnV7ncpNSCv3KtL0ao0PqsFmA6xYYyA';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 // Constants
 const DAY_KEYS  = ['mon','tue','wed','thu','fri','sat','sun'];
 const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const DAY_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-
 const REGION_DEFAULTS = {
   'Paris':     { open: 10, close: 18, saturday_rest: true,  sunday_rest: true,  weekly_hours: 37.5 },
   'New York':  { open: 10, close: 19, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40   },
@@ -1411,13 +1350,11 @@ const REGION_DEFAULTS = {
   'Singapore': { open: 7,  close: 20, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40   },
   'Seoul':     { open: 10, close: 19, saturday_rest: true,  sunday_rest: true,  weekly_hours: 40   },
 };
-
 function buildDefaultDayHours(open, close) {
   const h = {};
   DAY_KEYS.forEach(k => { h[k] = { open, close }; });
   return h;
 }
-
 // App state
 let currentRegionId   = null;
 let currentRegionName = '';
@@ -1450,7 +1387,6 @@ let intradayLoadSeq = 0;
 let intradayAxis = null;
 let curveListeners = null;
 let planningEvents = [];
-
 function toggleCellSelect(agentId, ds, td) {
   var idx = multiSelect.findIndex(function(s){ return s.agentId === agentId && s.ds === ds; });
   if (idx >= 0) { multiSelect.splice(idx, 1); if (td) td.classList.remove('is-multisel'); }
@@ -1477,7 +1413,6 @@ let calMonth          = new Date();
 let currentCalView    = 'annual';
 let agents            = [];
 let availability      = {};
-
 let regulations = {
   saturday_rest:   true,
   sunday_rest:     true,
@@ -1503,7 +1438,6 @@ let regulations = {
   public_holidays: [],
   day_hours:       buildDefaultDayHours(10, 18),
 };
-
 // Date helpers
 function getMondayOfCurrentWeek() {
   const today = new Date();
@@ -1514,7 +1448,6 @@ function getMondayOfCurrentWeek() {
   mon.setHours(0, 0, 0, 0);
   return mon;
 }
-
 function getWeekDays(monday) {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
@@ -1522,14 +1455,12 @@ function getWeekDays(monday) {
     return d;
   });
 }
-
 function toDateStr(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return y + '-' + m + '-' + d;
 }
-
 function getWeekNumber(date) {
   const d      = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
@@ -1537,53 +1468,43 @@ function getWeekNumber(date) {
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
-
 function formatDate(date) {
   return date.toLocaleDateString(dLoc(), { day: '2-digit', month: 'short' });
 }
-
 function formatDateDisplay(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
   return d.toLocaleDateString(dLoc(), { day: '2-digit', month: 'short', year: 'numeric' });
 }
-
 function isToday(date) { return toDateStr(date) === toDateStr(new Date()); }
-
 function changeWeek(dir) {
   currentWeekMonday.setDate(currentWeekMonday.getDate() + dir * 7);
   updateWeekLabel();
   if (currentStoreId) loadWeekData();
 }
-
 async function monthlyShift(dir) {
   monthlyRef.setDate(1);
   monthlyRef.setMonth(monthlyRef.getMonth() + dir);
   updateMonthlyLabel();
   if (currentStoreId) { await ensurePeriodData(); renderMonthlyPlanning(); }
 }
-
 async function monthlyToday() {
   monthlyRef = new Date();
   updateMonthlyLabel();
   if (currentStoreId) { await ensurePeriodData(); renderMonthlyPlanning(); }
 }
-
 function updateMonthlyLabel() {
   var el = document.getElementById('monthly-label');
   if (el) el.textContent = monthlyRef.toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
 }
-
 function updateWeekLabel() {
   const days = getWeekDays(currentWeekMonday);
   const wn   = getWeekNumber(currentWeekMonday);
   document.getElementById('week-label').textContent =
     'W' + wn + ' - ' + formatDate(days[0]) + ' \u2192 ' + formatDate(days[6]);
 }
-
 // UI helpers
 function showLoader() { document.getElementById('loader').classList.add('active'); }
 function hideLoader() { document.getElementById('loader').classList.remove('active'); }
-
 var toastTimer = null;
 function showToast(msg, type) {
   var el = document.getElementById('toast');
@@ -1593,7 +1514,6 @@ function showToast(msg, type) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function() { el.style.display = 'none'; }, 3000);
 }
-
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
   document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
@@ -1607,13 +1527,11 @@ function switchTab(name, btn) {
   if (name === 'traffic') renderTraffic();
   if (CURRENT_LANG !== 'en') retranslate();
 }
-
 var I18N_REV = null;
 function enOf(s) {
   if (!I18N_REV) { I18N_REV = {}; Object.keys(I18N).forEach(function(l) { Object.keys(I18N[l]).forEach(function(k) { if (!(I18N[l][k] in I18N_REV)) I18N_REV[I18N[l][k]] = k; }); }); }
   return I18N_REV[s] || s;
 }
-
 function retranslate() {
   var d = I18N[CURRENT_LANG]; if (!d) return;
   var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
@@ -1636,7 +1554,6 @@ function retranslate() {
     });
   });
 }
-
 function toggleNavGroup(name, btn) {
   var sub = document.getElementById('sub-' + name);
   var isOpen = btn.classList.contains('open');
@@ -1652,7 +1569,6 @@ function toggleNavGroup(name, btn) {
   if (name === 'calendar') switchCalendarNav(active ? active.dataset.calview : 'annual', active);
   placeRailMenu(sub, btn);
 }
-
 var currentPlanningView = 'monthly';
 function switchPlanningView(v, btn) {
   currentPlanningView = v;
@@ -1666,7 +1582,6 @@ function switchPlanningView(v, btn) {
   closeRailMenus();
   if (v === 'intraday' && currentStoreId) loadAndRenderIntraday(currentIntradayDate);
 }
-
 function toggleAddAgentForm() {
   var f = document.getElementById('add-agent-form');
   var opening = !f.classList.contains('open');
@@ -1686,10 +1601,9 @@ function toggleAddAgentForm() {
     }
   }
 }
-
 // Start-up
 // Touch screens: a tap shows the hover text
-var TAP_TIP_SEL = 'th.has-issue, .person-cell[title], .it-info[title], .lbl-s[title]';
+var TAP_TIP_SEL = '.person-cell[title], .it-info[title], .lbl-s[title]';
 function initTapTips() {
   if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) return;
   var owner = null;
@@ -1707,7 +1621,6 @@ function initTapTips() {
   }, true);
   window.addEventListener('scroll', function() { if (owner) hide(); }, true);
 }
-
 async function init() {
   initTapTips();
   initPlanHelp();
@@ -1721,7 +1634,6 @@ async function init() {
   const { data, error } = await sb.from('retail_regions').select('*').order('name');
   hideLoader();
   if (error) { showToast('Failed to load regions', 'error'); return; }
-
   const sel = document.getElementById('region-select');
   sel.innerHTML = '<option value="">- Select region -</option>';
   data.forEach(function(r) {
@@ -1739,7 +1651,6 @@ async function init() {
   if (await restoreScope()) return;
   openStoreGate();
 }
-
 function saveScope() {
   try {
     localStorage.setItem('cora_scope', JSON.stringify({
@@ -1763,28 +1674,23 @@ async function restoreScope() {
   if (sSel) { sSel.value = sc.store; if (sSel.value === sc.store) { await onStoreChange(); return true; } }
   return false;
 }
-
 async function onRegionChange() {
   var sel = document.getElementById('region-select');
   currentRegionId   = sel.value;
   currentRegionName = sel.value ? sel.options[sel.selectedIndex].text : '';
   currentRegionCity = sel.value ? (sel.options[sel.selectedIndex].dataset.city || '') : '';
-
   currentCountryId = null;
   currentStoreId   = null;
   currentStoreName = '';
   stores = [];
   resetSelect('store-select', '- All stores -', true);
-
   if (!currentRegionId) {
     countries = [];
     resetSelect('country-select', '- All countries -', true);
     return;
   }
-
   await loadCountries();
 }
-
 // Store selection screen
 function openStoreGate() {
   var gate = document.getElementById('store-gate');
@@ -1795,7 +1701,6 @@ function openStoreGate() {
   gate.classList.add('show');
   document.body.classList.add('gate-open');
 }
-
 function closeStoreGate() {
   var gate = document.getElementById('store-gate');
   var scope = document.getElementById('sb-scope');
@@ -1805,7 +1710,6 @@ function closeStoreGate() {
   gate.classList.remove('show');
   document.body.classList.remove('gate-open');
 }
-
 // Region, country and store dropdowns
 function resetSelect(id, placeholder, disable) {
   var el = document.getElementById(id);
@@ -1813,18 +1717,15 @@ function resetSelect(id, placeholder, disable) {
   el.innerHTML = '<option value="">' + placeholder + '</option>';
   el.disabled = !!disable;
 }
-
 async function loadCountries() {
   countries = [];
   var sel = document.getElementById('country-select');
   if (!sel || !currentRegionId) return;
-
   var res = await sb.from('retail_countries').select('*')
     .eq('region_id', currentRegionId).order('sort_order');
   if (res.error) { showToast('Could not load countries', 'error'); return; }
   countries = res.data || [];
   countries.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
-
   sel.innerHTML = '<option value="">- All countries -</option>';
   countries.forEach(function(c) {
     var o = document.createElement('option');
@@ -1834,7 +1735,6 @@ async function loadCountries() {
     sel.appendChild(o);
   });
   sel.disabled = countries.length === 0;
-
   if (countries.length === 1) {
     sel.value = countries[0].id;
     await onCountryChange();
@@ -1855,35 +1755,28 @@ async function loadCountries() {
     }
   }
 }
-
 async function onCountryChange() {
   var sel = document.getElementById('country-select');
   currentCountryId = sel ? sel.value : null;
-
   currentStoreId   = null;
   currentStoreName = '';
   stores = [];
   resetSelect('store-select', '- All stores -', true);
-
   currentCountryIso = sel && sel.value
     ? (sel.options[sel.selectedIndex].dataset.iso || '') : '';
-
   if (!currentCountryId) return;
   await loadHolidays(calMonth.getFullYear());
   await loadStores();
 }
-
 async function loadStores() {
   stores = [];
   var sel = document.getElementById('store-select');
   if (!sel || !currentCountryId) return;
-
   var res = await sb.from('retail_stores').select('*')
     .eq('country_id', currentCountryId).order('sort_order');
   if (res.error) { showToast('Could not load stores', 'error'); return; }
   stores = (res.data || []).filter(function(s) { return s.is_active !== false; });
   stores.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
-
   sel.innerHTML = stores.length
     ? '<option value="">- All stores -</option>'
     : '<option value="">- No store yet -</option>';
@@ -1894,20 +1787,17 @@ async function loadStores() {
     sel.appendChild(o);
   });
   sel.disabled = stores.length === 0;
-
   if (stores.length === 1) {
     sel.value = stores[0].id;
     onStoreChange();
   }
 }
-
 async function onStoreChange() {
   var sel = document.getElementById('store-select');
   currentStoreId = sel ? sel.value : null;
   var st = stores.find(function(s) { return s.id === currentStoreId; });
   currentStoreName = st ? st.name : '';
   currentStoreCity = st ? (st.city || st.location || '') : '';
-
   if (!currentStoreId) {
     // No store selected: empty every page
     agents = []; monthlyResult = {}; intradayExport = null; lastCoverage = null;
@@ -1923,7 +1813,6 @@ async function onStoreChange() {
     return;
   }
   var sid = currentStoreId;
-
   currentCornerView = null;
   planningEventsLoadSeq++;
   planningEvents = [];
@@ -1945,8 +1834,6 @@ async function onStoreChange() {
   await loadWeekData();
   if (sid !== currentStoreId) return;
   if (!currentIntradayDate) currentIntradayDate = toDateStr(new Date());
-  renderMonthlyPlanning();
-  renderAgents();
   renderDashboard();
   // Refresh the open page, so it shows the new store at once
   var openTab = document.querySelector('.tab-content.active');
@@ -1957,7 +1844,6 @@ async function onStoreChange() {
   if (page === 'traffic') renderTraffic();
   if (CURRENT_LANG !== 'en') retranslate();
 }
-
 // Load settings
 async function loadRegulations() {
   var sid = currentStoreId;
@@ -1966,7 +1852,6 @@ async function loadRegulations() {
     .eq('store_id', currentStoreId);
   if (sid !== currentStoreId) return;
   if (error) { showToast('Error loading regulations', 'error'); return; }
-
   const def = REGION_DEFAULTS[currentRegionCity] || REGION_DEFAULTS['Paris'];
   regulations = {
     saturday_rest:   def.saturday_rest,
@@ -1988,7 +1873,6 @@ async function loadRegulations() {
     public_holidays: [],
     day_hours:       buildDefaultDayHours(def.open, def.close),
   };
-
   (data || []).forEach(function(row) {
     switch (row.rule_key) {
       case 'saturday_rest':   regulations.saturday_rest = row.rule_value === 'true'; break;
@@ -2015,11 +1899,9 @@ async function loadRegulations() {
         break;
     }
   });
-
   if (!data || data.length === 0) await seedRegulations();
   if (sid !== currentStoreId) return;
 }
-
 async function seedRegulations() {
   const rows = [
     { store_id: currentStoreId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
@@ -2037,21 +1919,17 @@ async function seedRegulations() {
   });
   await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
 }
-
 var BREAK_COLORS = ['yellow', 'blue', 'pink', 'green', 'violet', 'teal', 'slate'];
 var BREAK_PICKER_COLORS = ['yellow','teal','blue','violet','pink','slate'];
-
 function breakColorOf(b, i) {
   if (b && b.color && BREAK_COLORS.indexOf(b.color) >= 0) return b.color;
   if (b && /lunch|dej/i.test(b.name || '')) return 'yellow';
   return 'pink';
 }
-
 function breakColorBtnHtml(sel) {
   return '<button type="button" class="tone-chip bc-' + sel + '" data-color="' + sel +
     '" onclick="openBreakColorPop(this, event)">A</button>';
 }
-
 var colorPopTarget = null;
 function openBreakColorPop(btn, evt) {
   evt.stopPropagation();
@@ -2069,12 +1947,10 @@ function openBreakColorPop(btn, evt) {
   pop.style.top  = (below ? r.bottom + 6 : Math.max(8, r.top - 6 - pop.offsetHeight)) + 'px';
   setTimeout(function() { document.addEventListener('click', closeColorPop, { once: true }); }, 0);
 }
-
 function closeColorPop() {
   document.getElementById('color-pop').classList.remove('open');
   colorPopTarget = null;
 }
-
 function pickBreakColor(k) {
   var btn = colorPopTarget;
   closeColorPop();
@@ -2083,7 +1959,6 @@ function pickBreakColor(k) {
   btn.setAttribute('data-color', k);
   saveRegulations();
 }
-
 // Save settings
 function addBreakRow() {
   var body = document.getElementById('breaks-body');
@@ -2100,13 +1975,11 @@ function addBreakRow() {
   body.appendChild(tr);
   saveRegulations();
 }
-
 function removeBreakRow(btn) {
   var tr = btn.closest('tr');
   if (tr) tr.remove();
   saveRegulations();
 }
-
 function addCornerRow() {
   var body = document.getElementById('corners-body');
   if (!body) return;
@@ -2119,13 +1992,11 @@ function addCornerRow() {
     '<td><button class="btn-sq" onclick="removeCornerRow(this)" title="Remove">\u2715</button></td>';
   body.appendChild(tr);
 }
-
 function removeCornerRow(btn) {
   var tr = btn.closest('tr');
   if (tr) tr.remove();
   saveCorners();
 }
-
 async function toggleDayOpen(cb) {
   var tr = cb.closest('tr');
   if (!tr) return;
@@ -2146,7 +2017,6 @@ async function toggleDayOpen(cb) {
     renderMonthlyPlanning();
   }
 }
-
 function snapshotStoreSettings(storeId) {
   var ss = storeSettings || {};
   return {
@@ -2163,7 +2033,6 @@ function snapshotStoreSettings(storeId) {
     sunday_single_shift: ss.sunday_single_shift !== false
   };
 }
-
 function regulationRows(storeId) {
   var r = regulations;
   return [
@@ -2178,9 +2047,7 @@ function regulationRows(storeId) {
     return { store_id: storeId, rule_key: kv[0], rule_value: kv[1] == null ? '' : kv[1] };
   });
 }
-
 var settingsJobs = new Map(), settingsDraining = false;
-
 function queueStoreSave(okMsg) {
   var storeId = currentStoreId;
   if (!storeId) return;
@@ -2193,7 +2060,6 @@ function queueStoreSave(okMsg) {
   });
   drainSettingsJobs();
 }
-
 async function drainSettingsJobs() {
   if (settingsDraining) return;
   settingsDraining = true;
@@ -2218,36 +2084,28 @@ async function drainSettingsJobs() {
     settingsDraining = false;
   }
 }
-
 async function toggleFairness(cb) {
   if (!currentStoreId) return;
   var on = cb.checked;
-  var lbl = document.getElementById('fairness-lbl');
-  if (lbl) lbl.textContent = on ? t('On - everyone rotates') : t('Off - home corners');
   if (!storeSettings) storeSettings = {};
   storeSettings.fairness_rotation = on;
   queueStoreSave();
   renderMonthlyPlanning();
 }
-
 function removeReinf(e, agentId, idx) {
   if (e) e.stopPropagation();
   if (!currentIntradayDate) return;
   dismissedReinf[currentIntradayDate + ':' + agentId] = true;
   renderIntraday(currentIntradayDate);
 }
-
 async function toggleReinforcement(cb) {
   if (!currentStoreId) return;
   var on = cb.checked;
-  var lbl = document.getElementById('reinf-lbl');
-  if (lbl) lbl.textContent = on ? t('On - auto proposals') : t('Off');
   if (!storeSettings) storeSettings = {};
   storeSettings.intraday_reinforcement = on;
   queueStoreSave();
   if (currentIntradayDate) renderIntraday(currentIntradayDate);
 }
-
 async function toggleSundaySingle(cb) {
   if (!currentStoreId) return;
   if (!storeSettings) storeSettings = {};
@@ -2255,7 +2113,6 @@ async function toggleSundaySingle(cb) {
   queueStoreSave();
   renderMonthlyPlanning();
 }
-
 async function saveCorners(silent) {
   var storeId = currentStoreId;
   if (!storeId) return;
@@ -2292,17 +2149,14 @@ async function saveCorners(silent) {
   showToast('Saved \u2713');
   if (!silent) { renderRegulations(); renderMonthlyPlanning(); }
 }
-
 function saveRegulations() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   if (!applyRegulationsForm()) return;
   queueStoreSave();
-  renderPlanning();
+  renderMonthlyPlanning();
 }
-
 function applyRegulationsForm() {
   function num(id, parse) { var el = document.getElementById(id); return el ? parse(el.value) : NaN; }
-
   var satTog = document.querySelector('.day-open-toggle[data-day="sat"]');
   var sunTog = document.querySelector('.day-open-toggle[data-day="sun"]');
   var mdays = num('reg-max-days', function(v){ return parseInt(v, 10); });
@@ -2312,7 +2166,6 @@ function applyRegulationsForm() {
   var mo    = num('thr-open',  function(v){ return parseInt(v, 10); });
   var mc    = num('thr-close', function(v){ return parseInt(v, 10); });
   var rr    = num('thr-ratio', function(v){ return parseInt(v, 10); });
-
   var dayHours = {}, hoursOk = true;
   DAY_KEYS.forEach(function(k) {
     var openEl = document.getElementById('reg-open-' + k), closeEl = document.getElementById('reg-close-' + k);
@@ -2323,7 +2176,6 @@ function applyRegulationsForm() {
     dayHours[k] = { open: o, close: c };
     if (k !== 'sat' && k !== 'sun' && tog && !tog.checked) dayHours[k].closed = true;
   });
-
   var newBreaks = [], breaksOk = true, breaksNamed = true;
   document.querySelectorAll('.break-row').forEach(function(row) {
     var name  = row.querySelector('.break-name').value.trim();
@@ -2335,11 +2187,9 @@ function applyRegulationsForm() {
     if ((wEnd - wStart) * 60 < dur) breaksOk = false;
     newBreaks.push({ name: name, duration: dur, window_start: wStart, window_end: wEnd, color: sw ? sw.getAttribute('data-color') : null });
   });
-
   if (!hoursOk)  { showToast('Each day: closing hour must be after opening hour', 'error'); return false; }
   if (!breaksNamed) { showToast('Each break needs a name and a duration', 'error'); return false; }
   if (!breaksOk) { showToast('Each break: the window must be longer than the break', 'error'); return false; }
-
   if (satTog) regulations.saturday_rest = !satTog.checked;
   if (sunTog) regulations.sunday_rest   = !sunTog.checked;
   if (mdays > 0) regulations.max_days = mdays;
@@ -2354,7 +2204,6 @@ function applyRegulationsForm() {
   regulations.breaks = newBreaks;
   return true;
 }
-
 // Help texts and ? buttons
 var SETTINGS_HELP = {
   labor: { n: 1, title: 'Labor rules',
@@ -2471,7 +2320,6 @@ var SETTINGS_HELP = {
       'Excel and PDF: export the day.'],
     important: 'Breaks avoid the busiest hours when possible.' }
 };
-
 function helpSeen() {
   try { return JSON.parse(localStorage.getItem('cora_help_seen') || '{}'); } catch (e) { return {}; }
 }
@@ -2479,7 +2327,6 @@ function markHelpSeen(key) {
   var s = helpSeen(); s[key] = true;
   try { localStorage.setItem('cora_help_seen', JSON.stringify(s)); } catch (e) {}
 }
-
 function helpContentHtml(key) {
   var hp = SETTINGS_HELP[key];
   return '<div class="help-h">' + t('What is it?') + '</div><p class="help-p">' + esc(t(hp.what)) + '</p>' +
@@ -2509,7 +2356,6 @@ function initPlanHelp() {
     card.insertAdjacentHTML('beforeend', helpOverlayHtml(key));
   });
 }
-
 function settingsHeadHtml(key, actionsHtml) {
   var seen = !!helpSeen()[key];
   return '<div class="page-head set-head"><div>' +
@@ -2519,7 +2365,6 @@ function settingsHeadHtml(key, actionsHtml) {
       '<div class="card-sub">' + esc(t(SETTINGS_HELP[key].sub)) + '</div>' +
     '</div>' + (actionsHtml || '') + '</div>';
 }
-
 function helpOverlayHtml(key) {
   if (helpSeen()[key]) return '';
   return '<div class="help-ov" onclick="dismissHelp(\'' + key + '\', this)">' +
@@ -2529,7 +2374,6 @@ function helpOverlayHtml(key) {
     '</div></div>';
 }
 function helpHostClass(key) { return helpSeen()[key] ? 'card help-host' : 'card help-host has-help'; }
-
 function dismissHelp(key, ov) {
   markHelpSeen(key);
   var card = ov.parentNode, q = card.querySelector('.help-q');
@@ -2544,18 +2388,15 @@ function dismissHelp(key, ov) {
     if (q) { q.classList.remove('is-hidden'); q.classList.add('help-pop'); }
   }, 450);
 }
-
 function openHelp(key) {
   document.getElementById('help-modal-title').textContent = helpTitle(key);
   document.getElementById('help-modal-body').innerHTML = helpContentHtml(key);
   document.getElementById('help-modal').classList.add('open');
 }
 function closeHelp() { document.getElementById('help-modal').classList.remove('open'); }
-
 // Settings page
 function hourSelectHtml(id, selected)  { return '<select class="time-sel" id="' + id + '">' + hourOptionsH(selected) + '</select>'; }
 function hourSelectHtml2(cls, selected) { return '<select onchange="saveRegulations()" class="time-sel ' + cls + '">' + hourOptionsH(selected) + '</select>'; }
-
 var SHIFT_TONES = [
   { key:'open',   label:'Blue'   },
   { key:'mid',    label:'Amber'  },
@@ -2564,7 +2405,6 @@ var SHIFT_TONES = [
   { key:'pink',   label:'Pink'   },
   { key:'slate',  label:'Slate'  },
 ];
-
 function hourMinOptionsPair(selMin) {
   selMin = (selMin == null) ? 600 : selMin;
   var h = Math.floor(selMin / 60), m = selMin % 60;
@@ -2586,35 +2426,29 @@ function hourMinValueOf(box) {
   if (isNaN(h) || isNaN(m)) return null;
   return h * 60 + m;
 }
-
 function hourMinSelectHtmlCls(cls, selMin) {
   return '<span class="hm-pair ' + cls + '">' + hourMinOptionsPair(selMin) + '</span>';
 }
 function hourMinValueIn(container, cls) {
   return hourMinValueOf(container.querySelector('.' + cls));
 }
-
 function hourMinSelectHtml(id, selMin) {
   return '<span class="hm-pair" id="' + id + '">' + hourMinOptionsPair(selMin) + '</span>';
 }
 function hourMinValue(id) {
   return hourMinValueOf(document.getElementById(id));
 }
-
 function durLabel(min) {
   var h = Math.floor(min / 60), m = min % 60;
   return h + 'h' + (m ? String(m).padStart(2,'0') : '');
 }
-
 function buildShiftSettingsHtml() {
   if (!currentStoreId) {
     return '<div class="card">' +
       '<div class="page-head" style="margin-bottom:0"><h2 class="set-title">' + esc(helpTitle('shifts')) + '</h2></div>' +
       '<p class="set-note" style="margin-top:var(--s3)">Select a store to configure its shifts.</p></div>';
   }
-
   var maxDaily = regulations.max_daily_hours || 8;
-
   function block(grid, title) {
     var list = RETAIL_SHIFTS[grid] || [];
     var h = '<div class="sec-title" style="margin-top:var(--s5)">' + title + '</div>';
@@ -2640,17 +2474,14 @@ function buildShiftSettingsHtml() {
          'onclick="openShiftCreator(\'' + grid + '\')">+ New shift</button>';
     return h;
   }
-
   return '<div class="' + helpHostClass('shifts') + '">' +
     settingsHeadHtml('shifts') +
     '<div onchange="saveShiftConfig()">' + block('sales', 'Sales shifts') + block('stock', 'Stock shifts') + '</div>' +
     helpOverlayHtml('shifts') +
     '</div>';
 }
-
 // New shift pop-up
 var shiftCreatorGrid = 'sales';
-
 function openShiftCreator(grid) {
   shiftCreatorGrid = grid;
   document.getElementById('sc-sub').textContent =
@@ -2662,11 +2493,9 @@ function openShiftCreator(grid) {
   document.getElementById('shift-creator').classList.add('open');
   setTimeout(function() { document.getElementById('sc-code').focus(); }, 60);
 }
-
 function closeShiftCreator() {
   document.getElementById('shift-creator').classList.remove('open');
 }
-
 function renderTonePicker(sel) {
   var box = document.getElementById('sc-tones');
   box.innerHTML = SHIFT_TONES.map(function(t) {
@@ -2675,14 +2504,12 @@ function renderTonePicker(sel) {
            '" onclick="pickTone(this)" title="' + t.label + '">A</button>';
   }).join('');
 }
-
 function pickTone(btn) {
   document.querySelectorAll('#sc-tones .tone-chip').forEach(function(b) {
     b.classList.remove('on');
   });
   btn.classList.add('on');
 }
-
 function confirmShiftCreation() {
   var code  = (document.getElementById('sc-code').value || '').trim().toUpperCase();
   var start = hourMinValue('sc-start-inner');
@@ -2690,7 +2517,6 @@ function confirmShiftCreation() {
   var toneEl = document.querySelector('#sc-tones .tone-chip.on');
   var tone  = toneEl ? toneEl.dataset.tone : 'close';
   var maxDaily = regulations.max_daily_hours || 8;
-
   if (!code) { showToast('Enter a shift letter', 'error'); return; }
   if (!/^[A-Z0-9]{1,3}$/.test(code)) { showToast('Shift codes: 1 to 3 letters or digits', 'error'); return; }
   if (['OFF', 'A', 'PT', 'P'].indexOf(code) !== -1) { showToast(tf('Code {code} is reserved', { code: code }), 'error'); return; }
@@ -2704,17 +2530,14 @@ function confirmShiftCreation() {
     showToast(tf('Shift lasts {duration}, over the {limit}h limit', { duration: durLabel(end - start), limit: maxDaily }), 'error');
     return;
   }
-
   RETAIL_SHIFTS[shiftCreatorGrid].push({
     code: code, label: minToLabel(start) + ' - ' + minToLabel(end),
     startMin: start, endMin: end, tone: tone
   });
-
   closeShiftCreator();
   renderRegulations();
   saveShiftConfig();
 }
-
 function removeShiftRow(btn) {
   var tr = btn.closest('tr');
   if (!tr) return;
@@ -2725,7 +2548,6 @@ function removeShiftRow(btn) {
   renderRegulations();
   saveShiftConfig();
 }
-
 var shiftSaving = false, shiftSavePending = false;
 async function saveShiftConfig() {
   if (shiftSaving) { shiftSavePending = true; return; }
@@ -2741,7 +2563,6 @@ async function saveShiftConfigNow() {
   var maxDaily = regulations.max_daily_hours || 8;
   var rows = [], problem = null, seen = {};
   var counters = { sales: 0, stock: 0 };
-
   document.querySelectorAll('.sh-row').forEach(function(tr) {
     if (problem) return;
     var grid  = tr.dataset.grid;
@@ -2749,7 +2570,6 @@ async function saveShiftConfigNow() {
     var start = hourMinValueIn(tr, 'sh-start');
     var end   = hourMinValueIn(tr, 'sh-end');
     var tone  = tr.dataset.tone || 'close';
-
     if (!code) { problem = 'Every shift needs a code'; return; }
     if (seen[code]) { problem = 'Duplicate code: ' + code; return; }
     seen[code] = true;
@@ -2767,10 +2587,8 @@ async function saveShiftConfigNow() {
       is_opening: false, is_closing: false
     });
   });
-
   if (problem) { showToast(problem, 'error'); return; }
   if (!rows.length) { showToast('At least one shift is required', 'error'); return; }
-
   if (rows.some(function(r) { return !/^[A-Za-z0-9]{1,3}$/.test(r.code); })) {
     showToast('Shift codes: 1 to 3 letters or digits', 'error'); return;
   }
@@ -2788,7 +2606,6 @@ async function saveShiftConfigNow() {
   renderRegulations();
   renderMonthlyPlanning();
 }
-
 function rrow(label, hint, inputHtml, unit) {
   inputHtml = inputHtml.replace('<input ', '<input onchange="saveRegulations()" ');
   return '<div class="set-rule">' +
@@ -2806,10 +2623,8 @@ function rrowToggle(label, hint, id, handler, checked, helpKey) {
       (helpKey ? helpBtnHtml(helpKey) : '') + '</span>' +
     '</div>';
 }
-
 function renderRegulations() {
   if (!currentStoreId) return;
-
   let hoursRows = '';
   DAY_KEYS.forEach(function(key, i) {
     const h = (regulations.day_hours && regulations.day_hours[key])
@@ -2830,7 +2645,6 @@ function renderRegulations() {
       '<td>' + durH + 'h</td>' +
       '</tr>';
   });
-
   let breakRows = '';
   (regulations.breaks || []).forEach(function(b, i) {
     breakRows += '<tr class="break-row">' +
@@ -2850,11 +2664,8 @@ function renderRegulations() {
       '<td><button class="btn-sq" onclick="removeCornerRow(this)" title="Remove">\u2715</button></td>' +
       '</tr>';
   });
-
   var settingsExtra = buildShiftSettingsHtml();
-
   document.getElementById('regulations-content').innerHTML =
-
     // Block 1: Labor rules
     '<div class="' + helpHostClass('labor') + '">' + settingsHeadHtml('labor') +
       '<div class="set-rules">' +
@@ -2882,7 +2693,6 @@ function renderRegulations() {
           : '') +
       '</div>' + helpOverlayHtml('labor') +
     '</div>' +
-
     // Block 2: Operating hours
     '<div class="' + helpHostClass('hours') + '">' + settingsHeadHtml('hours') +
       '<div class="table-scroll"><table class="tbl tbl-framed set-tbl hours-table"><thead><tr>' +
@@ -2890,7 +2700,6 @@ function renderRegulations() {
         '<th>Duration</th>' +
       '</tr></thead><tbody>' + hoursRows + '</tbody></table></div>' + helpOverlayHtml('hours') +
     '</div>' +
-
     // Block 3: Break structure
     '<div class="' + helpHostClass('breaks') + '">' + settingsHeadHtml('breaks') +
       '<div class="table-scroll"><table class="tbl tbl-framed set-tbl"><thead><tr>' +
@@ -2901,7 +2710,6 @@ function renderRegulations() {
       '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addBreakRow()">+ ' + t('Add break') + '</button>' +
       helpOverlayHtml('breaks') +
     '</div>' +
-
     // Block 4: Corners
     '<div class="' + helpHostClass('corners') + '">' + settingsHeadHtml('corners') +
       '<div class="table-scroll"><table class="tbl tbl-framed set-tbl"><thead><tr>' +
@@ -2911,16 +2719,13 @@ function renderRegulations() {
       '<button class="btn btn-ghost btn-sm" style="margin-top:var(--s3)" onclick="addCornerRow()">+ ' + t('Add corner') + '</button>' +
       helpOverlayHtml('corners') +
     '</div>' +
-
     settingsExtra;
   mountSettingsSections();
 }
-
 // Load team and store data
 async function loadWeekData() {
   var sid = currentStoreId;
   showLoader();
-
   const { data: agentData, error: e1 } = await sb
     .from('retail_agents').select('*')
     .eq('store_id', currentStoreId).eq('is_active', true).order('last_name');
@@ -2932,7 +2737,6 @@ async function loadWeekData() {
     if (ra !== rb) return ra - rb;
     return (a.last_name || '').localeCompare(b.last_name || '');
   });
-
   storeCorners = [];
   cornerTrafficMonthly = {};
   var { data: cnrData } = await sb.from('retail_corners')
@@ -2948,27 +2752,21 @@ async function loadWeekData() {
       cornerTrafficMonthly[r.corner_id + '|' + r.year + '|' + r.month] = r;
     });
   }
-
   availLoaded = null;
-
   hideLoader();
-
   await loadPlanningOverrides();
   if (sid !== currentStoreId) return;
   await loadAgentPrefs();
   if (sid !== currentStoreId) return;
   await ensurePeriodData();
   if (sid !== currentStoreId) return;
-
-  renderPlanning();
+  renderMonthlyPlanning();
   renderAgents();
 }
-
 // CAST date picker
 var DP_ICON = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
 var dpInput = null, dpMonth = null;
 var nativeValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-
 function dpLabel(input) {
   var v = input.value, btn = input.nextSibling;
   if (!btn || !btn.classList || !btn.classList.contains('dp-btn')) return;
@@ -2976,7 +2774,6 @@ function dpLabel(input) {
   btn.innerHTML = DP_ICON + '<span>' + (v ? esc(new Date(v + 'T12:00:00').toLocaleDateString(dLoc(),
     { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })) : t('Select a date')) + '</span>';
 }
-
 function enhanceDateInputs() {
   document.querySelectorAll('input[type=date]:not([data-dp])').forEach(function(input) {
     input.setAttribute('data-dp', '1');
@@ -2992,7 +2789,6 @@ function enhanceDateInputs() {
     dpLabel(input);
   });
 }
-
 function openDatePop(input) {
   if (dpInput === input) { closeDatePop(); return; }
   closeDatePop();
@@ -3002,7 +2798,6 @@ function openDatePop(input) {
   input.nextSibling.classList.add('is-open');
   renderDatePop();
 }
-
 function renderDatePop() {
   var pop = document.getElementById('date-pop'), btn = dpInput.nextSibling;
   var y = dpMonth.getFullYear(), m = dpMonth.getMonth();
@@ -3030,12 +2825,10 @@ function renderDatePop() {
   pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pop.offsetWidth - 8)) + 'px';
   pop.style.top  = (below ? r.bottom + 6 : Math.max(8, r.top - 6 - pop.offsetHeight)) + 'px';
 }
-
 function shiftDatePop(dir) {
   dpMonth = new Date(dpMonth.getFullYear(), dpMonth.getMonth() + dir, 1);
   renderDatePop();
 }
-
 function pickDate(ds) {
   var input = dpInput;
   closeDatePop();
@@ -3043,29 +2836,24 @@ function pickDate(ds) {
   input.value = ds;
   input.dispatchEvent(new Event('change', { bubbles: true }));
 }
-
 function closeDatePop() {
   if (dpInput && dpInput.nextSibling && dpInput.nextSibling.classList) dpInput.nextSibling.classList.remove('is-open');
   dpInput = null;
   var pop = document.getElementById('date-pop');
   if (pop) pop.classList.remove('open');
 }
-
 document.addEventListener('click', function(e) {
   if (dpInput && !e.target.closest('#date-pop')) closeDatePop();
 });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDatePop(); });
-
 // Data for the displayed month
 var availLoaded = null;
 var trafficYearLoaded = null;
-
 function mondayOfDate(d) {
   var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   x.setDate(x.getDate() - (x.getDay() + 6) % 7);
   return x;
 }
-
 var availLoadSeq = 0;
 async function loadAvailability(from, to) {
   var storeId = currentStoreId, seq = ++availLoadSeq;
@@ -3086,7 +2874,6 @@ async function loadAvailability(from, to) {
   availLoaded = { storeId: storeId, from: from, to: to };
   return true;
 }
-
 function snapshotMonthKey() {
   return monthlyRef.getFullYear() + '-' + String(monthlyRef.getMonth() + 1).padStart(2, '0') + '-01';
 }
@@ -3120,7 +2907,6 @@ function savePlanSnapshot(storeId, month, plan) {
   });
   return snapChain;
 }
-
 async function ensurePeriodData() {
   if (!currentStoreId) return;
   await loadPlanSnapshot();
@@ -3139,16 +2925,12 @@ async function ensurePeriodData() {
   await loadHolidays(parseInt(from.slice(0, 4), 10));
   await loadHolidays(parseInt(to.slice(0, 4), 10));
 }
-
 // Open or closed day
 function getDayClosureType(dayStr) {
   if (calOverrides[dayStr] === false) return 'holiday';
-
   if (calHolidays[dayStr] && calOverrides[dayStr] !== true) return 'holiday';
-
   if (regulations.public_holidays.includes(dayStr) && calOverrides[dayStr] !== true) return 'holiday';
   if (regulations.closed_dates.includes(dayStr)    && calOverrides[dayStr] !== true) return 'holiday';
-
   const dow = new Date(dayStr + 'T12:00:00').getDay();
   if (dow === 6 && regulations.saturday_rest && calOverrides[dayStr] !== true) return 'weekend';
   if (dow === 0 && regulations.sunday_rest   && calOverrides[dayStr] !== true) return 'weekend';
@@ -3157,7 +2939,6 @@ function getDayClosureType(dayStr) {
       regulations.day_hours[dk].closed && calOverrides[dayStr] !== true) return 'weekend';
   return null;
 }
-
 function agentOnLeave(agentId, dayStr) {
   for (var i = 0; i < agentLeaves.length; i++) {
     var lv = agentLeaves[i];
@@ -3165,15 +2946,10 @@ function agentOnLeave(agentId, dayStr) {
   }
   return null;
 }
-
 // Planning engine
-function renderPlanning() {
-  renderMonthlyPlanning();
-}
 // Monthly planning constants
 var MISSION_LABELS = { mb:'MB', wel:'Welcome', lun:'Lunch' };
 var MISSION_DUR = { mb:0.25, wel:1, lun:1 };
-
 // Missions a manager can add: every break of Break structure (live) + fixed missions.
 var FIXED_MISSIONS = [
   { type: 'mb',    label: 'Morning brief', short: 'MB',          dur: 15, cls: 'b-mb' },
@@ -3195,7 +2971,6 @@ function missionDef(type) {
 }
 // Duration (hours) of an added mission: its own if set, else its definition.
 function missionDurH(m) { return (m.dur || missionDef(m.type).dur) / 60; }
-
 var RETAIL_STATUS = {
   SM:               { label: 'Store Manager',          block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
   ASM:              { label: 'Deputy Store Director',  block: 'MGMT',     grid: 'sales', pool: 'mgmt'  },
@@ -3228,14 +3003,11 @@ var RETAIL_SHIFTS_DEFAULT = {
     { code:'CS', label:'10H00 - 18H30', startMin:600, endMin:1110, tone:'close' },
   ],
 };
-
 var RETAIL_SHIFTS = JSON.parse(JSON.stringify(RETAIL_SHIFTS_DEFAULT));
-
 function minToLabel(m) {
   var h = Math.floor(m / 60), mn = m % 60;
   return String(h).padStart(2, '0') + 'H' + String(mn).padStart(2, '0');
 }
-
 function minToTimeInput(m) {
   var h = Math.floor(m / 60), mn = m % 60;
   return String(h).padStart(2, '0') + ':' + String(mn).padStart(2, '0');
@@ -3247,9 +3019,7 @@ function timeInputToMin(v) {
   if (isNaN(h) || isNaN(mn)) return null;
   return h * 60 + mn;
 }
-
 var storeSettings = null;
-
 async function loadStoreSettings() {
   var sid = currentStoreId;
   storeSettings = null;
@@ -3259,31 +3029,26 @@ async function loadStoreSettings() {
   if (sid !== currentStoreId) return;
   if (res.error || !res.data || !res.data.length) return;
   storeSettings = res.data[0];
-
   storeSettings.min_opening  = storeSettings.min_opening  != null ? storeSettings.min_opening  : 1;
   storeSettings.min_closing  = storeSettings.min_closing  != null ? storeSettings.min_closing  : 1;
   storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70;
   storeSettings.fairness_rotation = !!storeSettings.fairness_rotation;
   storeSettings.intraday_reinforcement = !!storeSettings.intraday_reinforcement;
   storeSettings.sunday_single_shift = storeSettings.sunday_single_shift !== false;
-
   if (storeSettings.saturday_open != null) regulations.saturday_rest = !storeSettings.saturday_open;
   if (storeSettings.sunday_open   != null) regulations.sunday_rest   = !storeSettings.sunday_open;
   if (storeSettings.day_hours && Object.keys(storeSettings.day_hours).length) {
     regulations.day_hours = storeSettings.day_hours;
   }
 }
-
 async function loadShiftConfig() {
   var sid = currentStoreId;
   RETAIL_SHIFTS = JSON.parse(JSON.stringify(RETAIL_SHIFTS_DEFAULT));
   if (!currentStoreId) return;
-
   var res = await sb.from('retail_shift_config').select('*')
     .eq('store_id', currentStoreId).order('sort_order');
   if (sid !== currentStoreId) return;
   if (res.error || !res.data || !res.data.length) return;
-
   var byGrid = { sales: [], stock: [] };
   res.data.forEach(function(r) {
     if (r.is_active === false) return;
@@ -3299,12 +3064,10 @@ async function loadShiftConfig() {
   if (byGrid.sales.length) RETAIL_SHIFTS.sales = byGrid.sales;
   if (byGrid.stock.length) RETAIL_SHIFTS.stock = byGrid.stock;
 }
-
 function retailStatusOf(agent) {
   var st = (agent.status || 'SA').toUpperCase();
   return RETAIL_STATUS[st] ? st : 'SA';
 }
-
 var HIERARCHY_ORDER = ['SM', 'ASM', 'TM', 'MANAGER', 'SENIOR', 'SA', 'GRAND_VENDEUR', 'PART_TIME', 'STOCK_MANAGER', 'STOCK'];
 function skillMatchesCorner(skills, cornerCode) {
   if (!skills || !skills.length || !cornerCode) return false;
@@ -3313,7 +3076,6 @@ function skillMatchesCorner(skills, cornerCode) {
   for (var i = 0; i < skills.length; i++) if (norm(skills[i]) === target) return true;
   return false;
 }
-
 function setPlanMeta(id, text, isHtml) {
   var el = document.getElementById(id);
   if (!el) return;
@@ -3324,7 +3086,6 @@ function setPlanCoverage(html) {
   var el = document.getElementById('planning-coverage-body');
   if (el) el.innerHTML = html;
 }
-
 function renderCornerTabs() {
   ['monthly','intraday'].forEach(function(which) {
     var box = document.getElementById('corner-tabs-' + which);
@@ -3342,7 +3103,6 @@ function renderCornerTabs() {
     box.innerHTML = html;
   });
 }
-
 function switchCornerView(cid) {
   currentCornerView = cid;
   renderCornerTabs();
@@ -3351,7 +3111,6 @@ function switchCornerView(cid) {
     if (typeof loadAndRenderIntraday === 'function' && currentIntradayDate) renderIntraday(currentIntradayDate);
   }
 }
-
 function agentSubLabel(a) {
   if (storeCorners.length > 1 && a.home_corner_id) {
     for (var i = 0; i < storeCorners.length; i++)
@@ -3359,26 +3118,22 @@ function agentSubLabel(a) {
   }
   return currentStoreName;
 }
-
 function hierarchyRank(agent) {
   var st = retailStatusOf(agent);
   if (st === 'MANAGER') st = 'ASM';
   var i = HIERARCHY_ORDER.indexOf(st);
   return i === -1 ? HIERARCHY_ORDER.length : i;
 }
-
 // Monthly planning
 function shiftCls(code) {
   if (!code) return 'sh-none';
   if (code === 'OFF') return 'sh-off';
   if (code === 'A')   return 'sh-cp';
   if (code === 'PT')  return 'sh-pt';
-
   var def = findShiftDef(code);
   if (def) {
     return (def.grid === 'stock' ? 'sh-stock ' : '') + 'sh-' + (def.tone || 'close');
   }
-
   var isStock = code.length > 1 && code.charAt(code.length - 1) === 'S';
   var base = code.charAt(0);
   var tone = (base === 'O') ? 'sh-open'
@@ -3387,7 +3142,6 @@ function shiftCls(code) {
            : 'sh-close';
   return isStock ? ('sh-stock ' + tone) : tone;
 }
-
 // Store hours of one day, in minutes
 function dayMinutes(ds) {
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
@@ -3395,7 +3149,6 @@ function dayMinutes(ds) {
   if (calHours[ds]) dh = calHours[ds];
   return { open: Math.round(dh.open * 60), close: Math.round(dh.close * 60) };
 }
-
 // Opening, middle and closing groups of shifts for one day
 function shiftClusters(grid, ds) {
   var h = dayMinutes(ds);
@@ -3421,20 +3174,17 @@ function shiftClusters(grid, ds) {
   var mid = list.filter(function(s) { return openG.indexOf(s) === -1 && closeG.indexOf(s) === -1; });
   return { open: openG, mid: mid, close: closeG, covers: covers };
 }
-
 // Present for the first hour (opening) and for the last hour (closing)
 function coverOfHours(start, end, h) {
   return { open: start <= h.open && end >= Math.min(h.close, h.open + 60),
            close: start <= Math.max(h.open, h.close - 60) && end >= h.close };
 }
-
 // Spread k people evenly over the shifts of a group, turning each day
 function spreadPick(group, j, k, rot) {
   var m = group.length;
   var i = Math.min(m - 1, Math.floor((j + 0.5) * m / Math.max(1, k)));
   return group[(i + (rot || 0)) % m];
 }
-
 // Real working hours of a planning result, or null
 function workHoursOf(a, ds, res) {
   if (!res || res.special) return null;
@@ -3459,14 +3209,11 @@ function workHoursOf(a, ds, res) {
   }
   return { start: st, end: en };
 }
-
 // Real opening and closing coverage of a planning result
 function coverOf(a, ds, res) {
   var w = workHoursOf(a, ds, res);
   return w ? coverOfHours(w.start, w.end, dayMinutes(ds)) : { open: false, close: false };
 }
-
-
 function findShiftDef(code) {
   var found = null;
   ['sales', 'stock'].forEach(function(g) {
@@ -3476,7 +3223,6 @@ function findShiftDef(code) {
   });
   return found;
 }
-
 function attachCrossHighlight() {
   var tbl = document.getElementById('mth-table');
   if (!tbl) return;
@@ -3493,13 +3239,9 @@ function attachCrossHighlight() {
   });
   tbl.addEventListener('mouseleave', clear);
 }
-
 var DOW_WEIGHT = { 1: 0.982, 2: 0.959, 3: 0.915, 4: 0.959, 5: 1.080, 6: 1.221, 0: 0.885 };
-
 var CLOSING_BIAS = 2.3;
-
 function monthKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
-
 var trafficLoadSeq = 0;
 async function loadTraffic(year) {
   var storeId = currentStoreId, seq = ++trafficLoadSeq;
@@ -3516,10 +3258,8 @@ async function loadTraffic(year) {
   (dres.data || []).forEach(function(r) { td[r.date] = r; });
   trafficMonthly = tm; trafficDaily = td; trafficYearLoaded = year;
 }
-
 var eventEditorState = { id: null, cat: null };
 var eventSaving = false;
-
 function openEventEditor(id, cat, ds) {
   var ev = id ? planningEvents.find(function(e){ return e.id === id; }) : null;
   if (id && !ev) return;
@@ -3533,7 +3273,6 @@ function openEventEditor(id, cat, ds) {
   document.getElementById('event-editor').classList.add('open');
   setTimeout(function(){ document.getElementById('evt-label-input').focus(); }, 60);
 }
-
 function eventLanes(cat) {
   var y = monthlyRef.getFullYear(), m = monthlyRef.getMonth();
   var mStart = toDateStr(new Date(y, m, 1)), mEnd = toDateStr(new Date(y, m + 1, 0));
@@ -3551,7 +3290,6 @@ function eventLanes(cat) {
   });
   return lanes.length ? lanes : [[]];
 }
-
 function showEvtTip(el, id) {
   var ev = planningEvents.find(function(e) { return e.id === id; });
   var tip = document.getElementById('evt-tip');
@@ -3571,12 +3309,10 @@ function hideEvtTip() {
   var tip = document.getElementById('evt-tip');
   if (tip) tip.classList.remove('open');
 }
-
 function closeEventEditor() {
   document.getElementById('event-editor').classList.remove('open');
   eventEditorState = { id: null, cat: null };
 }
-
 async function saveEvent() {
   if (eventSaving) return;
   var st = eventEditorState, storeId = st.storeId;
@@ -3603,7 +3339,6 @@ async function saveEvent() {
     eventSaving = false;
   }
 }
-
 async function deleteEvent() {
   if (eventSaving) return;
   var st = eventEditorState, storeId = st.storeId;
@@ -3620,7 +3355,6 @@ async function deleteEvent() {
     eventSaving = false;
   }
 }
-
 async function afterEventWrite(st, storeId, okMsg) {
   if (currentStoreId !== storeId || eventEditorState !== st) return;
   var refreshed = await loadPlanningEvents();
@@ -3629,7 +3363,6 @@ async function afterEventWrite(st, storeId, okMsg) {
   if (refreshed) { showToast(okMsg); renderMonthlyPlanning(); }
   else showToast('Saved, but events could not be reloaded', 'error');
 }
-
 var planningEventsLoadSeq = 0;
 async function loadPlanningEvents() {
   var storeId = currentStoreId, seq = ++planningEventsLoadSeq;
@@ -3646,7 +3379,6 @@ async function loadPlanningEvents() {
     return false;
   }
 }
-
 function spreadMonthToDays(year, month, total) {
   var nDays = new Date(year, month, 0).getDate();
   var days  = [];
@@ -3662,7 +3394,6 @@ function spreadMonthToDays(year, month, total) {
     closedDays.forEach(function(ds) { empty[ds] = 0; });
     return empty;
   }
-
   var manualTotal = 0;
   var autoDays    = [];
   days.forEach(function(d) {
@@ -3670,12 +3401,10 @@ function spreadMonthToDays(year, month, total) {
     if (rec && rec.is_manual) manualTotal += (rec.traffic || 0);
     else autoDays.push(d);
   });
-
   var remaining = Math.max(0, (total || 0) - manualTotal);
   var weightSum = autoDays.reduce(function(s, d) {
     return s + (DOW_WEIGHT[d.dow] || 1);
   }, 0);
-
   var out = {};
   days.forEach(function(d) {
     var rec = trafficDaily[d.ds];
@@ -3686,13 +3415,11 @@ function spreadMonthToDays(year, month, total) {
   closedDays.forEach(function(ds) { out[ds] = 0; });
   return out;
 }
-
 async function recomputeMonthDaily(year, month) {
   if (!currentStoreId) return;
   var rec   = trafficMonthly[monthKey(year, month)];
   var total = rec ? (rec.current_year != null ? rec.current_year : 0) : 0;
   var spread = spreadMonthToDays(year, month, total);
-
   var rows = Object.keys(spread).map(function(ds) {
     var existing = trafficDaily[ds];
     return {
@@ -3703,16 +3430,13 @@ async function recomputeMonthDaily(year, month) {
     };
   });
   if (!rows.length) return;
-
   var res = await sb.from('retail_traffic_daily')
     .upsert(rows, { onConflict: 'store_id,date' });
   if (res.error) { showToast('Traffic save failed', 'error'); return; }
   rows.forEach(function(r) { trafficDaily[r.date] = r; });
 }
-
 // Traffic forecast
 // Forecast engine
-
 function openDaysInMonth(year, month) {
   var n = new Date(year, month, 0).getDate(), open = 0;
   for (var d = 1; d <= n; d++) {
@@ -3721,7 +3445,6 @@ function openDaysInMonth(year, month) {
   }
   return open;
 }
-
 function computeTrend(year) {
   var ratios = [], months = [];
   for (var m = 1; m <= 12; m++) {
@@ -3737,7 +3460,6 @@ function computeTrend(year) {
   var avg = ratios.reduce(function(s, v) { return s + v; }, 0) / ratios.length;
   return { pct: (avg - 1) * 100, n: ratios.length, months: months };
 }
-
 function forecastYear(year) {
   var out = {};
   var ly = [];
@@ -3747,7 +3469,6 @@ function forecastYear(year) {
   }
   var totalLY = ly.reduce(function(s, v) { return s + v; }, 0);
   if (totalLY <= 0) return out;
-
   var totalOpen = 0, openPerMonth = [];
   for (var m2 = 1; m2 <= 12; m2++) {
     var o = openDaysInMonth(year, m2);
@@ -3756,10 +3477,8 @@ function forecastYear(year) {
   }
   if (totalOpen <= 0) return out;
   var perOpenDay = totalLY / totalOpen;
-
   var trend = computeTrend(year);
   var factor = 1 + (trend.pct / 100);
-
   for (var m3 = 1; m3 <= 12; m3++) {
     var rec3 = trafficMonthly[monthKey(year, m3)];
     if (rec3 && rec3.current_year != null && rec3.current_year > 0 &&
@@ -3767,10 +3486,8 @@ function forecastYear(year) {
       out[m3] = rec3.current_year;
       continue;
     }
-
     var refLY = ly[m3 - 1];
     var open  = openPerMonth[m3 - 1];
-
     var base;
     if (refLY > 0 && open > 0) {
       var lyOpen = openDaysInMonth(year - 1, m3) || open;
@@ -3778,18 +3495,14 @@ function forecastYear(year) {
     } else {
       base = perOpenDay * open;
     }
-
     var smooth = 0.88 * base + 0.12 * (perOpenDay * open);
-
     out[m3] = Math.max(0, Math.round(smooth * factor));
   }
   return out;
 }
-
 // Traffic page
 var MONTH_NAMES = ['January','February','March','April','May','June',
                    'July','August','September','October','November','December'];
-
 async function renderTraffic(localeOnly) {
   var box = document.getElementById('traffic-content');
   if (!box) return;
@@ -3798,10 +3511,8 @@ async function renderTraffic(localeOnly) {
       'Select a store to manage traffic.</p></div>';
     return;
   }
-
   var year = currentWeekMonday.getFullYear();
   if (!localeOnly) await loadTraffic(year);
-
   var totalN2 = 0, totalLY = 0, totalCY = 0;
   for (var m = 1; m <= 12; m++) {
     var r = trafficMonthly[monthKey(year, m)] || {};
@@ -3810,17 +3521,13 @@ async function renderTraffic(localeOnly) {
     totalCY += (r.current_year || 0);
   }
   var delta = totalLY > 0 ? Math.round(((totalCY - totalLY) / totalLY) * 100) : 0;
-
   var html = '';
-
   // Card 1: monthly traffic
   var tr = computeTrend(year);
-
   html += '<div class="card" onchange="saveMonthlyTraffic(event)">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
   html +=     '<h2 class="page-title">' + t('Monthly traffic') + ' ' + year + '</h2>';
   html +=   '</div>';
-
   if (tr.n > 0) {
     var sign = tr.pct >= 0 ? '+' : '';
     var cls  = tr.pct >= 0 ? 'pill-ok' : 'pill-dang';
@@ -3834,7 +3541,6 @@ async function renderTraffic(localeOnly) {
       '<span class="trend-txt">Enter your first months to reveal the trend</span>' +
       '</div>';
   }
-
   html += '<div class="table-scroll"><table class="tbl tbl-framed traffic-month-table"><thead><tr>' +
           '<th>Month</th>' +
           '<th style="text-align:right">N-2</th>' +
@@ -3868,14 +3574,12 @@ async function renderTraffic(localeOnly) {
     '<td style="text-align:right">' + (totalCY ? ((delta > 0 ? '+' : '') + delta + '%') : '-') + '</td>' +
     '</tr>';
   html += '</tbody></table></div></div>';
-
   // Card 2: daily split of the month
   var mIdx  = currentWeekMonday.getMonth() + 1;
   var mName = t(MONTH_NAMES[mIdx - 1]);
   var recM  = trafficMonthly[monthKey(year, mIdx)] || {};
   var spread = spreadMonthToDays(year, mIdx, recM.current_year || 0);
   var keys   = Object.keys(spread).sort();
-
   html += '<div class="card" onchange="saveDailyTraffic()">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
   html +=     '<div><h2 class="page-title">' + t('Daily breakdown') + ' - ' + mName + '</h2>';
@@ -3885,7 +3589,6 @@ async function renderTraffic(localeOnly) {
   html +=       '<button class="btn btn-ghost btn-sm" onclick="resetDailyOverrides()">' + t('Reset daily edits') + '</button>';
   html +=     '</div>';
   html +=   '</div>';
-
   if (!keys.length) {
     html += '<p style="color:var(--tx-3);font-size:13px">No open day this month.</p>';
   } else {
@@ -3896,7 +3599,6 @@ async function renderTraffic(localeOnly) {
       var isM  = !!rec2.is_manual;
       var clo  = getDayClosureType(ds);
       var head = t(DAY_SHORT[(d.getDay() + 6) % 7]) + ' ' + d.getDate();
-
       if (clo) {
         var why = (clo === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
         html += '<div class="tr-day is-closed" title="' + why.replace(/"/g,'') + '">' +
@@ -3914,7 +3616,6 @@ async function renderTraffic(localeOnly) {
     html += '</div>';
   }
   html += '</div>';
-
   // Card 3: hourly traffic curve
   html += '<div class="card">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
@@ -3926,11 +3627,9 @@ async function renderTraffic(localeOnly) {
   html +=   '</div>';
   html +=   '<div class="curve-scroll"><div id="curve-host"></div></div>';
   html += '</div>';
-
   box.innerHTML = html;
   initHourlyCurve();
 }
-
 function weekOpenSpan() {
   var dh = regulations.day_hours || {};
   var opens = [], closes = [];
@@ -3946,24 +3645,19 @@ function weekOpenSpan() {
   if (open >= close) { open = 10; close = 18; }
   return { open: open, close: close };
 }
-
 // Curve indices use the clock labels shown in Traffic, not a day's opening time.
 function hourlyCurveIndex(minute) {
   return Math.floor(minute / 60) - weekOpenSpan().open;
 }
-
 var curveValues = [];
 var curveHours  = [];
-
 function initHourlyCurve(keepValues) {
   var host = document.getElementById('curve-host');
   if (!host) return;
-
   var span = weekOpenSpan();
   curveHours = [];
   for (var h = span.open; h <= span.close; h++) curveHours.push(h);
   var N = curveHours.length;
-
   if (!keepValues) {
     var saved = storeSettings && storeSettings.hourly_curve;
     if (saved && Array.isArray(saved) && saved.length === N) {
@@ -3972,12 +3666,10 @@ function initHourlyCurve(keepValues) {
       curveValues = curveHours.map(function(){ return 100 / N; });
     }
   }
-
   // Width follows the card; height stays 260
   var W = Math.max(500, Math.round(host.clientWidth || 680)), H = 260, padL = 34, padR = 18, padT = 28, padB = 32;
   var plotW = W - padL - padR, plotH = H - padT - padB;
   var maxPct = Math.max(22, Math.ceil(Math.max.apply(null, curveValues) + 4));
-
   host.innerHTML =
     '<svg id="curve-svg" viewBox="0 0 '+W+' '+H+'" style="width:100%;min-width:500px;height:auto;display:block;'+
       'touch-action:none;user-select:none;">'+
@@ -3990,11 +3682,9 @@ function initHourlyCurve(keepValues) {
     '<div style="display:flex;justify-content:flex-end;margin-top:10px;">'+
       '<span style="font-size:12px;color:var(--tx-3)">Total '+
       '<span id="cv-total" style="color:#166534;font-weight:700">100%</span></span></div>';
-
   var svg = document.getElementById('curve-svg');
   function xAt(i){ return padL + (plotW * i / (N - 1)); }
   function yAt(v){ return padT + plotH - (plotH * (v / maxPct)); }
-
   var grid = '';
   for (var p = 0; p <= maxPct; p += 5) {
     var gy = yAt(p);
@@ -4003,7 +3693,6 @@ function initHourlyCurve(keepValues) {
             'fill="#52647B" style="font-family:var(--font)">'+p+'%</text>';
   }
   document.getElementById('cv-grid').innerHTML = grid;
-
   function smooth(pts, close) {
     if (pts.length < 2) return '';
     var d = 'M ' + pts[0][0] + ' ' + pts[0][1];
@@ -4015,7 +3704,6 @@ function initHourlyCurve(keepValues) {
     if (close) d += ' L '+pts[pts.length-1][0]+' '+(padT+plotH)+' L '+pts[0][0]+' '+(padT+plotH)+' Z';
     return d;
   }
-
   function draw() {
     var pts = curveValues.map(function(v,i){ return [xAt(i), yAt(v)]; });
     document.getElementById('cv-line').setAttribute('d', smooth(pts, false));
@@ -4040,7 +3728,6 @@ function initHourlyCurve(keepValues) {
       Math.round(curveValues.reduce(function(a,b){return a+b;},0)) + '%';
     bind();
   }
-
   function setValue(idx, nv) {
     nv = Math.max(0.5, Math.min(maxPct, nv));
     var others = 0;
@@ -4049,7 +3736,6 @@ function initHourlyCurve(keepValues) {
     if (others <= 0) { var e=remaining/(N-1); for (var j=0;j<N;j++) curveValues[j]=(j===idx)?nv:e; }
     else { var s=remaining/others; for (var k=0;k<N;k++) curveValues[k]=(k===idx)?nv:curveValues[k]*s; }
   }
-
   var dragging = null;
   function toPct(evt){
     var r = svg.getBoundingClientRect();
@@ -4071,10 +3757,8 @@ function initHourlyCurve(keepValues) {
   window.addEventListener('touchmove', move, { passive: false, signal: sig });
   window.addEventListener('mouseup', end, { signal: sig });
   window.addEventListener('touchend', end, { signal: sig });
-
   draw();
 }
-
 function resetHourlyCurve() {
   if (!curveHours.length) return;
   if (!confirm(t('Reset the hourly curve to a flat shape?'))) return;
@@ -4083,7 +3767,6 @@ function resetHourlyCurve() {
   initHourlyCurve(true);
   saveHourlyCurve();
 }
-
 function saveHourlyCurve() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   var rounded = curveValues.map(function(v){ return Math.round(Number(v) * 10) / 10; });
@@ -4094,7 +3777,6 @@ function saveHourlyCurve() {
   storeSettings.hourly_curve = rounded;
   queueStoreSave();
 }
-
 function intradayPickDate(v) {
   if (!v) return;
   currentIntradayDate = v;
@@ -4109,7 +3791,6 @@ function intradayShiftDay(dir) {
   if (inp) inp.value = currentIntradayDate;
   loadAndRenderIntraday(currentIntradayDate);
 }
-
 async function loadAndRenderIntraday(ds) {
   if (!ds) ds = currentIntradayDate || toDateStr(new Date());
   currentIntradayDate = ds;
@@ -4139,7 +3820,6 @@ async function loadAndRenderIntraday(ds) {
   addedMissions = am;
   renderIntraday(ds);
 }
-
 function renderIntraday(ds) {
   intradayExport = null;
   var body = document.getElementById('planning-intraday-body');
@@ -4147,24 +3827,20 @@ function renderIntraday(ds) {
   renderCornerTabs();
   setPlanMeta('intraday-meta', ds ? formatDateDisplay(ds) : '');
   if (!currentStoreId) { body.innerHTML = '<p class="plan-empty">Select a store to view the intraday planning.</p>'; return; }
-
   if (!ds) ds = toDateStr(new Date());
   currentIntradayDate = ds;
   var inp = document.getElementById('intraday-date');
   if (inp && inp.value !== ds) inp.value = ds;
-
   var closure = getDayClosureType(ds);
   if (closure) {
     var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
     body.innerHTML = '<p class="plan-empty">' + tf('{date} - store closed ({reason}).', { date: formatDateDisplay(ds), reason: t(why) }) + '</p>';
     return;
   }
-
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
   var dh = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
   if (calHours[ds]) dh = calHours[ds];
   var openH = dh.open, closeH = dh.close;
-
   if (!monthlyResult[ds]) renderMonthlyPlanning();
   var dayPlan = monthlyResult[ds];
   if (!dayPlan) {
@@ -4172,7 +3848,6 @@ function renderIntraday(ds) {
       tf('Open {date} in the Monthly view first to compute its planning.', { date: formatDateDisplay(ds) }) + '</p>';
     return;
   }
-
   var working = agents.filter(function(a) {
     if (a.is_active === false) return false;
     var mr = dayPlan[a.id];
@@ -4182,7 +3857,6 @@ function renderIntraday(ds) {
     body.innerHTML = '<p class="plan-empty">' + tf('No client advisors scheduled on {date}.', { date: formatDateDisplay(ds) }) + '</p>';
     return;
   }
-
   // Same hours as the monthly planning
   var shiftInfo = {};
   working.forEach(function(a) {
@@ -4196,7 +3870,6 @@ function renderIntraday(ds) {
       tone: res.code === 'PT' ? 'pt' : res.code === 'D' ? 'dsun' : sh.tone, half: res.half
     };
   });
-
   var T0 = 24, T1 = 0;
   working.forEach(function(a) {
     var sh = shiftInfo[a.id];
@@ -4209,9 +3882,7 @@ function renderIntraday(ds) {
   intradayAxis = { T0: T0, T1: T1 };
   function pct(h) { return ((h - T0) / span) * 100; }
   function wpct(h) { return (h / span) * 100; }
-
   var curve = (storeSettings && storeSettings.hourly_curve) || null;
-
   // Intraday help between corners
   var reinforceMissions = {};
   if (storeSettings && storeSettings.intraday_reinforcement && storeCorners.length > 1 && curve && curve.length) {
@@ -4233,7 +3904,6 @@ function renderIntraday(ds) {
     var midStart = Math.ceil(openH) + 1, midEnd = Math.floor(closeH) - 1;
     var peakH = 0, peakVal = 0;
     for (var h = midStart; h <= midEnd; h++) { var w = hourWeight(h); if (w > peakVal) { peakVal = w; peakH = h; } }
-
     if (peakVal > 0) {
       var tension = storeCorners.map(function(c) {
         var present = (byC[c.id] || []).length;
@@ -4255,19 +3925,15 @@ function renderIntraday(ds) {
       }
     }
   }
-
   var breaks = (regulations.breaks || []);
   var lunch = breaks.find(function(b) { return /lunch|dej/i.test(b.name); }) || breaks[0] || null;
-
   var byArrival = working.slice().sort(function(a, b) {
     return shiftInfo[a.id].startMin - shiftInfo[b.id].startMin;
   });
-
   // Breaks: shared helpers
   var lunchPlan = {};
   var breakPlans = [];
   var takenSlots = {};
-
   function markTaken(agentId, start, dur) {
     (takenSlots[agentId] = takenSlots[agentId] || []).push([start, start + dur]);
   }
@@ -4278,7 +3944,6 @@ function renderIntraday(ds) {
     }
     return false;
   }
-
   function spreadOrder(n) {
     var bits = 0; while ((1 << bits) < n) bits++;
     var out = [];
@@ -4307,7 +3972,6 @@ function renderIntraday(ds) {
   var siloMembers = {};
   working.forEach(function(a) { var s = breakSiloOf(a); (siloMembers[s] = siloMembers[s] || []).push(a); });
   var siloKeys = Object.keys(siloMembers);
-
   var q0 = Infinity, q1 = -Infinity;
   working.forEach(function(a) { q0 = Math.min(q0, shiftInfo[a.id].startMin / 60); q1 = Math.max(q1, shiftInfo[a.id].endMin / 60); });
   q0 = Math.floor(q0 / Q) * Q;
@@ -4324,7 +3988,6 @@ function renderIntraday(ds) {
     var ci = hourlyCurveIndex((q0 + qd * Q) * 60 + 1e-7);
     demand.push((curveAvg > 0 && ci >= 0 && ci < curve.length) ? (+curve[ci] || 0) / curveAvg : 1);
   }
-
   // Manual missions of the day: never overlapped by an automatic break; a
   // manual break replaces the automatic one and counts as time off the floor.
   var manualBusy = {}, manualBreakAway = {};
@@ -4361,14 +4024,12 @@ function renderIntraday(ds) {
       jobs.push({ a: a, bi: bi, dur: dur, starts: starts, rank: rank, st: null });
     });
   });
-
   // Reserve valid manual positions before automatic placement and scoring.
   jobs.forEach(function(j) {
     var ov = edgeOverride(j);
     j.manual = ov != null;
     if (j.manual) j.st = ov;
   });
-
   function planScore() {
     var away = {}, unplaced = 0, empty = 0, over = 0, pressure = 0;
     Object.keys(manualBreakAway).forEach(function(aid) { away[aid] = Object.assign({}, manualBreakAway[aid]); });
@@ -4427,7 +4088,6 @@ function renderIntraday(ds) {
     j.st = null;
     return best;
   }
-
   var order = jobs.slice().sort(function(x, y) { return (x.starts.length - y.starts.length) || (y.dur - x.dur); });
   order.forEach(function(j) {
     if (j.manual) return;
@@ -4447,7 +4107,6 @@ function renderIntraday(ds) {
     });
     if (fix) { fix.o.st = fix.ost; j.st = fix.st; }
   });
-
   var cur = planScore();
   for (var pass = 0; pass < 8; pass++) {
     var improved = false;
@@ -4493,7 +4152,6 @@ function renderIntraday(ds) {
     }
     if (!improved) break;
   }
-
   // A lunch is never dropped: if the only free slot is with the other manager, keep it there
   jobs.forEach(function(j) {
     if (j.st != null || j.manual || breaks[j.bi] !== lunch || poolOf(j.a) !== 'mgmt') return;
@@ -4502,7 +4160,6 @@ function renderIntraday(ds) {
     relaxMgrLunch = false;
     if (b) j.st = b.st;
   });
-
   // Repair boundary coverage using displayed break positions; manual choices stay locked.
   function edgeOverride(j) {
     var value = intradayOverrides[j.a.id + ':' + edgeTypeByIdx[j.bi]];
@@ -4580,10 +4237,8 @@ function renderIntraday(ds) {
     }
     j.st = (found && found.sc[0] < base) ? found.st : keep;
   });
-
-  var unplacedBreaks = 0;
   jobs.forEach(function(j) {
-    if (j.st == null) { unplacedBreaks++; return; }
+    if (j.st == null) return;
     plansByIdx[j.bi][j.a.id] = j.st;
     markTaken(j.a.id, j.st, j.dur);
   });
@@ -4592,7 +4247,6 @@ function renderIntraday(ds) {
     if (b === lunch) lunchPlan = plansByIdx[i];
     else breakPlans.push({ brk: b, plan: plansByIdx[i] });
   });
-
   // Morning briefs
   var mbPlan = {};
   var noLeadAtAll = !working.some(function(a){ return poolOf(a) === 'mgmt' || retailStatusOf(a) === 'SENIOR'; });
@@ -4626,7 +4280,6 @@ function renderIntraday(ds) {
       });
     }
   }
-
   var welcomePlan = {};
   if (curve && curve.length) {
     var avgCurveVal = curve.reduce(function(s, v){ return s + v; }, 0) / curve.length;
@@ -4657,16 +4310,13 @@ function renderIntraday(ds) {
       welcomePlan[chosen.id].push(ph);
     }
   }
-
   function fmtH(m) {
     var h = Math.floor(m / 60), mn = m % 60;
     return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
   }
-
   var axis = '<div class="it-axis"><div class="pad">' + t('Agent') + '</div><div class="ticks">';
   for (var h = Math.floor(T0); h < Math.ceil(T1); h++) axis += '<span>' + h + 'h</span>';
   axis += '</div></div>';
-
   var groups = [];
   if (storeCorners.length > 1) {
     var refYi = monthlyRef.getFullYear(), refMi = monthlyRef.getMonth() + 1;
@@ -4706,7 +4356,6 @@ function renderIntraday(ds) {
       if (list.length) groups.push({ title: blockDef.title.toUpperCase(), list: list });
     });
   }
-
   var rowsHtml = '';
   var intradayExportRows = [];
   groups.forEach(function(grp) {
@@ -4717,7 +4366,6 @@ function renderIntraday(ds) {
       var sH = sh.startMin / 60, eH = sh.endMin / 60;
       var toneCls = 'sh-' + (sh.tone || 'close');
       var blocks = [];
-
       function withOverride(agentId, type, calcStart, durH) {
         var ov = intradayOverrides[agentId + ':' + type];
         if (ov == null) return calcStart;
@@ -4725,7 +4373,6 @@ function renderIntraday(ds) {
         if (ovH >= sH && ovH + durH <= eH) return ovH;
         return calcStart;
       }
-
       if (mbPlan[a.id] != null) {
         blocks.push([withOverride(a.id, 'mb', mbPlan[a.id], 0.25), 0.25, 'mb', 'MB']);
       }
@@ -4744,7 +4391,6 @@ function renderIntraday(ds) {
           blocks.push([withOverride(a.id, 'wel' + wi, wh, 1), 1, 'wel' + wi, 'Welcome']);
         });
       }
-
       var exportBlocks = blocks.map(function(b){
         return { start:b[0], dur:b[1], type:b[2], label:b[3],
                  color: (b[4] && b[4].indexOf('bc-') === 0) ? b[4].slice(3) : null };
@@ -4765,11 +4411,9 @@ function renderIntraday(ds) {
         code: sh.code, tone: sh.tone || 'close', startH: sH, endH: eH,
         blocks: exportBlocks
       });
-
       var grid = '<div class="it-grid">';
       for (var k = Math.floor(T0); k < Math.ceil(T1); k++) grid += '<i></i>';
       grid += '</div>';
-
       var track = '<div class="it-track it-track-add" data-agent="' + a.id +
         '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
         ' onclick="openMissionMenu(event,\'' + a.id + '\')">' + grid +
@@ -4801,7 +4445,7 @@ function renderIntraday(ds) {
           ' data-agent="' + a.id + '" data-type="' + esc(m.type) + '" data-mid="' + m.id + '"' +
           ' data-dur="' + durH + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
           ' title="' + esc(t(md.label)) + '" data-full="' + label + '" style="left:' + pct(m.start) + '%;width:' + wpct(durH) + '%">' +
-          '<span class="it-blk-label">' + (durH < 0.5 ? '' : label) + '</span>' +
+          (durH < 0.5 ? '' : label) +
           '</div>';
       });
       (reinforceMissions[a.id] || []).forEach(function(m, mi) {
@@ -4809,11 +4453,10 @@ function renderIntraday(ds) {
           ' data-agent="' + a.id + '" data-type="reinf" data-ridx="' + mi + '"' +
           ' data-dur="' + m.dur + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
           ' title="' + esc('\u2192' + m.toCode) + '" data-full="' + esc('\u2192' + m.toCode) + '" style="left:' + pct(m.start) + '%;width:' + wpct(m.dur) + '%">' +
-          '<span class="it-blk-label">' + (m.dur < 0.5 ? '' : '\u2192' + esc(m.toCode)) + '</span>' +
+          (m.dur < 0.5 ? '' : '\u2192' + esc(m.toCode)) +
           '</div>';
       });
       track += '</div>';
-
       var nm = ((a.first_name || '') + ' ' + (a.last_name || '')).trim();
       var roleLabel = t((RETAIL_STATUS[retailStatusOf(a)] || {}).label || '');
       var info = '<div class="it-info" data-no-i18n title="' + esc(nm + ' - ' + roleLabel) + '">' +
@@ -4824,20 +4467,16 @@ function renderIntraday(ds) {
     });
     rowsHtml += '</div>';
   });
-
   body.innerHTML =
     '<div class="it-wrap" style="--axis-width:' + Math.max(680, span * 72) + 'px">' +
       axis +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
-
   setPlanMeta('intraday-meta', tf('{date} - {count} present', { date: formatDateDisplay(ds), count: working.length }));
   intradayExport = { ds: ds, storeId: currentStoreId, openH: T0, closeH: T1, rows: intradayExportRows };
-
   initIntradayDrag(body, T0, span, ds);
   bindMissionEditors(body);
 }
-
 // Drag and drop in intraday
 function initIntradayDrag(root, T0, span, ds) {
   var blocks = root.querySelectorAll('.it-blk');
@@ -4855,10 +4494,8 @@ function initIntradayDrag(root, T0, span, ds) {
       blk.style.cursor = 'grabbing';
       blk.style.zIndex = '20';
       blk.setPointerCapture(e.pointerId);
-
       function hToPct(h) { return ((h - T0) / span) * 100; }
       function pctToH(p) { return T0 + (p / 100) * span; }
-
       function onMove(ev) {
         var dx = ev.clientX - startX;
         var dPct = (dx / trackRect.width) * 100;
@@ -4870,7 +4507,6 @@ function initIntradayDrag(root, T0, span, ds) {
         blk.style.left = hToPct(newH) + '%';
         blk.dataset.curH = newH;
       }
-
       function onUp(ev) {
         blk.releasePointerCapture(e.pointerId);
         blk.removeEventListener('pointermove', onMove);
@@ -4899,13 +4535,11 @@ function initIntradayDrag(root, T0, span, ds) {
           }
         }
       }
-
       blk.addEventListener('pointermove', onMove);
       blk.addEventListener('pointerup', onUp);
     });
   });
 }
-
 function openMissionMenu(ev, agentId) {
   if (ev.target.closest('.it-blk')) return;
   if (!ev.target.classList.contains('it-shift')) return;
@@ -4918,7 +4552,6 @@ function openMissionMenu(ev, agentId) {
   var clickMin = intradayAxis ? Math.round((intradayAxis.T0 + relX * (intradayAxis.T1 - intradayAxis.T0)) * 60) : smin;
   clickMin = Math.max(smin, Math.min(emin - 15, Math.round(clickMin / 5) * 5));
   missionMenuState = { agentId: agentId, smin: smin, emin: emin, type: null };
-
   var durOpts = '';
   for (var d = 15; d <= 480; d += 15) durOpts += '<option value="' + d + '"' + (d === 60 ? ' selected' : '') + '>' + durLabel(d) + '</option>';
   var menu = document.createElement('div');
@@ -4941,7 +4574,6 @@ function openMissionMenu(ev, agentId) {
   menu.style.top  = (ev.clientY + 6 + mh <= window.innerHeight - 8 ? ev.clientY + 6 : Math.max(8, ev.clientY - 6 - mh)) + 'px';
   setTimeout(function(){ document.addEventListener('click', closeMissionMenu); }, 0);
 }
-
 var missionMenuState = null;
 function pickMissionType(el) {
   document.querySelectorAll('#mission-menu .mission-menu-item').forEach(function(x) { x.classList.remove('is-on'); });
@@ -4949,13 +4581,11 @@ function pickMissionType(el) {
   missionMenuState.type = el.getAttribute('data-type');
   document.getElementById('mm-dur-fld').style.display = missionDef(missionMenuState.type).free ? '' : 'none';
 }
-
 function closeMissionMenu() {
   var m = document.getElementById('mission-menu');
   if (m) m.remove();
   document.removeEventListener('click', closeMissionMenu);
 }
-
 // Add a mission from the menu: checks shift, duplicates, overlaps, then saves.
 async function addMissionFromMenu() {
   var st = missionMenuState;
@@ -4986,7 +4616,6 @@ async function addMissionFromMenu() {
   showToast('Saved \u2713');
   if (storeId === currentStoreId && ds === currentIntradayDate) loadAndRenderIntraday(ds);
 }
-
 async function removeAddedMission(ev, missionId) {
   ev.stopPropagation();
   if (!currentStoreId) return;
@@ -4995,7 +4624,6 @@ async function removeAddedMission(ev, missionId) {
   showToast('Saved \u2713');
   loadAndRenderIntraday(currentIntradayDate);
 }
-
 async function saveAddedMissionPos(missionId, startMin) {
   (Object.keys(addedMissions)).forEach(function(aid) {
     (addedMissions[aid] || []).forEach(function(m) { if (m.id === missionId) m.start = startMin / 60; });
@@ -5005,7 +4633,6 @@ async function saveAddedMissionPos(missionId, startMin) {
   if (res.error) { showToast('Not saved: ' + (res.error.message || 'error'), 'error'); return; }
   showToast('Saved \u2713');
 }
-
 async function saveIntradayOverride(ds, agentId, blockType, startMin) {
   var storeId = currentStoreId;
   if (!storeId) return;
@@ -5024,7 +4651,6 @@ async function saveIntradayOverride(ds, agentId, blockType, startMin) {
   if (currentStoreId === storeId) intradayOverrides[agentId + ':' + blockType] = startMin;
   showToast('Moved \u2713');
 }
-
 async function saveMonthlyTraffic(ev) {
   var inp = ev && ev.target;
   if (!currentStoreId || !inp || !inp.classList || !inp.classList.contains('tr-cy')) return;
@@ -5049,7 +4675,6 @@ async function saveMonthlyTraffic(ev) {
   showToast('Saved \u2713');
   renderTraffic();
 }
-
 async function saveDailyTraffic() {
   if (!currentStoreId) return;
   var rows = [];
@@ -5073,7 +4698,6 @@ async function saveDailyTraffic() {
   showToast('Saved \u2713');
   renderTraffic();
 }
-
 async function resetDailyOverrides() {
   if (!currentStoreId) return;
   var year = currentWeekMonday.getFullYear();
@@ -5081,7 +4705,6 @@ async function resetDailyOverrides() {
   var first = toDateStr(new Date(year, mIdx - 1, 1));
   var last  = toDateStr(new Date(year, mIdx, 0));
   if (!confirm(tf('Reset daily edits for {month}?', { month: t(MONTH_NAMES[mIdx - 1]) }))) return;
-
   showLoader();
   var res = await sb.from('retail_traffic_daily')
     .delete().eq('store_id', currentStoreId).gte('date', first).lte('date', last);
@@ -5094,13 +4717,11 @@ async function resetDailyOverrides() {
   showToast('Daily edits cleared \u2713');
   renderTraffic();
 }
-
 // Forecast button
 async function runForecast() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   var year = currentWeekMonday.getFullYear();
   await loadTraffic(year);
-
   var btn = document.getElementById('btn-forecast');
   var steps = [
     'Analysing historical patterns\u2026',
@@ -5110,19 +4731,16 @@ async function runForecast() {
   ];
   btn.disabled = true;
   var original = btn.innerHTML;
-
   for (var i = 0; i < steps.length; i++) {
     btn.innerHTML = '<span class="spin"></span><span>' + steps[i] + '</span>';
     await new Promise(function(r) { setTimeout(r, 480); });
   }
-
   var proj = forecastYear(year);
   if (!Object.keys(proj).length) {
     btn.disabled = false; btn.innerHTML = original;
     showToast('Not enough history to forecast', 'error');
     return;
   }
-
   var rows = [];
   for (var m = 1; m <= 12; m++) {
     var ex = trafficMonthly[monthKey(year, m)] || {};
@@ -5137,18 +4755,14 @@ async function runForecast() {
   }
   var res = await sb.from('retail_traffic_monthly')
     .upsert(rows, { onConflict: 'store_id,year,month' });
-
   btn.disabled = false; btn.innerHTML = original;
   if (res.error) { showToast('Forecast could not be saved', 'error'); return; }
-
   await loadTraffic(year);
   for (var m3 = 1; m3 <= 12; m3++) await recomputeMonthDaily(year, m3);
   showToast('Forecast generated \u2713');
   renderTraffic();
 }
-
 // Manual changes on the planning
-
 async function loadPlanningOverrides() {
   var sid = currentStoreId;
   planningOverrides = {};
@@ -5174,9 +4788,7 @@ async function loadPlanningOverrides() {
     });
   }
 }
-
 var cellEditorState = { agentId: null, ds: null };
-
 function openCellEditor(agentId, ds, evt) {
   if (evt) evt.stopPropagation();
   if (evt && (evt.ctrlKey || evt.metaKey)) {
@@ -5187,10 +4799,8 @@ function openCellEditor(agentId, ds, evt) {
   var agent = agents.find(function(a) { return a.id === agentId; });
   if (!agent) return;
   cellEditorState = { agentId: agentId, ds: ds };
-
   var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid] || RETAIL_SHIFTS.sales;
   var current = (planningOverrides[agentId] || {})[ds] || '';
-
   var html = '';
   grid.forEach(function(s) {
     html += '<button class="ce-opt' + (current === s.code ? ' is-current' : '') +
@@ -5210,7 +4820,6 @@ function openCellEditor(agentId, ds, evt) {
             '<button class="ce-opt ce-reset" onclick="applyCellOverride(null)">' +
             '<span class="ce-lbl">Back to automatic</span></button>';
   }
-
   if (storeCorners.length > 1) {
     var curCnr = (cornerOverrides[agentId] || {})[ds] || '';
     html += '<div class="ce-sep"></div><div class="ce-cnr-lbl">Corner</div><div class="ce-cnr">';
@@ -5223,17 +4832,14 @@ function openCellEditor(agentId, ds, evt) {
     }
     html += '</div>';
   }
-
   html += '<div class="ce-sep"></div>' +
     '<div class="ce-adjust-row"><span class="ce-adjust-lbl">' + t('Adjust whole planning') + '</span>' +
       '<label class="toggle"><input type="checkbox" id="ce-adjust-toggle"' + (cellAdjustMode ? ' checked' : '') +
       ' onchange="toggleCellAdjustMode(this)"><span class="toggle-slider"></span></label>' + helpBtnHtml('adjust') + '</div>';
-
   document.getElementById('ce-title').textContent =
     ((agent.first_name || '') + ' ' + (agent.last_name || '')).trim();
   document.getElementById('ce-sub').textContent = formatDateDisplay(ds);
   document.getElementById('ce-body').innerHTML = html;
-
   var pop = document.getElementById('cell-editor');
   pop.style.display = 'block';
   pop.style.visibility = 'hidden';
@@ -5246,18 +4852,15 @@ function openCellEditor(agentId, ds, evt) {
   pop.style.visibility = 'visible';
   setTimeout(function() { document.addEventListener('click', closeCellEditorOutside); }, 0);
 }
-
 function closeCellEditorOutside(e) {
   var pop = document.getElementById('cell-editor');
   if (pop && !pop.contains(e.target)) closeCellEditor();
 }
-
 function closeCellEditor() {
   var pop = document.getElementById('cell-editor');
   if (pop) pop.style.display = 'none';
   document.removeEventListener('click', closeCellEditorOutside);
 }
-
 function toggleCellAdjustMode(cb) {
   if (cb.checked && !adjustWarned) {
     adjustWarned = true;
@@ -5268,7 +4871,6 @@ function toggleCellAdjustMode(cb) {
   }
   cellAdjustMode = cb.checked;
 }
-
 async function recalcFromToday() {
   if (!currentStoreId) return;
   if (!confirm(t('Recalculate the planning from today? Past days and your manual changes are kept.'))) return;
@@ -5280,7 +4882,6 @@ async function recalcFromToday() {
   if (ok) showToast('Planning recalculated \u2713');
   else if (!lastSnapSave) showToast('Planning recalculated, but it could not be saved', 'error');
 }
-
 function renderWithAdjustMode() {
   if (cellAdjustMode) {
     manualMode = false;
@@ -5291,17 +4892,14 @@ function renderWithAdjustMode() {
     renderMonthlyPlanning();
   }
 }
-
 async function applyCellOverride(value) {
   var st = cellEditorState;
   if (!st.agentId || !st.ds) return;
   closeCellEditor();
-
   var targets = multiSelect.length ? multiSelect.slice() : [{ agentId: st.agentId, ds: st.ds }];
   if (multiSelect.length && !targets.some(function(s){ return s.agentId === st.agentId && s.ds === st.ds; })) {
     targets.push({ agentId: st.agentId, ds: st.ds });
   }
-
   var succeeded = 0, failed = 0, lastErr = '';
   for (var ti = 0; ti < targets.length; ti++) {
     var tAgent = targets[ti].agentId, tDs = targets[ti].ds;
@@ -5326,7 +4924,6 @@ async function applyCellOverride(value) {
   renderWithAdjustMode();
   if (currentStoreId) renderDashboard();
 }
-
 async function applyCornerOverride(cornerId) {
   var st = cellEditorState;
   if (!st.agentId || !st.ds) return;
@@ -5355,9 +4952,7 @@ async function clearMonthOverrides() {
   var last  = toDateStr(new Date(year, mIdx + 1, 0));
   var label = new Date(year, mIdx, 1).toLocaleDateString(dLoc(),
                 { month: 'long', year: 'numeric' });
-
   if (!confirm(tf('Reset all manual changes for {period}?', { period: label }))) return;
-
   showLoader();
   var ids = agents.map(function(a) { return a.id; });
   var res = await sb.from('retail_planning_overrides')
@@ -5383,13 +4978,11 @@ async function clearMonthOverrides() {
   showToast('Manual changes cleared \u2713');
   renderMonthlyPlanning();
 }
-
 function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-
 async function loadHighlights() {
   var sid = currentStoreId;
   storeHighlights = [];
@@ -5399,7 +4992,6 @@ async function loadHighlights() {
   if (sid !== currentStoreId) return;
   if (!res.error && res.data) storeHighlights = res.data;
 }
-
 async function addHighlight() {
   var start = document.getElementById('hl-start').value;
   var end   = document.getElementById('hl-end').value;
@@ -5416,14 +5008,12 @@ async function addHighlight() {
   showToast('Highlight added \u2713');
   renderDashboard();
 }
-
 async function deleteHighlight(id) {
   var res = await sb.from('retail_highlights').delete().eq('id', id);
   if (res.error) { showToast('Not removed: ' + (res.error.message || ''), 'error'); return; }
   storeHighlights = storeHighlights.filter(function(h){ return h.id !== id; });
   renderDashboard();
 }
-
 function dailyTrafficFor(ds) {
   if (getDayClosureType(ds)) return 0;
   var rec = trafficDaily[ds];
@@ -5435,7 +5025,6 @@ function dailyTrafficFor(ds) {
   var spread = spreadMonthToDays(y, m, total);
   return spread[ds] || 0;
 }
-
 // Weekly dashboard
 function renderDashboard() {
   var body = document.getElementById('dashboard-body');
@@ -5444,31 +5033,14 @@ function renderDashboard() {
     body.innerHTML = '<div class="card"><p style="color:var(--tx-3)">Select a store to view the dashboard.</p></div>';
     return;
   }
-
   var days = getWeekDays(currentWeekMonday);
   var wn = getWeekNumber(currentWeekMonday);
   var todayStr = toDateStr(new Date());
   var DOW3 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
   var vols = days.map(function(d){ return dailyTrafficFor(toDateStr(d)); });
   var weekTotal = vols.reduce(function(s,v){ return s+v; }, 0);
   var maxVol = Math.max.apply(null, vols.concat([1]));
-  var peakIdx = vols.indexOf(Math.max.apply(null, vols));
-
-  var trendPct = null;
-  var prevTotals = [];
-  for (var tw = 1; tw <= 6; tw++) {
-    var pMon = new Date(currentWeekMonday);
-    pMon.setDate(pMon.getDate() - 7 * tw);
-    var pTot = getWeekDays(pMon).reduce(function(s,d){ return s + dailyTrafficFor(toDateStr(d)); }, 0);
-    if (pTot > 0) prevTotals.push(pTot);
-  }
-  if (prevTotals.length && weekTotal > 0) {
-    var avgPrev = prevTotals.reduce(function(s,v){ return s+v; }, 0) / prevTotals.length;
-    if (avgPrev > 0) trendPct = Math.round((weekTotal - avgPrev) / avgPrev * 100);
-  }
-
   var spark = '';
   days.forEach(function(d, i) {
     var ds = toDateStr(d);
@@ -5478,7 +5050,6 @@ function renderDashboard() {
              '<div class="bar' + (isToday ? ' today' : '') + '" style="height:' + Math.max(4,h) + 'px"></div>' +
              '<div class="lbl">' + DOW3[d.getDay()] + '<span class="lbl-date">' + d.getDate() + '</span></div></div>';
   });
-
   var poolAgents = { mgmt:[], sales:[], stock:[] };
   var todayInWeek = days.some(function(d){ return toDateStr(d) === todayStr; });
   var presDs = todayInWeek ? todayStr : toDateStr(days[0]);
@@ -5505,7 +5076,6 @@ function renderDashboard() {
       }
     });
   }
-
   var absences = [];
   agents.forEach(function(a) {
     var offDays = [];
@@ -5519,25 +5089,21 @@ function renderDashboard() {
       absences.push({ name: (a.first_name || '') + ' ' + (a.last_name || '').charAt(0) + '.', range: range });
     }
   });
-
   var holidays = [];
   days.forEach(function(d) {
     var ds = toDateStr(d);
     if (calHolidays[ds]) holidays.push({ name: calHolidays[ds], day: DOW3[d.getDay()] + ' ' + formatDate(d) });
   });
-
   var weekStart = toDateStr(days[0]), weekEnd = toDateStr(days[6]);
   var hls = (storeHighlights || []).filter(function(h) {
     return h.start_date <= weekEnd && h.end_date >= weekStart;
   }).sort(function(a,b){ return a.start_date < b.start_date ? -1 : 1; });
-
   var mRef = new Date(monthlyRef);
   var mStart = toDateStr(new Date(mRef.getFullYear(), mRef.getMonth(), 1));
   var mEnd   = toDateStr(new Date(mRef.getFullYear(), mRef.getMonth() + 1, 0));
   var monthEvts = (planningEvents || []).filter(function(e) {
     return e.start_date <= mEnd && e.end_date >= mStart;
   }).sort(function(a,b){ return a.start_date < b.start_date ? -1 : 1; });
-
   body.innerHTML =
     '<div class="dash-head">' +
       '<div>' +
@@ -5587,7 +5153,6 @@ function renderDashboard() {
       '</div>' +
     '</div>';
 }
-
 function cornerBreakdownHtml(cornerPresence) {
   var codes = Object.keys(cornerPresence);
   if (!codes.length) return '';
@@ -5598,7 +5163,6 @@ function cornerBreakdownHtml(cornerPresence) {
   }).join('');
   return '<div class="cnr-breakdown">' + chips + '</div>';
 }
-
 function poolBlockHtml(title, list) {
   var head = '<div class="pool-row"><span class="pool-name">' + title + '</span>' +
     '<span class="pool-count">' + list.length + '<span class="of"> present</span></span></div>';
@@ -5613,7 +5177,6 @@ function poolBlockHtml(title, list) {
   }).join('');
   return head + '<div class="pool-agents">' + items + '</div>';
 }
-
 function evtItemHtml(e) {
   var when = e.start_date === e.end_date
     ? formatDate(new Date(e.start_date + 'T12:00:00'))
@@ -5624,7 +5187,6 @@ function evtItemHtml(e) {
       e.category.charAt(0).toUpperCase() + e.category.slice(1) + '</span>' + esc(e.label || '') + '</span>' +
     '</div>';
 }
-
 function hlItemHtml(h) {
   var cls = h.start_date === h.end_date ? 'day' : 'week';
   var when;
@@ -5639,7 +5201,6 @@ function hlItemHtml(h) {
     '<button class="hl-del" title="Remove" onclick="deleteHighlight(\'' + h.id + '\')">\u00d7</button>' +
     '</div>';
 }
-
 function hlAddFormHtml(weekStart, weekEnd) {
   return '<div class="hl-add">' +
     '<div class="hl-field"><label>From</label><input type="date" id="hl-start" value="' + weekStart + '"></div>' +
@@ -5648,10 +5209,9 @@ function hlAddFormHtml(weekStart, weekEnd) {
     '<button class="hl-submit" onclick="addHighlight()">Add</button>' +
     '</div>';
 }
-
 function renderMonthlyPlanning() {
   var maxDays = regulations.max_days > 0 ? regulations.max_days : 5;
-  var lunchBrk = (regulations.breaks || []).find(function(b) { return /lunch|dej/i.test(b.name || ''); });
+  var lunchBrk = (regulations.breaks || []).find(function(b) { return /lunch|dej/i.test(b.name || ''); }) || (regulations.breaks || [])[0] || null;
   var unpaidMin = lunchBrk ? lunchBrk.duration : 0;
   var restGapMin = (regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) * 60;
   // Saved planning, kept or recalculated
@@ -5660,7 +5220,6 @@ function renderMonthlyPlanning() {
   var snapPlan = (snapLoaded && planSnapshot.plan) || {};
   var recalcFromToday = forceRecalc || !manualMode;
   var todayDs = toDateStr(new Date());
-
   // Shown result of one agent on one day
   function shownRes(a, ds) {
     var ov = (planningOverrides[a.id] || {})[ds];
@@ -5701,15 +5260,11 @@ function renderMonthlyPlanning() {
     setPlanMeta('monthly-meta', ''); setPlanCoverage('');
     return;
   }
-
   var ref      = new Date(monthlyRef);
   var year     = ref.getFullYear();
   var monthIdx = ref.getMonth();
   var lastDay  = new Date(year, monthIdx + 1, 0);
   var nDays    = lastDay.getDate();
-  var monthName = new Date(year, monthIdx, 1)
-                    .toLocaleDateString(dLoc(), { month: 'long', year: 'numeric' });
-
   var monthDays = [];
   var _todayStr = toDateStr(new Date());
   var _snapReady = !!(planSnapshot && planSnapshot.storeId === currentStoreId &&
@@ -5724,7 +5279,6 @@ function renderMonthlyPlanning() {
     monthDays.push({ num: dnum, date: dObj, ds: ds, dow: dObj.getDay(),
                      closure: closure, vol: vol, past: ds < _todayStr });
   }
-
   function weekKey(d) {
     var dd = new Date(d);
     var day = dd.getDay();
@@ -5738,10 +5292,8 @@ function renderMonthlyPlanning() {
     if (!weeks[wk]) weeks[wk] = [];
     weeks[wk].push(d);
   });
-
   var restMap = {};
   agents.forEach(function(a) { restMap[a.id] = {}; });
-
   // Absences and leaves always win
   function isBlocked(a, d) {
     if (d.closure) return true;
@@ -5752,22 +5304,18 @@ function renderMonthlyPlanning() {
     }
     return false;
   }
-
   // Preference balance per agent
   var prefDebt = {};
   agents.forEach(function(a) { prefDebt[a.id] = 0; });
-
   function prefScoreFor(a, d) {
     var p = agentPrefs[a.id] || {};
     var s = 0;
     if ((p.avoid_days || []).indexOf(d.dow) !== -1) s -= 2;
     return s;
   }
-
   var weekKeys = Object.keys(weeks).sort();
   var weekQuota = {};
   var volantHalf = {};
-
   agents.forEach(function(a) {
     var pct = a.work_pct || 100;
     var isVolant = (retailStatusOf(a) === 'PART_TIME') && !isFixed(a) && pct < 100;
@@ -5800,19 +5348,16 @@ function renderMonthlyPlanning() {
       }
     });
   });
-
   var quota = {};
   agents.forEach(function(a) {
     quota[a.id] = weekKeys.reduce(function(s, wk) {
       return s + (weekQuota[a.id][wk] || 0);
     }, 0);
   });
-
   var worked = {};
   agents.forEach(function(a) { worked[a.id] = 0; });
   var workedInWeek = {};
   agents.forEach(function(a) { workedInWeek[a.id] = {}; });
-
   function canWork(a, d) {
     if (isBlocked(a, d)) return false;
     if (isFixed(a) && !fixedHasTime(a) && !fixedWorksOn(a, d)) return false;
@@ -5824,22 +5369,17 @@ function renderMonthlyPlanning() {
     if (doneThisWeek >= wq) return false;
     return true;
   }
-
   function assign(a, d) {
     var wk = weekKey(d.date);
     worked[a.id]++;
     workedInWeek[a.id][wk] = (workedInWeek[a.id][wk] || 0) + 1;
   }
-
   var assignedMap = {};
   monthDays.forEach(function(d) { assignedMap[d.ds] = []; });
-
   var openList = monthDays.filter(function(d) { return !d.closure; });
-
   function isLead(a)  { return poolOf(a) === 'mgmt'; }
   function isStock(a) { return poolOf(a) === 'stock'; }
   function isSales(a) { return poolOf(a) === 'sales'; }
-
   // Fixed part-time schedules
   function fixedSchedOf(a) {
     var p = agentPrefs[a.id];
@@ -5856,18 +5396,15 @@ function renderMonthlyPlanning() {
     var fx = fixedSchedOf(a);
     return fx && fx.days.indexOf(d.date.getDay()) !== -1;
   }
-
   function isLeadV(a)  { return isLead(a)  && !isFixedTimed(a); }
   function isStockV(a) { return isStock(a) && !isFixedTimed(a); }
   function isSalesV(a) { return isSales(a) && !isFixedTimed(a); }
-
   var mgmtAgents  = agents.filter(isLeadV);
   var salesAgents = agents.filter(isSalesV);
   var stockAgents = agents.filter(isStockV);
   var fixedAgents = agents.filter(isFixedTimed);
   var hasStockTeam = stockAgents.length > 0;
   var hasMgmt = mgmtAgents.length > 0;
-
   var fixedAllAgents = agents.filter(isFixed);
   fixedAllAgents.forEach(function(a) {
     monthDays.forEach(function(d) {
@@ -5878,7 +5415,6 @@ function renderMonthlyPlanning() {
       }
     });
   });
-
   var dayTarget = {};
   weekKeys.forEach(function(wk) {
     var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
@@ -5915,16 +5451,13 @@ function renderMonthlyPlanning() {
       dayTarget[d.ds] = Math.max(0, Math.min(perDayCap, base[i]));
     });
   });
-
   function salesCount(ds) {
     return assignedMap[ds].filter(function(id) {
       var a = agents.find(function(x) { return x.id === id; });
       return a && isSales(a);
     }).length;
   }
-
   var byLoad = openList.slice().sort(function(x, y) { return (y.vol || 0) - (x.vol || 0); });
-
   var takenByDay = {};
   openList.forEach(function(d){ takenByDay[d.ds] = {}; });
   function pickFor(d, filterFn) {
@@ -5950,7 +5483,6 @@ function renderMonthlyPlanning() {
     prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
     return chosen;
   }
-
   function fillSalesDay(d, target) {
     var wk = weekKey(d.date);
     while (salesCount(d.ds) < target) {
@@ -5978,11 +5510,9 @@ function renderMonthlyPlanning() {
       prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
     }
   }
-
   byLoad.forEach(function(d) {
     if (hasMgmt) pickFor(d, isLead);
   });
-
   weekKeys.forEach(function(wk) {
     var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; })
       .sort(function(x, y) { return (dayTarget[y.ds] || 0) - (dayTarget[x.ds] || 0); });
@@ -5993,7 +5523,6 @@ function renderMonthlyPlanning() {
       fillSalesDay(d, dayTarget[d.ds] || 2);
     });
   });
-
   if (hasMgmt) {
     weekKeys.forEach(function(wk) {
       var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
@@ -6011,7 +5540,6 @@ function renderMonthlyPlanning() {
       }
     });
   }
-
   if (hasStockTeam) {
     weekKeys.forEach(function(wk) {
       var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
@@ -6029,14 +5557,12 @@ function renderMonthlyPlanning() {
       }
     });
   }
-
   var minFloor = ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1)
                + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
   openList.forEach(function(d) {
     if (assignedMap[d.ds].length >= minFloor) return;
     var already = {};
     assignedMap[d.ds].forEach(function(id) { already[id] = true; });
-
     var pool = agents.filter(function(a) {
       if (already[a.id]) return false;
       if (isFixed(a)) return false;
@@ -6059,7 +5585,6 @@ function renderMonthlyPlanning() {
       assignedMap[d.ds].push(pool[i].id);
     }
   });
-
   // Two days off in a row when possible
   (function groupDaysOff() {
     function worksOn(a, d) { return assignedMap[d.ds].indexOf(a.id) !== -1; }
@@ -6129,7 +5654,6 @@ function renderMonthlyPlanning() {
       if (!changed) break;
     }
   })();
-
   // Days not worked become days off
   monthDays.forEach(function(d) {
     if (d.closure) return;
@@ -6137,7 +5661,6 @@ function renderMonthlyPlanning() {
       if (assignedMap[d.ds].indexOf(a.id) === -1) restMap[a.id][d.ds] = true;
     });
   });
-
   // Half days for flexible part-time
   var volantHalfDay = {};
   agents.forEach(function(a) {
@@ -6172,10 +5695,8 @@ function renderMonthlyPlanning() {
       volantHalfDay[a.id][halfDs] = (amLoad >= pmLoad) ? 'am' : 'pm';
     });
   });
-
   // Traffic covered by each shift
   var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
-
   var shiftPlanByDay = {};
   var shiftUse = {};
   function isSpecialDay(d) {
@@ -6191,20 +5712,17 @@ function renderMonthlyPlanning() {
     if (calHours[d.ds]) dh = calHours[d.ds];
     var present = assignedMap[d.ds].slice();
     var plan = {};
-
     present = present.filter(function(id) {
       var a = agents.find(function(x){ return x.id === id; });
       if (a && isFixedTimed(a)) { plan[id] = 'PT'; return false; }
       return true;
     });
-
     // Sundays and open holidays: single shift D
     if (isSpecialDay(d)) {
       present.forEach(function(id){ plan[id] = 'D'; });
       shiftPlanByDay[d.ds] = plan;
       return;
     }
-
     var byGrid = { sales: [], stock: [] };
     present.forEach(function(id) {
       var a = agents.find(function(x){ return x.id === id; });
@@ -6212,13 +5730,11 @@ function renderMonthlyPlanning() {
       var g = RETAIL_STATUS[retailStatusOf(a)].grid;
       (byGrid[g] || byGrid.sales).push(a);
     });
-
     Object.keys(byGrid).forEach(function(g) {
       var list = byGrid[g];
       var grid = RETAIL_SHIFTS[g] || [];
       if (!list.length || !grid.length) return;
       var cl = shiftClusters(grid, d.ds);
-
       if (g === 'stock') {
         var earliest = grid.reduce(function(a, b){ return b.startMin < a.startMin ? b : a; });
         var nS = list.length;
@@ -6237,7 +5753,6 @@ function renderMonthlyPlanning() {
         }
         return;
       }
-
       if (g === 'sales') {
         // Managers open first and close last
         var openSh  = cl.open[0];
@@ -6283,7 +5798,6 @@ function renderMonthlyPlanning() {
         }
         if (!list.length) return;
       }
-
       var mid = (dh.open + dh.close) / 2;
       function avgCurve(fromH, toH) {
         if (!curveArr || !curveArr.length) return 1;
@@ -6298,14 +5812,12 @@ function renderMonthlyPlanning() {
       var wEvening = avgCurve(mid, dh.close) * CLOSING_BIAS;
       var wSum = (wMorning + wEvening) || 1;
       var eveningShare = wEvening / wSum;
-
       var nTotal = list.length;
       var frozen = d.past;
       var lateRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
       var minOpen  = frozen ? 1 : ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1);
       var minClose = frozen ? 1 : ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
       function restOk(a, s) { return !s || restAllows(a, d.ds, s.code); }
-
       // Early and late halves of the shift list (middle shift goes late)
       var byStart = grid.slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
       var halfAt = Math.floor(byStart.length / 2);
@@ -6313,7 +5825,6 @@ function renderMonthlyPlanning() {
       byStart.forEach(function(s, k) { isLate[s.code] = byStart.length > 1 && k >= halfAt; });
       var nLate = byStart.length > 1 ? Math.max(0, Math.min(nTotal, Math.round(nTotal * lateRatio))) : 0;
       var left = { early: nTotal - nLate, late: nLate };
-
       // Hourly traffic of the day, in 15 min slots
       var hm = dayMinutes(d.ds), slots = [];
       for (var tm = hm.open; tm < hm.close; tm += 15) {
@@ -6391,14 +5902,11 @@ function renderMonthlyPlanning() {
         if (ok) plan[a.id] = ok.code;
       });
     });
-
     shiftPlanByDay[d.ds] = plan;
   });
-
   // Engine 2: balance sellers between corners
   var cornerAssign = {};
   var fairnessOn = storeCorners.length > 1 && storeSettings && storeSettings.fairness_rotation;
-
   if (fairnessOn) {
     // Fairness mode: everyone rotates between corners
     var refYf = monthlyRef.getFullYear(), refMf = monthlyRef.getMonth() + 1;
@@ -6411,7 +5919,6 @@ function renderMonthlyPlanning() {
     var fairCount = {};
     agents.forEach(function(a){ fairCount[a.id] = {}; storeCorners.forEach(function(c){ fairCount[a.id][c.id] = 0; }); });
     var cornersByW = storeCorners.slice().sort(function(x,y){ return wF[x.id] - wF[y.id]; });
-
     monthDays.forEach(function(d) {
       if (d.closure) return;
       var present = agents.filter(function(a) {
@@ -6428,7 +5935,6 @@ function renderMonthlyPlanning() {
       var big = cornersByW[cornersByW.length - 1];
       if (big) need[big.id] += (n - assignedCount);
       if (need[big.id] < 0) need[big.id] = 0;
-
       var placedToday = {};
       cornersByW.forEach(function(c) {
         var slots = need[c.id];
@@ -6458,7 +5964,6 @@ function renderMonthlyPlanning() {
       });
     });
   }
-
   if (!fairnessOn && storeCorners.length > 1) {
     var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
     var cornerWeight = {};
@@ -6467,21 +5972,18 @@ function renderMonthlyPlanning() {
       cornerWeight[c.id] = t ? (t.last_year || t.n_2 || 0) : 0;
     });
     var totW = 0; storeCorners.forEach(function(c){ totW += cornerWeight[c.id]; });
-
     // Placement groups of the day
     function inPlaceGroup(code, ds, key) {
       return !!(shiftClusters(RETAIL_SHIFTS.sales, ds).covers[code] || {})[key];
     }
     function isOpenCode(code, ds){ return inPlaceGroup(code, ds, 'open'); }
     function isCloseCode(code, ds){ return inPlaceGroup(code, ds, 'close'); }
-
     monthDays.forEach(function(d) {
       if (d.closure) return;
       var present = agents.filter(function(a) {
         return poolOf(a) === 'sales' && assignedMap[d.ds].indexOf(a.id) !== -1;
       });
       if (!present.length) return;
-
       if (d.past || _freeze) {
         present.forEach(function(a) {
           if (a.home_corner_id) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = a.home_corner_id;
@@ -6492,7 +5994,6 @@ function renderMonthlyPlanning() {
         });
         return;
       }
-
       var byCorner = {};
       storeCorners.forEach(function(c){ byCorner[c.id] = []; });
       var noHome = [];
@@ -6500,12 +6001,10 @@ function renderMonthlyPlanning() {
         if (a.home_corner_id && byCorner[a.home_corner_id]) byCorner[a.home_corner_id].push(a);
         else noHome.push(a);
       });
-
       var target = {};
       storeCorners.forEach(function(c) {
         target[c.id] = totW > 0 ? Math.round(present.length * cornerWeight[c.id] / totW) : 0;
       });
-
       var assign = {};
       storeCorners.forEach(function(c){ assign[c.id] = byCorner[c.id].slice(); });
       noHome.slice().sort(function(a,b){ return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }).forEach(function(a) {
@@ -6515,7 +6014,6 @@ function renderMonthlyPlanning() {
         })[0];
         assign[short.id].push(a);
       });
-
       function shiftCode(a){
         return (shiftPlanByDay[d.ds] || {})[a.id] || 'O';
       }
@@ -6524,7 +6022,6 @@ function renderMonthlyPlanning() {
         assign[cid].forEach(function(a){ var s=shiftCode(a); if(isOpenCode(s, d.ds))hasO=true; if(isCloseCode(s, d.ds))hasC=true; });
         return { needO: !hasO, needC: !hasC };
       }
-
       function pickDonor(fromId, wantOpen, toCode){
         var pool = assign[fromId].filter(function(a){
           var s = shiftCode(a);
@@ -6536,7 +6033,6 @@ function renderMonthlyPlanning() {
         cand = cand.slice().sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
         return cand[0];
       }
-
       storeCorners.forEach(function(c) {
         var gap = coverGap(c.id);
         [['O',gap.needO],['C',gap.needC]].forEach(function(g){
@@ -6553,7 +6049,6 @@ function renderMonthlyPlanning() {
           }
         });
       });
-
       var guard = 0;
       while (guard++ < 20) {
         var over = storeCorners.filter(function(c){ return assign[c.id].length - target[c.id] >= 1; });
@@ -6566,7 +6061,6 @@ function renderMonthlyPlanning() {
         assign[from.id] = assign[from.id].filter(function(x){return x.id!==donor.id;});
         assign[to.id].push(donor);
       }
-
       storeCorners.forEach(function(c) {
         assign[c.id].forEach(function(a) {
           (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = c.id;
@@ -6578,7 +6072,6 @@ function renderMonthlyPlanning() {
       });
     });
   }
-
   // Final rest check (all pools)
   monthDays.forEach(function(d) {
     if (d.closure || d.past) return;
@@ -6604,7 +6097,6 @@ function renderMonthlyPlanning() {
       }
     });
   });
-
   // Repair real displayed coverage after the rest pass. Manual choices stay locked.
   (function repairDisplayedCoverage() {
     var grid = RETAIL_SHIFTS.sales || [];
@@ -6618,7 +6110,6 @@ function renderMonthlyPlanning() {
     });
     var minO = storeSettings && storeSettings.min_opening != null ? storeSettings.min_opening : 1;
     var minC = storeSettings && storeSettings.min_closing != null ? storeSettings.min_closing : 1;
-
     function effective(a, ds, replacement) {
       var ov = (planningOverrides[a.id] || {})[ds];
       if (ov) return { code: ov };
@@ -6658,7 +6149,6 @@ function renderMonthlyPlanning() {
       for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i];
       return false;
     }
-
     monthDays.forEach(function(d) {
       if (d.closure || d.past || _freeze || isSpecialDay(d)) return;
       var hm = dayMinutes(d.ds), groups = {};
@@ -6734,12 +6224,10 @@ function renderMonthlyPlanning() {
       });
     });
   })();
-
   function cornerCodeOf(cid) {
     for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === cid) return storeCorners[i].code;
     return null;
   }
-
   // Shift of one agent on one day
   // Saved planning (frozen mode)
   var newSnap = {};
@@ -6749,7 +6237,6 @@ function renderMonthlyPlanning() {
     (newSnap[day.ds] = newSnap[day.ds] || {})[agent.id] = res;
     return res;
   }
-
   // Manual corner change wins, also on saved planning
   function withCorner(agent, day, res) {
     var cov = (cornerOverrides[agent.id] || {})[day.ds];
@@ -6759,41 +6246,33 @@ function renderMonthlyPlanning() {
     else r.corner = cornerCodeOf(cov) || r.corner;
     return r;
   }
-
   function shiftFor(agent, day) {
     if (day.closure) {
       var kept = day.closure === 'weekend' && (snapPlan[day.ds] || {})[agent.id];
       if (!kept || (recalcFromToday && day.ds >= todayDs)) return { code: '', cls: 'sh-closed', special: 'closed' };
     }
     var automatic = withCorner(agent, day, autoLayer(agent, day));
-
     var ov = (planningOverrides[agent.id] || {})[day.ds];
     if (ov) {
       if (ov === 'OFF') return { code: 'OFF', special: 'off' };
       if (ov === 'A')   return { code: 'A',   special: 'leave' };
       return automatic.corner ? { code: ov, corner: automatic.corner } : { code: ov };
     }
-
     if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
     var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
     if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
-
     if (isFixedTimed(agent)) {
       return fixedWorksOn(agent, day)
         ? { code: 'PT' }
         : { code: 'OFF', cls: 'sh-off', special: 'off' };
     }
-
     if (st === 'rest_override' || st === 'rest_parttime')
       return { code: 'OFF', cls: 'sh-off', special: 'off' };
-
     return automatic;
   }
-
   function autoFor(agent, day) {
     if (restMap[agent.id] && restMap[agent.id][day.ds])
       return { code: 'OFF', cls: 'sh-off', special: 'off' };
-
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid];
     var planned = (shiftPlanByDay[day.ds] || {})[agent.id];
     var baseCode = planned || (grid[0] || { code: 'O' }).code;
@@ -6809,7 +6288,6 @@ function renderMonthlyPlanning() {
     }
     return { code: baseCode, tone: baseTone };
   }
-
   function cell(res) {
     if (res.special === 'closed') return '<span class="sh-none">-</span>';
     if (res.half) {
@@ -6819,18 +6297,17 @@ function renderMonthlyPlanning() {
       return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + esc(res.code) + '</span></span>';
     }
     if (res.corner) {
-      return '<span class="sh-cnr"><span class="sh-cnr-tag" data-no-i18n>' + esc(res.corner) + '</span>' +
+      return '<span class="sh-cnr"><span class="sh-cnr-tag" data-no-i18n title="' + esc(res.corner) + '">' + esc(res.corner) + '</span>' +
              '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span></span>';
     }
     return '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span>';
   }
-
   // Shifts and HR counters per agent
   var agentRows = {};
   var rh = {};
   agents.forEach(function(a) {
     agentRows[a.id] = [];
-    rh[a.id] = { O: 0, C: 0, off: 0, dim: 0, ferie: 0, cp: 0 };
+    rh[a.id] = { O: 0, C: 0, off: 0, dim: 0, cp: 0 };
     monthDays.forEach(function(d) {
       var res = shiftFor(a, d);
       agentRows[a.id].push({ d: d, res: res });
@@ -6844,15 +6321,12 @@ function renderMonthlyPlanning() {
       if (res.special === 'off')   rh[a.id].off++;
       if (res.special === 'leave') rh[a.id].cp++;
       if (worked && d.dow === 0)   rh[a.id].dim++;
-      if (worked && d.closure === 'holiday') rh[a.id].ferie++;
     });
   });
-
   if (snapLoaded && !planSnapshot.writeBlocked && JSON.stringify(newSnap) !== JSON.stringify(planSnapshot.plan || {})) {
     planSnapshot.plan = newSnap;
     lastSnapSave = savePlanSnapshot(currentStoreId, snapKey, newSnap);
   }
-
   monthlyResult = {};
   agents.forEach(function(a) {
     agentRows[a.id].forEach(function(row) {
@@ -6860,7 +6334,6 @@ function renderMonthlyPlanning() {
       monthlyResult[row.d.ds][a.id] = { code: row.res.code, tone: row.res.tone, special: row.res.special, half: row.res.half, corner: row.res.corner };
     });
   });
-
   var totPres = {}, totO = {}, totC = {}, totOff = {};
   monthDays.forEach(function(d) {
     totPres[d.ds] = 0; totO[d.ds] = 0; totC[d.ds] = 0; totOff[d.ds] = 0;
@@ -6875,13 +6348,11 @@ function renderMonthlyPlanning() {
       }
     });
   });
-
   // Planning table
   var todayStr = toDateStr(new Date());
   // Counter columns: short code in English, translated word in other languages
   var rhCols = ['O','C','OFF','SUN','ABS'];
   var RH_FULL = { SUN:'Sun', ABS:'Absence' };
-
   function dayCls(d) {
     var c = 'c-day';
     if (d.dow === 1) c += ' wk-start';
@@ -6890,85 +6361,7 @@ function renderMonthlyPlanning() {
     if (d.ds === todayStr) c += ' is-today';
     return c;
   }
-
   var html = '';
-
-  // Coverage checks
-  var issues = [];
-  monthDays.forEach(function(d) {
-    if (d.closure) return;
-    var isSpecial = isSpecialDay(d);
-    var hasOpen = false, hasClose = false, hasLead = false;
-    agents.forEach(function(a) {
-      var r = agentRows[a.id].find(function(x) { return x.d.ds === d.ds; });
-      if (!r || r.res.special) return;
-      var kc = coverOf(a, d.ds, r.res);
-      if (kc.open)  hasOpen  = true;
-      if (kc.close) hasClose = true;
-      if (poolOf(a) === 'mgmt') hasLead = true;
-    });
-    var missing = [];
-    if (!isSpecial && !hasOpen)  missing.push('opening');
-    if (!isSpecial && !hasClose) missing.push('closing');
-    if (!hasLead)  missing.push('SM/ASM');
-    if (missing.length) issues.push({ ds: d.ds, num: d.num, missing: missing });
-  });
-
-  // Final check on the shown planning, after manual changes
-  var minOpenF  = (storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1;
-  var minCloseF = (storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1;
-  var coverageAlerts = [];
-  var resOf = {};
-  agents.forEach(function(a) {
-    resOf[a.id] = {};
-    agentRows[a.id].forEach(function(r) { resOf[a.id][r.d.ds] = r.res; });
-  });
-  monthDays.forEach(function(d) {
-    if (d.closure || d.ds < todayDs) return;
-    // Rest between two days
-    var prevDs = prevDayOf(d.ds);
-    agents.forEach(function(a) {
-      var prev = (prevDs in resOf[a.id]) ? resOf[a.id][prevDs] : shownRes(a, prevDs);
-      var ph = workHoursOf(a, prevDs, prev), th = workHoursOf(a, d.ds, resOf[a.id][d.ds]);
-      if (ph && th && (1440 + th.start - ph.end) < restGapMin)
-        coverageAlerts.push({ ds: d.ds, who: a.first_name + (a.last_name ? ' ' + a.last_name.charAt(0) + '.' : ''), reason: 'rest_gap' });
-    });
-    // Opening and closing minimums, per corner or for the store
-    var groups = {};
-    if (storeCorners.length > 1) storeCorners.forEach(function(c) { groups[c.code] = { o: 0, c: 0 }; });
-    else groups[''] = { o: 0, c: 0 };
-    agents.forEach(function(a) {
-      if (poolOf(a) === 'stock') return;
-      var key = '';
-      if (storeCorners.length > 1) {
-        if (poolOf(a) !== 'sales') return;
-        var shown = resOf[a.id][d.ds];
-        key = (shown && shown.corner) || cornerCodeOf(a.home_corner_id) || '';
-      }
-      var g = groups[key];
-      if (!g) return;
-      var cv = coverOf(a, d.ds, resOf[a.id][d.ds]);
-      if (cv.open)  g.o++;
-      if (cv.close) g.c++;
-    });
-    Object.keys(groups).forEach(function(k) {
-      if (groups[k].o < minOpenF)  coverageAlerts.push({ ds: d.ds, who: k, reason: 'opening', have: groups[k].o, need: minOpenF });
-      if (groups[k].c < minCloseF) coverageAlerts.push({ ds: d.ds, who: k, reason: 'closing', have: groups[k].c, need: minCloseF });
-    });
-  });
-
-  // Day checks kept for reference only: nothing is shown
-  var issueByDs = {};
-  function addIssue(ds, txt) { (issueByDs[ds] = issueByDs[ds] || []).push(txt); }
-  issues.forEach(function(i) {
-    if (i.missing.indexOf('SM/ASM') !== -1) addIssue(i.ds, t('No SM/ASM'));
-  });
-  coverageAlerts.forEach(function(al) {
-    var msg = al.reason === 'rest_gap' ? t('minimum rest between shifts could not be kept')
-      : t(al.reason === 'opening' ? 'opening below minimum' : 'closing below minimum') + ' (' + al.have + '/' + al.need + ')';
-    addIssue(al.ds, (al.who ? al.who + ': ' : '') + msg);
-  });
-
   var nOverrides = 0;
   agents.forEach(function(a) {
     Object.keys(planningOverrides[a.id] || {}).concat(Object.keys(cornerOverrides[a.id] || {})).forEach(function(ds) {
@@ -6976,18 +6369,15 @@ function renderMonthlyPlanning() {
           ds <= toDateStr(new Date(year, monthIdx + 1, 0))) nOverrides++;
     });
   });
-
   var mcTxt = (CURRENT_LANG === 'en' && nOverrides === 1) ? '1 manual change' : tf('{count} manual changes', { count: nOverrides });
   setPlanMeta('monthly-meta', nOverrides ? mcTxt : '');
   var resetBtn = document.getElementById('btn-reset-manual');
   if (resetBtn) resetBtn.disabled = !nOverrides;
-
   // Full label on screen, short one on phone
   var GROUP_SHORT = { Management:'MGT', Stock:'STK', Unassigned:'-' };
   function lblPair(full, short) {
     return '<span class="lbl-l">' + esc(full) + '</span><span class="lbl-s" title="' + esc(full) + '">' + esc(short) + '</span>';
   }
-
   // Column headers
   function headRow(firstLabel, withEvents) {
     var lab = firstLabel === 'Agent' ? (CURRENT_LANG === 'en' ? 'Agents' : t('Agent')) : firstLabel;
@@ -6998,10 +6388,7 @@ function renderMonthlyPlanning() {
       if (d.dow === 0 || d.dow === 6) cls += ' is-weekend';
       if (d.ds === todayStr) cls += ' is-today';
       var dl = new Date(d.ds + 'T12:00:00').toLocaleDateString(dLoc(), { weekday:CURRENT_LANG === 'en' ? 'narrow' : 'short' });
-      var dayIssues = null; // Day alerts removed (v9.1.2)
-      if (dayIssues) cls += ' has-issue';
-      var tip = dayIssues ? ' title="' + esc(dayIssues.join('\n')) + '"' : '';
-      h += '<th class="' + cls + '" data-col="' + i + '"' + tip + '>' +
+      h += '<th class="' + cls + '" data-col="' + i + '">' +
            '<span class="dow">' + dl + '</span><span class="dnum">' + d.num + '</span></th>';
     });
     rhCols.forEach(function(c){
@@ -7010,7 +6397,6 @@ function renderMonthlyPlanning() {
         (full && CURRENT_LANG !== 'en' ? esc(t(full)) : c) + '</th>';
     });
     h += '</tr>';
-
     // Event rows
     if (withEvents) ['local', 'national', 'training'].forEach(function(cat) {
       eventLanes(cat).forEach(function(lane, li) {
@@ -7038,14 +6424,11 @@ function renderMonthlyPlanning() {
         h += '</tr>';
       });
     });
-
     return h + '</thead>';
   }
-
   html += '<div class="mth-wrap"><table class="mth" id="mth-table" style="min-width:calc(var(--name-col) + ' + (monthDays.length * 32 + 190) + 'px)">' + monthlyColumns(monthDays.length);
   html += headRow('Agent', true);
   html += '<tbody>';
-
   var ordered = [];
   if (storeCorners.length > 1) {
     var refYb = monthlyRef.getFullYear(), refMb = monthlyRef.getMonth() + 1;
@@ -7055,16 +6438,13 @@ function renderMonthlyPlanning() {
     }
     var viewCorner = currentCornerView
       ? storeCorners.filter(function(c){ return c.id === currentCornerView; })[0] : null;
-
     function reinforcesView(a) {
       if (!viewCorner) return false;
       var rows = agentRows[a.id] || [];
       return rows.some(function(rc){ return rc.res && rc.res.corner === viewCorner.code; });
     }
-
     var mgmt = agents.filter(function(a){ return poolOf(a) === 'mgmt'; });
     if (mgmt.length) { ordered.push({ group: 'Management' }); mgmt.forEach(function(a){ ordered.push(a); }); }
-
     var cornersSorted = storeCorners.slice().sort(function(x,y){ return cWeight(y.id) - cWeight(x.id); });
     var placed = {};
     if (viewCorner) {
@@ -7084,7 +6464,6 @@ function renderMonthlyPlanning() {
       var noHome = agents.filter(function(a){ return poolOf(a) === 'sales' && !placed[a.id]; });
       if (noHome.length) { ordered.push({ group: 'Unassigned' }); noHome.forEach(function(a){ ordered.push(a); }); }
     }
-
     var stock = agents.filter(function(a){ return poolOf(a) === 'stock'; });
     if (stock.length) { ordered.push({ group: 'Stock' }); stock.forEach(function(a){ ordered.push(a); }); }
   } else {
@@ -7094,10 +6473,6 @@ function renderMonthlyPlanning() {
       }).forEach(function(a) { ordered.push(a); });
     });
   }
-
-  var totalCols = agentRows[agents[0] ? agents[0].id : Object.keys(agentRows)[0]];
-  var nDayCols = totalCols ? totalCols.length : 0;
-
   ordered.forEach(function(a) {
     if (a.group) {
       html += '<tr class="mth-group"><td class="c-agent mth-group-lbl"' + (a.isCode ? ' data-no-i18n' : '') + '>' + lblPair(a.group, GROUP_SHORT[a.group] || a.group) +
@@ -7134,7 +6509,6 @@ function renderMonthlyPlanning() {
     html += '</tr>';
   });
   html += '</tbody></table></div>';
-
   var POOL_LABELS = [['mgmt','Management'],['sales','Sales'],['stock','Stock']];
   var poolDayCount = {};
   poolDayCount.mgmt = {}; poolDayCount.sales = {}; poolDayCount.stock = {};
@@ -7146,14 +6520,11 @@ function renderMonthlyPlanning() {
       }
     });
   });
-
   var html2 = '';
   html2 += '<summary><span class="coverage-expander" aria-hidden="true"></span><span>' + t('Coverage & headcount') + '</span></summary>';
-
   html2 += '<div class="mth-wrap"><table class="mth" id="mth-summary" style="min-width:calc(var(--name-col) + ' + (monthDays.length * 32 + 190) + 'px)">' + monthlyColumns(monthDays.length);
   html2 += headRow('Indicator');
   html2 += '<tbody>';
-
   function sumRow(label, map, cls) {
     var r = '<tr class="' + (cls || '') + '"><td class="c-agent">' + label + '</td>';
     monthDays.forEach(function(d, i) {
@@ -7163,20 +6534,16 @@ function renderMonthlyPlanning() {
     rhCols.forEach(function(){ r += '<td class="c-rh"></td>'; });
     return r + '</tr>';
   }
-
   lastCoverage = { totPres: totPres, totOff: totOff, totO: totO, totC: totC, pools: poolDayCount, rh: rh };
   html2 += sumRow('Total present', totPres, 'tot');
   html2 += sumRow('Off',           totOff,  'tot');
   html2 += sumRow('Opening',       totO,    'tot');
   html2 += sumRow('Closing',       totC,    'tot tot-last');
-
   POOL_LABELS.forEach(function(p) {
     if (!agents.some(function(a){ return poolOf(a) === p[0]; })) return;
     html2 += sumRow(p[1], poolDayCount[p[0]], 'st-row');
   });
-
   html2 += '</tbody></table></div>';
-
   container.innerHTML = html;
   var prevCoverage = document.querySelector('.coverage-card');
   var coverageOpen = prevCoverage && prevCoverage.open;
@@ -7184,13 +6551,10 @@ function renderMonthlyPlanning() {
   bindPlanningScroll();
   attachCrossHighlight();
 }
-
 function retailAvatarColor(name) { return '#EAF0F8'; }
-
 function retailInitials(f, l) {
   return ((f||' ')[0] + (l||' ')[0]).toUpperCase();
 }
-
 function renderAgents() {
   var container = document.getElementById('agent-list');
   if (!agents.length) {
@@ -7222,20 +6586,16 @@ function renderAgents() {
     '</div>';
   }).join('');
 }
-
 // Agent editor
 var STATUS_OPTS = ['SM','ASM','TM','MANAGER','STOCK_MANAGER','STOCK','SENIOR','SA','GRAND_VENDEUR','PART_TIME'];
 var agentEditorId = null;
-
 function statusOptionsHtml(cur) {
   return STATUS_OPTS.map(function(o){
     return '<option value="' + o + '"' + (o === cur ? ' selected' : '') + '>' +
            RETAIL_STATUS[o].label + '</option>';
   }).join('');
 }
-
 var DAY_CHIPS = [['1','Mon'],['2','Tue'],['3','Wed'],['4','Thu'],['5','Fri'],['6','Sat'],['0','Sun']];
-
 var agentPrefsStore = null, calDataStore = null;
 async function loadAgentPrefs() {
   var sid = currentStoreId;
@@ -7249,7 +6609,6 @@ async function loadAgentPrefs() {
   (res.data || []).forEach(function(p) { ap[p.agent_id] = p; });
   agentPrefs = ap; agentPrefsStore = sid;
 }
-
 function renderDayChips(selected, boxId) {
   var box = document.getElementById(boxId || 'ae-avoid');
   if (!box) return;
@@ -7259,7 +6618,6 @@ function renderDayChips(selected, boxId) {
            '" data-day="' + d[0] + '" onclick="toggleDayChip(this)">' + d[1] + '</button>';
   }).join('');
 }
-
 var CORNER_SKILLS = ['PRF', 'LG', 'RTW', 'MEN', 'WMN'];
 function renderSkillChips(selected) {
   var box = document.getElementById('ae-skills');
@@ -7275,15 +6633,12 @@ function readSkillChips() {
     .call(document.querySelectorAll('#ae-skills .day-chip.on'))
     .map(function(b) { return b.dataset.skill; });
 }
-
 function toggleDayChip(btn) { btn.classList.toggle('on'); }
-
 function updateFixedSectionVisibility() {
   var status = document.getElementById('ae-status').value;
   var sec = document.getElementById('ae-fixed-sec');
   if (sec) sec.style.display = (status === 'PART_TIME') ? 'block' : 'none';
 }
-
 function setPtType(type) {
   var isFixed = (type === 'fixed');
   document.getElementById('ae-pt-fixed-btn').classList.toggle('active', isFixed);
@@ -7291,13 +6646,11 @@ function setPtType(type) {
   document.getElementById('ae-pt-fixed').style.display  = isFixed ? 'block' : 'none';
   document.getElementById('ae-pt-volant').style.display = isFixed ? 'none' : 'block';
 }
-
 function readDayChips(boxId) {
   return Array.prototype.slice
     .call(document.querySelectorAll('#' + (boxId || 'ae-avoid') + ' .day-chip.on'))
     .map(function(b) { return parseInt(b.dataset.day); });
 }
-
 function openAgentEditor(agentId) {
   var a = agents.find(function(x){ return x.id === agentId; });
   if (!a) return;
@@ -7309,7 +6662,6 @@ function openAgentEditor(agentId) {
   document.getElementById('ae-store').value  = currentStoreName || '';
   document.getElementById('ae-status').innerHTML =
     statusOptionsHtml((a.status || 'SA').toUpperCase());
-
   var cSec = document.getElementById('ae-corner-sec');
   if (storeCorners.length > 1) {
     cSec.style.display = 'block';
@@ -7322,10 +6674,8 @@ function openAgentEditor(agentId) {
   } else {
     cSec.style.display = 'none';
   }
-
   var p = agentPrefs[agentId] || {};
   renderDayChips(p.avoid_days || [], 'ae-avoid');
-
   var fx = p.fixed_schedule || null;
   var isVolant = !(fx && fx.enabled) && (a.work_pct || 100) < 100;
   renderDayChips((fx && fx.days) || [], 'ae-fixed-days');
@@ -7335,10 +6685,8 @@ function openAgentEditor(agentId) {
   document.getElementById('ae-pct-vol').value = pctVal;
   updateFixedSectionVisibility();
   setPtType(isVolant ? 'volant' : 'fixed');
-
   document.getElementById('agent-editor').classList.add('open');
 }
-
 var agentSaveTimer = null, agentEditorDirty = false;
 var agentSaveInFlight = Promise.resolve(true);
 function queueAgentSave() {
@@ -7357,7 +6705,6 @@ async function closeAgentEditor() {
   agentEditorId = null;
   if (agentEditorDirty) { agentEditorDirty = false; await loadWeekData(); }
 }
-
 async function saveAgentEditor() {
   var agentId = agentEditorId;
   if (!agentId) return true;
@@ -7365,12 +6712,10 @@ async function saveAgentEditor() {
   var last   = document.getElementById('ae-last').value.trim();
   var status = document.getElementById('ae-status').value;
   if (!first || !last) { showToast('First and last name are required', 'error'); return false; }
-
   var isPT = (status === 'PART_TIME');
   var ptVolant = isPT && document.getElementById('ae-pt-volant-btn').classList.contains('active');
   var pct = 100;
   if (ptVolant) pct = parseInt(document.getElementById('ae-pct-vol').value) || 50;
-
   var fixedSchedule = null;
   if (isPT && !ptVolant) {
     var fdays = readDayChips('ae-fixed-days');
@@ -7381,14 +6726,12 @@ async function saveAgentEditor() {
     if (!(fstart === 0 && fend === 0) && fend <= fstart) { showToast('Fixed end must be after start', 'error'); return false; }
     fixedSchedule = { enabled: true, days: fdays, start: fstart, end: fend };
   }
-
   var upd = { first_name: first, last_name: last, status: status, work_pct: pct };
   if (storeCorners.length > 1) {
     upd.home_corner_id = document.getElementById('ae-home-corner').value || null;
     upd.corner_skills = readSkillChips();
   }
   var prefRow = { agent_id: agentId, avoid_days: readDayChips('ae-avoid'), fixed_schedule: fixedSchedule };
-
   var res = await sb.from('retail_agents').update(upd).eq('id', agentId);
   if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return false; }
   var a = agents.find(function(x){ return x.id === agentId; });
@@ -7404,7 +6747,6 @@ async function saveAgentEditor() {
   showToast('Saved \u2713');
   return true;
 }
-
 async function deleteAgentFromEditor() {
   if (!agentEditorId) return;
   if (!confirm(t('Delete this agent? This cannot be undone.'))) return;
@@ -7420,7 +6762,6 @@ async function deleteAgentFromEditor() {
   showToast('Agent deleted');
   await loadWeekData();
 }
-
 async function addAgent() {
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   var first  = document.getElementById('new-first-name').value.trim();
@@ -7428,13 +6769,11 @@ async function addAgent() {
   var status = document.getElementById('new-status').value || 'SA';
   var pct    = 100;
   if (!first || !last) { showToast('Enter first and last name', 'error'); return; }
-
   var homeCorner = null;
   if (storeCorners.length > 1) {
     var cv = document.getElementById('new-corner');
     homeCorner = (cv && cv.value) ? cv.value : null;
   }
-
   showLoader();
   var res = await sb.from('retail_agents').insert({
     store_id: currentStoreId, first_name: first, last_name: last,
@@ -7442,23 +6781,19 @@ async function addAgent() {
   });
   hideLoader();
   if (res.error) { showToast('Failed to add agent', 'error'); return; }
-
   document.getElementById('new-first-name').value = '';
   document.getElementById('new-last-name').value  = '';
   document.getElementById('add-agent-form').classList.remove('open');
   showToast(tf('{person} added \u2713', { person: first + ' ' + last }));
   await loadWeekData();
 }
-
 // Monthly Excel export
 function printableExport(contentHtml, titleText, fitWidth) {
   if (!contentHtml || !currentStoreId) { showToast('Nothing to export', 'error'); return; }
   var w = window.open('', '_blank');
   if (!w) { showToast('Popup blocked - allow popups to export PDF', 'error'); return; }
-
   var siteCss = '';
   document.querySelectorAll('style').forEach(function(st){ siteCss += st.textContent + '\n'; });
-
   var printCss =
     '@page { size:landscape; margin:8mm; }' +
     'body { background:#fff; margin:0; padding:14px 16px; font-family:var(--font); }' +
@@ -7470,7 +6805,6 @@ function printableExport(contentHtml, titleText, fitWidth) {
     '.mth-wrap { overflow:visible !important; border:none !important; }' +
     '.card { box-shadow:none !important; border:1px solid var(--line) !important; }' +
     '* { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }';
-
   var stamp = esc(currentStoreName + ' - ' + titleText);
   w.document.write('<!DOCTYPE html><html lang="' + docLang() + '"><head><meta charset="utf-8">' +
     '<title>' + stamp + '</title>' +
@@ -7489,7 +6823,6 @@ function printableExport(contentHtml, titleText, fitWidth) {
     w.focus(); w.print();
   }, 600);
 }
-
 // Send: build a real PDF file, then the share window or an email
 var PDF_LIBS = ['https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
                 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
@@ -7535,7 +6868,7 @@ async function buildPlanningPdf(view) {
   var box = document.createElement('div');
   box.className = 'pdf-shot' + (view === 'intraday' ? ' is-intraday' : '');
   box.innerHTML = '<div class="pdf-shot-head">' + pdfBrandHtml() + '<div style="text-align:right"><b>' + esc(info.storeName + ' - ' + t(info.kind) + ' - ' + planningScopeLabel(info.scope, info.scopeIsCorner)) + '</b><br><span>' + esc(info.period) + '</span></div></div>' +
-    '<div class="card' + (view === 'monthly' ? ' pdf-grid-only' : '') + '">' +
+    '<div class="card">' +
     planningExportHtml(view).replace(/ id="[^"]*"/g, '') + '</div>';
   var exportDays = view === 'monthly' ? new Date(monthlyRef.getFullYear(), monthlyRef.getMonth() + 1, 0).getDate() : 0;
   var exportSpan = intradayAxis ? intradayAxis.T1 - intradayAxis.T0 : 12;
@@ -7591,7 +6924,6 @@ async function buildPlanningPdf(view) {
 function sendText(info) { return tf("Hello, please find attached the team's planning for {period}.", { period: info.period }); }
 function planningScopeLabel(scope, isCorner) { return isCorner ? scope : t('All'); }
 function sendSubject(info) { return tf('Planning {store} - {scope} - {period}', { store: info.storeName, scope: planningScopeLabel(info.scope, info.scopeIsCorner), period: info.period }); }
-
 // Send menu: PDF is prepared first, so the share window opens right away
 async function openSendMenu(ev, view) {
   ev.stopPropagation();
@@ -7615,7 +6947,6 @@ async function openSendMenu(ev, view) {
   m.style.left = Math.max(8, Math.min(r.left, vw - m.offsetWidth - 8)) + 'px';
   document.addEventListener('keydown', onExportMenuKey);
   setTimeout(function() { document.addEventListener('click', closeExportMenu); }, 0);
-
   var built;
   try { built = await buildPlanningPdf(view); }
   catch (e) {
@@ -7652,28 +6983,25 @@ async function openSendMenu(ev, view) {
   };
   (m.querySelector('button:not([disabled])') || mailBtn).focus({ preventScroll: true });
 }
-
 function exportMonthlyPDF() {
   var mn = monthlyRef.toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
-  // One page: names and shift cells only (no counters, no coverage table), fitted to the page width.
-  printableExport('<div class="card pdf-grid-only">' + planningExportHtml('monthly') + '</div>',
+  // Monthly planning and coverage, fitted to the page width.
+  printableExport('<div class="card">' + planningExportHtml('monthly') + '</div>',
     tf('Monthly - {scope} - {period}', { scope: planningScopeLabel(scope, !!currentCornerView), period: mn }), true);
 }
-
 function exportIntradayPDF() {
   var scope = currentCornerView ? cornerCodeById(currentCornerView) : 'All';
   printableExport('<div class="card">' + planningExportHtml('intraday') + '</div>',
     tf('Intraday - {scope} - {date}', { scope: planningScopeLabel(scope, !!currentCornerView), date: currentIntradayDate ? formatDateDisplay(currentIntradayDate) : '' }));
 }
-
 // Download menu: Excel or PDF
 function openExportMenu(ev, view) {
   ev.stopPropagation();
   closeExportMenu();
   var items = [
-    ['xl', 'Microsoft_Office_Excel_(2025%E2%80%93present).svg.webp', 'Excel', view === 'monthly' ? 'exportMonthly()' : 'exportIntraday()'],
-    ['pdf', 'logo%20pdf.webp', 'PDF', view === 'monthly' ? 'exportMonthlyPDF()' : 'exportIntradayPDF()']
+    ['xl', 'logo/Microsoft_Office_Excel_(2025%E2%80%93present).svg.webp', 'Excel', view === 'monthly' ? 'exportMonthly()' : 'exportIntraday()'],
+    ['pdf', 'logo/logo%20pdf.webp', 'PDF', view === 'monthly' ? 'exportMonthlyPDF()' : 'exportIntradayPDF()']
   ];
   var m = document.createElement('div');
   m.id = 'export-menu'; m.className = 'mission-menu';
@@ -7706,13 +7034,10 @@ function onExportMenuKey(ev) {
   closeExportMenu();
   if (trigger) trigger.focus({ preventScroll:true });
 }
-
 function cornerCodeById(cid) {
   for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === cid) return storeCorners[i].code;
   return 'All';
 }
-
-
 // xlsx-js-style 1.2.0 does not serialize !freeze, !panes or !pageSetup.
 // Use its bundled ZIP writer to insert those worksheet properties.
 function planningWorkbookBytes(wb) {
@@ -7750,20 +7075,16 @@ function exportMonthly() {
   if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
   if (!monthlyResult || !Object.keys(monthlyResult).length) renderMonthlyPlanning();
-
   var ref = new Date(monthlyRef);
   var year = ref.getFullYear(), monthIdx = ref.getMonth();
   var nDays = new Date(year, monthIdx + 1, 0).getDate();
   var monthName = new Date(year, monthIdx, 1).toLocaleDateString(dLoc(), { month:'long', year:'numeric' });
-
   var days = [];
   for (var dn = 1; dn <= nDays; dn++) {
     var dObj = new Date(year, monthIdx, dn);
     var ds = toDateStr(dObj);
-    days.push({ num:dn, ds:ds, dow:dObj.getDay(), closure:getDayClosureType(ds),
-                vol:(trafficDaily[ds] && trafficDaily[ds].traffic!=null)?trafficDaily[ds].traffic:0 });
+    days.push({ num:dn, ds:ds, dow:dObj.getDay(), closure:getDayClosureType(ds) });
   }
-
   var SHIFT_XL = {
     'sh-open':{bg:'DBEAFE',tx:'1E407A'}, 'sh-mid':{bg:'F5EBCB',tx:'6B5622'},
     'sh-close':{bg:'DCEBDF',tx:'2D5841'}, 'sh-late':{bg:'F5EBCB',tx:'6B5622'}, 'sh-dsun':{bg:'E4DDF0',tx:'5C467A'}, 'sh-violet':{bg:'E4DDF0',tx:'5C467A'}, 'sh-pt':{bg:'E8E9EB',tx:'4C586A'},
@@ -7782,7 +7103,6 @@ function exportMonthly() {
     var tone = tones[0];
     return SHIFT_XL[tone] ? tone : 'sh-none';
   }
-
   function cell(v, o) {
     o = o || {};
     var num = (v !== '' && v != null && !isNaN(v) && String(v).trim() !== '');
@@ -7808,11 +7128,8 @@ function exportMonthly() {
     c.s = s;
     return c;
   }
-
   var HEAD={bg:'FAFAFB',tx:'6B7280'}, BLK={bg:'F4F5F7',tx:'52525B'}, RH={bg:'FAFAFB',tx:'17283E'};
   var rows = [];
-  var DOWL = ['S','M','T','W','T','F','S'];
-
   var totalCols = 2 + nDays + 5;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
   // Logo line and tagline, like the app
@@ -7825,7 +7142,6 @@ function exportMonthly() {
   for (var i=1;i<totalCols;i++) metaRow.push(cell('', { underline:'rule' }));
   rows.push(metaRow);
   rows.push(blankRow());
-
   // Same style for every row label
   var LBL = { tx:'52525B', bold:true, sz:9, align:'left' };
   function lbl(txt, bg, isCode) { return cell(String(isCode ? txt : t(txt)).toUpperCase(), Object.assign({ bg:bg }, LBL)); }
@@ -7839,8 +7155,6 @@ function exportMonthly() {
   hRow.push(cell(CURRENT_LANG === 'en' ? 'SUN' : t('Sun'),{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
   hRow.push(cell(CURRENT_LANG === 'en' ? 'ABS' : t('Absence'),{bg:RH.bg,tx:RH.tx,bold:true,grid:true}));
   rows.push(hRow);
-
-
   var EVT_XL = { local:{bg:'DBEAFE',tx:'1E40AF'}, national:{bg:'F6DDE7',tx:'82334E'}, training:{bg:'DCECE7',tx:'13574B'} };
   var evtMerges = [];
   ['local', 'national', 'training'].forEach(function(cat) {
@@ -7863,11 +7177,9 @@ function exportMonthly() {
       rows.push(r);
     });
   });
-
   var BLOCKS = [ ['mgmt','Management'], ['sales','Sales'], ['stock','Stock'] ];
   var perDay = { mgmt:{}, sales:{}, stock:{}, open:{}, close:{} };
   days.forEach(function(d){ ['mgmt','sales','stock','open','close'].forEach(function(k){ perDay[k][d.ds]=0; }); });
-
   var xlGroups = [];
   if (storeCorners.length > 1) {
     var refYx = monthlyRef.getFullYear(), refMx = monthlyRef.getMonth() + 1;
@@ -7903,13 +7215,11 @@ function exportMonthly() {
       if (inB.length) xlGroups.push({ label:bl[1], pool:bl[0], list:inB });
     });
   }
-
   xlGroups.forEach(function(grp){
     var inBlock = grp.list;
     var blkRow = [ lbl(grp.label, BLK.bg, grp.isCode) ];
     for (var i=1;i<totalCols;i++) blkRow.push(cell('',{bg:BLK.bg}));
     rows.push(blkRow);
-
     inBlock.forEach(function(a){
       var role = (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '';
       var nm = ((a.first_name || '') + ' ' + (a.last_name || '')).trim();
@@ -7950,10 +7260,8 @@ function exportMonthly() {
       rows.push(r);
     });
   });
-
   rows.push(blankRow());
   rows.push(blankRow());
-
   function sumRow(label, map, opt) {
     opt = opt || {};
     var r = [ cell(t(label),{align:'left',bold:true,tx:opt.tx||'6B7280',sz:9,bg:opt.bg||'FCFCFD'}),
@@ -7978,7 +7286,6 @@ function exportMonthly() {
   rows.push(sumRow('Management', (cv.pools && cv.pools.mgmt) || perDay.mgmt));
   rows.push(sumRow('Sales', (cv.pools && cv.pools.sales) || perDay.sales));
   rows.push(sumRow('Stock', (cv.pools && cv.pools.stock) || perDay.stock));
-
   var ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:Math.min(12,totalCols-1)} },
@@ -8002,14 +7309,12 @@ function exportMonthly() {
   ws['!panes']  = [{ xSplit:2, ySplit:6, topLeftCell:'C7', activePane:'bottomRight', state:'frozen' }];
   ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:0 };
   ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
-
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Monthly');
   var tag = year + '-' + String(monthIdx+1).padStart(2,'0');
   downloadPlanningWorkbook(wb, 'CAST_Retail_Monthly_' + tag + '.xlsx');
   showToast('Exported \u2713');
 }
-
 function exportIntraday() {
   if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
   if (!currentStoreId) { showToast('Select a store first', 'error'); return; }
@@ -8017,11 +7322,8 @@ function exportIntraday() {
     intradayExport.storeId === currentStoreId && intradayExport.rows.length; };
   if (!fresh()) renderIntraday(currentIntradayDate);
   if (!fresh()) { showToast('Nothing to export', 'error'); return; }
-
   var openH = intradayExport.openH, closeH = intradayExport.closeH;
   var nQ = Math.round((closeH - openH) * 4);
-
-  var TONE_XL = { open:{bar:'EEF1F5'}, mid:{bar:'EEF1F5'}, close:{bar:'EEF1F5'}, late:{bar:'EEF1F5'}, dsun:{bar:'EEF1F5'}, violet:{bar:'EEF1F5'}, pt:{bar:'EEF1F5'}, teal:{bar:'EEF1F5'}, pink:{bar:'EEF1F5'}, slate:{bar:'EEF1F5'}, dsun:{bar:'EEF1F5'}, violet:{bar:'EEF1F5'}, pt:{bar:'EEF1F5'}, open_stock:{bar:'EEF1F5'} };
   var MISSION_XL = {
     mb:{bg:'DBEAFE',tx:'1E407A',full:'MB'},
     lun:{bg:'F5EBCB',tx:'6B5622',full:'Lunch'},
@@ -8048,7 +7350,6 @@ function exportIntraday() {
     teal:{bg:'DCEBDF',tx:'2D5841'}, pink:{bg:'F6DDE7',tx:'82334E'}, slate:{bg:'E8E9EB',tx:'4C586A'}
   };
   var EMPTY = 'F4F5F8';
-
   function cell(v, o) {
     o = o || {};
     var c = { v:(v==null?'':v), t:'s' };
@@ -8065,12 +7366,10 @@ function exportIntraday() {
     c.s = s;
     return c;
   }
-
   var rows = [];
   var merges = [];
   var totalCols = 3 + nQ;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
-
   [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'183C74' }],
    ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
    ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) {
@@ -8080,7 +7379,6 @@ function exportIntraday() {
   for (var i=1;i<totalCols;i++) metaRow.push(cell('',{rule:true}));
   rows.push(metaRow);
   rows.push(blankRow());
-
   var hRow = [ cell(t('Agent'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell(t('Role'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell(t('Shift'),{bg:'FAFAFB',tx:'6B7280',bold:true}) ];
@@ -8089,9 +7387,7 @@ function exportIntraday() {
     hRow.push(cell(isHour ? String(openH + q/4) + 'H' : '', { bg:'FAFAFB', tx:'6B7280', bold:true, sz:8, grid:true, lHour:isHour }));
   }
   rows.push(hRow);
-
   var spacerIdx = [];
-
   var lastGroup = null;
   intradayExport.rows.forEach(function(r, ri) {
     if (r.group && r.group !== lastGroup) {
@@ -8105,13 +7401,11 @@ function exportIntraday() {
     var row = [ cell((function(){var a=agents.find(function(a){return a.id===r.agentId;});return a?((a.first_name||'')+' '+(a.last_name||'')).trim():r.name;})(),{align:'left',bold:true}),
                 cell(t(r.role),{align:'left',tx:'6B7280',sz:9}),
                 cell(r.code,{bg:head.bg,tx:head.tx,bold:true}) ];
-    var tone = TONE_XL[r.tone] || TONE_XL.close;
-
     var qcells = [];
     for (var q=0; q<nQ; q++) {
       var hAt = openH + q/4;
       var inShift = (hAt >= r.startH - 0.001 && hAt < r.endH - 0.001);
-      qcells.push({ bg: inShift ? tone.bar : EMPTY, mission:null });
+      qcells.push({ bg: inShift ? 'EEF1F5' : EMPTY, mission:null });
     }
     r.blocks.forEach(function(b) {
       var mx = exportBlockStyle(b);
@@ -8124,7 +7418,6 @@ function exportIntraday() {
         merges.push({ s:{r:rowIndex, c:3+qStart}, e:{r:rowIndex, c:3+qEnd-1} });
       }
     });
-
     for (var q=0; q<nQ; q++) {
       var qc = qcells[q];
       if (qc.mission) {
@@ -8134,7 +7427,6 @@ function exportIntraday() {
       }
     }
     rows.push(row);
-
     if (ri < intradayExport.rows.length - 1) {
       spacerIdx.push(rows.length);
       var sp = [];
@@ -8142,7 +7434,6 @@ function exportIntraday() {
       rows.push(sp);
     }
   });
-
   rows.push(blankRow());
   var legRow = [ cell(t('Legend'),{align:'left',bold:true,tx:'6B7280',sz:10}) ];
   for (var i=1;i<totalCols;i++) legRow.push(cell(''));
@@ -8164,7 +7455,6 @@ function exportIntraday() {
     for (var i=2;i<totalCols;i++) lr.push(cell(''));
     rows.push(lr);
   });
-
   var ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!merges'] = [
     { s:{r:0,c:0}, e:{r:0,c:Math.min(14,totalCols-1)} },
@@ -8190,23 +7480,19 @@ function exportIntraday() {
   ws['!panes']  = [{ xSplit:3, ySplit:6, topLeftCell:'D7', activePane:'bottomRight', state:'frozen' }];
   ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:1 };
   ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
-
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Intraday');
   downloadPlanningWorkbook(wb, 'CAST_Retail_Intraday_' + intradayExport.ds + '.xlsx');
   showToast('Exported \u2713');
 }
-
 // Calendar
 var CAL_DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-
 function switchCalendarView(v) {
   currentCalView = v;
   document.getElementById('calendar-annual').style.display  = v==='annual'  ? 'block' : 'none';
   document.getElementById('calendar-monthly').style.display = v==='monthly' ? 'block' : 'none';
   renderCalendar();
 }
-
 function switchCalendarNav(v, btn) {
   document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
   document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
@@ -8217,12 +7503,10 @@ function switchCalendarNav(v, btn) {
   document.querySelectorAll('#sub-calendar .nav-subitem, #tab-calendar .view-switch button').forEach(function(b) {
     b.classList.toggle('active', b.dataset.calview === v);
   });
-  if (currentStoreId) renderCalendar();
   switchCalendarView(v);
   updateBreadcrumb(v === 'annual' ? 'Bank Holidays' : 'Absence');
   if (!btn) closeRailMenus();
 }
-
 function calChangeMonth(delta) {
   if (currentCalView === 'annual') {
     calMonth = new Date(calMonth.getFullYear() + delta, calMonth.getMonth(), 1);
@@ -8231,7 +7515,6 @@ function calChangeMonth(delta) {
   }
   renderCalendar();
 }
-
 var holidaysLoaded = {}, holidaysCountry = null;
 async function loadHolidays(year) {
   var country = currentCountryIso || 'FR';
@@ -8247,7 +7530,6 @@ async function loadHolidays(year) {
     showToast('Could not load public holidays', 'error');
   }
 }
-
 async function loadCalendarData() {
   var sid = currentStoreId;
   if (!sid) return;
@@ -8263,7 +7545,6 @@ async function loadCalendarData() {
   });
   agentLeaves = lv.data || []; calOverrides = co; calHours = ch; calDataStore = sid;
 }
-
 async function renderCalendar() {
   if (!currentStoreId) return;
   var year = calMonth.getFullYear();
@@ -8275,7 +7556,6 @@ async function renderCalendar() {
   if (currentCalView === 'annual') renderAnnualCalendar();
   else renderMonthlyCalendar();
 }
-
 function calMonthDays() {
   var y = calMonth.getFullYear(), m = calMonth.getMonth();
   var first = new Date(y, m, 1);
@@ -8286,12 +7566,10 @@ function calMonthDays() {
   for (var d = 1; d <= daysInMonth; d++) cells.push(new Date(y, m, d));
   return cells;
 }
-
 function renderAnnualCalendar() {
   var container = document.getElementById('calendar-annual');
   var year = calMonth.getFullYear();
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
   var html = '<div class="cal-year-grid">';
   for (var mo = 0; mo < 12; mo++) {
     html += '<div class="cal-mini">';
@@ -8301,7 +7579,6 @@ function renderAnnualCalendar() {
       var dowLabel = new Date(2026, 0, 5 + wd).toLocaleDateString(dLoc(), { weekday:CURRENT_LANG === 'en' ? 'narrow' : 'short' });
       html += '<div class="cal-mini-dow">' + esc(dowLabel) + '</div>';
     }
-
     var first = new Date(year, mo, 1);
     var startDow = (first.getDay() + 6) % 7;
     var daysInMonth = new Date(year, mo+1, 0).getDate();
@@ -8331,17 +7608,14 @@ function renderAnnualCalendar() {
     tf('Public holidays for {country} are highlighted. Click any holiday to force the store open (green) or closed, or set exceptional hours.', { country: currentCountryIso || 'FR' }) + '</p>';
   container.innerHTML = html;
 }
-
 function renderMonthlyCalendar() {
   var container = document.getElementById('calendar-monthly');
   var cells = calMonthDays();
-
   var LEAVE_STYLE = {
     leave:   { bg:'#fef9c3', text:'#854d0e', icon:'\uD83C\uDFDD\uFE0F', label:'Leave' },
     sick:    { bg:'#ffedd5', text:'#9a3412', icon:'\uD83D\uDE91', label:'Sick' },
     absence: { bg:'#fee2e2', text:'#b91c1c', icon:'\u26D4', label:'Absence' }
   };
-
   var monthStart = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth(), 1));
   var monthEnd   = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 0));
   var visible = agentLeaves.filter(function(lv){ return lv.end_date >= monthStart && lv.start_date <= monthEnd; });
@@ -8356,10 +7630,8 @@ function renderMonthlyCalendar() {
     if (!placed) { laneOf[lv.id] = lanes.length; lanes.push(lv.end_date); }
   });
   var laneCount = Math.max(1, lanes.length);
-
   var grid = '<div class="cal-grid">';
   CAL_DOW.forEach(function(d){ grid += '<div class="cal-dow">'+esc(t(d))+'</div>'; });
-
   cells.forEach(function(day){
     if (!day) { grid += '<div class="cal-cell empty"></div>'; return; }
     var ds = toDateStr(day);
@@ -8369,7 +7641,6 @@ function renderMonthlyCalendar() {
     if (isToday(day)) cls += ' today';
     if (closure === 'holiday') cls += ' holiday';
     else if (closure === 'weekend') cls += ' weekend';
-
     var inner = '<div class="cal-daynum">'+day.getDate()+'</div>';
     inner += '<div class="cal-lanes" style="height:'+(laneCount*16)+'px;">';
     visible.forEach(function(lv){
@@ -8395,7 +7666,6 @@ function renderMonthlyCalendar() {
     grid += '<div class="'+cls+'">'+inner+'</div>';
   });
   grid += '</div>';
-
   var list = '<div class="cal-agent-list"><h4>Declare absence</h4>';
   if (!agents.length) list += '<p style="font-size:12px;color:#9ca3af;">No client advisors.</p>';
   agents.forEach(function(a){
@@ -8403,10 +7673,8 @@ function renderMonthlyCalendar() {
       esc(a.first_name+' '+a.last_name)+'</div>';
   });
   list += '</div>';
-
   container.innerHTML = '<div class="cal-monthly-wrap"><div class="cal-monthly-grid">'+grid+'</div>'+list+'</div>';
 }
-
 // Absence pop-up
 var leavePickerAgent = null;
 function showLeavePicker(agentId, event) {
@@ -8423,7 +7691,6 @@ function showLeavePicker(agentId, event) {
   p.style.top  = Math.min(event.clientY+10, window.innerHeight-320) + 'px';
 }
 function closeLeavePopup(){ document.getElementById('leave-popup').style.display='none'; }
-
 async function saveLeave() {
   var start = document.getElementById('leave-start').value;
   var end   = document.getElementById('leave-end').value;
@@ -8436,9 +7703,8 @@ async function saveLeave() {
   closeLeavePopup();
   showToast('Absence saved \u2713');
   renderCalendar();
-  if (currentStoreId) { renderPlanning(); renderDashboard(); }
+  if (currentStoreId) { renderMonthlyPlanning(); renderDashboard(); }
 }
-
 async function deleteLeavePrompt(leaveId, event) {
   event.stopPropagation();
   if (!confirm(t('Remove this absence?'))) return;
@@ -8447,10 +7713,9 @@ async function deleteLeavePrompt(leaveId, event) {
   agentLeaves = agentLeaves.filter(function(l){return l.id !== leaveId;});
   showToast('Absence removed \u2713');
   renderCalendar();
-  renderPlanning();
+  renderMonthlyPlanning();
   if (currentStoreId) renderDashboard();
 }
-
 // Open or closed day pop-up
 var dayOpenPickerDate = null;
 function hourOptionsH(sel){
@@ -8464,7 +7729,6 @@ function hourOptionsH(sel){
   }
   return o;
 }
-
 // Measure the actual popup, including expanded opening hours.
 function positionOpeningPopup(p, x, y) {
   var vw = document.documentElement.clientWidth;
@@ -8490,7 +7754,6 @@ function showDayOpenPicker(ds, event) {
     positionOpeningPopup(popup, parseFloat(popup.style.left) || 8, parseFloat(popup.style.top) || 8);
     applyDayOpen(dayOpenPickerDate, toggle.checked);
   };
-
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
   var base = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
   var exc  = calHours[ds] || {};
@@ -8520,9 +7783,8 @@ async function applyDayOpen(ds, isOpen) {
   calOverrides[ds] = isOpen;
   showToast(isOpen ? 'Marked open \u2713' : 'Marked closed \u2713');
   renderCalendar();
-  renderPlanning();
+  renderMonthlyPlanning();
 }
-
 async function saveDayHours() {
   var ds = dayOpenPickerDate;
   if (!ds) return;
@@ -8534,9 +7796,8 @@ async function saveDayHours() {
   if (error) { showToast('Failed: '+error.message, 'error'); return; }
   calHours[ds] = { open: o, close: c };
   showToast('Saved \u2713');
-  renderPlanning();
+  renderMonthlyPlanning();
 }
-
 async function clearDayHours() {
   var ds = dayOpenPickerDate;
   if (!ds) return;
@@ -8549,9 +7810,8 @@ async function clearDayHours() {
   document.getElementById('dayopen-open-time').value  = base.open;
   document.getElementById('dayopen-close-time').value = base.close;
   showToast('Hours reset \u2713');
-  renderPlanning();
+  renderMonthlyPlanning();
 }
-
 function toggleWeekPicker(event) {
   event.stopPropagation();
   var popup = document.getElementById('week-picker-popup');
@@ -8565,46 +7825,37 @@ function toggleWeekPicker(event) {
   popup.style.left = Math.max(8, rect.left - 100) + 'px';
   setTimeout(function() { document.addEventListener('click', closeWeekPickerOutside); }, 0);
 }
-
 function closeWeekPickerOutside(e) {
   var popup = document.getElementById('week-picker-popup');
   if (popup && !popup.contains(e.target)) closeWeekPicker();
 }
-
 function closeWeekPicker() {
   document.getElementById('week-picker-popup').style.display = 'none';
   document.removeEventListener('click', closeWeekPickerOutside);
 }
-
 function wkpChangeMonth(dir) {
   wkpDate.setMonth(wkpDate.getMonth() + dir);
   renderWeekPicker();
 }
-
 function renderWeekPicker() {
   var y = wkpDate.getFullYear(), m = wkpDate.getMonth();
   document.getElementById('wkp-month-label').textContent =
     new Date(y, m, 1).toLocaleDateString(dLoc(), {month:'long', year:'numeric'});
-
   var first = new Date(y, m, 1);
   var dow = first.getDay() || 7;
   var gridStart = new Date(first);
   gridStart.setDate(first.getDate() - (dow - 1));
-
   var todayStr = toDateStr(new Date());
   var selMon   = toDateStr(currentWeekMonday);
-
   var html = '<div class="wkp-wn"></div>' +
     ['Mo','Tu','We','Th','Fr','Sa','Su'].map(function(d){
       return '<div class="wkp-day-hdr">'+d+'</div>';
     }).join('');
-
   for (var week = 0; week < 6; week++) {
     var weekMonday = new Date(gridStart);
     weekMonday.setDate(gridStart.getDate() + week * 7);
     var wn = getWeekNumber(weekMonday);
     html += '<div class="wkp-wn">W'+wn+'</div>';
-
     for (var d = 0; d < 7; d++) {
       var day = new Date(weekMonday);
       day.setDate(weekMonday.getDate() + d);
@@ -8623,7 +7874,6 @@ function renderWeekPicker() {
   }
   document.getElementById('wkp-grid').innerHTML = html;
 }
-
 function pickWeek(mondayStr) {
   var parts = mondayStr.split('-');
   var newMon = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
@@ -8633,7 +7883,6 @@ function pickWeek(mondayStr) {
   closeWeekPicker();
   if (currentStoreId) loadWeekData();
 }
-
 // Presentation helpers: use the existing saves and engine outputs.
 var currentSettingsView = 'store';
 function updateBreadcrumb(label) {
@@ -8706,19 +7955,6 @@ function bindPlanningScroll() {
     locked=true; (src===main?sum:main).scrollLeft=src.scrollLeft; locked=false;
   }, {passive:true});});
 }
-function intradayLegendHtml() {
-  var items=missionDefs().slice();
-  (Object.keys(addedMissions)).forEach(function(id){
-    (addedMissions[id]||[]).forEach(function(m){
-      if (!items.some(function(x){return x.type===m.type;})) items.push(missionDef(m.type));
-    });
-  });
-  if (storeSettings && storeSettings.intraday_reinforcement) items.push({short:'R',label:'Reinforcement',cls:'it-blk-reinf'});
-  return '<div class="it-legend" aria-label="'+esc(t('Legend'))+'">'+items.map(function(m){
-    return '<span class="it-legend-item"><span class="it-legend-swatch '+m.cls+'" aria-hidden="true">'+''+'</span><span>'+esc(t(m.label))+'</span></span>';
-  }).join('')+'</div>';
-}
-// Export a stable grid width, independent of the viewport and hidden HR columns.
 // CAST logo and tagline for exported files
 function pdfBrandHtml() {
   var img = document.querySelector('#sidebar .sb-wordmark');
@@ -8858,7 +8094,6 @@ function initDesignV2() {
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeRailMenus();closeMissionMenu();}});
   updateBreadcrumb('Dashboard');
 }
-
 // More actions menu (Monthly): open, close on outside click or Escape
 function toggleMoreMenu(e) {
   e.stopPropagation();
@@ -8881,11 +8116,9 @@ document.addEventListener('keydown', function(e) {
   var m = document.getElementById('more-menu');
   if (e.key === 'Escape' && m && m.classList.contains('open')) { closeMoreMenu(); document.getElementById('more-btn').focus(); }
 });
-
 document.addEventListener('pointerup', function() {
   setTimeout(function() { fitMissionLabels(document.getElementById('planning-intraday-body')); }, 0);
 });
-
 // Header rows stay visible while the page scrolls (no inner scroll bar)
 function syncStickyHeads() {
   var bar = document.getElementById('topbar');
@@ -8909,7 +8142,6 @@ window.addEventListener('resize', syncStickyHeads);
   var orig = window[fn]; if (typeof orig !== 'function') return;
   window[fn] = function() { var r = orig.apply(this, arguments); setTimeout(syncStickyHeads, 0); return r; };
 });
-
 // Start app
 initDesignV2();
 init();
