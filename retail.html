@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.1.2</title>
+  <title>CAST v9.1.3</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -14,7 +14,7 @@
   --brand:#183C74; --brand-hover:#102F5E; --brand-soft:#EAF0FA; --brand-on:#FFFFFF; --tx-1:#17283E; --tx-2:#52647B; --tx-3:#52647B; --tx-on:#FFFFFF; --tx-person:#304D74; --tx-metric:#507BAD; --tx-curve-value:#345D8E; /* Bordures */
   --line:#DCE3EC; --line-2:#BDC9D9; --line-row:#E8EDF3; --line-day:#EDF0F5; --line-month-row:#E6ECF3; --line-sticky:#D4DEEB; --line-hover:#B9C8DB; --line-selection:#B8CCE6; --line-manual:#91ACD2; --line-chip-active:#CBD9EC; --line-expander:#B8C7D9; --line-menu:#D4DEEB; --line-tooltip:#C5D3E4; --line-modal:#CFDAE8; --line-block:#00000016; --line-swatch:#0000001A; --line-week:#536D8E; --line-calendar-today:#88A6CE; --focus:#4A75AD; --cross-highlight:rgba(24, 60, 116, 0.045); /* Six familles de blocs */
   --amber-bg:#F9E8B5; --amber-tx:#61470B; --teal-bg:#CCECE4; --teal-tx:#13574B; --blue-bg:#DBEAFE; --blue-tx:#1E407A; --violet-bg:#E8E0F5; --violet-tx:#583981; --rose-bg:#F6DDE7; --rose-tx:#82334E; --slate-bg:#E2E8F0; --slate-tx:#334155; /* Shifts:couleurs indépendantes des règles de calcul */
-  --shift-open-bg: #DCECE7; --shift-open-tx:#215C4B; --shift-mid-bg:#E8E0F5; --shift-mid-tx:#583981; --shift-close-bg:#DBEAFE; --shift-close-tx:#1E407A; --shift-late-bg:#C5B3E6; --shift-late-tx:#3E2470; --shift-off-bg:#F0F3F7; --shift-off-tx:#52647B; --shift-absence-bg:#F6DDE7; --shift-absence-tx:#82334E; --shift-hover-line:#849EBD; /* Intraday */
+  --shift-open-bg: #DCECE7; --shift-open-tx:#215C4B; --shift-mid-bg:#E8E0F5; --shift-mid-tx:#583981; --shift-close-bg:#DBEAFE; --shift-close-tx:#1E407A; --shift-late-bg:#F4F6DD; --shift-late-tx:#4D5715; --shift-off-bg:#F0F3F7; --shift-off-tx:#52647B; --shift-absence-bg:#F6DDE7; --shift-absence-tx:#82334E; --shift-hover-line:#849EBD; /* Intraday */
   --track-shift-bg:#E8EFF8; --track-shift-line:#D4DFED; --track-shift-tx:#3B5270; --track-quarter-line:#EEF2F7; --track-hour-line:#D4DEEA; --track-outside-open:#F7F9FC; --block-focus:#183C7440; /* Graphiques */
   --chart-light:#D6E3F5; --chart-accent:#6F93C3; --curve-line:#507BAD; --curve-area:#E9F0FA; --curve-grid:#E7EDF5; --trend-positive-bg:#E3F0EB; --trend-positive-tx:#275A49; /* Actions et messages existants */
   --danger-tx:#92384D; --danger-line:#D9BBC1; --danger-bg:#F6DDE7; --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5; --warn-tx:#61470B; --dang-soft:#F6DDE7; --dang-tx:#82334E; --info-soft:#DBEAFE; --info-tx:#1E407A; --overlay:#12263E44; --disabled-opacity:0.5; /* Rayons */
@@ -72,7 +72,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .it-blk { position:absolute; top:14px; height:24px; border-radius:3px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; cursor:grab; }
 .it-blk-label { min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .it-blk:hover { box-shadow:inset 0 0 0 1px currentColor; }
-.b-mb { background:#183C74; color:#FFFFFF; box-shadow:none; }
+.b-mb { background:#FEEFDB; color:#7A4A12; box-shadow:none; }
 .bc-yellow { background:#F9E8B5; color:#61470B; }
 .bc-blue { background:#DBEAFE; color:#1E407A; }
 .bc-pink { background:#F6DDE7; color:#82334E; }
@@ -86,7 +86,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .it-blk-added { overflow:hidden; }
 .it-blk-reinf { background:#E2E8F0; color:#334155; }
 .b-train { background:#E8E0F5; color:#583981; box-shadow:none; }
-.b-cli { background:#F6DDE7; color:#82334E; box-shadow:none; }
+.b-cli { background:#E0F5F3; color:#13574B; box-shadow:none; }
 .mm-list { max-height:260px; overflow-y:auto; }
 .mission-menu-item.is-on { background:var(--bg-base-3); box-shadow:inset 3px 0 0 var(--brand); }
 .mm-dur { margin-left:auto; font-size:12px; color:var(--tx-3); }
@@ -354,7 +354,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh-open { background:#DCECE7; color:#215C4B; }
 .sh-mid { background:#E8E0F5; color:#583981; }
 .sh-close { background:#DBEAFE; color:#1E407A; }
-.sh-late { background:#C5B3E6; color:#3E2470; }
+.sh-late { background:#F4F6DD; color:#4D5715; }
+.sh-dsun { background:#E8E0F5; color:#583981; }
 .sh-teal { background:#CCECE4; color:#13574B; }
 .sh-pink { background:#FCE7F3; color:#9D174D; }
 .sh-slate { background:#E2E8F0; color:#334155; }
@@ -362,7 +363,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh-stock.sh-open { background:var(--bg-base); border:1px dashed #215C4B; color:#215C4B; }
 .sh-stock.sh-mid { background:var(--bg-base); border:1px dashed #583981; color:#583981; }
 .sh-stock.sh-close { background:var(--bg-base); border:1px dashed #1E407A; color:#1E407A; }
-.sh-stock.sh-late { background:var(--bg-base); border:1px dashed #3E2470; color:#3E2470; }
+.sh-stock.sh-late { background:var(--bg-base); border:1px dashed #4D5715; color:#4D5715; }
 .sh-stock.sh-teal { background:var(--bg-base); border:1px dashed #13574B; color:#13574B; }
 .sh-stock.sh-pink { background:var(--bg-base); border:1px dashed #82334E; color:#82334E; }
 .sh-stock.sh-slate { background:var(--bg-base); border:1px dashed #334155; color:#334155; }
@@ -707,7 +708,7 @@ textarea { resize:vertical; line-height:1.5; }
   .tab-content { padding-left:40px; padding-right:40px; }
   #topbar { padding-left:40px; padding-right:40px; }
   .it-row, .it-track { min-height:56px; }
-  .it-shift, .it-blk { top:16px; }
+  .it-track .it-shift, .it-track .it-blk { top:16px; }
 }
 @media (max-width:1199px) {
   .cal-year-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -1900,6 +1901,14 @@ async function onStoreChange() {
   renderMonthlyPlanning();
   renderAgents();
   renderDashboard();
+  // Refresh the open page, so it shows the new store at once
+  var openTab = document.querySelector('.tab-content.active');
+  var page = openTab ? openTab.id.slice(4) : '';
+  if (page === 'planning' && currentPlanningView === 'intraday') loadAndRenderIntraday(currentIntradayDate);
+  if (page === 'regulations') renderRegulations();
+  if (page === 'calendar') renderCalendar();
+  if (page === 'traffic') renderTraffic();
+  if (CURRENT_LANG !== 'en') retranslate();
 }
 
 // Load settings
@@ -2503,7 +2512,7 @@ function hourSelectHtml2(cls, selected) { return '<select onchange="saveRegulati
 var SHIFT_TONES = [
   { key:'open',  label:'Green'  },
   { key:'mid',   label:'Violet'  },
-  { key:'late',  label:'Purple' },
+  { key:'late',  label:'Lime' },
   { key:'close', label:'Blue'   },
   { key:'teal',  label:'Teal'   },
   { key:'pink',  label:'Pink'   },
@@ -3327,7 +3336,7 @@ function shiftCls(code) {
   var base = code.charAt(0);
   var tone = (base === 'O') ? 'sh-open'
            : (base === 'M') ? 'sh-mid'
-           : (base === 'D') ? 'sh-late'
+           : (base === 'D') ? 'sh-dsun'
            : 'sh-close';
   return isStock ? ('sh-stock ' + tone) : tone;
 }
@@ -4136,7 +4145,7 @@ function renderIntraday(ds) {
     var own = res.code === 'PT' || res.code === 'D';
     shiftInfo[a.id] = {
       code: own ? res.code : sh.code, startMin: w.start, endMin: w.end,
-      tone: res.code === 'PT' ? 'teal' : res.code === 'D' ? 'late' : sh.tone, half: res.half
+      tone: res.code === 'PT' ? 'teal' : res.code === 'D' ? 'dsun' : sh.tone, half: res.half
     };
   });
 
@@ -7702,7 +7711,7 @@ function exportMonthly() {
 
   var SHIFT_XL = {
     'sh-open':{bg:'DCECE7',tx:'215C4B'}, 'sh-mid':{bg:'E8E0F5',tx:'583981'},
-    'sh-close':{bg:'DBEAFE',tx:'1E407A'}, 'sh-late':{bg:'C5B3E6',tx:'3E2470'},
+    'sh-close':{bg:'DBEAFE',tx:'1E407A'}, 'sh-late':{bg:'F4F6DD',tx:'4D5715'}, 'sh-dsun':{bg:'E8E0F5',tx:'583981'},
     'sh-teal':{bg:'CCECE4',tx:'13574B'}, 'sh-pink':{bg:'F6DDE7',tx:'82334E'},
     'sh-slate':{bg:'E2E8F0',tx:'334155'},
     'sh-off':{bg:'F1F2F4',tx:'A1A1AA'}, 'sh-cp':{bg:'FEE2E2',tx:'7F1D1D'},
@@ -7712,7 +7721,7 @@ function exportMonthly() {
     if (code === 'OFF') return 'sh-off';
     if (code === 'A')   return 'sh-cp';
     if (code === 'PT')  return 'sh-teal';
-    if (code === 'D')   return 'sh-late';
+    if (code === 'D')   return 'sh-dsun';
     var cls = shiftCls(code);
     var tones = cls.split(' ').filter(function(c){ return c !== 'sh-stock'; });
     var tone = tones[0];
@@ -7935,13 +7944,13 @@ function exportIntraday() {
   var openH = intradayExport.openH, closeH = intradayExport.closeH;
   var nQ = Math.round((closeH - openH) * 4);
 
-  var TONE_XL = { open:{bar:'E8EFF8'}, mid:{bar:'E8EFF8'}, close:{bar:'E8EFF8'}, late:{bar:'E8EFF8'}, teal:{bar:'E8EFF8'}, pink:{bar:'E8EFF8'}, slate:{bar:'E8EFF8'}, open_stock:{bar:'E8EFF8'} };
+  var TONE_XL = { open:{bar:'E8EFF8'}, mid:{bar:'E8EFF8'}, close:{bar:'E8EFF8'}, late:{bar:'E8EFF8'}, dsun:{bar:'E8EFF8'}, teal:{bar:'E8EFF8'}, pink:{bar:'E8EFF8'}, slate:{bar:'E8EFF8'}, dsun:{bar:'E8EFF8'}, open_stock:{bar:'E8EFF8'} };
   var MISSION_XL = {
-    mb:{bg:'183C74',tx:'FFFFFF',full:'MB'},
+    mb:{bg:'FEEFDB',tx:'7A4A12',full:'MB'},
     lun:{bg:'F9E8B5',tx:'61470B',full:'Lunch'},
     wel:{bg:'CCECE4',tx:'13574B',full:'Welcome'},
     train:{bg:'E8E0F5',tx:'583981',full:'Training'},
-    cli:{bg:'F6DDE7',tx:'82334E',full:'Clienteling'},
+    cli:{bg:'E0F5F3',tx:'13574B',full:'Clienteling'},
     reinf:{bg:'E2E8F0',tx:'334155',full:'Reinforcement'}
   };
   var BREAK_XL = {
@@ -7958,7 +7967,7 @@ function exportIntraday() {
   }
   var SHIFT_HEAD = {
     open:{bg:'DCECE7',tx:'215C4B'}, close:{bg:'DBEAFE',tx:'1E407A'},
-    mid:{bg:'E8E0F5',tx:'583981'}, late:{bg:'C5B3E6',tx:'3E2470'}
+    mid:{bg:'E8E0F5',tx:'583981'}, late:{bg:'F4F6DD',tx:'4D5715'}, dsun:{bg:'E8E0F5',tx:'583981'}
   };
   var EMPTY = 'F4F5F8';
 
