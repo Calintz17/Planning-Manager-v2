@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v2.0.0</title>
+  <title>CAST v2.0.1</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -2029,7 +2029,7 @@ function buildShiftSettingsHtml() {
   }
   return '<div class="' + helpHostClass('shifts') + '">' +
     settingsHeadHtml('shifts') +
-    '<div onchange="saveShiftConfig()">' + block('sales', 'Sales shifts') + block('stock', 'Stock shifts') + '</div>' +
+    '<div onchange="saveShiftConfig()">' + block('sales', 'Shifts') + '</div>' +
     helpOverlayHtml('shifts') +
     '</div>';
 }
@@ -2564,7 +2564,7 @@ function missionDef(type) {
 function missionDurH(m) { return (m.dur || missionDef(m.type).dur) / 60; }
 var RETAIL_STATUS = {
   MANAGER:     { label: 'Manager',               block: 'MGMT',      grid: 'sales', pool: 'mgmt'  },
-  TEAM_LEADER: { label: 'Team Leader',           block: 'MGMT',      grid: 'sales', pool: 'mgmt'  },
+  TEAM_LEADER: { label: 'Team Leader',           block: 'SA',        grid: 'sales', pool: 'sales' },
   SENIOR:      { label: 'Senior Client Advisor', block: 'SENIOR',    grid: 'sales', pool: 'sales' },
   CA:          { label: 'Client Advisor',        block: 'SA',        grid: 'sales', pool: 'sales' },
   PART_TIME:   { label: 'Part Time',             block: 'PART_TIME', grid: 'sales', pool: 'sales' }
@@ -2577,19 +2577,7 @@ var RETAIL_BLOCK_ORDER = [
   { key: 'PART_TIME', title: 'Part Time' },
   { key: 'STOCK',     title: 'Stock' },
 ];
-var RETAIL_SHIFTS_DEFAULT = {
-  sales: [
-    { code:'O', label:'09H30 - 18H00', startMin:570, endMin:1080, tone:'open' },
-    { code:'M', label:'10H30 - 19H00', startMin:630, endMin:1140, tone:'mid' },
-    { code:'C', label:'11H15 - 19H45', startMin:675, endMin:1185, tone:'close' },
-  ],
-  stock: [
-    { code:'OS', label:'08H00 - 16H30', startMin:480, endMin: 990, tone:'open' },
-    { code:'MS', label:'09H00 - 17H30', startMin:540, endMin:1050, tone:'mid' },
-    { code:'CS', label:'10H00 - 18H30', startMin:600, endMin:1110, tone:'close' },
-  ],
-};
-var RETAIL_SHIFTS = JSON.parse(JSON.stringify(RETAIL_SHIFTS_DEFAULT));
+var RETAIL_SHIFTS = { sales: [], stock: [] };
 function minToLabel(m) {
   var h = Math.floor(m / 60), mn = m % 60;
   return String(h).padStart(2, '0') + 'H' + String(mn).padStart(2, '0');
@@ -2606,7 +2594,7 @@ function timeInputToMin(v) {
   return h * 60 + mn;
 }
 var regionSettings = null;
-var REGION_SETTINGS_DEFAULT = { min_opening: 1, min_closing: 1, closing_ratio: 0.70 };
+var REGION_SETTINGS_DEFAULT = { min_opening: 1, min_closing: 1, closing_ratio: 0.70, sunday_single_shift: false };
 async function loadRegionSettings() {
   var sid = currentRegionId;
   regionSettings = Object.assign({}, REGION_SETTINGS_DEFAULT);
@@ -2618,9 +2606,22 @@ async function loadRegionSettings() {
     if (res.data[0][k] != null) regionSettings[k] = res.data[0][k];
   });
 }
+// Default shifts from the center hours: opening, middle and closing, 30 min outside the opening hours
+function defaultShifts() {
+  var span = weekOpenSpan();
+  var open = span.open * 60, close = span.close * 60;
+  var paidH = Math.min((regulations.weekly_hours || 40) / Math.max(1, Math.min(5, regulations.max_days || 5)), regulations.max_daily_hours || 8);
+  var lunch = (regulations.breaks || []).find(function(b) { return /lunch|dej/i.test(b.name || ''); });
+  var len = Math.round((paidH * 60 + (lunch ? lunch.duration : 0)) / 15) * 15;
+  var q = function(m) { return Math.round(m / 15) * 15; };
+  var oS = q(open - 30), cS = q(close + 30 - len), mS = q((oS + cS) / 2);
+  return [['O', oS, 'open'], ['M', mS, 'mid'], ['C', cS, 'close']].map(function(x) {
+    return { code: x[0], label: minToLabel(x[1]) + ' - ' + minToLabel(x[1] + len), startMin: x[1], endMin: x[1] + len, tone: x[2] };
+  });
+}
 async function loadShiftConfig() {
   var sid = currentRegionId;
-  RETAIL_SHIFTS = JSON.parse(JSON.stringify(RETAIL_SHIFTS_DEFAULT));
+  RETAIL_SHIFTS = { sales: defaultShifts(), stock: [] };
   if (!currentRegionId) return;
   var res = await sb.from('csc_shift_config').select('*')
     .eq('region_id', currentRegionId).order('sort_order');
@@ -2819,11 +2820,94 @@ var DOW_WEIGHT = { 1: 0.982, 2: 0.959, 3: 0.915, 4: 0.959, 5: 1.080, 6: 1.221, 0
 var CLOSING_BIAS = 2.3;
 function monthKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
 var trafficLoadSeq = 0;
+// CSC workload per day and per hour, from last year's volume of the same weekday, with the trend
+var cscVol = {}, cscBoTargets = {};
+function dayHoursFor(ds) {
+  if (calHours[ds]) return calHours[ds];
+  var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
+  return (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
+}
+function addDaysStr(ds, n) { var d = new Date(ds + 'T12:00:00'); d.setDate(d.getDate() + n); return toDateStr(d); }
 async function loadTraffic(year) {
-  var storeId = currentRegionId, seq = ++trafficLoadSeq;
-  if (!storeId) { trafficMonthly = {}; trafficDaily = {}; trafficYearLoaded = null; return; }
-  var tm = {}, td = {};
-  trafficMonthly = tm; trafficDaily = td; trafficYearLoaded = year;
+  var regionId = currentRegionId, seq = ++trafficLoadSeq;
+  trafficMonthly = {};
+  if (!regionId) { trafficDaily = {}; cscVol = {}; trafficYearLoaded = null; return; }
+  var last = await sb.from('historical_volume').select('date').eq('region_id', regionId).order('date', { ascending: false }).limit(1);
+  var bo = await sb.from('monthly_bo_targets').select('*').eq('region_id', regionId).eq('year', year);
+  if (seq !== trafficLoadSeq || regionId !== currentRegionId) return;
+  if (last.error || bo.error) { showToast('Traffic not loaded: ' + ((last.error || bo.error).message || ''), 'error'); return; }
+  var maxDs = last.data && last.data[0] ? last.data[0].date : null;
+  function srcOf(ds) {
+    if (!maxDs) return null;
+    var src = addDaysStr(ds, -364);
+    while (src > maxDs) src = addDaysStr(src, -364);
+    return src;
+  }
+  var first = addDaysStr(year + '-01-01', -7), lastDs = year + '-12-31';
+  var hist = {};
+  if (maxDs) {
+    var from = srcOf(first) < srcOf(lastDs) ? srcOf(first) : addDaysStr(srcOf(lastDs), -371);
+    for (var page = 0; ; page++) {
+      var res = await sb.from('historical_volume').select('date,hour,task,volume').eq('region_id', regionId)
+        .gte('date', from).lte('date', maxDs).order('date').range(page * 1000, page * 1000 + 999);
+      if (seq !== trafficLoadSeq || regionId !== currentRegionId) return;
+      if (res.error) { showToast('Traffic not loaded: ' + res.error.message, 'error'); return; }
+      (res.data || []).forEach(function(r) {
+        var d = hist[r.date] = hist[r.date] || {};
+        (d[r.task] = d[r.task] || {})[r.hour] = (d[r.task][r.hour] || 0) + (r.volume || 0);
+      });
+      if (!res.data || res.data.length < 1000) break;
+    }
+  }
+  cscBoTargets = {};
+  (bo.data || []).forEach(function(r) { cscBoTargets[r.month + '|' + r.task] = r.volume || 0; });
+  var trend = 1 + (Number(regulations.trend_pct) || 0) / 100;
+  var vol = {}, carry = {}, td = {};
+  for (var ds = first; ds <= lastDs; ds = addDaysStr(ds, 1)) {
+    var open = !getDayClosureType(ds), dh = dayHoursFor(ds);
+    var oh = Math.floor(dh.open), ch = Math.ceil(dh.close);
+    var src = hist[srcOf(ds)] || {}, day = {};
+    tasks.forEach(function(t) {
+      var hours = {}, add = function(h, v) { if (v) hours[h] = (hours[h] || 0) + v; };
+      var rows = src[t.name] || {};
+      if (open && carry[t.name]) { add(oh, carry[t.name]); carry[t.name] = 0; }
+      Object.keys(rows).forEach(function(hs) {
+        var h = +hs, v = rows[hs] * trend;
+        if (open && h >= oh && h < ch) add(h, v);
+        else if (t.is_realtime) return;
+        else if (open && h < oh) add(oh, v);
+        else carry[t.name] = (carry[t.name] || 0) + v;
+      });
+      var m = parseInt(ds.slice(5, 7), 10), target = cscBoTargets[m + '|' + t.name];
+      if (open && target && ds.slice(0, 4) === String(year)) {
+        var endH = t.morning_only ? Math.min(12, ch) : ch, span = Math.max(1, endH - oh);
+        var daily = target / Math.max(1, openDaysInMonth(year, m));
+        for (var h = oh; h < oh + span; h++) add(h, daily / span);
+      }
+      var total = Object.keys(hours).reduce(function(s2, h2) { return s2 + hours[h2]; }, 0);
+      if (total) day[t.name] = { total: total, hours: hours };
+    });
+    vol[ds] = day;
+    var work = tasks.reduce(function(s2, t) { return s2 + (day[t.name] ? day[t.name].total * (t.aht_minutes || 0) : 0); }, 0);
+    if (ds.slice(0, 4) === String(year)) td[ds] = { date: ds, traffic: Math.round(work), is_manual: true };
+  }
+  // Hourly curve: real time work at its hour, other work spread over the open hours
+  var span = weekOpenSpan(), curve = [];
+  for (var h = span.open; h < span.close; h++) curve.push(0);
+  Object.keys(td).forEach(function(d) {
+    var dh2 = dayHoursFor(d), oh2 = Math.floor(dh2.open), ch2 = Math.ceil(dh2.close);
+    tasks.forEach(function(t) {
+      var v = vol[d][t.name]; if (!v) return;
+      Object.keys(v.hours).forEach(function(hs) {
+        var w = v.hours[hs] * (t.aht_minutes || 0);
+        if (t.is_realtime) { var i2 = +hs - span.open; if (i2 >= 0 && i2 < curve.length) curve[i2] += w; }
+        else for (var k = oh2; k < ch2; k++) { var i3 = k - span.open; if (i3 >= 0 && i3 < curve.length) curve[i3] += w / Math.max(1, ch2 - oh2); }
+      });
+    });
+  });
+  var top = Math.max.apply(null, curve.concat([1]));
+  regionSettings.hourly_curve = curve.map(function(v) { return Math.round(v / top * 100); });
+  cscVol = vol; trafficDaily = td; trafficYearLoaded = year;
 }
 var eventEditorState = { id: null, cat: null };
 var eventSaving = false;
@@ -4991,8 +5075,20 @@ function renderMonthlyPlanning() {
     cap += fixedManDays;
     var perDayCap = salesAgents.length + fixedAgents.length;
     cap = Math.min(cap, wkDays.length * perDayCap);
-    var volTot = wkDays.reduce(function(s, d) { return s + (d.vol || 0); }, 0) || 1;
-    var raw = wkDays.map(function(d) { return cap * (d.vol || 0) / volTot; });
+    // Share the week by workload; a day never takes more than the team, the extra goes to the other days
+    var full = {}, raw = [];
+    for (var pass = 0; pass <= wkDays.length; pass++) {
+      var freeIdx = wkDays.map(function(d, i) { return i; }).filter(function(i) { return !full[i]; });
+      var remCap = cap - Object.keys(full).length * perDayCap;
+      var volFree = freeIdx.reduce(function(s, i) { return s + (wkDays[i].vol || 0); }, 0);
+      raw = wkDays.map(function(d, i) {
+        if (full[i]) return perDayCap;
+        return volFree ? remCap * (d.vol || 0) / volFree : remCap / Math.max(1, freeIdx.length);
+      });
+      var over = freeIdx.filter(function(i) { return raw[i] > perDayCap; });
+      if (!over.length) break;
+      over.forEach(function(i) { full[i] = true; });
+    }
     var base = raw.map(function(r) { return Math.floor(r); });
     var leftover = cap - base.reduce(function(s, b) { return s + b; }, 0);
     var order = raw.map(function(r, i) { return [i, r - Math.floor(r)]; })
@@ -6678,7 +6774,7 @@ function exportMonthly() {
   var totalCols = 2 + nDays + 5;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
   // Logo line and tagline, like the app
-  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'086842' }],
+  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'1E2F13' }],
    ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
    ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) {
     var br = [ cell(b[0], b[1]) ]; for (var i=1;i<totalCols;i++) br.push(cell('')); rows.push(br);
@@ -6915,7 +7011,7 @@ function exportIntraday() {
   var merges = [];
   var totalCols = 3 + nQ;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
-  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'086842' }],
+  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'1E2F13' }],
    ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
    ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) {
     var br = [ cell(b[0], b[1]) ]; for (var i=1;i<totalCols;i++) br.push(cell('')); rows.push(br);
@@ -7504,7 +7600,7 @@ function bindPlanningScroll() {
 function pdfBrandHtml() {
   var img = document.querySelector('#sidebar .sb-wordmark');
   var logo = (img && img.complete && img.naturalWidth && !img.classList.contains('is-off'))
-    ? '<img src="' + img.src + '" alt="CAST">' : '<b style="font-size:24px;color:#086842">CAST</b>';
+    ? '<img src="' + img.src + '" alt="CAST">' : '<b style="font-size:24px;color:#1E2F13">CAST</b>';
   return '<div class="pdf-brand">' + logo + '<span>CELINE AUTOMATED<br>SCHEDULING TOOL</span></div>';
 }
 function planningExportHtml(view) {
