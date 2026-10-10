@@ -2,113 +2,128 @@
 
 | Version | What happened |
 |---|---|
-| Build_V1 | First draft : HTML structure, color palette, and Supabase integration. Used to have index.html / app.js / styles.css / config.js files. |
-| Build_V1.1 | Added the Tasks and forecast module. Added Copyright at. Roman Inc. mthfckr |
-| Build_V1.2 | Added the Weekly planning module and a shitty PTO drawer. |
-| Build_V1.3 | Added the Regulations module with validation, (set in stone, see later to upgrade). |
-| Build_V1.4 | header, footer, background and button colors (remove golden layout), and added a task management UI with pills. |
-| Build_V1.5 | Added a forecast test page and refined the layout so it look good. It didn't. |
-| MVP_v1 | Switched to a single index.html file because too many sub-file and i can't bother to have a app.js. Removed styles.css and config.js. |
-| MVP_v1.1 | Added the rotation engine, forecast blocking logic, and reactive opening-hours handling. Didn't work |
-| MVP_v1.2 | Added the auto-forecast and carry-over logic -> Shit's great. To test if it work with OPS tho |
-| MVP_v1.3 | Broke everything, then Intraday view + drag-and-drop schedule overrides. |
-| MVP_v1.4 | Task configuration and defaults, and fixed agent tags. More upsert, less insert |
-| CORA_V1.5 | Added required tags to task defaults (will work with retail) and converted agent tag chips to skill pills. |
-| CORA_V1.6 | Recap card and renamed the weekly forecast title because too many "planning" |
-| CORA_V1.7 | Removed the Forecast tab. Remove "regulation", replaced with Settings tab -> 1 tab to make input only |
-| CORA_V1.8 | Set the default planning view and reworked the view buttons. |
-| CORA_V1.9 | Added the Shifts engine : agent presence handling and Morning / Afternoon scheduling logic. Broke things with China |
-| CORA_V1.10 | Added the iOS-style shift switch popover and its styles. Fixed China. |
-| CORA_V1.11 | Shift badge styling yo, presence logic if FTE is here, and shift hour calculations. |
-| CORA_V1.12 | Added the Excel export button and its core functionality as per AST request. |
-| CORA_V1.13 | Refined the Excel export with extra cell merges and border styles. Still not perfect, but will do for now |
-| CORA_V1.14 | Added the calendar navigation and leave declaration forms. (Only 3 now) |
-| CORA_V1.15 | Perpetual calendar, thanks Rida, view and updated styles. |
-| CORA_V1.16 | Added volum eanomaly detection and updated styling > based on n-1 forecast. |
-| CORA_V1.17 | Refactored the anomaly checks (too heavy), coverage calculations, and production alert logic. |
-| CORA_V1.20 | updated the setup steps. |
-| CORA_V1.21 | My baby is born : Update header to CORA with the logo, and renamed the title. |
-| CORA_V1.21.1 | Added the status bar with status text |
-| CORA_V1.21.2 | Fixed shit with .table-scroll to wrap table so mobile is ok, cause everyone likes fucking mobile dunno why |
-| CORA_V2.0 | Retail is born. Cloned the CSC brain, painted it navy, pointed it at retail_ tables. Same CORA, new floor. |
-| CORA_V2.1 | Store hierarchy Region > Country > Store, and the sales / management / stock pools. |
-| CORA_V2.2 | Weekly ventilation on traffic, per pool. First retail planning that isn't garbage. |
-| CORA_V2.3 | Shifts O / M / C / D and the stock ones OS / MS / CS. |
-| CORA_V2.4 | Dashboard landing page : hero sparkline, pool cards, highlights. Finally looks like something. |
-| CORA_V2.5 | Fixed part-timer UI with quarter-hour time inputs. |
-| CORA_V2.6 | Calendar with Nager holidays and per-day open/close overrides. |
-| CORA_V3.0 | Killed the rest-days bug for good. A ghost function from the old rotation was writing rest days behind the engine's back. Took me forever to find. The engine is finally solid. |
-| CORA_V3.0.1 | Removed the "monthly quota" thing. Turns out I never asked for it, everything is weekly. |
-| CORA_V3.1 | 70-30 closing bias and the Welcome mission on peak hours. |
-| CORA_V3.1.1 | Comment cleanup, made the code read like a human wrote it and not a robot. |
-| CORA_V3.2 | Dashboard trend badge (6-week trend, green up red down) and fixed the monthly table alignment. |
-| CORA_V3.3 | Mandatory store-selection gate on startup. Can't do anything until you pick a boutique. |
-| CORA_V3.4 | Stock shift rules : never all-close, one open one close, Sunday is D, roughly 50-50. |
-| CORA_V3.4.1 | Single stockist picks the earliest shift of the day. Small but it bugged me. |
-| CORA_V4.0 | Excel exports, the big one : monthly (full month, per-day summary) and a brand new intraday export. This is what makes it usable for real. |
-| CORA_V4.0.1 | Export styling : flat fills everywhere, borders only inside the grid, D shift in pastel not aggressive purple. |
-| CORA_V4.1 | Month navigator in the monthly view. Arrows and a clickable label, independent from the week nav. |
-| CORA_V4.2 | Add a mission by hand in the intraday. Click the shift bar, pick MB or Welcome, done. |
-| CORA_V4.2.1 | Excel fixes and the [+] follows the cursor. Turned out the cursor was blocking the delete cross, oops. |
-| CORA_V4.3 | Reworked the mission interaction : click the bar to add, drag the bubble to move, hover for an iOS-style cross to remove. Clean. |
-| CORA_V4.4 | Half-hour opening times. Store can close at 19:30 now. Clean display, decimal under the hood. |
-| CORA_V4.5 | Part-time volant : the flexible one. Engine spreads them on the busy days at their %, half a day lands when the count says so. |
-| CORA_V4.6 | Volant polish : slider Fixed / Flexible in the agent editor, % only shown for part-timers, half-cell cut diagonally, intraday half-shift. |
-| CORA_V4.6.1 | Cleanup pass : killed the ghost onboarding popup, de-robot-ified the comments, checked the whole thing holds together as a system. Diagonal half-cell now follows O / C. |
-| CORA_V4.7 | Traffic tab : added N-2 column (N-2 / N-1 / This year / Variation). |
-| CORA_V4.8 | Dashboard shows dates + refreshes on live absence. Lunch breaks keep the floor covered. 70-30 split separately for managers and sellers. |
-| CORA_V4.9 | Corner tag format on the shift cell (dormant until engine 2). |
-| CORA_V5.0 | Multi-corner : corners in base, home corner + skills on agents, engine 2 assigns vendors to corners. |
-| CORA_V5.1 | Engine 2 rebalancing : pro-rata store traffic vs manager plan, minimum transfers. Corner bubbles + per-corner dashboard count. |
-| CORA_V5.2 | Manual corner override per cell. Scope saved (F5 keeps the store). Stores/countries sorted A-Z. |
-| CORA_V5.3 | Removed shift + weekend preferences. Absence = one reason. |
-| CORA_V5.4 | Calendar moved to burger menu (Bank Holidays / Absence). Intraday grouped by corner. Excel shows corners. |
-| CORA_V5.5 | Engine made deterministic (same input = same planning). 3-letter shift codes start here. |
-| CORA_V5.6 | Renamed roles to official titles + Grand Vendeur / Stock Manager / Stock Controller. Saturday/Sunday open-closed wording. |
-| CORA_V5.7 | Shifts past midnight (18:00 -> 02:00). Part-time with fixed days but no fixed hours (engine picks the shift). |
-| CORA_V5.8 | PDF export button on monthly and intraday. |
-| CORA_V6.0 | Multilingual EN / JP. Language dropdown top right, choice remembered. |
-| CORA_V6.1 | Coverage thresholds per store (min open / min close / ratio). Past days frozen : settings changes only affect today onward. |
-| CORA_V6.2 | Corner tabs on monthly + intraday : each tab = one corner's people + shared stock + management. |
-| CORA_V6.3 | Agent popup scrolls (Save always reachable). Mobile store gate fixed. |
-| CORA_V6.4 | PDF export redone : matches the site 1:1, follows the active tab. |
-| CORA_V6.5 | Excel follows the active tab. Absences from monthly sync to the Calendar. |
-| CORA_V6.6 | Fixed first-time store save failing (Japan). |
-| CORA_V6.7 | Corners fully custom per store (named in Settings). Home corner set at agent creation. |
-| CORA_V6.8 | Labor rules : editable max days, max hours between shifts, max hours/day (8h30 default), coverage inline. Open/close slider per day. |
-| CORA_V6.9 | Off count row in the monthly recap. Shift codes up to 3 chars, colors/counters read the shift tone. |
-| CORA_V7.0 | Fairness rotation toggle : ignore home corners, everyone rotates fair on the low corner (traffic still drives headcount). |
-| CORA_V7.1 | Consecutive days off : groups isolated rest days when it doesn't change daily headcount. |
-| CORA_V7.2 | Intraday reinforcement toggle : engine proposes moving one agent 1h to the busy corner at peak. |
-| CORA_V7.3 | Code cleanup + fixed settings save silently resetting the fairness / reinforcement toggles. |
-| CORA_V7.4 | First try at the weekend bug (Saturday / Sunday off when it's the biggest day of the week). Added the help texts in Settings. |
-| CORA_V7.5 | Real weekend fix : open/closed weekend had two sources that didn't talk to each other. One source of truth now. |
-| CORA_V7.6 | Auto-save in Settings : Labor rules, Operating hours, Breaks, Corners. No more Save button there. |
-| CORA_V7.7 | Reinforcement v2 : it's a pill on the agent's bar now, placed at peak, you can slide it or kill it. |
-| CORA_V7.8 | Opening / closing coverage per corner (each corner = a mini store), lunch never empties a corner, Sunday single shift toggle. |
-| CORA_V7.9 | Frozen planning by default : a manual change stays on its cell, nobody else moves. "Adjust whole planning" to recalculate. |
-| CORA_V8.0 | Shift times to the minute (Japan wanted 10:20 and 18:50). Hour + minute dropdowns. |
-| CORA_V8.0.1 | Same minute picker in the shift edit table. Forgot it the first time. |
-| CORA_V8.1 | Japan feedback : all breaks show in the intraday with their name, lunch uses the full window, the shift bubble isn't cut at the bottom anymore, Ctrl+click to change many cells at once. |
-| CORA_V8.1.2 | Event rows on top of the monthly : Local / National / Training, over several days, with a card on the dashboard for the month. |
-| CORA_V8.2.1 | First cross-audit with Astra : dead code out, part-timer on leave shows absent, forced-open Sunday stays open, 12:30 breaks don't turn into 12:00, one-day events. |
-| CORA_V8.2.2 | Zero rest gap saved for real, open days count follows the same closing rule as the planning, both absence types beat fixed part-time, part-timers same color in Excel. |
-| CORA_V8.2.3 | Small cleanup in the shift logic. |
-| CORA_V8.2.4 | Settings save wrote twice, once before checking the form. One write now, after checking. |
-| CORA_V8.2.5 | Break colors, From / To dates on events, real Supabase error messages. Fixed breaks not saving |
-| CORA_V8.2.6 | Everything lines up : monthly 30% wider, one square size everywhere, one color square that opens a popup, same width for all time pickers. Found the missing store settings columns. |
-| CORA_V8.2.7 | Breaks spread over the whole window for the whole store, managers don't eat together, bad breaks refused. One save at a time. |
-| CORA_V8.2.8 | Breaks placed on who's really there, quarter by quarter. A corner never goes empty if it can be avoided. |
-| CORA_V8.2.9 | one single writer for settings, the break engine scores the whole day with traffic, events safe |
-| CORA_V8.3.0 | Help everywhere : numbered block titles, subtitles, first-visit overlay that shrinks into a "?". Japanese included. |
-| CORA_V8.3.1 | "?" on the 3 tricky toggles and on Adjust, titles and buttons inside the Monthly / Intraday card, nice event tooltip, no more "·" anywhere. The 70-30 help text was wrong, the code was right. |
-| CORA_V8.4.0 | Weekly quota fixed (max days finally does something), 2 days off in a row when traffic allows, the manager always wins, stacked events + in Excel, tasks can't overlap, auto-save everywhere with a green Saved. |
-| CORA_V8.4.1 | Legal rules for real : minimum rest between shifts and max hours per week (lunch not counted). |
-| CORA_V8.4.2 | Data loaded for the month on screen, not just the selected week. Holidays over 2 years. |
-| CORA_V8.4.3 | Real frozen planning : saved in Supabase, never moves on its own. "Recalculate from today" button. |
-| CORA_V8.4.4 | CORA date picker. Bye bye ugly browser calendar. |
-| CORA_V8.4.5 | manual cells keep their frozen value, New York timezone bug, corner Excel matches the screen, "Saved" only when it's really saved. |
-| CORA_V8.4.6 | forecast never overwrites a month typed by hand, A in a cell is a manual change, Monday can be closed, missions land at the right hour. |
-| CORA_V8.4.7 | Editing one month of traffic doesn't lock the 11 others, reset clears corner changes too, Monthly / Intraday switch on mobile, coverage alerts on screen. |
-| CORA_V8.4.8 | Fast store switch doesn't mix agents anymore, final rest check on everyone, intraday export date and crash fixed, JP back to EN works. |
-| CORA_V8.5.0 | Add missions by hand in the intraday : any break from Break structure, Training, Clienteling, Welcome, MB. Time to the minute, auto-saved. Reinforcements in Excel. Monthly PDF on one page, grid only. |
+| Build_V1 | First draft and Supabase integration. |
+| Build_V1.1 | Added Tasks and Forecast. |
+| Build_V1.2 | Added weekly planning and leave requests. |
+| Build_V1.3 | Added Regulations. |
+| Build_V1.4 | Design update and task management. |
+| Build_V1.5 | Added forecast test page. |
+| MVP_v1 | Moved everything into one HTML file. |
+| MVP_v1.1 | Added rotation engine and opening-hours rules. |
+| MVP_v1.2 | Added automatic forecast and carry-over. |
+| MVP_v1.3 | Added intraday planning and drag-and-drop. |
+| MVP_v1.4 | Task settings and bug fixes. |
+| CORA_V1.5 | Added task tags and agent skills. |
+| CORA_V1.6 | Added recap card. |
+| CORA_V1.7 | Merged inputs into Settings. |
+| CORA_V1.8 | Planning navigation update. |
+| CORA_V1.9 | Added shift engine. |
+| CORA_V1.10 | Added shift editor and bug fixes. |
+| CORA_V1.11 | Shift display and bug fixes. |
+| CORA_V1.12 | Added Excel export. |
+| CORA_V1.13 | Excel design update. |
+| CORA_V1.14 | Added calendar and leave forms. |
+| CORA_V1.15 | Added perpetual calendar. |
+| CORA_V1.16 | Added traffic anomaly checks. |
+| CORA_V1.17 | Reworked coverage and anomaly checks. |
+| CORA_V1.20 | Setup update. |
+| CORA_V1.21 | New CORA name and logo. |
+| CORA_V1.21.1 | Added status bar. |
+| CORA_V1.21.2 | Mobile bug fixes. |
+| CORA_V2.0 | Added Retail version. |
+| CORA_V2.1 | Added store hierarchy and staff groups. |
+| CORA_V2.2 | Staffing follows weekly traffic. |
+| CORA_V2.3 | Added sales and stock shifts. |
+| CORA_V2.4 | Added dashboard. |
+| CORA_V2.5 | Part-time bug fixes. |
+| CORA_V2.6 | Added holidays and opening-hours overrides. |
+| CORA_V3.0 | Rest days bug fix. |
+| CORA_V3.0.1 | Removed monthly quotas. |
+| CORA_V3.1 | Added closing ratio and Welcome mission. |
+| CORA_V3.1.1 | Code cleanup. |
+| CORA_V3.2 | Added dashboard trend and design fixes. |
+| CORA_V3.3 | Added store selection at startup. |
+| CORA_V3.4 | Added stock shift rules. |
+| CORA_V3.4.1 | Single stockist gets the earliest shift. |
+| CORA_V4.0 | Added monthly and intraday Excel exports. |
+| CORA_V4.0.1 | Export design update. |
+| CORA_V4.1 | Added monthly navigation. |
+| CORA_V4.2 | Added manual missions. |
+| CORA_V4.2.1 | Excel and mission bug fixes. |
+| CORA_V4.3 | Added mission drag-and-drop and deletion. |
+| CORA_V4.4 | Added half-hour opening times. |
+| CORA_V4.5 | Added flexible part-time scheduling. |
+| CORA_V4.6 | Part-time design update. |
+| CORA_V4.6.1 | Code cleanup and bug fixes. |
+| CORA_V4.7 | Added N-2 traffic. |
+| CORA_V4.8 | Reworked lunch coverage and closing ratio. |
+| CORA_V4.9 | Added corner tags. |
+| CORA_V5.0 | Added multi-corner planning. |
+| CORA_V5.1 | Reworked corner allocation around traffic. |
+| CORA_V5.2 | Added manual corner changes and saved store selection. |
+| CORA_V5.3 | Simplified preferences and absences. |
+| CORA_V5.4 | Calendar navigation and corner display update. |
+| CORA_V5.5 | Deterministic engine and 3-character shift codes. |
+| CORA_V5.6 | Role names and settings labels update. |
+| CORA_V5.7 | Added overnight shifts and flexible part-time hours. |
+| CORA_V5.8 | Added PDF exports. |
+| CORA_V6.0 | Added EN / JP languages. |
+| CORA_V6.1 | Added coverage settings and frozen past days. |
+| CORA_V6.2 | Added corner tabs. |
+| CORA_V6.3 | Mobile and agent editor bug fixes. |
+| CORA_V6.4 | Reworked PDF exports. |
+| CORA_V6.5 | Corner Excel exports and absence calendar sync. |
+| CORA_V6.6 | Store settings bug fix. |
+| CORA_V6.7 | Added custom corners. |
+| CORA_V6.8 | Added editable labor rules and daily opening hours. |
+| CORA_V6.9 | Added OFF counter and shift display update. |
+| CORA_V7.0 | Added fairness rotation. |
+| CORA_V7.1 | Added consecutive days off. |
+| CORA_V7.2 | Added intraday reinforcement. |
+| CORA_V7.3 | Code cleanup and settings bug fixes. |
+| CORA_V7.4 | Weekend bug fixes and help texts. |
+| CORA_V7.5 | Weekend opening bug fix. |
+| CORA_V7.6 | Added Settings auto-save. |
+| CORA_V7.7 | Added editable reinforcement missions. |
+| CORA_V7.8 | Added corner coverage and Sunday single shift. |
+| CORA_V7.9 | Frozen planning and manual recalculation. |
+| CORA_V8.0 | Added minute-level shift times. |
+| CORA_V8.0.1 | Shift editor update. |
+| CORA_V8.1 | Break display update and bulk cell editing. |
+| CORA_V8.1.2 | Added planning events. |
+| CORA_V8.2.1 | Code cleanup and bug fixes. |
+| CORA_V8.2.2 | Planning and export bug fixes. |
+| CORA_V8.2.3 | Shift logic cleanup. |
+| CORA_V8.2.4 | Settings save bug fix. |
+| CORA_V8.2.5 | Added break colors and bug fixes. |
+| CORA_V8.2.6 | Design update and settings bug fixes. |
+| CORA_V8.2.7 | Reworked break placement and manager lunches. |
+| CORA_V8.2.8 | Break placement follows actual corner coverage. |
+| CORA_V8.2.9 | Reworked break engine around traffic. |
+| CORA_V8.3.0 | Added help across the tool. |
+| CORA_V8.3.1 | Help and design update. |
+| CORA_V8.4.0 | Reworked weekly scheduling, manual changes and auto-save. |
+| CORA_V8.4.1 | Added minimum rest and weekly hours limits. |
+| CORA_V8.4.2 | Monthly data loading and holiday update. |
+| CORA_V8.4.3 | Added saved planning and recalculation from today. |
+| CORA_V8.4.4 | Added custom date picker. |
+| CORA_V8.4.5 | Planning and export bug fixes. |
+| CORA_V8.4.6 | Forecast and planning bug fixes. |
+| CORA_V8.4.7 | Added coverage alerts and bug fixes. |
+| CORA_V8.4.8 | Store switching and export bug fixes. |
+| CORA_V8.5.0 | More manual missions, reinforcement exports and monthly PDF update. |
+| CAST_V8.6.1 | Reworked Japan shift rules. |
+| CAST_V8.6.6 | Bug fixes. |
+| CAST_V8.6.7 | Design update. Arial font and alert block removed. |
+| CAST_V8.6.8 | Mobile and Excel bug fixes. |
+| CAST_V8.6.9 | Mobile update and Download menu. |
+| CAST_V9.0.0 | Bug fixes. |
+| CAST_V9.0.1 | Added PDF sharing and email drafts. |
+| CAST_V9.0.3 | Reworked shift engine around hourly traffic. Added Late shifts target. |
+| CAST_V9.0.4 | Engine bug fixes. |
+| CAST_V9.0.5 | Breaks protect opening / closing coverage. |
+| CAST_V9.0.6 | Break engine bug fixes. |
+| CAST_V9.0.10 | Added KR / CN languages. Translations moved to JSON. |
+| CAST_V9.0.11 | Translation bug fixes. |
+| CAST_V9.1.0 | Design update. |
+| CAST_V9.1.5 | New logo, pastel colors and ABS counter. Alerts removed, bug fixes. |
