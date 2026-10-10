@@ -1,129 +1,129 @@
-# CORA - Version history
+# Planning Manager - Version history
 
-| Version | What happened |
-|---|---|
-| Build_V1 | First draft and Supabase integration. |
-| Build_V1.1 | Added Tasks and Forecast. |
-| Build_V1.2 | Added weekly planning and leave requests. |
-| Build_V1.3 | Added Regulations. |
-| Build_V1.4 | Design update and task management. |
-| Build_V1.5 | Added forecast test page. |
-| MVP_v1 | Moved everything into one HTML file. |
-| MVP_v1.1 | Added rotation engine and opening-hours rules. |
-| MVP_v1.2 | Added automatic forecast and carry-over. |
-| MVP_v1.3 | Added intraday planning and drag-and-drop. |
-| MVP_v1.4 | Task settings and bug fixes. |
-| CORA_V1.5 | Added task tags and agent skills. |
-| CORA_V1.6 | Added recap card. |
-| CORA_V1.7 | Merged inputs into Settings. |
-| CORA_V1.8 | Planning navigation update. |
-| CORA_V1.9 | Added shift engine. |
-| CORA_V1.10 | Added shift editor and bug fixes. |
-| CORA_V1.11 | Shift display and bug fixes. |
-| CORA_V1.12 | Added Excel export. |
-| CORA_V1.13 | Excel design update. |
-| CORA_V1.14 | Added calendar and leave forms. |
-| CORA_V1.15 | Added perpetual calendar. |
-| CORA_V1.16 | Added traffic anomaly checks. |
-| CORA_V1.17 | Reworked coverage and anomaly checks. |
-| CORA_V1.20 | Setup update. |
-| CORA_V1.21 | New CORA name and logo. |
-| CORA_V1.21.1 | Added status bar. |
-| CORA_V1.21.2 | Mobile bug fixes. |
-| CORA_V2.0 | Added Retail version. |
-| CORA_V2.1 | Added store hierarchy and staff groups. |
-| CORA_V2.2 | Staffing follows weekly traffic. |
-| CORA_V2.3 | Added sales and stock shifts. |
-| CORA_V2.4 | Added dashboard. |
-| CORA_V2.5 | Part-time bug fixes. |
-| CORA_V2.6 | Added holidays and opening-hours overrides. |
-| CORA_V3.0 | Rest days bug fix. |
-| CORA_V3.0.1 | Removed monthly quotas. |
-| CORA_V3.1 | Added closing ratio and Welcome mission. |
-| CORA_V3.1.1 | Code cleanup. |
-| CORA_V3.2 | Added dashboard trend and design fixes. |
-| CORA_V3.3 | Added store selection at startup. |
-| CORA_V3.4 | Added stock shift rules. |
-| CORA_V3.4.1 | Single stockist gets the earliest shift. |
-| CORA_V4.0 | Added monthly and intraday Excel exports. |
-| CORA_V4.0.1 | Export design update. |
-| CORA_V4.1 | Added monthly navigation. |
-| CORA_V4.2 | Added manual missions. |
-| CORA_V4.2.1 | Excel and mission bug fixes. |
-| CORA_V4.3 | Added mission drag-and-drop and deletion. |
-| CORA_V4.4 | Added half-hour opening times. |
-| CORA_V4.5 | Added flexible part-time scheduling. |
-| CORA_V4.6 | Part-time design update. |
-| CORA_V4.6.1 | Code cleanup and bug fixes. |
-| CORA_V4.7 | Added N-2 traffic. |
-| CORA_V4.8 | Reworked lunch coverage and closing ratio. |
-| CORA_V4.9 | Added corner tags. |
-| CORA_V5.0 | Added multi-corner planning. |
-| CORA_V5.1 | Reworked corner allocation around traffic. |
-| CORA_V5.2 | Added manual corner changes and saved store selection. |
-| CORA_V5.3 | Simplified preferences and absences. |
-| CORA_V5.4 | Calendar navigation and corner display update. |
-| CORA_V5.5 | Deterministic engine and 3-character shift codes. |
-| CORA_V5.6 | Role names and settings labels update. |
-| CORA_V5.7 | Added overnight shifts and flexible part-time hours. |
-| CORA_V5.8 | Added PDF exports. |
-| CORA_V6.0 | Added EN / JP languages. |
-| CORA_V6.1 | Added coverage settings and frozen past days. |
-| CORA_V6.2 | Added corner tabs. |
-| CORA_V6.3 | Mobile and agent editor bug fixes. |
-| CORA_V6.4 | Reworked PDF exports. |
-| CORA_V6.5 | Corner Excel exports and absence calendar sync. |
-| CORA_V6.6 | Store settings bug fix. |
-| CORA_V6.7 | Added custom corners. |
-| CORA_V6.8 | Added editable labor rules and daily opening hours. |
-| CORA_V6.9 | Added OFF counter and shift display update. |
-| CORA_V7.0 | Added fairness rotation. |
-| CORA_V7.1 | Added consecutive days off. |
-| CORA_V7.2 | Added intraday reinforcement. |
-| CORA_V7.3 | Code cleanup and settings bug fixes. |
-| CORA_V7.4 | Weekend bug fixes and help texts. |
-| CORA_V7.5 | Weekend opening bug fix. |
-| CORA_V7.6 | Added Settings auto-save. |
-| CORA_V7.7 | Added editable reinforcement missions. |
-| CORA_V7.8 | Added corner coverage and Sunday single shift. |
-| CORA_V7.9 | Frozen planning and manual recalculation. |
-| CORA_V8.0 | Added minute-level shift times. |
-| CORA_V8.0.1 | Shift editor update. |
-| CORA_V8.1 | Break display update and bulk cell editing. |
-| CORA_V8.1.2 | Added planning events. |
-| CORA_V8.2.1 | Code cleanup and bug fixes. |
-| CORA_V8.2.2 | Planning and export bug fixes. |
-| CORA_V8.2.3 | Shift logic cleanup. |
-| CORA_V8.2.4 | Settings save bug fix. |
-| CORA_V8.2.5 | Added break colors and bug fixes. |
-| CORA_V8.2.6 | Design update and settings bug fixes. |
-| CORA_V8.2.7 | Reworked break placement and manager lunches. |
-| CORA_V8.2.8 | Break placement follows actual corner coverage. |
-| CORA_V8.2.9 | Reworked break engine around traffic. |
-| CORA_V8.3.0 | Added help across the tool. |
-| CORA_V8.3.1 | Help and design update. |
-| CORA_V8.4.0 | Reworked weekly scheduling, manual changes and auto-save. |
-| CORA_V8.4.1 | Added minimum rest and weekly hours limits. |
-| CORA_V8.4.2 | Monthly data loading and holiday update. |
-| CORA_V8.4.3 | Added saved planning and recalculation from today. |
-| CORA_V8.4.4 | Added custom date picker. |
-| CORA_V8.4.5 | Planning and export bug fixes. |
-| CORA_V8.4.6 | Forecast and planning bug fixes. |
-| CORA_V8.4.7 | Added coverage alerts and bug fixes. |
-| CORA_V8.4.8 | Store switching and export bug fixes. |
-| CORA_V8.5.0 | More manual missions, reinforcement exports and monthly PDF update. |
-| CAST_V8.6.1 | Reworked Japan shift rules. |
-| CAST_V8.6.6 | Bug fixes. |
-| CAST_V8.6.7 | Design update. Arial font and alert block removed. |
-| CAST_V8.6.8 | Mobile and Excel bug fixes. |
-| CAST_V8.6.9 | Mobile update and Download menu. |
-| CAST_V9.0.0 | Bug fixes. |
-| CAST_V9.0.1 | Added PDF sharing and email drafts. |
-| CAST_V9.0.3 | Reworked shift engine around hourly traffic. Added Late shifts target. |
-| CAST_V9.0.4 | Engine bug fixes. |
-| CAST_V9.0.5 | Breaks protect opening / closing coverage. |
-| CAST_V9.0.6 | Break engine bug fixes. |
-| CAST_V9.0.10 | Added KR / CN languages. Translations moved to JSON. |
-| CAST_V9.0.11 | Translation bug fixes. |
-| CAST_V9.1.0 | Design update. |
-| CAST_V9.1.5 | New logo, pastel colors and ABS counter. Alerts removed, bug fixes. |
+| Date | Version | What happened |
+|---|---|---|
+| 23-10-2025 | Build_V1 | First draft and Supabase integration. |
+| 23-10-2025 | Build_V1.1 | Added Tasks and Forecast. |
+| 23-10-2025 | Build_V1.2 | Added weekly planning and leave requests. |
+| 23-10-2025 | Build_V1.3 | Added Regulations. |
+| 24-10-2025 | Build_V1.4 | Design update and task management. |
+| 06-11-2025 | Build_V1.5 | Added forecast test page. |
+| 09-03-2026 | MVP_v1 | Moved everything into one HTML file. |
+| 10-03-2026 | MVP_v1.1 | Added rotation engine and opening-hours rules. |
+| 23-03-2026 | MVP_v1.2 | Added automatic forecast and carry-over. |
+| 23-03-2026 | MVP_v1.3 | Added intraday planning and drag-and-drop. |
+| 24-03-2026 | MVP_v1.4 | Task settings and bug fixes. |
+| 05-06-2026 | CORA_V1.5 | Added task tags and agent skills. |
+| 05-06-2026 | CORA_V1.6 | Added recap card. |
+| 05-06-2026 | CORA_V1.7 | Merged inputs into Settings. |
+| 05-06-2026 | CORA_V1.8 | Planning navigation update. |
+| 05-06-2026 | CORA_V1.9 | Added shift engine. |
+| 05-06-2026 | CORA_V1.10 | Added shift editor and bug fixes. |
+| 05-06-2026 | CORA_V1.11 | Shift display and bug fixes. |
+| 05-06-2026 | CORA_V1.12 | Added Excel export. |
+| 05-06-2026 | CORA_V1.13 | Excel design update. |
+| 05-06-2026 | CORA_V1.14 | Added calendar and leave forms. |
+| 05-06-2026 | CORA_V1.15 | Added perpetual calendar. |
+| 05-06-2026 | CORA_V1.16 | Added traffic anomaly checks. |
+| 06-06-2026 | CORA_V1.17 | Reworked coverage and anomaly checks. |
+| 06-06-2026 | CORA_V1.20 | Setup update. |
+| 06-06-2026 | CORA_V1.21 | New CORA name and logo. |
+| 06-06-2026 | CORA_V1.21.1 | Added status bar. |
+| 07-06-2026 | CORA_V1.21.2 | Mobile bug fixes. |
+| 30-06-2026 | CORA_V2.0 | Added Retail version. |
+| 23-07-2026 | CORA_V2.1 | Added store hierarchy and staff groups. |
+| 23-07-2026 | CORA_V2.2 | Staffing follows weekly traffic. |
+| 12-08-2026 | CORA_V2.3 | Added sales and stock shifts. |
+| 12-08-2026 | CORA_V2.4 | Added dashboard. |
+| 13-08-2026 | CORA_V2.5 | Part-time bug fixes. |
+| 15-08-2026 | CORA_V2.6 | Added holidays and opening-hours overrides. |
+| 15-08-2026 | CORA_V3.0 | Rest days bug fix. |
+| 15-08-2026 | CORA_V3.0.1 | Removed monthly quotas. |
+| 15-08-2026 | CORA_V3.1 | Added closing ratio and Welcome mission. |
+| 15-08-2026 | CORA_V3.1.1 | Code cleanup. |
+| 15-08-2026 | CORA_V3.2 | Added dashboard trend and design fixes. |
+| 16-08-2026 | CORA_V3.3 | Added store selection at startup. |
+| 16-08-2026 | CORA_V3.4 | Added stock shift rules. |
+| 16-08-2026 | CORA_V3.4.1 | Single stockist gets the earliest shift. |
+| 16-08-2026 | CORA_V4.0 | Added monthly and intraday Excel exports. |
+| 16-08-2026 | CORA_V4.0.1 | Export design update. |
+| 16-08-2026 | CORA_V4.1 | Added monthly navigation. |
+| 16-08-2026 | CORA_V4.2 | Added manual missions. |
+| 17-08-2026 | CORA_V4.2.1 | Excel and mission bug fixes. |
+| 17-08-2026 | CORA_V4.3 | Added mission drag-and-drop and deletion. |
+| 17-08-2026 | CORA_V4.4 | Added half-hour opening times. |
+| 17-08-2026 | CORA_V4.5 | Added flexible part-time scheduling. |
+| 17-08-2026 | CORA_V4.6 | Part-time design update. |
+| 17-08-2026 | CORA_V4.6.1 | Code cleanup and bug fixes. |
+| 18-08-2026 | CORA_V4.7 | Added N-2 traffic. |
+| 19-08-2026 | CORA_V4.8 | Reworked lunch coverage and closing ratio. |
+| 20-08-2026 | CORA_V4.9 | Added corner tags. |
+| 20-08-2026 | CORA_V5.0 | Added multi-corner planning. |
+| 20-08-2026 | CORA_V5.1 | Reworked corner allocation around traffic. |
+| 08-09-2026 | CORA_V5.2 | Added manual corner changes and saved store selection. |
+| 08-09-2026 | CORA_V5.3 | Simplified preferences and absences. |
+| 08-09-2026 | CORA_V5.4 | Calendar navigation and corner display update. |
+| 09-09-2026 | CORA_V5.5 | Deterministic engine and 3-character shift codes. |
+| 09-09-2026 | CORA_V5.6 | Role names and settings labels update. |
+| 09-09-2026 | CORA_V5.7 | Added overnight shifts and flexible part-time hours. |
+| 09-09-2026 | CORA_V5.8 | Added PDF exports. |
+| 11-09-2026 | CORA_V6.0 | Added EN / JP languages. |
+| 11-09-2026 | CORA_V6.1 | Added coverage settings and frozen past days. |
+| 12-09-2026 | CORA_V6.2 | Added corner tabs. |
+| 12-09-2026 | CORA_V6.3 | Mobile and agent editor bug fixes. |
+| 12-09-2026 | CORA_V6.4 | Reworked PDF exports. |
+| 12-09-2026 | CORA_V6.5 | Corner Excel exports and absence calendar sync. |
+| 16-09-2026 | CORA_V6.6 | Store settings bug fix. |
+| 19-09-2026 | CORA_V6.7 | Added custom corners. |
+| 19-09-2026 | CORA_V6.8 | Added editable labor rules and daily opening hours. |
+| 19-09-2026 | CORA_V6.9 | Added OFF counter and shift display update. |
+| 19-09-2026 | CORA_V7.0 | Added fairness rotation. |
+| 20-09-2026 | CORA_V7.1 | Added consecutive days off. |
+| 20-09-2026 | CORA_V7.2 | Added intraday reinforcement. |
+| 20-09-2026 | CORA_V7.3 | Code cleanup and settings bug fixes. |
+| 20-09-2026 | CORA_V7.4 | Weekend bug fixes and help texts. |
+| 20-09-2026 | CORA_V7.5 | Weekend opening bug fix. |
+| 20-09-2026 | CORA_V7.6 | Added Settings auto-save. |
+| 21-09-2026 | CORA_V7.7 | Added editable reinforcement missions. |
+| 21-09-2026 | CORA_V7.8 | Added corner coverage and Sunday single shift. |
+| 21-09-2026 | CORA_V7.9 | Frozen planning and manual recalculation. |
+| 24-09-2026 | CORA_V8.0 | Added minute-level shift times. |
+| 24-09-2026 | CORA_V8.0.1 | Shift editor update. |
+| 25-09-2026 | CORA_V8.1 | Break display update and bulk cell editing. |
+| 26-09-2026 | CORA_V8.1.2 | Added planning events. |
+| 26-09-2026 | CORA_V8.2.1 | Code cleanup and bug fixes. |
+| 26-09-2026 | CORA_V8.2.2 | Planning and export bug fixes. |
+| 26-09-2026 | CORA_V8.2.3 | Shift logic cleanup. |
+| 26-09-2026 | CORA_V8.2.4 | Settings save bug fix. |
+| 27-09-2026 | CORA_V8.2.5 | Added break colors and bug fixes. |
+| 27-09-2026 | CORA_V8.2.6 | Design update and settings bug fixes. |
+| 28-09-2026 | CORA_V8.2.7 | Reworked break placement and manager lunches. |
+| 28-09-2026 | CORA_V8.2.8 | Break placement follows actual corner coverage. |
+| 28-09-2026 | CORA_V8.2.9 | Reworked break engine around traffic. |
+| 28-09-2026 | CORA_V8.3.0 | Added help across the tool. |
+| 28-09-2026 | CORA_V8.3.1 | Help and design update. |
+| 29-09-2026 | CORA_V8.4.0 | Reworked weekly scheduling, manual changes and auto-save. |
+| 29-09-2026 | CORA_V8.4.1 | Added minimum rest and weekly hours limits. |
+| 29-09-2026 | CORA_V8.4.2 | Monthly data loading and holiday update. |
+| 29-09-2026 | CORA_V8.4.3 | Added saved planning and recalculation from today. |
+| 29-09-2026 | CORA_V8.4.4 | Added custom date picker. |
+| 29-09-2026 | CORA_V8.4.5 | Planning and export bug fixes. |
+| 29-09-2026 | CORA_V8.4.6 | Forecast and planning bug fixes. |
+| 29-09-2026 | CORA_V8.4.7 | Added coverage alerts and bug fixes. |
+| 30-09-2026 | CORA_V8.4.8 | Store switching and export bug fixes. |
+| 30-09-2026 | CORA_V8.5.0 | More manual missions, reinforcement exports and monthly PDF update. |
+| 08-10-2026 | CAST_V8.6.1 | Reworked Japan shift rules. |
+| 08-10-2026 | CAST_V8.6.6 | Bug fixes. |
+| 08-10-2026 | CAST_V8.6.7 | Design update. Arial font and alert block removed. |
+| 08-10-2026 | CAST_V8.6.8 | Mobile and Excel bug fixes. |
+| 09-10-2026 | CAST_V8.6.9 | Mobile update and Download menu. |
+| 09-10-2026 | CAST_V9.0.0 | Bug fixes. |
+| 09-10-2026 | CAST_V9.0.1 | Added PDF sharing and email drafts. |
+| 09-10-2026 | CAST_V9.0.3 | Reworked shift engine around hourly traffic. Added Late shifts target. |
+| 09-10-2026 | CAST_V9.0.4 | Engine bug fixes. |
+| 09-10-2026 | CAST_V9.0.5 | Breaks protect opening / closing coverage. |
+| 09-10-2026 | CAST_V9.0.6 | Break engine bug fixes. |
+| 09-10-2026 | CAST_V9.0.10 | Added KR / CN languages. Translations moved to JSON. |
+| 09-10-2026 | CAST_V9.0.11 | Translation bug fixes. |
+| 10-10-2026 | CAST_V9.1.0 | Design update. |
+| 10-10-2026 | CAST_V9.1.5 | New logo, pastel colors and ABS counter. Alerts removed, bug fixes. |
