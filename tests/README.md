@@ -14,13 +14,15 @@ Nothing here is loaded by `retail.html` or `CSC.html`. The site does not use it.
 
 
 ## How to run the bench
-`python3 tests/retail/bm/run_bench.py tests/builds/CAST_v9_2_6_RETAIL.html` (Python Playwright with Chromium).
-The runner prints the SHA-256 it computed, fixes the browser clock at 2026-10-31 12:00, stubs Supabase (`stub_supabase.js`), loads `setup.js` and the official JSON, then runs `check_rules.js` for five settings: base 5/5/10, 6/12/11 at 45 h, weekly rest 35 h, a fixed contract with no hours, and a fixed 5 x 08:00-18:00 contract (must be refused at save).
+`python3 tests/retail/bm/run_bench.py tests/builds/CAST_v9_2_7_RETAIL.html` (Python Playwright with Chromium).
+The runner prints the SHA-256 it computed, fixes the browser clock at 2026-10-31 12:00, stubs Supabase (`stub_supabase.js`), loads `setup.js` and the official JSON, then runs `check_rules.js` for four settings: base 5/5/10, 6/12/11 at 45 h (stress), a fixed contract with no hours, and a fixed 5 x 08:00-18:00 contract already in the database. On the base it also saves two contracts through the real agent editor: 5 x 08:00-18:00 must be refused with no write, 4 days with no hours must be saved.
 `retail.html` on main is the live version, not the candidate: always name the build file you test.
+Results have three states: a breach, "to fix" (a fixed contract above Labor rules, kept as the manager set it) and "not checkable" (daily rest next to an OUT day, whose hours are unknown). Not checkable is never counted as valid.
 
 ## Reference run (Claude, 2026-10-12)
-`tests/builds/CAST_v9_2_6_RETAIL.html`, SHA-256 `3a28ce6b82b9`:
-- every variant: no breach of days per week, days in a row, two weeks, daily rest, weekly rest or weekly hours;
-- base 5/5/10: in November every corner has an opener and a closer every day (rule: two sellers per corner, one O, one C), as in the official planning;
-- 6/12/11 at 45 h (stress only): 2026-11-01 RTW and SHO empty (only day of its week in November, the team already used its days in October: left to the manager);
-- November match on this bench: day 64.3 %, cell 35.1 % (codes and corners only, synthetic traffic: not the private real-store score).
+`tests/builds/CAST_v9_2_7_RETAIL.html`, SHA-256 `60d631e04b7a`:
+- base 5/5/10: no breach; in November every corner has an opener and a closer every day; 14 daily rests not checkable (next to OUT); agent editor: 5 x 08:00-18:00 refused, 0 write; 4 days with no hours saved;
+- 6/12/11 at 45 h (stress): no breach of days, rest or hours; 2026-11-01 RTW and SHO empty, PRF without opening, LG without closing (only day of its week in November, the team already used its days in October: left to the manager);
+- fixed 4 days, no hours: accepted, no breach, no corner gap;
+- fixed 5 x 08:00-18:00 already saved: listed "to fix" and 45 h weeks reported (the contract is kept, never cut silently); 6 November corners without opening;
+- November match on this bench (base): day 64.3 %, cell 35.1 % (codes and corners only, synthetic traffic: not the private real-store score).

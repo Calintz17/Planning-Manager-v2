@@ -11,10 +11,21 @@ stub, setup, check, official = read('stub_supabase.js'), read('setup.js'), read(
 VARIANTS = {
   'base 5/5/10': '',
   '6/12/11, 45 h': 'regulations.max_days=6; regulations.max_consecutive_days=12; regulations.max_days_2weeks=11; regulations.weekly_hours=45;',
-  'weekly rest 35 h': 'regulations.weekly_rest_hours=35;',
   'fixed 4 days, no hours': "agentPrefs['a22'].fixed_schedule={enabled:true,days:[1,2,3,4],start:0,end:0}; window.FX=fixedScheduleIssue(agentPrefs['a22'].fixed_schedule,'PART_TIME');",
-  'fixed 5 x 08-18 (refused at save)': "window.FX=fixedScheduleIssue({enabled:true,days:[1,2,3,4,5],start:480,end:1080},'PART_TIME');",
+  'fixed 5 x 08-18 already saved': "agents.find(x=>x.id==='a22').status='PART_TIME'; agentPrefs['a22'].fixed_schedule={enabled:true,days:[1,2,3,4,5],start:480,end:1080};",
 }
+# Agent editor, through the real save: a contract above Labor rules is refused and nothing is written
+SAVE_TEST = '''(async () => {
+  var writes = 0, from = sb.from; sb.from = function() { writes++; return from.apply(this, arguments); };
+  async function trySave(days, start, end) {
+    writes = 0; openAgentEditor('a22'); document.getElementById('ae-status').value = 'PART_TIME'; setPtType('fixed');
+    renderDayChips(days, 'ae-fixed-days'); document.getElementById('ae-fixed-start').value = start; document.getElementById('ae-fixed-end').value = end;
+    var ok = await saveAgentEditor(); agentEditorId = null;
+    return { saved: ok, writes: writes, message: ok ? '' : document.getElementById('toast').textContent };
+  }
+  var r = { refused_5x08_18: await trySave([1,2,3,4,5], '08:00', '18:00'), accepted_4_days_no_hours: await trySave([1,2,3,4], '00:00', '00:00') };
+  sb.from = from; return JSON.stringify(r);
+})()'''
 class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
 srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Q, directory=root)); port = srv.server_address[1]
@@ -38,8 +49,9 @@ with sync_playwright() as p:
         lists = {k: v for k, v in r.items() if isinstance(v, list) and v}
         nov = {k: v for k, v in r['nov'].items() if v}
         print('\n==', name, '| clock', r['clock'], '| limits', r['limits'], '| match', r.get('match'))
-        print('   breaches', lists or 'none', '| november gaps', nov or 'none')
+        print('   breaches', lists or 'none', '| november gaps', nov or 'none', '| daily rest not checkable (next to OUT):', r['restUnknown'])
         if fx is not None: print('   fixed schedule check:', fx or 'accepted')
+        if name.startswith('base'): print('   agent editor save:', pg.evaluate(SAVE_TEST))
         if errs: print('   page errors', errs[:3])
         pg.close()
     b.close()

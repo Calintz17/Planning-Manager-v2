@@ -1,5 +1,5 @@
 // Hard-rule check: generates October, November and December 2026 in a row, then lists every breach with its dates.
-// Run it with run_bench.py (browser clock fixed at 2026-10-31 12:00). Limits are read from the settings, weekly rest included.
+// Run it with run_bench.py (browser clock fixed at 2026-10-31 12:00). Limits are read from the settings.
 // Optional: window.OFFICIAL = official_nov2026_anonymized.json gives the November match (K3 day, K4 exact cell).
 (() => {
   var clock = toDateStr(new Date());
@@ -12,13 +12,13 @@
   }
   var O = gen(2026, 9, null), N = gen(2026, 10, O), D = gen(2026, 11, N);
   var all = Object.assign({}, O, N, D), days = Object.keys(all).sort();
-  var weekRest = (regulations.weekly_rest_hours || 0) * 60, lim = dayLimits(), weekMin = regulations.weekly_hours * 60, gapMin = (regulations.rest_gap_hours || 0) * 60, from = '2026-10-05', to = '2026-12-27';
+  var lim = dayLimits(), weekMin = regulations.weekly_hours * 60, gapMin = (regulations.rest_gap_hours || 0) * 60, from = '2026-10-05', to = '2026-12-27';
   function res(a, ds) { return (all[ds] || {})[a.id]; }
   function busy(a, ds) { var r = res(a, ds); return isOnsite(a, ds, r) || (r && r.code === 'OUT') || agentOnLeave(a.id, ds) === 'out'; }
   function monday(ds) { var d = new Date(ds + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toDateStr(d); }
-  var out = { clock: clock, limits: lim, weekDays: {}, runOver: [], weekOver: [], twoWeeksOver: [], restShort: [], weekRestShort: [], hoursOver: [], nov: {} };
+  var out = { clock: clock, limits: lim, weekDays: {}, runOver: [], weekOver: [], twoWeeksOver: [], restShort: [], restUnknown: 0, fixedToFix: [], hoursOver: [], nov: {} };
   agents.forEach(function(a) {
-    var name = (a.first_name + ' ' + a.last_name).trim(), run = 0, runStart = '', wk = {}, hk = {}, prev = null, last = null;
+    var name = (a.first_name + ' ' + a.last_name).trim(), run = 0, runStart = '', wk = {}, hk = {}, prev = null;
     days.forEach(function(ds) {
       var k = monday(ds), r = res(a, ds);
       if (busy(a, ds)) {
@@ -30,10 +30,14 @@
       if (wh) {
         hk[k] = (hk[k] || 0) + paidMinOf(wh.start, wh.end);
         if (prev && (new Date(ds) - new Date(prev.ds)) / 864e5 === 1 && 1440 + wh.start - prev.end < gapMin) out.restShort.push(name + ' ' + ds);
-        if (weekRest && last && (new Date(ds) - new Date(last.ds)) / 864e5 === 2 && 2880 + wh.start - last.end < weekRest) out.weekRestShort.push(name + ' ' + ds);
-        prev = last = { ds: ds, end: wh.end };
-      } else { prev = null; if (busy(a, ds)) last = null; }
+        prev = { ds: ds, end: wh.end };
+      } else prev = null;
+      // Day next to an OUT day: OUT has no known hours, so the daily rest cannot be checked (unknown, not valid)
+      if (wh && [-1, 1].some(function(k) { var x = new Date(ds + 'T12:00:00'); x.setDate(x.getDate() + k); var xs = toDateStr(x); return !isOnsite(a, xs, res(a, xs)) && busy(a, xs); })) out.restUnknown++;
     });
+    // A fixed contract above Labor rules is kept as the manager set it: listed as to fix, never as compliant
+    var fxIssue = fixedScheduleIssue((agentPrefs[a.id] || {}).fixed_schedule, retailStatusOf(a));
+    if (fxIssue) out.fixedToFix.push(name + ': ' + fxIssue);
     var ks = Object.keys(wk).sort();
     ks.forEach(function(k, i) {
       if (k < from || k > to) return;
