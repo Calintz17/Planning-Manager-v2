@@ -65,6 +65,21 @@
     storeCorners.forEach(function(q) { var z = cor[q.code]; if (!z) x.cornerEmpty.push(ds + ' ' + q.code); else { if (!z.o) x.cornerNoOpen.push(ds + ' ' + q.code); if (!z.c) x.cornerNoClose.push(ds + ' ' + q.code); } });
   });
   out.nov = x;
+  // November intraday: every corner keeps someone on the floor each quarter hour of the opening (breaks and lunch taken in turn)
+  gen(2026, 10, O); currentCornerView = null; x.cornerEmptyQuarter = [];
+  Object.keys(N).sort().forEach(function(ds) {
+    if (getDayClosureType(ds)) return;
+    renderIntraday(ds); if (!intradayExport) return;
+    var hm = dayMinutes(ds), groups = {};
+    intradayExport.rows.forEach(function(r) { if (r.groupIsCorner) (groups[r.group] = groups[r.group] || []).push(r); });
+    Object.keys(groups).forEach(function(g) {
+      for (var t = hm.open; t < hm.close; t += 15) {
+        var h = t / 60 + 1e-6;
+        var on = groups[g].some(function(r) { return h >= r.startH && h < r.endH && !r.blocks.some(function(b) { return /^(lun|brk)/.test(b.type) && h >= b.start && h < b.start + b.dur; }); });
+        if (!on) x.cornerEmptyQuarter.push(ds + ' ' + g + ' ' + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'));
+      }
+    });
+  });
   // November match with the official planning
   if (window.OFFICIAL) {
     var tot = 0, day = 0, cell = 0;

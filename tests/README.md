@@ -21,8 +21,8 @@ Results have three states: a breach, "to fix" (a fixed contract above Labor rule
 
 ## Reference run (Claude, 2026-10-12)
 `tests/builds/CAST_v9_2_7_RETAIL.html`, SHA-256 `60d631e04b7a`:
-- base 5/5/10: no breach; in November every corner has an opener and a closer every day; 14 daily rests not checkable (next to OUT); agent editor: 5 x 08:00-18:00 refused, 0 write; 4 days with no hours saved;
-- 6/12/11 at 45 h (stress): no breach of days, rest or hours; 2026-11-01 RTW and SHO empty, PRF without opening, LG without closing (only day of its week in November, the team already used its days in October: left to the manager);
+- base 5/5/10: no breach; in November every corner has an opener and a closer every day, and someone on the floor every quarter hour of the opening (lunch and breaks taken in turn, 0 empty quarter); 14 daily rests not checkable (next to OUT); agent editor: 5 x 08:00-18:00 refused, 0 write; 4 days with no hours saved;
+- 6/12/11 at 45 h (stress): no breach of days, rest or hours; 2026-11-01 RTW and SHO empty, PRF without opening, LG without closing (only day of its week in November, the team already used its days in October: left to the manager), so LG and PRF also have empty quarters that day;
 - fixed 4 days, no hours: accepted, no breach, no corner gap;
-- fixed 5 x 08:00-18:00 already saved: listed "to fix" and 45 h weeks reported (the contract is kept, never cut silently); 6 November corners without opening;
+- fixed 5 x 08:00-18:00 already saved: listed "to fix" and 45 h weeks reported (the contract is kept, never cut silently); 6 November corners without opening, so 2 hours without anyone in each.
 - November match on this bench (base): day 64.3 %, cell 35.1 % (codes and corners only, synthetic traffic: not the private real-store score).
