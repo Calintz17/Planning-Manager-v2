@@ -5756,8 +5756,9 @@ function renderMonthlyPlanning() {
   });
   var minFloor = ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1)
                + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
-  // Floors of each open day, whatever the traffic: the store minimums, and one seller in every corner
-  var liveCorners = storeCorners.length > 1 ? storeCorners.length : 0;
+  // Floors of each open day, whatever the traffic: the store minimums, and two sellers in every corner
+  // Two sellers in every corner, one who opens and one who closes
+  var liveCorners = storeCorners.length > 1 ? 2 * storeCorners.length : 0;
   var agentById = {};
   agents.forEach(function(a) { agentById[a.id] = a; });
   function agentOf(id) { return agentById[id]; }

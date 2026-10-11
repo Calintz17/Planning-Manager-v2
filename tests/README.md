@@ -19,8 +19,8 @@ The runner prints the SHA-256 it computed, fixes the browser clock at 2026-10-31
 `retail.html` on main is the live version, not the candidate: always name the build file you test.
 
 ## Reference run (Claude, 2026-10-12)
-`tests/builds/CAST_v9_2_6_RETAIL.html`, SHA-256 `9a7dd448dbd1`:
+`tests/builds/CAST_v9_2_6_RETAIL.html`, SHA-256 `3a28ce6b82b9`:
 - every variant: no breach of days per week, days in a row, two weeks, daily rest, weekly rest or weekly hours;
-- base: no empty corner; 2026-11-10 RTW without opening and SHO without closing (one seller in each);
-- 6/12/11 at 45 h: 2026-11-01 RTW and SHO empty (only day of its week in November, the team already used its days in October: left to the manager);
-- November match on this bench: day 64.6 %, cell 35.6 % (codes and corners only, synthetic traffic: not the private real-store score).
+- base 5/5/10: in November every corner has an opener and a closer every day (rule: two sellers per corner, one O, one C), as in the official planning;
+- 6/12/11 at 45 h (stress only): 2026-11-01 RTW and SHO empty (only day of its week in November, the team already used its days in October: left to the manager);
+- November match on this bench: day 64.3 %, cell 35.1 % (codes and corners only, synthetic traffic: not the private real-store score).
