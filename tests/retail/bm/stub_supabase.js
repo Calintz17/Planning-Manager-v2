@@ -1,0 +1,2 @@
+(function(){function Q(){var p=Promise.resolve({data:[],error:null});var q=new Proxy(function(){}, {get:(t,k)=>k==='then'?p.then.bind(p):(k==='catch'?p.catch.bind(p):()=>q), apply:()=>q});return q;}
+window.supabase={createClient:()=>({from:()=>Q(),rpc:()=>Q(),auth:{getSession:()=>Promise.resolve({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getUser:()=>Promise.resolve({data:{user:null}})},channel:()=>({on(){return this},subscribe(){return this}})})};})();

@@ -14,12 +14,13 @@ Nothing here is loaded by `retail.html` or `CSC.html`. The site does not use it.
 
 
 ## How to run the bench
-1. Open `retail.html` with a stubbed Supabase and the browser clock fixed at **2026-10-31 12:00** (Playwright: `page.clock.set_fixed_time(datetime(2026, 10, 31, 12, 0))` before `goto`). The clock decides which days are past, so results differ without it. `check_rules.js` prints the clock it saw.
-2. Evaluate `setup.js`, then optionally `window.OFFICIAL = <official_nov2026_anonymized.json>`, then `check_rules.js`.
-3. Every result says which `retail.html` it tested: first 12 characters of its SHA-256.
+`python3 tests/retail/bm/run_bench.py tests/builds/CAST_v9_2_6_RETAIL.html` (Python Playwright with Chromium).
+The runner prints the SHA-256 it computed, fixes the browser clock at 2026-10-31 12:00, stubs Supabase (`stub_supabase.js`), loads `setup.js` and the official JSON, then runs `check_rules.js` for five settings: base 5/5/10, 6/12/11 at 45 h, weekly rest 35 h, a fixed contract with no hours, and a fixed 5 x 08:00-18:00 contract (must be refused at save).
+`retail.html` on main is the live version, not the candidate: always name the build file you test.
 
 ## Reference run (Claude, 2026-10-12)
-`retail.html` 9.2.5, SHA-256 `7256ba6ea4db`, clock 2026-10-31, default limits 5 / 5 / 10:
-no breach of days, days in a row, two weeks, rest or weekly hours; store open and closed every day; no empty corner;
-2026-11-10: RTW without opening, SHO without closing (one seller in these corners, allowed by the "1 per corner" rule).
-November match: day 64.6 %, exact cell 35.6 % (same as 9.2.4 on this bench). Traffic is synthetic, so this is not the real-store score.
+`tests/builds/CAST_v9_2_6_RETAIL.html`, SHA-256 `9a7dd448dbd1`:
+- every variant: no breach of days per week, days in a row, two weeks, daily rest, weekly rest or weekly hours;
+- base: no empty corner; 2026-11-10 RTW without opening and SHO without closing (one seller in each);
+- 6/12/11 at 45 h: 2026-11-01 RTW and SHO empty (only day of its week in November, the team already used its days in October: left to the manager);
+- November match on this bench: day 64.6 %, cell 35.6 % (codes and corners only, synthetic traffic: not the private real-store score).
