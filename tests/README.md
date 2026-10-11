@@ -9,6 +9,7 @@ Nothing here is loaded by `retail.html` or `CSC.html`. The site does not use it.
   - `setup.js` : test data (agents, roles, corners, leaves, shifts, settings). Traffic is synthetic.
   - `check_rules.js` : generates October, November and December in a row and lists every breach with its dates. Limits come from the settings (Max working days / week, Max days in a row, Max days over 2 weeks, Max hours / week, rest between shifts, unpaid lunch). November store and corner coverage. If `window.OFFICIAL` holds the official JSON, it also gives the November match (day and exact cell). Needs `retail.html` 9.2.5 or later.
   - `official_nov2026_anonymized.json` : the real planning of the month, per agent id and date (reference for matching).
+- `builds/` : versions proposed by Claude or Astra, before Roman validates them. Never loaded by the site. Name: `CAST_vX_Y_Z_RETAIL.html` or `CAST_VX.Y.Z_CSC.html`, one version number per file. Roman alone copies a validated build into `retail.html` or `CSC.html`.
 - `audits/` : audit reports and replies. One file per round, named `YYYY-MM-DD_<author>_<subject>.md` (author = astra, claude or roman).
 
 
