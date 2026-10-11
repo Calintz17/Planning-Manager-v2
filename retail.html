@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.1.10</title>
+  <title>CAST v9.2.1</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -601,6 +601,7 @@ textarea { resize:vertical; line-height:1.5; }
 .person-initials { display:none; }
 .mth .person-cell { display:block; line-height:1.4; min-width:0; }
 .sh-pink, .sh-cp { background:#F6DDE7; color:#82334E; }
+.sh-out { background:var(--bg-base); color:#4C586A; border:1px dashed #4C586A; }
 .coverage-card { padding:0; overflow:hidden; }
 .coverage-card > summary { display:flex; align-items:center; gap:12px; cursor:pointer; padding:18px 22px; list-style:none; font-size:16px; font-weight:700; }
 .coverage-card > summary::-webkit-details-marker { display:none; }
@@ -608,6 +609,19 @@ textarea { resize:vertical; line-height:1.5; }
 .coverage-card > summary .coverage-expander::after { content:"+"; }
 .coverage-card[open] > summary .coverage-expander::after { content:"-"; }
 .coverage-card .mth-wrap { border:0; border-top:1px solid var(--line); border-radius:0; max-height:none; }
+.ca-card { margin-top:12px; }
+.ca-wrap { overflow-x:auto; border-top:1px solid var(--line); overscroll-behavior-x:contain; }
+.ca-table { border-collapse:collapse; width:100%; font-size:12px; }
+.ca-table th { font-size:11px; font-weight:700; color:var(--tx-2); text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); background:var(--bg-base-2); }
+.ca-table td { padding:6px 12px; border-bottom:1px solid var(--line); }
+.ca-table .ca-name { white-space:nowrap; font-weight:700; }
+.ca-table .ca-n { text-align:center; width:64px; font-variant-numeric:tabular-nums; }
+.ca-table .ca-tot { font-weight:700; }
+.ca-btn { border:0; background:transparent; font:inherit; color:var(--brand); font-weight:700; cursor:pointer; min-width:32px; min-height:28px; border-radius:4px; }
+.ca-btn:hover { background:var(--bg-base-3); }
+.ca-detail { padding:10px 22px 14px; font-size:12px; color:var(--tx-2); display:flex; flex-wrap:wrap; gap:6px; }
+.ca-detail:empty { display:none; }
+.ca-detail b { color:var(--tx-1); margin-right:6px; }
 .it-wrap { overflow-x:auto; overflow-y:hidden; max-height:none; position:relative; border:1px solid var(--line); border-radius:6px; overscroll-behavior-x:contain; }
 .it-rows { min-width:calc(184px + var(--axis-width, 920px)); }
 .it-info .sh { font-size:9px; min-width:24px; height:22px; flex-shrink:0; }
@@ -1142,6 +1156,14 @@ function trimLogo(img) {
     <label class="leave-label">To</label>
     <input type="date" id="leave-end" class="leave-input">
   </div>
+  <div class="leave-field">
+    <label class="leave-label">Type</label>
+    <select id="leave-type" class="leave-input">
+      <option value="absence">Absence</option>
+      <option value="out">Out of store (training, school)</option>
+      <option value="off_request">Day off request</option>
+    </select>
+  </div>
   <div style="display:flex;gap:8px;margin-top:14px;">
     <button class="btn btn-primary" style="flex:1;" onclick="saveLeave()">Save</button>
     <button class="btn btn-ghost" style="flex:1;" onclick="closeLeavePopup()">Cancel</button>
@@ -1419,6 +1441,7 @@ let regulations = {
   weekly_hours:    40,
   max_daily_hours: 8.5,
   max_days: 5,
+  monthly_rest_days: 0,
   rest_gap_hours: 11,
   trend_pct:       0,
   aht_tasks: {
@@ -1859,6 +1882,7 @@ async function loadRegulations() {
     weekly_hours:    def.weekly_hours,
     max_daily_hours: 8.5,
     max_days: 5,
+    monthly_rest_days: 0,
     rest_gap_hours: 11,
     trend_pct:       0,
     aht_tasks: {
@@ -1880,6 +1904,7 @@ async function loadRegulations() {
       case 'weekly_hours':    regulations.weekly_hours  = parseFloat(row.rule_value); break;
       case 'max_daily_hours': { var vMDH = parseFloat(row.rule_value); regulations.max_daily_hours = isNaN(vMDH) ? 8.5 : vMDH; break; }
       case 'max_days':        { var vMD  = parseInt(row.rule_value, 10); regulations.max_days = isNaN(vMD) ? 5 : vMD; break; }
+      case 'monthly_rest_days': { var vMR = parseInt(row.rule_value, 10); regulations.monthly_rest_days = isNaN(vMR) || vMR < 0 ? 0 : vMR; break; }
       case 'rest_gap_hours':  { var vRGH = parseFloat(row.rule_value); regulations.rest_gap_hours = isNaN(vRGH) ? 11 : vRGH; break; }
       case 'trend_pct':       regulations.trend_pct     = parseFloat(row.rule_value) || 0; break;
       case 'aht_tasks':
@@ -2027,7 +2052,7 @@ function snapshotStoreSettings(storeId) {
     hourly_curve: ss.hourly_curve ? ss.hourly_curve.slice() : null,
     min_opening: ss.min_opening != null ? ss.min_opening : 1,
     min_closing: ss.min_closing != null ? ss.min_closing : 1,
-    closing_ratio: ss.closing_ratio != null ? ss.closing_ratio : 0.70,
+    closing_ratio: ss.closing_ratio != null ? ss.closing_ratio : 0.50,
     fairness_rotation: !!ss.fairness_rotation,
     intraday_reinforcement: !!ss.intraday_reinforcement,
     sunday_single_shift: ss.sunday_single_shift !== false
@@ -2038,7 +2063,7 @@ function regulationRows(storeId) {
   return [
     ['saturday_rest', String(r.saturday_rest)], ['sunday_rest', String(r.sunday_rest)],
     ['weekly_hours', String(r.weekly_hours)], ['max_daily_hours', String(r.max_daily_hours)],
-    ['max_days', String(r.max_days || 5)],
+    ['max_days', String(r.max_days || 5)], ['monthly_rest_days', String(r.monthly_rest_days || 0)],
     ['rest_gap_hours', String(r.rest_gap_hours != null ? r.rest_gap_hours : 11)],
     ['trend_pct', String(r.trend_pct)], ['aht_tasks', JSON.stringify(r.aht_tasks)],
     ['breaks', JSON.stringify(r.breaks)], ['closed_dates', JSON.stringify(r.closed_dates)],
@@ -2161,6 +2186,7 @@ function applyRegulationsForm() {
   var sunTog = document.querySelector('.day-open-toggle[data-day="sun"]');
   var mdays = num('reg-max-days', function(v){ return parseInt(v, 10); });
   var rg    = num('reg-rest-gap', parseFloat);
+  var mrest = num('reg-month-rest', function(v){ return parseInt(v, 10); });
   var md    = num('reg-max-daily', parseFloat);
   var wh    = num('reg-weekly-hours', parseFloat);
   var mo    = num('thr-open',  function(v){ return parseInt(v, 10); });
@@ -2194,12 +2220,13 @@ function applyRegulationsForm() {
   if (sunTog) regulations.sunday_rest   = !sunTog.checked;
   if (mdays > 0) regulations.max_days = mdays;
   if (rg >= 0)   regulations.rest_gap_hours = rg;
+  if (document.getElementById('reg-month-rest')) regulations.monthly_rest_days = (isNaN(mrest) || mrest < 0) ? 0 : mrest;
   if (md > 0)    regulations.max_daily_hours = md;
   if (wh > 0)    regulations.weekly_hours = wh;
   if (!storeSettings) storeSettings = {};
   if (document.getElementById('thr-open'))  storeSettings.min_opening   = (isNaN(mo) || mo < 0) ? 1 : mo;
   if (document.getElementById('thr-close')) storeSettings.min_closing   = (isNaN(mc) || mc < 0) ? 1 : mc;
-  if (document.getElementById('thr-ratio')) storeSettings.closing_ratio = (isNaN(rr) || rr < 0 || rr > 100) ? 0.70 : rr / 100;
+  if (document.getElementById('thr-ratio')) storeSettings.closing_ratio = (isNaN(rr) || rr < 0 || rr > 100) ? 0.50 : rr / 100;
   Object.keys(dayHours).forEach(function(k) { regulations.day_hours[k] = dayHours[k]; });
   regulations.breaks = newBreaks;
   return true;
@@ -2677,12 +2704,14 @@ function renderRegulations() {
           '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5">', 'h') +
         rrow('Minimum rest between shifts', 'How many hours an advisor must rest between the end of one shift and the start of the next',
           '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) + '" min="0" max="24" step="0.5">', 'h') +
+        rrow('Rest days per month', 'Optional. Days off each advisor gets in a month, when your contracts count them by month. Leave at 0 to use the weekly limit only',
+          '<input type="number" id="reg-month-rest" class="set-rule-input" value="' + (regulations.monthly_rest_days || 0) + '" min="0" max="20" step="1">', 'days') +
         rrow('Opening minimum', 'How many advisors are needed at minimum to open a store or a corner',
           '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1">', 'CA') +
         rrow('Closing minimum', 'How many advisors are needed at minimum to close a store or a corner',
           '<input type="number" id="thr-close" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '" min="0" max="20" step="1">', 'CA') +
         rrow('Late shifts target', 'Share of advisors who start in the later half of your shifts',
-          '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.70) * 100) + '" min="0" max="100" step="5">', '%') +
+          '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.50) * 100) + '" min="0" max="100" step="5">', '%') +
         rrowToggle('Sunday single shift', 'One shift D on Sundays (uncheck for wide-amplitude stores that need O/C on Sunday)',
           'sunday-single-toggle', 'toggleSundaySingle', !(storeSettings && storeSettings.sunday_single_shift === false), 'sunday') +
         (storeCorners.length > 1 ?
@@ -2846,6 +2875,13 @@ document.addEventListener('click', function(e) {
   if (dpInput && !e.target.closest('#date-pop')) closeDatePop();
 });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDatePop(); });
+// An end date never comes before its start date: it follows the start date
+document.addEventListener('change', function(e) {
+  var el = e.target;
+  if (!el || !el.id || !/-start$/.test(el.id) || !/^\d{4}-\d{2}-\d{2}$/.test(el.value)) return;
+  var end = document.getElementById(el.id.replace(/-start$/, '-end'));
+  if (end && (!/^\d{4}-\d{2}-\d{2}$/.test(end.value) || end.value < el.value)) { end.value = el.value; end.dispatchEvent(new Event('change', { bubbles: true })); }
+});
 // Data for the displayed month
 var availLoaded = null;
 var trafficYearLoaded = null;
@@ -2885,10 +2921,13 @@ async function loadPlanSnapshot() {
   var prevMonth = pm.getFullYear() + '-' + String(pm.getMonth() + 1).padStart(2, '0') + '-01';
   var res  = await sb.from('retail_planning_snapshot').select('plan').eq('store_id', storeId).eq('month', month);
   var prev = await sb.from('retail_planning_snapshot').select('plan').eq('store_id', storeId).eq('month', prevMonth);
+  var past = [1, 2, 3].map(function(k) { var d = new Date(monthlyRef.getFullYear(), monthlyRef.getMonth() - k, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01'; });
+  var hist = await sb.from('retail_planning_snapshot').select('plan').eq('store_id', storeId).in('month', past);
   if (storeId !== currentStoreId || month !== snapshotMonthKey()) return;
   var plan = (!res.error && res.data && res.data[0]) ? res.data[0].plan : null;
   planSnapshot = { storeId: storeId, month: month, ok: !res.error, plan: plan, confirmed: plan,
-                   prevPlan: (!prev.error && prev.data && prev.data[0]) ? prev.data[0].plan : null };
+                   prevPlan: (!prev.error && prev.data && prev.data[0]) ? prev.data[0].plan : null,
+                   history: (!hist.error && hist.data) ? hist.data.map(function(r) { return r.plan; }) : [] };
 }
 var snapChain = Promise.resolve(true), lastSnapSave = null;
 function savePlanSnapshot(storeId, month, plan) {
@@ -3031,7 +3070,7 @@ async function loadStoreSettings() {
   storeSettings = res.data[0];
   storeSettings.min_opening  = storeSettings.min_opening  != null ? storeSettings.min_opening  : 1;
   storeSettings.min_closing  = storeSettings.min_closing  != null ? storeSettings.min_closing  : 1;
-  storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.70;
+  storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.50;
   storeSettings.fairness_rotation = !!storeSettings.fairness_rotation;
   storeSettings.intraday_reinforcement = !!storeSettings.intraday_reinforcement;
   storeSettings.sunday_single_shift = storeSettings.sunday_single_shift !== false;
@@ -3082,6 +3121,14 @@ function setPlanMeta(id, text, isHtml) {
   if (isHtml) el.innerHTML = text; else el.textContent = text;
 }
 var lastCoverage = null;
+// Traffic of a corner for one month: this year's forecast when the store has one for that month, else last year
+function cornerTrafficValue(cid, year, month) {
+  var r = cornerTrafficMonthly[cid + '|' + year + '|' + month];
+  if (!r) return 0;
+  var hasCurrent = storeCorners.some(function(c) { var x = cornerTrafficMonthly[c.id + '|' + year + '|' + month]; return x && Number(x.current_year) > 0; });
+  var v = hasCurrent && r.current_year != null ? r.current_year : (r.last_year || r.n_2 || 0);
+  return Math.max(0, Number(v) || 0);
+}
 function setPlanCoverage(html) {
   var el = document.getElementById('planning-coverage-body');
   if (el) el.innerHTML = html;
@@ -3092,7 +3139,7 @@ function renderCornerTabs() {
     if (!box) return;
     if (storeCorners.length <= 1) { box.innerHTML = ''; return; }
     var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
-    function cw(cid){ var t = cornerTrafficMonthly[cid+'|'+refY+'|'+refM]; return t ? (t.last_year||t.n_2||0) : 0; }
+    function cw(cid){ return cornerTrafficValue(cid, refY, refM); }
     var sorted = storeCorners.slice().sort(function(a,b){ return cw(b.id) - cw(a.id); });
     var html = '<button class="corner-tab' + (currentCornerView === null ? ' active' : '') +
                '" onclick="switchCornerView(null)">All</button>';
@@ -3130,6 +3177,7 @@ function shiftCls(code) {
   if (code === 'OFF') return 'sh-off';
   if (code === 'A')   return 'sh-cp';
   if (code === 'PT')  return 'sh-pt';
+  if (code === 'OUT') return 'sh-out';
   var def = findShiftDef(code);
   if (def) {
     return (def.grid === 'stock' ? 'sh-stock ' : '') + 'sh-' + (def.tone || 'close');
@@ -3887,7 +3935,7 @@ function renderIntraday(ds) {
   var reinforceMissions = {};
   if (storeSettings && storeSettings.intraday_reinforcement && storeCorners.length > 1 && curve && curve.length) {
     var refYr = monthlyRef.getFullYear(), refMr = monthlyRef.getMonth() + 1;
-    var cwR = function(cid){ var t = cornerTrafficMonthly[cid+'|'+refYr+'|'+refMr]; return t ? (t.last_year||t.n_2||0) : 0; };
+    var cwR = function(cid){ return cornerTrafficValue(cid, refYr, refMr); };
     var effCornerId = function(a){
       var r = (monthlyResult[ds] || {})[a.id];
       if (r && r.corner) { for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id; }
@@ -3905,6 +3953,14 @@ function renderIntraday(ds) {
     var peakH = 0, peakVal = 0;
     for (var h = midStart; h <= midEnd; h++) { var w = hourWeight(h); if (w > peakVal) { peakVal = w; peakH = h; } }
     if (peakVal > 0) {
+      // Only advisors really on the floor for the whole peak hour count, and can help
+      storeCorners.forEach(function(c) {
+        byC[c.id] = byC[c.id].filter(function(a) {
+          var si = shiftInfo[a.id];
+          return si && si.startMin <= peakH * 60 && si.endMin >= (peakH + 1) * 60 &&
+            !(addedMissions[a.id] || []).some(function(m) { return m.start < peakH + 1 && m.start + missionDurH(m) > peakH; });
+        });
+      });
       var tension = storeCorners.map(function(c) {
         var present = (byC[c.id] || []).length;
         var trafficAtPeak = cwR(c.id) * peakVal;
@@ -4000,6 +4056,10 @@ function renderIntraday(ds) {
         for (var i = Math.max(0, Math.floor((s0 - q0) / Q + 1e-9)); i < nQ && q0 + i * Q < s0 + d0 - 1e-9; i++) arr[i] = true;
       }
     });
+  });
+  // A reinforcement hour is never covered by an automatic break
+  Object.keys(reinforceMissions).forEach(function(aid) {
+    reinforceMissions[aid].forEach(function(m) { (manualBusy[aid] = manualBusy[aid] || []).push([m.start, m.start + m.dur]); });
   });
   // Added manual missions also reserve time for the automatic brief and Welcome.
   Object.keys(manualBusy).forEach(function(aid) {
@@ -4320,7 +4380,7 @@ function renderIntraday(ds) {
   var groups = [];
   if (storeCorners.length > 1) {
     var refYi = monthlyRef.getFullYear(), refMi = monthlyRef.getMonth() + 1;
-    function cWi(cid){ var t = cornerTrafficMonthly[cid+'|'+refYi+'|'+refMi]; return t ? (t.last_year||t.n_2||0) : 0; }
+    function cWi(cid){ return cornerTrafficValue(cid, refYi, refMi); }
     function effCorner(a){
       var r = (monthlyResult[ds] || {})[a.id];
       if (r && r.corner) {
@@ -4744,7 +4804,8 @@ async function runForecast() {
   var rows = [];
   for (var m = 1; m <= 12; m++) {
     var ex = trafficMonthly[monthKey(year, m)] || {};
-    if (ex.source === 'manual') continue;
+    // Real and manual months are kept: only empty or forecast months are projected
+    if (ex.current_year != null && ex.source !== 'forecast') continue;
     rows.push({
       store_id: currentStoreId, year: year, month: m,
       n_2: ex.n_2 || 0,
@@ -4758,7 +4819,7 @@ async function runForecast() {
   btn.disabled = false; btn.innerHTML = original;
   if (res.error) { showToast('Forecast could not be saved', 'error'); return; }
   await loadTraffic(year);
-  for (var m3 = 1; m3 <= 12; m3++) await recomputeMonthDaily(year, m3);
+  for (var m3 = 0; m3 < rows.length; m3++) await recomputeMonthDaily(year, rows[m3].month);
   showToast('Forecast generated \u2713');
   renderTraffic();
 }
@@ -5017,7 +5078,7 @@ async function deleteHighlight(id) {
 function dailyTrafficFor(ds) {
   if (getDayClosureType(ds)) return 0;
   var rec = trafficDaily[ds];
-  if (rec && rec.is_manual) return rec.traffic || 0;
+  if (rec && rec.traffic != null) return Math.max(0, Number(rec.traffic) || 0);
   var dt = new Date(ds + 'T12:00:00');
   var y = dt.getFullYear(), m = dt.getMonth() + 1;
   var mRec = trafficMonthly[monthKey(y, m)];
@@ -5243,7 +5304,8 @@ function renderMonthlyPlanning() {
   }
   function weekCap(a) {
     var grid = RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [];
-    var paid = grid.reduce(function(m, s) { return Math.max(m, s.endMin - s.startMin); }, 0) - unpaidMin;
+    var lens = grid.map(function(s) { return s.endMin - s.startMin; }).sort(function(x, y) { return x - y; });
+    var paid = (lens.length ? lens[Math.floor((lens.length - 1) / 2)] : 0) - unpaidMin;
     if (!(regulations.weekly_hours > 0) || paid <= 0) return maxDays;
     return Math.min(maxDays, Math.floor(regulations.weekly_hours * 60 / paid + 1e-9));
   }
@@ -5274,8 +5336,10 @@ function renderMonthlyPlanning() {
     var dObj = new Date(year, monthIdx, dnum);
     var ds   = toDateStr(dObj);
     var closure = getDayClosureType(ds);
-    var vol = (trafficDaily[ds] && trafficDaily[ds].traffic != null)
-      ? trafficDaily[ds].traffic : 0;
+    var monthTraffic = trafficMonthly[monthKey(year, monthIdx + 1)];
+    var vol = monthTraffic && monthTraffic.current_year != null
+      ? dailyTrafficFor(ds)
+      : ((trafficDaily[ds] && trafficDaily[ds].traffic) || 0);
     monthDays.push({ num: dnum, date: dObj, ds: ds, dow: dObj.getDay(),
                      closure: closure, vol: vol, past: ds < _todayStr });
   }
@@ -5313,6 +5377,25 @@ function renderMonthlyPlanning() {
     if ((p.avoid_days || []).indexOf(d.dow) !== -1) s -= 2;
     return s;
   }
+  // Week across two months: days already worked in the other month count, unknown days keep their share
+  function visibleQuota(a, wk, target) {
+    var monday = new Date(wk + 'T12:00:00');
+    var inside = 0, outsideUnknown = 0, outsideWorked = 0;
+    for (var i = 0; i < 7; i++) {
+      var dd = new Date(monday); dd.setDate(dd.getDate() + i);
+      var ds = toDateStr(dd);
+      if (getDayClosureType(ds) || (!_freeze && (agentOnLeave(a.id, ds) || (availability[a.id] || {})[ds] === 'absent'))) continue;
+      if (dd.getFullYear() === year && dd.getMonth() === monthIdx) { inside++; continue; }
+      var res = (planningOverrides[a.id] || {})[ds];
+      if (res) res = { code: res };
+      else res = (snapPlan[ds] || {})[a.id] || (planSnapshot && planSnapshot.prevPlan && (planSnapshot.prevPlan[ds] || {})[a.id]);
+      if (res) { if (workHoursOf(a, ds, res)) outsideWorked++; }
+      else outsideUnknown++;
+    }
+    var left = Math.max(0, target - outsideWorked);
+    if (outsideUnknown) left -= Math.round(left * outsideUnknown / Math.max(1, inside + outsideUnknown));
+    return Math.max(0, Math.min(inside, left));
+  }
   var weekKeys = Object.keys(weeks).sort();
   var weekQuota = {};
   var volantHalf = {};
@@ -5332,21 +5415,39 @@ function renderMonthlyPlanning() {
         if (getDayClosureType(dds)) continue;
         openW++;
         var stAv = (availability[a.id] && availability[a.id][dds]) || null;
-        if (!_freeze && (agentOnLeave(a.id, dds) || stAv === 'absent')) absW++;
+        var ltW = agentOnLeave(a.id, dds);
+        if (!_freeze && ((ltW && ltW !== 'off_request') || stAv === 'absent')) absW++;
       }
       if (isVolant) {
         var target = weekCap(a) * pct / 100 - absW;
         target = Math.max(0, Math.min(openW, target));
+        target = visibleQuota(a, wk, target);
         var fullDays = Math.floor(target);
         var hasHalf = (target - fullDays) >= 0.5;
         weekQuota[a.id][wk] = fullDays + (hasHalf ? 1 : 0);
         volantHalf[a.id][wk] = hasHalf;
       } else {
         var maxWork = Math.max(0, Math.min(weekCap(a), openW) - absW);
-        var days = Math.round(maxWork * pct / 100);
+        var days = visibleQuota(a, wk, Math.round(maxWork * pct / 100));
         weekQuota[a.id][wk] = Math.max(0, Math.min(maxWork, days));
       }
     });
+  });
+  // Rest days per month (optional): an advisor never works more days than the month allows
+  var restPerMonth = regulations.monthly_rest_days > 0 ? regulations.monthly_rest_days : 0;
+  if (restPerMonth) agents.forEach(function(a) {
+    if (isFixed(a)) return;
+    var away = monthDays.filter(function(d) {
+      var lt = agentOnLeave(a.id, d.ds);
+      return !d.closure && !_freeze && ((lt && lt !== 'off_request') || (availability[a.id] || {})[d.ds] === 'absent');
+    }).length;
+    var cap = Math.max(0, Math.round((nDays - restPerMonth) * (a.work_pct || 100) / 100) - away);
+    var total = weekKeys.reduce(function(sum, wk) { return sum + (weekQuota[a.id][wk] || 0); }, 0);
+    while (total > cap) {
+      var wkMax = weekKeys.slice().sort(function(x, y) { return (weekQuota[a.id][y] || 0) - (weekQuota[a.id][x] || 0); })[0];
+      if (!(weekQuota[a.id][wkMax] > 0)) break;
+      weekQuota[a.id][wkMax]--; total--;
+    }
   });
   var quota = {};
   agents.forEach(function(a) {
@@ -5403,7 +5504,6 @@ function renderMonthlyPlanning() {
   var salesAgents = agents.filter(isSalesV);
   var stockAgents = agents.filter(isStockV);
   var fixedAgents = agents.filter(isFixedTimed);
-  var hasStockTeam = stockAgents.length > 0;
   var hasMgmt = mgmtAgents.length > 0;
   var fixedAllAgents = agents.filter(isFixed);
   fixedAllAgents.forEach(function(a) {
@@ -5419,7 +5519,8 @@ function renderMonthlyPlanning() {
   weekKeys.forEach(function(wk) {
     var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
     if (!wkDays.length) return;
-    var cap = salesAgents.reduce(function(s, a) {
+    // One target for the whole team (managers, sales and stock), spread on the days by traffic
+    var cap = mgmtAgents.concat(salesAgents, stockAgents).reduce(function(s, a) {
       return s + ((weekQuota[a.id] && weekQuota[a.id][wk]) || 0);
     }, 0);
     var fixedManDays = 0;
@@ -5429,10 +5530,17 @@ function renderMonthlyPlanning() {
       });
     });
     cap += fixedManDays;
-    var perDayCap = salesAgents.length + fixedAgents.length;
+    var perDayCap = mgmtAgents.length + salesAgents.length + stockAgents.length + fixedAgents.length;
     cap = Math.min(cap, wkDays.length * perDayCap);
     var volTot = wkDays.reduce(function(s, d) { return s + (d.vol || 0); }, 0) || 1;
     var raw = wkDays.map(function(d) { return cap * (d.vol || 0) / volTot; });
+    // A full day gives its extra people to the other days, by traffic
+    for (var pass = 0; pass < 7; pass++) {
+      var extra = 0, freeVol = 0;
+      raw.forEach(function(r, i) { if (r > perDayCap) { extra += r - perDayCap; raw[i] = perDayCap; } else if (r < perDayCap) freeVol += (wkDays[i].vol || 0); });
+      if (extra < 1e-6 || !freeVol) break;
+      raw = raw.map(function(r, i) { return r < perDayCap ? r + extra * (wkDays[i].vol || 0) / freeVol : r; });
+    }
     var base = raw.map(function(r) { return Math.floor(r); });
     var leftover = cap - base.reduce(function(s, b) { return s + b; }, 0);
     var order = raw.map(function(r, i) { return [i, r - Math.floor(r)]; })
@@ -5451,12 +5559,6 @@ function renderMonthlyPlanning() {
       dayTarget[d.ds] = Math.max(0, Math.min(perDayCap, base[i]));
     });
   });
-  function salesCount(ds) {
-    return assignedMap[ds].filter(function(id) {
-      var a = agents.find(function(x) { return x.id === id; });
-      return a && isSales(a);
-    }).length;
-  }
   var byLoad = openList.slice().sort(function(x, y) { return (y.vol || 0) - (x.vol || 0); });
   var takenByDay = {};
   openList.forEach(function(d){ takenByDay[d.ds] = {}; });
@@ -5483,80 +5585,48 @@ function renderMonthlyPlanning() {
     prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
     return chosen;
   }
-  function fillSalesDay(d, target) {
+  // Remaining days of the week for one agent
+  function weekLeft(a, wk) { return ((weekQuota[a.id] && weekQuota[a.id][wk]) || 0) - (workedInWeek[a.id][wk] || 0); }
+  function free(a, d) { return !isFixed(a) && assignedMap[d.ds].indexOf(a.id) === -1 && canWork(a, d); }
+  function addTo(a, d) {
+    assign(a, d);
+    assignedMap[d.ds].push(a.id);
+    prefDebt[a.id] += (prefScoreFor(a, d) < 0 ? -1 : 1);
+  }
+  // Fill one day up to its target, everyone together, the most days left first
+  function fillDay(d, target) {
     var wk = weekKey(d.date);
-    while (salesCount(d.ds) < target) {
-      var pool = agents.filter(function(a) {
-        if (isFixed(a) || !isSales(a)) return false;
-        if (assignedMap[d.ds].indexOf(a.id) !== -1) return false;
-        return canWork(a, d);
-      });
+    while (assignedMap[d.ds].length < target) {
+      var pool = agents.filter(function(a) { return free(a, d); });
       if (!pool.length) break;
       pool.sort(function(x, y) {
-        var wqx = (weekQuota[x.id] && weekQuota[x.id][wk]) || 0;
-        var wqy = (weekQuota[y.id] && weekQuota[y.id][wk]) || 0;
-        var remX = wqx - (workedInWeek[x.id][wk] || 0);
-        var remY = wqy - (workedInWeek[y.id][wk] || 0);
-        if (remX !== remY) return remY - remX;
-        var dd = prefDebt[x.id] - prefDebt[y.id];
-        if (dd !== 0) return dd;
-        var pp = prefScoreFor(y, d) - prefScoreFor(x, d);
-        if (pp !== 0) return pp;
-        return x.id < y.id ? -1 : 1;
+        return (weekLeft(y, wk) - weekLeft(x, wk)) || (prefDebt[x.id] - prefDebt[y.id]) ||
+          (prefScoreFor(y, d) - prefScoreFor(x, d)) || (x.id < y.id ? -1 : 1);
       });
-      var chosen = pool[0];
-      assign(chosen, d);
-      assignedMap[d.ds].push(chosen.id);
-      prefDebt[chosen.id] += (prefScoreFor(chosen, d) < 0 ? -1 : 1);
+      addTo(pool[0], d);
     }
   }
+  // A manager every day when possible, busiest days first
   byLoad.forEach(function(d) {
     if (hasMgmt) pickFor(d, isLead);
   });
   weekKeys.forEach(function(wk) {
     var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; })
       .sort(function(x, y) { return (dayTarget[y.ds] || 0) - (dayTarget[x.ds] || 0); });
-    wkDays.forEach(function(d) {
-      fillSalesDay(d, dayTarget[d.ds] || 2);
-    });
-    wkDays.forEach(function(d) {
-      fillSalesDay(d, dayTarget[d.ds] || 2);
+    wkDays.forEach(function(d) { fillDay(d, dayTarget[d.ds] || 2); });
+    // Days still owed go where the team is the most short of its target
+    agents.filter(function(a) { return !isFixed(a); }).forEach(function(a) {
+      while (weekLeft(a, wk) > 0) {
+        var days = wkDays.filter(function(d) { return free(a, d); });
+        if (!days.length) break;
+        days.sort(function(x, y) {
+          return ((dayTarget[y.ds] || 0) - assignedMap[y.ds].length) - ((dayTarget[x.ds] || 0) - assignedMap[x.ds].length) ||
+            (prefScoreFor(a, y) - prefScoreFor(a, x)) || ((y.vol || 0) - (x.vol || 0));
+        });
+        addTo(a, days[0]);
+      }
     });
   });
-  if (hasMgmt) {
-    weekKeys.forEach(function(wk) {
-      var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
-      var progressing = true;
-      while (progressing) {
-        progressing = false;
-        wkDays.forEach(function(d) {
-          var wq = mgmtAgents.some(function(a) {
-            var q = (weekQuota[a.id] && weekQuota[a.id][wk]) || 0;
-            return (workedInWeek[a.id][wk] || 0) < q &&
-                   assignedMap[d.ds].indexOf(a.id) === -1 && canWork(a, d);
-          });
-          if (wq && pickFor(d, isLead)) progressing = true;
-        });
-      }
-    });
-  }
-  if (hasStockTeam) {
-    weekKeys.forEach(function(wk) {
-      var wkDays = openList.filter(function(d) { return weekKey(d.date) === wk; });
-      var progressing = true;
-      while (progressing) {
-        progressing = false;
-        wkDays.forEach(function(d) {
-          var wq = stockAgents.some(function(a) {
-            var q = (weekQuota[a.id] && weekQuota[a.id][wk]) || 0;
-            return (workedInWeek[a.id][wk] || 0) < q &&
-                   assignedMap[d.ds].indexOf(a.id) === -1 && canWork(a, d);
-          });
-          if (wq && pickFor(d, isStock)) progressing = true;
-        });
-      }
-    });
-  }
   var minFloor = ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1)
                + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
   openList.forEach(function(d) {
@@ -5699,10 +5769,57 @@ function renderMonthlyPlanning() {
   var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
   var shiftPlanByDay = {};
   var shiftUse = {};
+  // Shifts the store really uses: saved plannings of the last 3 months, the manager's own choices counting double
+  var shiftHabit = {}, habitMax = 0;
+  ((planSnapshot && planSnapshot.history) || []).forEach(function(pl) {
+    Object.keys(pl || {}).forEach(function(ds) {
+      Object.keys(pl[ds] || {}).forEach(function(id) { var c = pl[ds][id] && pl[ds][id].code; if (c) shiftHabit[c] = (shiftHabit[c] || 0) + 1; });
+    });
+  });
+  Object.keys(planningOverrides).forEach(function(id) {
+    Object.keys(planningOverrides[id] || {}).forEach(function(ds) { var c = planningOverrides[id][ds]; if (c) shiftHabit[c] = (shiftHabit[c] || 0) + 2; });
+  });
+  Object.keys(shiftHabit).forEach(function(c) { habitMax = Math.max(habitMax, shiftHabit[c]); });
+  function habitOf(code) { return habitMax ? (shiftHabit[code] || 0) / habitMax : 0; }
+  // Paid minutes planned in each week: a shift that would break the weekly hours is swapped for one that fits
+  var weekPaid = {};
+  function paidOfCode(a, ds, code) {
+    var wh = workHoursOf(a, ds, { code: code });
+    return wh ? Math.max(0, wh.end - wh.start - unpaidMin) : 0;
+  }
+  function fitsWeek(a, d, s) {
+    if (!(regulations.weekly_hours > 0)) return true;
+    var wk = weekKey(d.date), used = (weekPaid[a.id] || {})[wk] || 0;
+    var daysLeft = monthDays.filter(function(x) { return x.ds >= d.ds && weekKey(x.date) === wk && (assignedMap[x.ds] || []).indexOf(a.id) !== -1; }).length;
+    var room = (regulations.weekly_hours * 60 - used) / Math.max(1, daysLeft);
+    return Math.max(0, s.endMin - s.startMin - unpaidMin) <= room + 1e-6;
+  }
+  function settleWeekHours(d, plan) {
+    var hm = dayMinutes(d.ds);
+    Object.keys(plan).forEach(function(id) {
+      var a = agents.find(function(x) { return x.id === id; });
+      if (!a || (planningOverrides[id] || {})[d.ds]) return;
+      var grid = RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || [];
+      var cur = grid.find(function(s) { return s.code === plan[id]; });
+      if (!cur || fitsWeek(a, d, cur)) return;
+      var cov = coverOfHours(cur.startMin, cur.endMin, hm);
+      var alt = grid.filter(function(s) { return fitsWeek(a, d, s) && restAllows(a, d.ds, s.code); }).sort(function(x, y) {
+        var cx = coverOfHours(x.startMin, x.endMin, hm), cy = coverOfHours(y.startMin, y.endMin, hm);
+        var sx = (cx.open === cov.open && cx.close === cov.close) ? 0 : 1, sy = (cy.open === cov.open && cy.close === cov.close) ? 0 : 1;
+        return (sx - sy) || (Math.abs(x.startMin - cur.startMin) - Math.abs(y.startMin - cur.startMin));
+      })[0];
+      if (alt) plan[id] = alt.code;
+    });
+    Object.keys(plan).forEach(function(id) {
+      var a = agents.find(function(x) { return x.id === id; });
+      if (!a) return;
+      var code = (planningOverrides[id] || {})[d.ds] || plan[id], wk = weekKey(d.date);
+      (weekPaid[id] = weekPaid[id] || {})[wk] = ((weekPaid[id] || {})[wk] || 0) + paidOfCode(a, d.ds, code);
+    });
+  }
   function isSpecialDay(d) {
     var sundaySingle = !storeSettings || storeSettings.sunday_single_shift !== false;
-    if (d.date.getDay() === 0) return sundaySingle;
-    return !!calHolidays[d.ds];
+    return sundaySingle && (d.date.getDay() === 0 || !!calHolidays[d.ds]);
   }
   monthDays.forEach(function(d) {
     if (d.closure) return;
@@ -5720,6 +5837,7 @@ function renderMonthlyPlanning() {
     // Sundays and open holidays: single shift D
     if (isSpecialDay(d)) {
       present.forEach(function(id){ plan[id] = 'D'; });
+      settleWeekHours(d, plan);
       shiftPlanByDay[d.ds] = plan;
       return;
     }
@@ -5735,6 +5853,17 @@ function renderMonthlyPlanning() {
       var grid = RETAIL_SHIFTS[g] || [];
       if (!list.length || !grid.length) return;
       var cl = shiftClusters(grid, d.ds);
+      // Preferred shift of an advisor, kept when the rest rule allows it
+      var prefSales = [];
+      list = list.filter(function(a) {
+        var pc = (agentPrefs[a.id] || {}).preferred_shift;
+        var ps = pc && grid.find(function(s) { return s.code === pc; });
+        if (!ps || !restAllows(a, d.ds, ps.code)) return true;
+        plan[a.id] = ps.code; shiftUse[ps.code] = (shiftUse[ps.code] || 0) + 1;
+        if (poolOf(a) === 'sales') prefSales.push(ps.code);
+        return false;
+      });
+      if (!list.length) return;
       if (g === 'stock') {
         var earliest = grid.reduce(function(a, b){ return b.startMin < a.startMin ? b : a; });
         var nS = list.length;
@@ -5812,7 +5941,7 @@ function renderMonthlyPlanning() {
       var wEvening = avgCurve(mid, dh.close) * CLOSING_BIAS;
       var wSum = (wMorning + wEvening) || 1;
       var eveningShare = wEvening / wSum;
-      var nTotal = list.length;
+      var nTotal = list.length + prefSales.length;
       var frozen = d.past;
       var lateRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
       var minOpen  = frozen ? 1 : ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1);
@@ -5825,6 +5954,7 @@ function renderMonthlyPlanning() {
       byStart.forEach(function(s, k) { isLate[s.code] = byStart.length > 1 && k >= halfAt; });
       var nLate = byStart.length > 1 ? Math.max(0, Math.min(nTotal, Math.round(nTotal * lateRatio))) : 0;
       var left = { early: nTotal - nLate, late: nLate };
+      prefSales.forEach(function(c) { left[isLate[c] ? 'late' : 'early']--; });
       // Hourly traffic of the day, in 15 min slots
       var hm = dayMinutes(d.ds), slots = [];
       for (var tm = hm.open; tm < hm.close; tm += 15) {
@@ -5847,11 +5977,13 @@ function renderMonthlyPlanning() {
         return g;
       }
       function use(s) { return shiftUse[s.code] || 0; }
+      // Traffic first, then the shifts the store already uses (history and this month): a few shifts, not all of them
       function best(cands) {
-        var b = null, bg = -1;
+        var b = null, bs = -1, top = 1;
+        cands.forEach(function(s) { top = Math.max(top, use(s)); });
         cands.forEach(function(s) {
-          var g = gain(s);
-          if (!b || g > bg + 1e-9 || (Math.abs(g - bg) <= 1e-9 && use(s) < use(b))) { b = s; bg = g; }
+          var sc = gain(s) * (1 + 0.25 * habitOf(s.code) + 0.15 * use(s) / top);
+          if (!b || sc > bs + 1e-9) { b = s; bs = sc; }
         });
         return b;
       }
@@ -5902,74 +6034,61 @@ function renderMonthlyPlanning() {
         if (ok) plan[a.id] = ok.code;
       });
     });
+    settleWeekHours(d, plan);
     shiftPlanByDay[d.ds] = plan;
   });
   // Engine 2: balance sellers between corners
   var cornerAssign = {};
   var fairnessOn = storeCorners.length > 1 && storeSettings && storeSettings.fairness_rotation;
+  // Corner weights from the traffic of each corner. Without corner traffic, everyone stays in the usual corner.
+  var refYf = monthlyRef.getFullYear(), refMf = monthlyRef.getMonth() + 1;
+  var wF = {}, totWf = 0;
+  storeCorners.forEach(function(c) {
+    wF[c.id] = cornerTrafficValue(c.id, refYf, refMf);
+    totWf += wF[c.id];
+  });
+  if (!(totWf > 0)) fairnessOn = false;
   if (fairnessOn) {
-    // Fairness mode: everyone rotates between corners
-    var refYf = monthlyRef.getFullYear(), refMf = monthlyRef.getMonth() + 1;
-    var wF = {};
-    storeCorners.forEach(function(c) {
-      var t = cornerTrafficMonthly[c.id + '|' + refYf + '|' + refMf];
-      wF[c.id] = t ? (t.last_year || t.n_2 || 0) : 0;
-    });
-    var totWf = 0; storeCorners.forEach(function(c){ totWf += wF[c.id]; });
+    // Fairness mode: everyone rotates between corners, counted on the final corner of each day
     var fairCount = {};
     agents.forEach(function(a){ fairCount[a.id] = {}; storeCorners.forEach(function(c){ fairCount[a.id][c.id] = 0; }); });
-    var cornersByW = storeCorners.slice().sort(function(x,y){ return wF[x.id] - wF[y.id]; });
     monthDays.forEach(function(d) {
       if (d.closure) return;
       var present = agents.filter(function(a) {
         return poolOf(a) === 'sales' && assignedMap[d.ds].indexOf(a.id) !== -1;
       });
       if (!present.length) return;
-      var n = present.length;
-      var need = {};
-      var assignedCount = 0;
-      storeCorners.forEach(function(c) {
-        need[c.id] = totWf > 0 ? Math.max((wF[c.id] > 0 ? 1 : 0), Math.round(n * wF[c.id] / totWf)) : 0;
-        assignedCount += need[c.id];
-      });
-      var big = cornersByW[cornersByW.length - 1];
-      if (big) need[big.id] += (n - assignedCount);
-      if (need[big.id] < 0) need[big.id] = 0;
-      var placedToday = {};
-      cornersByW.forEach(function(c) {
-        var slots = need[c.id];
-        if (slots <= 0) return;
-        var cand = present.filter(function(a){ return !placedToday[a.id]; })
-          .sort(function(x, y) {
-            var d1 = fairCount[x.id][c.id] - fairCount[y.id][c.id];
-            if (d1 !== 0) return d1;
-            return x.id < y.id ? -1 : 1;
-          });
-        for (var i = 0; i < slots && i < cand.length; i++) {
-          var a = cand[i];
-          placedToday[a.id] = true;
-          fairCount[a.id][c.id]++;
-          (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = c.id;
-        }
-      });
-      present.forEach(function(a) {
-        if (!placedToday[a.id] && big) {
-          fairCount[a.id][big.id]++;
-          (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = big.id;
-        }
-      });
+      var n = present.length, need = {}, placedToday = {};
+      // Seats of each corner from its traffic share; rounding goes to the largest remainders
+      var share = storeCorners.map(function(c) { var q = n * wF[c.id] / totWf; need[c.id] = Math.floor(q); return { c: c, r: q - Math.floor(q) }; });
+      var given = storeCorners.reduce(function(sum, c) { return sum + need[c.id]; }, 0);
+      share.sort(function(x, y) { return (y.r - x.r) || (wF[y.c.id] - wF[x.c.id]); })
+        .forEach(function(e) { if (given < n) { need[e.c.id]++; given++; } });
+      function put(a, cid) {
+        placedToday[a.id] = true; need[cid] = (need[cid] || 0) - 1;
+        if (fairCount[a.id][cid] != null) fairCount[a.id][cid]++;
+        (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = cid;
+      }
+      // Manual corners first: they count in their real corner
       present.forEach(function(a) {
         var ov = (cornerOverrides[a.id] || {})[d.ds];
-        if (ov) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = ov;
+        if (ov) put(a, ov);
+        else if ((agentPrefs[a.id] || {}).rotates === false && a.home_corner_id) put(a, a.home_corner_id);
       });
+      storeCorners.slice().sort(function(x, y) { return (wF[y.id] - wF[x.id]) || (x.id < y.id ? -1 : 1); }).forEach(function(c) {
+        var cand = present.filter(function(a) { return !placedToday[a.id]; }).sort(function(x, y) {
+          return (fairCount[x.id][c.id] - fairCount[y.id][c.id]) || (x.id < y.id ? -1 : 1);
+        });
+        cand.slice(0, Math.max(0, need[c.id])).forEach(function(a) { put(a, c.id); });
+      });
+      present.forEach(function(a) { if (!placedToday[a.id] && a.home_corner_id) put(a, a.home_corner_id); });
     });
   }
   if (!fairnessOn && storeCorners.length > 1) {
     var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
     var cornerWeight = {};
     storeCorners.forEach(function(c) {
-      var t = cornerTrafficMonthly[c.id + '|' + refY + '|' + refM];
-      cornerWeight[c.id] = t ? (t.last_year || t.n_2 || 0) : 0;
+      cornerWeight[c.id] = cornerTrafficValue(c.id, refY, refM);
     });
     var totW = 0; storeCorners.forEach(function(c){ totW += cornerWeight[c.id]; });
     // Placement groups of the day
@@ -6115,7 +6234,10 @@ function renderMonthlyPlanning() {
       if (ov) return { code: ov };
       var day = monthDays.find(function(d) { return d.ds === ds; });
       if (!day) return shownRes(a, ds);
-      if (agentOnLeave(a.id, ds)) return { code: 'A', special: 'leave' };
+      var ltE = agentOnLeave(a.id, ds);
+      if (ltE === 'out') return { code: 'OUT', special: 'out' };
+      if (ltE === 'off_request') return { code: 'OFF', special: 'off' };
+      if (ltE) return { code: 'A', special: 'leave' };
       var status = (availability[a.id] || {})[ds];
       if (status === 'absent') return { code: 'A', special: 'leave' };
       if (isFixedTimed(a)) return fixedWorksOn(a, day) ? { code: 'PT' } : { code: 'OFF', special: 'off' };
@@ -6258,7 +6380,10 @@ function renderMonthlyPlanning() {
       if (ov === 'A')   return { code: 'A',   special: 'leave' };
       return automatic.corner ? { code: ov, corner: automatic.corner } : { code: ov };
     }
-    if (agentOnLeave(agent.id, day.ds)) return { code: 'A', cls: 'sh-cp', special: 'leave' };
+    var lt = agentOnLeave(agent.id, day.ds);
+    if (lt === 'out') return { code: 'OUT', cls: 'sh-out', special: 'out' };
+    if (lt === 'off_request') return { code: 'OFF', cls: 'sh-off', special: 'off' };
+    if (lt) return { code: 'A', cls: 'sh-cp', special: 'leave' };
     var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
     if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
     if (isFixedTimed(agent)) {
@@ -6433,8 +6558,7 @@ function renderMonthlyPlanning() {
   if (storeCorners.length > 1) {
     var refYb = monthlyRef.getFullYear(), refMb = monthlyRef.getMonth() + 1;
     function cWeight(cid){
-      var t = cornerTrafficMonthly[cid + '|' + refYb + '|' + refMb];
-      return t ? (t.last_year || t.n_2 || 0) : 0;
+      return cornerTrafficValue(cid, refYb, refMb);
     }
     var viewCorner = currentCornerView
       ? storeCorners.filter(function(c){ return c.id === currentCornerView; })[0] : null;
@@ -6545,11 +6669,51 @@ function renderMonthlyPlanning() {
   });
   html2 += '</tbody></table></div>';
   container.innerHTML = html;
-  var prevCoverage = document.querySelector('.coverage-card');
+  var prevCoverage = document.querySelector('.coverage-card:not(.ca-card)');
   var coverageOpen = prevCoverage && prevCoverage.open;
-  setPlanCoverage('<details class="card coverage-card"' + (coverageOpen ? ' open' : '') + '>' + html2 + '</details>');
+  var prevCa = document.querySelector('.ca-card');
+  setPlanCoverage('<details class="card coverage-card"' + (coverageOpen ? ' open' : '') + '>' + html2 + '</details>' +
+    cornerAllocHtml(agentRows, prevCa && prevCa.open));
   bindPlanningScroll();
   attachCrossHighlight();
+}
+// Corner allocation: who worked in which corner and when, read from the final planning of the month
+var cornerAllocDetail = {};
+function cornerAllocHtml(agentRows, open) {
+  if (storeCorners.length <= 1) return '';
+  var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
+  function cw(cid) { return cornerTrafficValue(cid, refY, refM); }
+  var corners = storeCorners.slice().sort(function(a, b) { return cw(b.id) - cw(a.id); });
+  var codeOf = {}; storeCorners.forEach(function(c) { codeOf[c.id] = c.code; });
+  cornerAllocDetail = {};
+  var body = '';
+  agents.filter(function(a) { return poolOf(a) === 'sales'; }).forEach(function(a) {
+    var per = {}, tot = 0;
+    (agentRows[a.id] || []).forEach(function(rc) {
+      var r = rc.res;
+      if (!r || r.special || !r.code || r.code === 'OFF' || r.code === 'A') return;
+      var cc = r.corner || codeOf[a.home_corner_id];
+      if (!cc) return;
+      (per[cc] = per[cc] || []).push(rc.d.ds.slice(8, 10) + '-' + rc.d.ds.slice(5, 7) + ' ' + r.code);
+      tot++;
+    });
+    var name = ((a.first_name || '') + ' ' + (a.last_name || '')).trim();
+    cornerAllocDetail[a.id] = { name: name, per: per };
+    body += '<tr><td class="ca-name">' + esc(name) + '</td>' + corners.map(function(c) {
+      var n = (per[c.code] || []).length;
+      return '<td class="ca-n">' + (n ? '<button type="button" class="ca-btn" onclick="showCornerAlloc(\'' + a.id + '\',\'' + esc(c.code) + '\')">' + n + '</button>' : '<span class="sh-none">0</span>') + '</td>';
+    }).join('') + '<td class="ca-n ca-tot">' + tot + '</td></tr>';
+  });
+  return '<details class="card coverage-card ca-card"' + (open ? ' open' : '') + '><summary><span class="coverage-expander" aria-hidden="true"></span><span>' + t('Corner allocation') + '</span></summary>' +
+    '<div class="ca-wrap"><table class="ca-table"><thead><tr><th class="ca-name">' + t('Client advisor') + '</th>' +
+    corners.map(function(c) { return '<th class="ca-n" data-no-i18n>' + esc(c.code) + '</th>'; }).join('') + '<th class="ca-n">' + t('Total') + '</th></tr></thead><tbody>' +
+    body + '</tbody></table></div><div class="ca-detail" id="ca-detail"></div></details>';
+}
+function showCornerAlloc(agentId, code) {
+  var box = document.getElementById('ca-detail'), d = cornerAllocDetail[agentId];
+  if (!box || !d) return;
+  var list = (d.per[code] || []);
+  box.innerHTML = '<b>' + esc(d.name) + ' - ' + esc(code) + '</b><span>' + list.map(esc).join(', ') + '</span>';
 }
 function retailAvatarColor(name) { return '#EAF0F8'; }
 function retailInitials(f, l) {
@@ -6676,6 +6840,11 @@ function openAgentEditor(agentId) {
   }
   var p = agentPrefs[agentId] || {};
   renderDayChips(p.avoid_days || [], 'ae-avoid');
+  document.getElementById('ae-rotates').checked = p.rotates !== false;
+  var prefGrid = RETAIL_SHIFTS[(RETAIL_STATUS[(a.status || 'SA').toUpperCase()] || RETAIL_STATUS.SA).grid] || [];
+  document.getElementById('ae-pref-shift').innerHTML = '<option value="">- none -</option>' + prefGrid.map(function(s) {
+    return '<option data-no-i18n value="' + esc(s.code) + '"' + (p.preferred_shift === s.code ? ' selected' : '') + '>' + esc(s.code + ' - ' + minToLabel(s.startMin) + ' - ' + minToLabel(s.endMin)) + '</option>';
+  }).join('');
   var fx = p.fixed_schedule || null;
   var isVolant = !(fx && fx.enabled) && (a.work_pct || 100) < 100;
   renderDayChips((fx && fx.days) || [], 'ae-fixed-days');
@@ -6731,7 +6900,10 @@ async function saveAgentEditor() {
     upd.home_corner_id = document.getElementById('ae-home-corner').value || null;
     upd.corner_skills = readSkillChips();
   }
-  var prefRow = { agent_id: agentId, avoid_days: readDayChips('ae-avoid'), fixed_schedule: fixedSchedule };
+  var prevPref = agentPrefs[agentId] || {};
+  var prefRow = { agent_id: agentId, avoid_days: readDayChips('ae-avoid'), fixed_schedule: fixedSchedule,
+    preferred_shift: document.getElementById('ae-pref-shift').value || null,
+    rotates: storeCorners.length > 1 ? document.getElementById('ae-rotates').checked : prevPref.rotates !== false };
   var res = await sb.from('retail_agents').update(upd).eq('id', agentId);
   if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return false; }
   var a = agents.find(function(x){ return x.id === agentId; });
@@ -7097,6 +7269,7 @@ function exportMonthly() {
     if (code === 'OFF') return 'sh-off';
     if (code === 'A')   return 'sh-cp';
     if (code === 'PT')  return 'sh-pt';
+    if (code === 'OUT') return 'sh-off';
     if (code === 'D')   return 'sh-dsun';
     var cls = shiftCls(code);
     var tones = cls.split(' ').filter(function(c){ return c !== 'sh-stock'; });
@@ -7183,7 +7356,7 @@ function exportMonthly() {
   var xlGroups = [];
   if (storeCorners.length > 1) {
     var refYx = monthlyRef.getFullYear(), refMx = monthlyRef.getMonth() + 1;
-    var cWx = function(cid){ var t=cornerTrafficMonthly[cid+'|'+refYx+'|'+refMx]; return t?(t.last_year||t.n_2||0):0; };
+    var cWx = function(cid){ return cornerTrafficValue(cid, refYx, refMx); };
     var viewC = currentCornerView ? cornerCodeById(currentCornerView) : null;
     function reinf(a){
       if (!viewC) return false;
@@ -7614,7 +7787,9 @@ function renderMonthlyCalendar() {
   var LEAVE_STYLE = {
     leave:   { bg:'#fef9c3', text:'#854d0e', icon:'\uD83C\uDFDD\uFE0F', label:'Leave' },
     sick:    { bg:'#ffedd5', text:'#9a3412', icon:'\uD83D\uDE91', label:'Sick' },
-    absence: { bg:'#fee2e2', text:'#b91c1c', icon:'\u26D4', label:'Absence' }
+    absence: { bg:'#fee2e2', text:'#b91c1c', icon:'\u26D4', label:'Absence' },
+    out:     { bg:'#E8E9EB', text:'#4C586A', icon:'\uD83C\uDF93', label:'Out of store' },
+    off_request: { bg:'#E8E9EB', text:'#4C586A', icon:'\uD83D\uDCC5', label:'Day off request' }
   };
   var monthStart = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth(), 1));
   var monthEnd   = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 0));
@@ -7668,7 +7843,7 @@ function renderMonthlyCalendar() {
   grid += '</div>';
   var list = '<div class="cal-agent-list"><h4>Declare absence</h4>';
   if (!agents.length) list += '<p style="font-size:12px;color:#9ca3af;">No client advisors.</p>';
-  agents.forEach(function(a){
+  agents.slice().sort(function(x, y) { return (x.first_name + ' ' + x.last_name).localeCompare(y.first_name + ' ' + y.last_name); }).forEach(function(a){
     list += '<div class="cal-agent-item" onclick="showLeavePicker(\''+a.id+'\',event)">'+
       esc(a.first_name+' '+a.last_name)+'</div>';
   });
@@ -7685,6 +7860,7 @@ function showLeavePicker(agentId, event) {
   var firstOfMonth = toDateStr(new Date(calMonth.getFullYear(), calMonth.getMonth(), 1));
   document.getElementById('leave-start').value = firstOfMonth;
   document.getElementById('leave-end').value = firstOfMonth;
+  document.getElementById('leave-type').value = 'absence';
   var p = document.getElementById('leave-popup');
   p.style.display = 'block';
   p.style.left = Math.min(event.clientX+10, window.innerWidth-280) + 'px';
@@ -7696,7 +7872,7 @@ async function saveLeave() {
   var end   = document.getElementById('leave-end').value;
   if (!start || !end) { showToast('Pick both dates', 'error'); return; }
   if (end < start) { showToast('End date is before start date', 'error'); return; }
-  var row = { store_id: currentStoreId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: 'absence' };
+  var row = { store_id: currentStoreId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: document.getElementById('leave-type').value || 'absence' };
   var { data, error } = await sb.from('retail_agent_leave').insert([row]).select();
   if (error) { showToast('Failed to save: '+error.message, 'error'); return; }
   if (data && data[0]) agentLeaves.push(data[0]);
@@ -8179,11 +8355,20 @@ init();
           <label>Skills</label>
           <div class="day-chips" id="ae-skills"></div>
         </div>
+        <div class="set-rule" style="margin-top:12px;">
+          <span class="set-rule-lbl-wrap"><span class="set-rule-lbl">Rotates between corners</span>
+            <span class="set-rule-hint">Only when Fairness rotation is on. Off: the advisor stays in the home corner</span></span>
+          <span class="set-rule-field"><label class="toggle"><input type="checkbox" id="ae-rotates"><span class="toggle-slider"></span></label></span>
+        </div>
       </div>
       <div class="modal-sec">Preferences</div>
       <div class="fld" style="margin-top:12px;">
         <label>Days I prefer to be off (optional)</label>
         <div class="day-chips" id="ae-avoid"></div>
+      </div>
+      <div class="fld" style="margin-top:12px;">
+        <label>Preferred shift (optional)</label>
+        <select id="ae-pref-shift"></select>
       </div>
       <div id="ae-fixed-sec" style="display:none;">
         <div class="modal-sec">Part-time configuration</div>
