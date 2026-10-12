@@ -1,5 +1,5 @@
 // Hard-rule check: generates October, November and December 2026 in a row, then lists every breach with its dates.
-// Run it with the browser clock fixed at 2026-10-31 12:00 (see tests/README.md). Limits are read from the settings.
+// Run it with run_bench.py (browser clock fixed at 2026-10-31 12:00). Limits are read from the settings.
 // Optional: window.OFFICIAL = official_nov2026_anonymized.json gives the November match (K3 day, K4 exact cell).
 (() => {
   var clock = toDateStr(new Date());
@@ -16,7 +16,7 @@
   function res(a, ds) { return (all[ds] || {})[a.id]; }
   function busy(a, ds) { var r = res(a, ds); return isOnsite(a, ds, r) || (r && r.code === 'OUT') || agentOnLeave(a.id, ds) === 'out'; }
   function monday(ds) { var d = new Date(ds + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toDateStr(d); }
-  var out = { clock: clock, limits: lim, weekDays: {}, runOver: [], weekOver: [], twoWeeksOver: [], restShort: [], hoursOver: [], nov: {} };
+  var out = { clock: clock, limits: lim, weekDays: {}, runOver: [], weekOver: [], twoWeeksOver: [], restShort: [], restUnknown: 0, fixedToFix: [], hoursOver: [], nov: {} };
   agents.forEach(function(a) {
     var name = (a.first_name + ' ' + a.last_name).trim(), run = 0, runStart = '', wk = {}, hk = {}, prev = null;
     days.forEach(function(ds) {
@@ -32,7 +32,12 @@
         if (prev && (new Date(ds) - new Date(prev.ds)) / 864e5 === 1 && 1440 + wh.start - prev.end < gapMin) out.restShort.push(name + ' ' + ds);
         prev = { ds: ds, end: wh.end };
       } else prev = null;
+      // Day next to an OUT day: OUT has no known hours, so the daily rest cannot be checked (unknown, not valid)
+      if (wh && [-1, 1].some(function(k) { var x = new Date(ds + 'T12:00:00'); x.setDate(x.getDate() + k); var xs = toDateStr(x); return !isOnsite(a, xs, res(a, xs)) && busy(a, xs); })) out.restUnknown++;
     });
+    // A fixed contract above Labor rules is kept as the manager set it: listed as to fix, never as compliant
+    var fxIssue = fixedScheduleIssue((agentPrefs[a.id] || {}).fixed_schedule, retailStatusOf(a));
+    if (fxIssue) out.fixedToFix.push(name + ': ' + fxIssue);
     var ks = Object.keys(wk).sort();
     ks.forEach(function(k, i) {
       if (k < from || k > to) return;
@@ -60,6 +65,21 @@
     storeCorners.forEach(function(q) { var z = cor[q.code]; if (!z) x.cornerEmpty.push(ds + ' ' + q.code); else { if (!z.o) x.cornerNoOpen.push(ds + ' ' + q.code); if (!z.c) x.cornerNoClose.push(ds + ' ' + q.code); } });
   });
   out.nov = x;
+  // November intraday: every corner keeps someone on the floor each quarter hour of the opening (breaks and lunch taken in turn)
+  gen(2026, 10, O); currentCornerView = null; x.cornerEmptyQuarter = [];
+  Object.keys(N).sort().forEach(function(ds) {
+    if (getDayClosureType(ds)) return;
+    renderIntraday(ds); if (!intradayExport) return;
+    var hm = dayMinutes(ds), groups = {};
+    intradayExport.rows.forEach(function(r) { if (r.groupIsCorner) (groups[r.group] = groups[r.group] || []).push(r); });
+    Object.keys(groups).forEach(function(g) {
+      for (var t = hm.open; t < hm.close; t += 15) {
+        var h = t / 60 + 1e-6;
+        var on = groups[g].some(function(r) { return h >= r.startH && h < r.endH && !r.blocks.some(function(b) { return /^(lun|brk)/.test(b.type) && h >= b.start && h < b.start + b.dur; }); });
+        if (!on) x.cornerEmptyQuarter.push(ds + ' ' + g + ' ' + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'));
+      }
+    });
+  });
   // November match with the official planning
   if (window.OFFICIAL) {
     var tot = 0, day = 0, cell = 0;
