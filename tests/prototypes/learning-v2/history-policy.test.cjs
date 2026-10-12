@@ -1,0 +1,23 @@
+const assert=require('node:assert/strict');
+const {selectLearningHistory:select}=require('./history-policy.js');
+const {buildLearningModel}=require('./learning.js');
+const a={id:'a',storeId:'store',pool:'sales',joined:'2026-01-01',contextVersion:'v1',catalogue:['O','C']};
+const row={agentId:'a',storeId:'store',pool:'sales',date:'2026-10-05',state:'work',shift:'O',source:'official',validated:true,contextVersion:'v1'};
+const checks=[];
+function test(name,fn){fn();checks.push(name);}
+test('validated previous month selected',()=>assert.equal(select([row],[a],'2026-11-01').records.length,1));
+test('future and target month excluded',()=>assert.equal(select([{...row,date:'2026-11-02'}],[a],'2026-11-01').records.length,0));
+test('retrospective cutoff prevents hindsight',()=>assert.equal(select([row],[a],'2026-09-01').records.length,0));
+test('generated snapshot cannot train',()=>assert.equal(select([{...row,source:'generated'}],[a],'2026-11-01').records.length,0));
+test('departed agent kept in archive but not target model',()=>{const archive=[{...row,agentId:'bob'}];const copy=JSON.stringify(archive);assert.equal(select(archive,[a],'2026-11-01').records.length,0);assert.equal(JSON.stringify(archive),copy);});
+test('same name new identity does not inherit',()=>assert.equal(select([row],[{...a,id:'new-id'}],'2026-11-01').records.length,0));
+test('transfer or changed contract invalidates old context',()=>assert.equal(select([row],[{...a,contextVersion:'v2'}],'2026-11-01').records.length,0));
+test('record before hiring excluded',()=>assert.equal(select([row],[{...a,joined:'2026-10-10'}],'2026-11-01').records.length,0));
+test('closed or exceptional requested OFF not habitual',()=>{for(const k of ['closed','requestedOff'])assert.equal(select([{...row,state:'off',[k]:true}],[a],'2026-11-01').records.length,0);});
+test('absence and OUT are not OFF preference',()=>{for(const state of ['leave','out'])assert.equal(select([{...row,state}],[a],'2026-11-01').records.length,0);});
+test('old or removed catalogue shift excluded',()=>assert.equal(select([{...row,shift:'Z'}],[a],'2026-11-01').records.length,0));
+test('duplicate reference rejected',()=>assert.throws(()=>select([row,row],[a],'2026-11-01'),/Duplicate/));
+test('two vs six months selection',()=>{const r={...row,date:'2026-06-01'};assert.equal(select([r],[a],'2026-11-01',{months:2}).records.length,0);assert.equal(select([r],[a],'2026-11-01',{months:6}).records.length,1);});
+test('recent evidence weighs more',()=>{const r=select([row,{...row,date:'2026-06-01'}],[a],'2026-11-01');assert(r.records[0].weight>r.records[1].weight);assert(r.effectiveSampleSize>1 && r.effectiveSampleSize<2);});
+test('both OFF and shift model survive exclusions',()=>{const r=select([row,{...row,date:'2026-10-12',state:'off',shift:null},{...row,date:'2026-11-02'}],[a],'2026-11-01');const m=buildLearningModel(r.records,'2026-11-01');assert.equal(m.observations,2);assert(m.presence('a','sales',1)>0 && m.presence('a','sales',1)<1);assert(m.shift('a','sales',1,'O',2)>m.shift('a','sales',1,'C',2));});
+console.log(JSON.stringify({passed:checks.length,checks},null,2));
