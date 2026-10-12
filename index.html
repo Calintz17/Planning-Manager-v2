@@ -1,157 +1,188 @@
+Roman C <roman.attal@gmail.com>
+	
+10:56 (il y a 0 minute)
+	
+	
+À moi
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CAST - CELINE Automated Scheduling Tool</title>
-<meta name="description" content="CAST builds the monthly and intraday planning of CELINE boutiques and Client Service centers from traffic, workload, people and local rules.">
+<meta name="description" content="CAST builds the planning of CELINE boutiques and Client Service centers from traffic, workload, people and local rules.">
 <style>
 :root {
   --font:Arial, Helvetica, sans-serif;
-  --bg-app:#F5F7FA; --bg-base:#FFFFFF; --bg-base-2:#FAFBFD; --bg-base-3:#EDF2F8;
-  --brand:#183C74; --brand-hover:#102F5E; --brand-on:#FFFFFF; --brand-soft:#EAF0FA;
-  --tx-1:#17283E; --tx-2:#52647B; --line:#DCE3EC; --line-2:#BDC9D9;
+  --night:#0C1A33; --night-2:#112447; --brand:#183C74; --brand-hover:#102F5E;
+  --mist:#C9D5E6; --mist-2:#8FA3C0; --paper:#F3F5F8; --white:#FFFFFF;
+  --tx-1:#17283E; --tx-2:#52647B; --line:#DCE3EC; --line-dark:#24395E;
   --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5; --warn-tx:#61470B;
   --info-soft:#DBEAFE; --info-tx:#1E407A; --dang-soft:#F6DDE7; --dang-tx:#82334E;
   --off-a:#E9EDF2; --off-b:#F4F6F9;
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s16:64px; --s24:96px;
-  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-pill:999px;
-  --sh-2:0 8px 30px #192D491C;
-  --max:1120px;
+  --veil:rgba(12,26,51,.62); --veil-strong:rgba(12,26,51,.78);
+  --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px; --s16:64px; --s24:96px; --s32:128px;
+  --r-sm:6px; --r-md:8px; --r-lg:14px; --r-pill:999px;
+  --max:1200px;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html { scroll-behavior:smooth; }
-body { font-family:var(--font); font-size:15px; line-height:1.55; color:var(--tx-1); background:var(--bg-app); -webkit-font-smoothing:antialiased; }
+body { font-family:var(--font); font-size:17px; line-height:1.6; color:var(--tx-1); background:var(--night); -webkit-font-smoothing:antialiased; }
 a { color:inherit; text-decoration:none; }
-img { display:block; max-width:100%; }
+img, video { display:block; max-width:100%; }
 i { font-style:normal; }
-.wrap { max-width:var(--max); margin:0 auto; padding:0 var(--s6); }
-
-/* Top bar */
-.top { position:sticky; top:0; z-index:10; background:var(--bg-base); border-bottom:1px solid var(--line); }
-.top .wrap { display:flex; align-items:center; justify-content:space-between; height:64px; gap:var(--s4); }
-.brand { display:flex; align-items:center; gap:var(--s3); }
-.brand img { height:28px; width:auto; }
-.brand-txt { display:none; font-size:24px; font-weight:700; font-style:italic; color:var(--brand); letter-spacing:-.02em; }
-.brand-txt.is-on { display:block; }
-.brand-sub { font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--tx-2); line-height:1.3; border-left:1px solid var(--line); padding-left:var(--s3); }
-.top-nav { display:flex; align-items:center; gap:var(--s2); }
-.top-nav a.lnk { font-size:13px; color:var(--tx-2); padding:var(--s2) var(--s3); border-radius:var(--r-sm); }
-.top-nav a.lnk:hover { background:var(--bg-base-3); color:var(--tx-1); }
+.wrap { max-width:var(--max); margin:0 auto; padding:0 var(--s8); }
+:focus-visible { outline:2px solid var(--mist); outline-offset:3px; border-radius:var(--r-sm); }
 
 /* Buttons */
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--s2); height:44px; padding:0 var(--s5); border-radius:var(--r-md); font-size:14px; font-weight:700; border:1px solid transparent; transition:background .15s, border-color .15s, color .15s; white-space:nowrap; }
-.btn svg { width:16px; height:16px; }
-.btn-primary { background:var(--brand); color:var(--brand-on); }
-.btn-primary:hover { background:var(--brand-hover); }
-.btn-ghost { background:var(--bg-base); color:var(--brand); border-color:var(--line-2); }
-.btn-ghost:hover { border-color:var(--brand); }
-.btn-sm { height:36px; padding:0 var(--s4); font-size:13px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; height:52px; padding:0 var(--s8); border-radius:var(--r-pill); font-size:15px; font-weight:700; border:1px solid transparent; transition:background .2s, color .2s, border-color .2s; white-space:nowrap; }
+.btn-light { background:var(--white); color:var(--night); }
+.btn-light:hover { background:var(--mist); }
+.btn-line { color:var(--white); border-color:rgba(255,255,255,.55); }
+.btn-line:hover { border-color:var(--white); background:rgba(255,255,255,.08); }
+.btn-navy { background:var(--brand); color:var(--white); }
+.btn-navy:hover { background:var(--brand-hover); }
+
+/* Top bar, over the video */
+.top { position:absolute; inset:0 0 auto 0; z-index:5; }
+.top .wrap { display:flex; align-items:center; justify-content:space-between; height:88px; }
+.brand { display:flex; align-items:center; gap:var(--s4); color:var(--white); }
+.brand img { height:30px; width:auto; filter:brightness(0) invert(1); }
+.brand-txt { display:none; font-size:28px; font-weight:700; font-style:italic; letter-spacing:-.03em; }
+.brand-txt.is-on { display:block; }
+.brand-sub { font-size:12px; line-height:1.35; color:var(--mist); border-left:1px solid rgba(255,255,255,.3); padding-left:var(--s4); }
+.top-nav { display:flex; align-items:center; gap:var(--s6); font-size:14px; color:var(--mist); }
+.top-nav a:hover { color:var(--white); }
+.top-nav .btn { height:40px; padding:0 var(--s5); font-size:14px; }
 
 /* Hero */
-.hero { padding:var(--s24) 0 var(--s16); }
-.hero .wrap { display:grid; grid-template-columns:1fr 1.1fr; gap:var(--s16); align-items:center; }
-.eyebrow { display:inline-flex; align-items:center; gap:var(--s2); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--brand); background:var(--brand-soft); padding:6px 12px; border-radius:var(--r-pill); }
-h1 { font-size:46px; line-height:1.1; letter-spacing:-.02em; margin:var(--s5) 0 var(--s5); font-weight:700; }
-h1 em { font-style:normal; color:var(--brand); }
-.lead { font-size:17px; color:var(--tx-2); max-width:500px; }
-.hero-cta { display:flex; gap:var(--s3); margin-top:var(--s8); flex-wrap:wrap; }
-.hero-note { margin-top:var(--s4); font-size:12.5px; color:var(--tx-2); }
+.hero { position:relative; min-height:100vh; min-height:100svh; display:flex; align-items:flex-end; color:var(--white); overflow:hidden; background:var(--night); }
+.hero-media, .hero-veil { position:absolute; inset:0; }
+.hero-media video, .hero-media img { width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.05); }
+.hero-veil { background:var(--veil); }
+.hero-veil::after { content:""; position:absolute; inset:0; background:var(--brand); mix-blend-mode:color; opacity:.55; }
+.hero .wrap { position:relative; z-index:2; width:100%; padding-bottom:var(--s16); }
+.hero h1 { font-size:clamp(44px, 7.4vw, 104px); line-height:.98; letter-spacing:-.035em; font-weight:700; max-width:13ch; }
+.hero-row { display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s10); margin-top:var(--s8); flex-wrap:wrap; }
+.hero p { font-size:19px; line-height:1.55; color:var(--mist); max-width:34em; }
+.hero-cta { display:flex; gap:var(--s3); flex-wrap:wrap; }
 
-/* Planning mock */
-.mock { background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--sh-2); overflow:hidden; }
-.mock-head { display:flex; align-items:center; justify-content:space-between; padding:var(--s4) var(--s5); border-bottom:1px solid var(--line); }
-.mock-title { font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
-.mock-month { font-size:12.5px; color:var(--tx-2); }
-.mock-grid { padding:var(--s3) var(--s5) var(--s4); overflow:hidden; }
-.mrow { display:grid; grid-template-columns:92px repeat(10, 1fr); gap:5px; align-items:center; height:34px; }
-.mrow.hd { height:26px; }
-.mrow.hd span { font-size:10px; color:var(--tx-2); text-align:center; font-weight:700; }
-.mrow.hd span:first-child { text-align:left; letter-spacing:.06em; }
-.who { display:flex; align-items:center; gap:var(--s2); font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; }
-.av { width:22px; height:22px; min-width:22px; border-radius:var(--r-pill); color:var(--brand-on); font-size:9.5px; font-weight:700; display:flex; align-items:center; justify-content:center; }
-.sh { height:22px; border-radius:var(--r-sm); font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+/* Shift ribbon: the one moving element of the page */
+.ribbon { background:var(--night); border-top:1px solid var(--line-dark); border-bottom:1px solid var(--line-dark); overflow:hidden; padding:var(--s5) 0; }
+.ribbon-track { display:flex; gap:var(--s2); width:max-content; animation:slide 60s linear infinite; }
+.sh { height:30px; min-width:44px; padding:0 var(--s3); border-radius:var(--r-sm); font-size:13px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
 .o { background:var(--ok-soft); color:var(--ok-tx); }
 .m { background:var(--warn-soft); color:var(--warn-tx); }
 .c { background:var(--info-soft); color:var(--info-tx); }
-.f { background:repeating-linear-gradient(135deg, var(--off-a) 0 4px, var(--off-b) 4px 8px); color:var(--tx-2); font-weight:400; font-size:9.5px; }
 .a { background:var(--dang-soft); color:var(--dang-tx); }
-.mock-foot { display:flex; gap:var(--s5); flex-wrap:wrap; padding:var(--s3) var(--s5); background:var(--bg-base-2); border-top:1px solid var(--line); font-size:11.5px; color:var(--tx-2); }
-.mock-foot b { color:var(--tx-1); }
+.f { background:repeating-linear-gradient(135deg, var(--off-a) 0 4px, var(--off-b) 4px 8px); color:var(--tx-2); font-weight:400; }
+.ribbon .f { background:transparent; color:var(--mist-2); box-shadow:inset 0 0 0 1px var(--line-dark); }
+@keyframes slide { to { transform:translateX(-50%); } }
 
-/* Sections */
-section { padding:var(--s16) 0; }
-.sec-head { max-width:640px; margin-bottom:var(--s10); }
-.sec-label { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--brand); }
-h2 { font-size:32px; line-height:1.2; letter-spacing:-.01em; margin-top:var(--s3); }
-.sec-head p { margin-top:var(--s3); color:var(--tx-2); font-size:16px; }
+/* Statement */
+.statement { background:var(--night); color:var(--white); padding:var(--s32) 0 var(--s24); }
+.statement h2 { font-size:clamp(32px, 4.4vw, 60px); line-height:1.08; letter-spacing:-.025em; font-weight:700; max-width:18ch; }
+.statement-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s10); margin-top:var(--s16); border-top:1px solid var(--line-dark); padding-top:var(--s10); }
+.statement-grid h3 { font-size:20px; letter-spacing:-.01em; }
+.statement-grid p { margin-top:var(--s3); color:var(--mist); font-size:16px; }
 
-/* Module cards */
-.modules { display:grid; grid-template-columns:1fr 1fr; gap:var(--s6); }
-.mod { background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg); padding:var(--s8); display:flex; flex-direction:column; }
-.mod-top { display:flex; align-items:center; gap:var(--s3); }
-.mod-ic { width:44px; height:44px; border-radius:var(--r-md); background:var(--brand-soft); color:var(--brand); display:flex; align-items:center; justify-content:center; }
-.mod-ic svg { width:22px; height:22px; }
-.mod h3 { font-size:22px; }
-.mod-sub { font-size:12.5px; color:var(--tx-2); }
-.mod p.desc { margin:var(--s5) 0 var(--s4); color:var(--tx-2); }
-.mod ul { list-style:none; display:flex; flex-direction:column; gap:var(--s3); margin-bottom:var(--s8); }
-.mod li { display:flex; gap:var(--s3); font-size:14px; }
-.mod li svg { width:18px; height:18px; min-width:18px; color:var(--ok-tx); margin-top:2px; }
-.mod .btn { margin-top:auto; align-self:flex-start; }
+/* Module panels */
+.modules { background:var(--paper); padding:var(--s24) 0; }
+.modules-head { display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s8); margin-bottom:var(--s12); flex-wrap:wrap; }
+.modules-head h2 { font-size:clamp(30px, 3.6vw, 48px); line-height:1.1; letter-spacing:-.02em; max-width:16ch; }
+.modules-head p { color:var(--tx-2); max-width:30em; }
+.panel { display:grid; grid-template-columns:1.1fr 1fr; background:var(--white); border-radius:var(--r-lg); overflow:hidden; min-height:520px; }
+.panel + .panel { margin-top:var(--s6); }
+.panel.flip { grid-template-columns:1fr 1.1fr; }
+.panel.flip .duo { order:2; }
+.duo { position:relative; background:var(--brand); min-height:320px; overflow:hidden; }
+.duo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.08); mix-blend-mode:luminosity; opacity:.9; }
+.duo::after { content:""; position:absolute; inset:0; background:rgba(12,26,51,.28); }
+.duo-tag { position:absolute; left:var(--s6); bottom:var(--s6); z-index:2; display:flex; gap:var(--s2); }
+.panel-body { padding:var(--s16) var(--s12); display:flex; flex-direction:column; }
+.panel-for { font-size:14px; color:var(--tx-2); }
+.panel h3 { font-size:clamp(34px, 3.4vw, 46px); letter-spacing:-.03em; line-height:1.05; margin-top:var(--s3); }
+.panel .desc { margin-top:var(--s5); color:var(--tx-2); max-width:30em; }
+.panel ul { list-style:none; margin:var(--s8) 0 var(--s10); border-top:1px solid var(--line); }
+.panel li { padding:var(--s4) 0; border-bottom:1px solid var(--line); font-size:16px; }
+.panel .btn { margin-top:auto; align-self:flex-start; }
 
-/* Steps */
-.steps { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s6); counter-reset:step; }
-.step { background:var(--bg-base); border:1px solid var(--line); border-radius:var(--r-lg); padding:var(--s6); }
-.step-n { width:32px; height:32px; border-radius:var(--r-pill); background:var(--brand); color:var(--brand-on); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; }
-.step h4 { font-size:16px; margin:var(--s4) 0 var(--s2); }
-.step p { font-size:14px; color:var(--tx-2); }
+/* Product glimpse */
+.glimpse { background:var(--night-2); color:var(--white); padding:var(--s24) 0; overflow:hidden; }
+.glimpse .wrap { display:grid; grid-template-columns:.8fr 1.2fr; gap:var(--s16); align-items:center; }
+.glimpse h2 { font-size:clamp(30px, 3.6vw, 48px); line-height:1.1; letter-spacing:-.02em; }
+.glimpse p { margin-top:var(--s5); color:var(--mist); }
+.steps { list-style:none; margin-top:var(--s10); counter-reset:s; }
+.steps li { counter-increment:s; display:grid; grid-template-columns:40px 1fr; gap:var(--s4); padding:var(--s4) 0; border-top:1px solid var(--line-dark); font-size:16px; color:var(--mist); }
+.steps li::before { content:counter(s); font-weight:700; color:var(--white); }
+.steps b { color:var(--white); display:block; }
+.mock { background:var(--white); color:var(--tx-1); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.35); }
+.mock-head { display:flex; justify-content:space-between; align-items:center; padding:var(--s4) var(--s5); border-bottom:1px solid var(--line); font-size:13px; }
+.mock-head b { font-size:14px; }
+.mock-head span { color:var(--tx-2); }
+.mock-grid { padding:var(--s3) var(--s5) var(--s4); }
+.mrow { display:grid; grid-template-columns:110px repeat(10, 1fr); gap:5px; align-items:center; height:36px; }
+.mrow.hd { height:26px; font-size:11px; color:var(--tx-2); font-weight:700; text-align:center; }
+.mrow.hd span:first-child { text-align:left; }
+.mock .sh { height:24px; min-width:0; padding:0; font-size:11px; }
+.who { display:flex; align-items:center; gap:var(--s2); font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; }
+.av { width:24px; height:24px; min-width:24px; border-radius:var(--r-pill); color:var(--white); font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.mock-foot { padding:var(--s3) var(--s5); background:#FAFBFD; border-top:1px solid var(--line); font-size:12.5px; color:var(--tx-2); }
 
-/* Principles */
-.band { background:var(--bg-base); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-.principles { display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--s6); }
-.pr h4 { font-size:15px; margin:var(--s3) 0 var(--s2); }
-.pr p { font-size:13.5px; color:var(--tx-2); }
-.pr-ic { width:36px; height:36px; border-radius:var(--r-md); border:1px solid var(--line-2); color:var(--brand); display:flex; align-items:center; justify-content:center; }
-.pr-ic svg { width:18px; height:18px; }
+/* Reach */
+.reach { background:var(--paper); padding:var(--s24) 0; }
+.reach-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--s6); }
+.reach-item { border-top:2px solid var(--tx-1); padding-top:var(--s5); }
+.reach-item strong { display:block; font-size:clamp(40px, 5vw, 64px); line-height:1; letter-spacing:-.03em; }
+.reach-item span { display:block; margin-top:var(--s3); color:var(--tx-2); font-size:16px; }
+.cities { margin-top:var(--s16); font-size:clamp(22px, 3vw, 40px); line-height:1.3; letter-spacing:-.02em; color:var(--tx-2); }
+.cities b { color:var(--tx-1); font-weight:700; }
 
-/* Final call */
-.final { text-align:center; }
-.final h2 { margin:0 auto; max-width:640px; }
-.final p { color:var(--tx-2); margin:var(--s3) auto 0; max-width:520px; }
-.final .hero-cta { justify-content:center; }
-.langs-lbl { margin-top:var(--s8); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--tx-2); }
-.langs { display:flex; justify-content:center; gap:var(--s2); flex-wrap:wrap; margin-top:var(--s3); }
-.lang { font-size:12px; color:var(--tx-2); border:1px solid var(--line); background:var(--bg-base); border-radius:var(--r-pill); padding:4px 12px; }
+/* Final */
+.final { position:relative; color:var(--white); padding:var(--s32) 0; overflow:hidden; text-align:center; background:var(--brand); }
+.final .duo-bg { position:absolute; inset:0; }
+.final .duo-bg img { width:100%; height:100%; object-fit:cover; filter:grayscale(1); mix-blend-mode:luminosity; opacity:.35; }
+.final .wrap { position:relative; z-index:2; }
+.final h2 { font-size:clamp(36px, 5.4vw, 76px); line-height:1.02; letter-spacing:-.03em; max-width:14ch; margin:0 auto; }
+.final p { margin:var(--s5) auto 0; color:var(--mist); max-width:30em; }
+.final .hero-cta { justify-content:center; margin-top:var(--s10); }
 
-footer { border-top:1px solid var(--line); padding:var(--s6) 0; font-size:12.5px; color:var(--tx-2); }
+footer { background:var(--night); color:var(--mist-2); font-size:13px; padding:var(--s8) 0; }
 footer .wrap { display:flex; justify-content:space-between; gap:var(--s4); flex-wrap:wrap; }
+.credits { color:var(--mist-2); }
+.credits a { text-decoration:underline; }
 
 /* Responsive */
-@media (max-width: 960px) {
-  .hero { padding:var(--s16) 0 var(--s10); }
-  .hero .wrap { grid-template-columns:1fr; gap:var(--s10); }
-  h1 { font-size:38px; }
-  .modules, .steps { grid-template-columns:1fr; }
-  .principles { grid-template-columns:1fr 1fr; }
+@media (max-width: 980px) {
+  .panel, .panel.flip { grid-template-columns:1fr; min-height:0; }
+  .panel.flip .duo { order:0; }
+  .panel-body { padding:var(--s10) var(--s8); }
+  .glimpse .wrap { grid-template-columns:1fr; gap:var(--s12); }
+  .statement-grid, .reach-grid { grid-template-columns:1fr; gap:var(--s8); }
 }
-@media (max-width: 600px) {
-  .wrap { padding:0 var(--s4); }
-  .top-nav a.lnk, .brand-sub { display:none; }
-  h1 { font-size:31px; }
-  h2 { font-size:25px; }
-  .lead { font-size:16px; }
+@media (max-width: 640px) {
+  body { font-size:16px; }
+  .wrap { padding:0 var(--s5); }
+  .top .wrap { height:72px; }
+  .brand-sub, .top-nav a.lnk { display:none; }
+  .hero .wrap { padding-bottom:var(--s10); }
+  .hero p { font-size:17px; }
+  .hero-cta { width:100%; }
   .hero-cta .btn { flex:1 1 100%; }
-  .mod { padding:var(--s6); }
-  .principles { grid-template-columns:1fr; }
+  .statement { padding:var(--s16) 0; }
+  .modules, .glimpse, .reach { padding:var(--s16) 0; }
+  .panel-body { padding:var(--s8) var(--s6); }
+  .duo { min-height:240px; }
   .mock-grid { padding:var(--s3); }
   .mrow { grid-template-columns:28px repeat(7, 1fr); gap:4px; }
   .mrow > :nth-child(n+9) { display:none; }
-  .mrow.hd span:first-child { font-size:0; }
   .who span { display:none; }
-  .sh { font-size:9.5px; }
-  .f { font-size:0; }
-  section { padding:var(--s10) 0; }
+  .mrow.hd span:first-child { font-size:0; }
+  .final { padding:var(--s24) 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ribbon-track { animation:none; }
+  html { scroll-behavior:auto; }
 }
 </style>
 </head>
@@ -162,34 +193,117 @@ footer .wrap { display:flex; justify-content:space-between; gap:var(--s4); flex-
     <a class="brand" href="#">
       <img src="logo/CAST_LOGO_TEXTE.png" alt="CAST" onload="trimLogo(this)" onerror="this.style.display='none';this.nextElementSibling.classList.add('is-on')">
       <span class="brand-txt">CAST.</span>
-      <span class="brand-sub">CELINE AUTOMATED<br>SCHEDULING TOOL</span>
+      <span class="brand-sub">CELINE Automated<br>Scheduling Tool</span>
     </a>
     <nav class="top-nav">
       <a class="lnk" href="#modules">Modules</a>
       <a class="lnk" href="#how">How it works</a>
-      <a class="btn btn-primary btn-sm" href="#modules">Open CAST</a>
+      <a class="btn btn-light" href="#modules">Open CAST</a>
     </nav>
   </div>
 </header>
 
 <main>
   <section class="hero">
+    <div class="hero-media">
+      <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1920&q=70">
+        <source src="hero.mp4" type="video/mp4">
+        <source src="https://videos.pexels.com/video-files/8306450/8306450-uhd_2732_1440_25fps.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="hero-veil"></div>
     <div class="wrap">
-      <div>
-        <span class="eyebrow">Retail and Client Service</span>
-        <h1>Your planning,<br>built for you.<br><em>In seconds.</em></h1>
-        <p class="lead">CAST turns traffic, workload, your team and your local rules into a monthly and intraday planning. No more Excel schedules: you review, adjust and share.</p>
+      <h1>The right people, in the right place, every day.</h1>
+      <div class="hero-row">
+        <p>CAST plans CELINE boutiques and Client Service centers from traffic, workload, your team and your local rules. You review, adjust and share.</p>
         <div class="hero-cta">
-          <a class="btn btn-primary" href="retail.html">Open Retail <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a class="btn btn-ghost" href="CSC.html">Open Client Service <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn-light" href="retail.html">Open Retail</a>
+          <a class="btn btn-line" href="CSC.html">Open Client Service</a>
         </div>
-        <p class="hero-note">Pick your region and store when it opens: you only see your own team.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="ribbon" aria-hidden="true">
+    <div class="ribbon-track">
+      <i class="sh o">O</i><i class="sh c">C</i><i class="sh m">M</i><i class="sh f">OFF</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh a">A</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh m">M</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh m">M</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">O</i>
+      <i class="sh o">O</i><i class="sh c">C</i><i class="sh m">M</i><i class="sh f">OFF</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh a">A</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh m">M</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh m">M</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">O</i>
+    </div>
+  </div>
+
+  <section class="statement">
+    <div class="wrap">
+      <h2>Less time on spreadsheets. More time with clients.</h2>
+      <div class="statement-grid">
+        <div><h3>A month planned in seconds</h3><p>Days, shifts and corners are set from traffic and workload, within your hours and rest rules.</p></div>
+        <div><h3>Your call, always</h3><p>Change any cell. Your choices are kept, even when the planning is recalculated.</p></div>
+        <div><h3>Covered from open to close</h3><p>Every corner has someone who opens and someone who closes, and lunches are taken in turn.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="modules" id="modules">
+    <div class="wrap">
+      <div class="modules-head">
+        <h2>Two teams, one way to plan</h2>
+        <p>Each module speaks the language of its teams. Choose yours and pick your store or center.</p>
       </div>
 
+      <article class="panel">
+        <div class="duo">
+          <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1400&q=70" alt="Clothing boutique interior" loading="lazy">
+          <div class="duo-tag" aria-hidden="true"><i class="sh o">O</i><i class="sh m">M</i><i class="sh c">C</i></div>
+        </div>
+        <div class="panel-body">
+          <span class="panel-for">For boutiques and department stores</span>
+          <h3>Retail</h3>
+          <p class="desc">Sales, management and stock teams planned around store traffic, corner by corner.</p>
+          <ul>
+            <li>Shifts matched to hourly traffic</li>
+            <li>Part-time, absences, days off and training days</li>
+            <li>Intraday view with briefs, welcome, lunch and breaks</li>
+            <li>English, Japanese, Korean and Chinese</li>
+          </ul>
+          <a class="btn btn-navy" href="retail.html">Open Retail</a>
+        </div>
+      </article>
+
+      <article class="panel flip">
+        <div class="duo">
+          <img src="https://images.unsplash.com/photo-1766066014237-00645c74e9c6?auto=format&fit=crop&w=1400&q=70" alt="Client advisor with a headset" loading="lazy">
+          <div class="duo-tag" aria-hidden="true"><i class="sh c">CALL</i><i class="sh o">CHAT</i><i class="sh m">MAIL</i></div>
+        </div>
+        <div class="panel-body">
+          <span class="panel-for">For Client Service centers</span>
+          <h3>Client Service</h3>
+          <p class="desc">Calls, chats and emails staffed from forecast volume and handling time.</p>
+          <ul>
+            <li>Call, chat, mail, back office, fraud and clienteling</li>
+            <li>Task permissions for each agent, Team Leaders included</li>
+            <li>Intraday plan in 30-minute slots, with focus time on emails</li>
+            <li>Unfinished emails and back office carried to the next day</li>
+          </ul>
+          <a class="btn btn-navy" href="CSC.html">Open Client Service</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="glimpse" id="how">
+    <div class="wrap">
+      <div>
+        <h2>From your rules to your planning</h2>
+        <p>Set it up once. CAST does the rest every month.</p>
+        <ol class="steps">
+          <li><span><b>Set your rules</b>Opening hours, shifts, breaks, corners and contracts.</span></li>
+          <li><span><b>Add your team and traffic</b>Advisors, leaves and days off, traffic or workload by hour.</span></li>
+          <li><span><b>Review and share</b>Adjust any cell, then download in Excel or PDF, or send it.</span></li>
+        </ol>
+      </div>
       <div class="mock" aria-hidden="true">
-        <div class="mock-head"><span class="mock-title">Monthly planning</span><span class="mock-month">November 2026</span></div>
+        <div class="mock-head"><b>Monthly planning</b><span>November 2026</span></div>
         <div class="mock-grid">
-          <div class="mrow hd"><span>AGENT</span><span>M 2</span><span>T 3</span><span>W 4</span><span>T 5</span><span>F 6</span><span>S 7</span><span>S 8</span><span>M 9</span><span>T 10</span><span>W 11</span></div>
+          <div class="mrow hd"><span>Agent</span><span>M 2</span><span>T 3</span><span>W 4</span><span>T 5</span><span>F 6</span><span>S 7</span><span>S 8</span><span>M 9</span><span>T 10</span><span>W 11</span></div>
           <div class="mrow"><div class="who"><i class="av" style="background:#854F0B">SM</i><span>Store Mgr</span></div><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i></div>
           <div class="mrow"><div class="who"><i class="av" style="background:#185FA5">AR</i><span>Advisor</span></div><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh m">M</i><i class="sh o">O</i></div>
           <div class="mrow"><div class="who"><i class="av" style="background:#0F6E56">BL</i><span>Advisor</span></div><i class="sh m">M</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i></div>
@@ -197,103 +311,44 @@ footer .wrap { display:flex; justify-content:space-between; gap:var(--s4); flex-
           <div class="mrow"><div class="who"><i class="av" style="background:#3C3489">DN</i><span>Advisor</span></div><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh m">M</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh m">M</i></div>
           <div class="mrow"><div class="who"><i class="av" style="background:#5F5E5A">EP</i><span>Stock</span></div><i class="sh o">OS</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh o">OS</i></div>
         </div>
-        <div class="mock-foot"><span><b>Every corner</b> opens and closes</span><span><b>Max days</b> and rest respected</span><span><b>Manual changes</b> kept</span></div>
+        <div class="mock-foot">Example planning. Names are fictitious.</div>
       </div>
     </div>
   </section>
 
-  <section id="modules">
+  <section class="reach">
     <div class="wrap">
-      <div class="sec-head">
-        <span class="sec-label">Two modules</span>
-        <h2>Choose your environment</h2>
-        <p>Same engine, same principles. Each module speaks the language of its teams.</p>
+      <div class="reach-grid">
+        <div class="reach-item"><strong>30</strong><span>countries with CELINE boutiques</span></div>
+        <div class="reach-item"><strong>6</strong><span>Client Service centers</span></div>
+        <div class="reach-item"><strong>5</strong><span>languages in Retail</span></div>
       </div>
-      <div class="modules">
-        <article class="mod">
-          <div class="mod-top">
-            <span class="mod-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V6a6 6 0 0 1 12 0v2"/><path d="M4 8h16l-1.2 12.1a2 2 0 0 1-2 1.9H7.2a2 2 0 0 1-2-1.9z"/></svg></span>
-            <div><h3>Retail</h3><span class="mod-sub">Boutiques and department stores</span></div>
-          </div>
-          <p class="desc">Plan sales, management and stock teams around store traffic, corner by corner.</p>
-          <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Shifts chosen against hourly traffic, with an opener and a closer in every corner</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Fixed or flexible part-time, absences, days off and training days</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Intraday view: briefs, welcome, lunch and breaks taken in turn</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>English, Japanese, Korean and Chinese</li>
-          </ul>
-          <a class="btn btn-primary" href="retail.html">Open Retail <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        </article>
-        <article class="mod">
-          <div class="mod-top">
-            <span class="mod-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="6" rx="1.5"/><rect x="17.5" y="13" width="4" height="6" rx="1.5"/><path d="M20 19a3 3 0 0 1-3 3h-3"/></svg></span>
-            <div><h3>Client Service</h3><span class="mod-sub">Paris, New York, Shanghai, Tokyo, Seoul, Singapore</span></div>
-          </div>
-          <p class="desc">Staff calls, chats and emails from forecast volume and handling time.</p>
-          <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Call, chat, mail, back office, fraud and clienteling, with editable priorities</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Task permissions for each agent, Team Leaders included</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Intraday plan in 30-minute slots, with focus time on emails</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Unfinished emails and back office carried to the next day</li>
-          </ul>
-          <a class="btn btn-primary" href="CSC.html">Open Client Service <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section id="how">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="sec-label">How it works</span>
-        <h2>From your rules to a planning in three steps</h2>
-      </div>
-      <div class="steps">
-        <div class="step"><span class="step-n">1</span><h4>Set your rules</h4><p>Opening hours, shifts, breaks, corners, contracts and minimum staffing. Saved automatically.</p></div>
-        <div class="step"><span class="step-n">2</span><h4>Add your team and traffic</h4><p>Advisors, leaves and days off, then traffic or workload by month, day and hour.</p></div>
-        <div class="step"><span class="step-n">3</span><h4>Review and share</h4><p>CAST builds the month and each day. Change any cell, then download in Excel or PDF, or send it.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band">
-    <div class="wrap">
-      <div class="sec-head">
-        <span class="sec-label">Principles</span>
-        <h2>A tool that helps, never one that blocks</h2>
-      </div>
-      <div class="principles">
-        <div class="pr"><span class="pr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><h4>You have the last word</h4><p>Manual changes are always kept, even when the planning is recalculated.</p></div>
-        <div class="pr"><span class="pr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><h4>Rules come first</h4><p>Working days, days in a row, weekly hours and rest between shifts, as set for your store.</p></div>
-        <div class="pr"><span class="pr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span><h4>Best with who is there</h4><p>Short on people? CAST plans the best possible day and leaves the final call to the manager.</p></div>
-        <div class="pr"><span class="pr-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><path d="M10 18h4"/></svg></span><h4>Desktop and phone</h4><p>Read and edit the planning anywhere. Tap menus on mobile, drag controls on desktop.</p></div>
-      </div>
+      <p class="cities"><b>Paris</b>, <b>New York</b>, <b>Shanghai</b>, <b>Tokyo</b>, <b>Seoul</b> and <b>Singapore</b>, with one planning logic for every team.</p>
     </div>
   </section>
 
   <section class="final">
+    <div class="duo-bg"><img src="https://images.unsplash.com/photo-1759050486852-fdfe2fdc7bea?auto=format&fit=crop&w=1920&q=70" alt="" loading="lazy"></div>
     <div class="wrap">
-      <h2>Ready to plan?</h2>
-      <p>Pick your module. Your store or center opens with its own settings and team.</p>
+      <h2>Ready for next month?</h2>
+      <p>Open your module, pick your store or center, and your team is already there.</p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="retail.html">Open Retail <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        <a class="btn btn-ghost" href="CSC.html">Open Client Service <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn btn-light" href="retail.html">Open Retail</a>
+        <a class="btn btn-line" href="CSC.html">Open Client Service</a>
       </div>
-      <p class="langs-lbl">Retail speaks</p>
-      <div class="langs"><span class="lang">English</span><span class="lang" lang="ja">日本語</span><span class="lang" lang="ko">한국어</span><span class="lang" lang="zh-Hans">简体中文</span><span class="lang" lang="zh-Hant">繁體中文</span></div>
     </div>
   </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>CAST - CELINE Automated Scheduling Tool</span>
-    <span>@Roman Inc.</span>
+    <span>CAST - CELINE Automated Scheduling Tool. Internal tool for CELINE teams.</span>
+    <span class="credits">Photos <a href="https://unsplash.com">Unsplash</a>, video <a href="https://www.pexels.com">Pexels</a></span>
   </div>
 </footer>
 
 <script>
-// Crop the white margins of the logo image so it sits on the text line
+// Crop the white margins of the logo image
 function trimLogo(img) {
   if (img.dataset.trimmed) return;
   try {
@@ -310,6 +365,10 @@ function trimLogo(img) {
     o.getContext('2d').drawImage(img, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
     img.dataset.trimmed = '1'; img.src = o.toDataURL('image/png');
   } catch (e) {}
+}
+// Still image instead of the video when the visitor asks for less motion
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  var v = document.getElementById('hero-video'); if (v) { v.removeAttribute('autoplay'); v.pause(); }
 }
 </script>
 </body>
