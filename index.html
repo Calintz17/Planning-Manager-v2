@@ -1,3 +1,9 @@
+Roman C <roman.attal@gmail.com>
+	
+11:46 (il y a 0 minute)
+	
+	
+À moi
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +20,7 @@
   --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5; --warn-tx:#61470B;
   --info-soft:#DBEAFE; --info-tx:#1E407A; --dang-soft:#F6DDE7; --dang-tx:#82334E;
   --off-a:#E9EDF2; --off-b:#F4F6F9;
-  --veil:rgba(12,26,51,.6);
+  --veil:rgba(12,26,51,.45);
   --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px; --s16:64px; --s24:96px; --s32:128px;
   --r-sm:6px; --r-md:8px; --r-lg:12px;
   --top-h:72px; --max:1200px;
@@ -52,24 +58,14 @@ i { font-style:normal; }
 /* Hero */
 .hero { position:relative; min-height:calc(100vh - var(--top-h)); min-height:calc(100svh - var(--top-h)); display:flex; align-items:flex-end; color:var(--white); overflow:hidden; background:var(--night); }
 .hero-media, .hero-veil { position:absolute; inset:0; }
-.hero-media video { width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.05); }
+.hero-media img { width:100%; height:100%; object-fit:cover; }
 .hero-veil { background:var(--veil); }
-.hero-veil::after { content:""; position:absolute; inset:0; background:var(--brand); mix-blend-mode:color; opacity:.55; }
+.hero-veil::after { content:""; position:absolute; inset:0; background:var(--brand); mix-blend-mode:color; opacity:.4; }
 .hero .wrap { position:relative; z-index:2; width:100%; padding-bottom:var(--s16); }
 .hero h1 { font-size:clamp(44px, 7.4vw, 104px); line-height:.98; letter-spacing:-.035em; font-weight:700; max-width:13ch; }
 .hero-row { display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s10); margin-top:var(--s8); flex-wrap:wrap; }
 .hero p { font-size:19px; line-height:1.55; color:var(--mist); max-width:34em; }
 .cta { display:flex; gap:var(--s3); flex-wrap:wrap; }
-
-/* Boutiques ribbon: the one moving element of the page */
-.boutiques { background:var(--night); border-bottom:1px solid var(--line-dark); padding:var(--s5) 0; overflow:hidden; }
-.track { display:flex; gap:var(--s2); width:max-content; animation:slide 420s linear infinite; }
-.track + .track { margin-top:var(--s2); animation-direction:reverse; animation-duration:480s; }
-.boutiques:hover .track { animation-play-state:paused; }
-.st { display:inline-flex; align-items:center; gap:var(--s3); height:40px; padding:0 var(--s4); border:1px solid var(--line-dark); border-radius:var(--r-sm); background:var(--night-2); white-space:nowrap; }
-.st b { font-size:13px; color:var(--white); font-weight:700; }
-.st i { font-size:11px; color:var(--mist-2); font-weight:700; }
-@keyframes slide { to { transform:translateX(-50%); } }
 
 /* Statement */
 .statement { background:var(--night); color:var(--white); padding:var(--s32) 0 var(--s24); }
@@ -89,6 +85,8 @@ i { font-style:normal; }
 .duo { position:relative; background:var(--brand); min-height:320px; overflow:hidden; }
 .duo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.08); mix-blend-mode:luminosity; opacity:.92; }
 .duo::after { content:""; position:absolute; inset:0; background:rgba(12,26,51,.22); }
+.duo.natural img { filter:none; mix-blend-mode:normal; opacity:1; }
+.duo.natural::after { display:none; }
 .panel-body { padding:var(--s16) var(--s12); display:flex; flex-direction:column; }
 .panel-for { font-size:14px; color:var(--tx-2); }
 .panel h3 { font-size:clamp(34px, 3.4vw, 46px); letter-spacing:-.03em; line-height:1.05; margin-top:var(--s3); }
@@ -100,8 +98,7 @@ i { font-style:normal; }
 /* Learning */
 .learn { background:var(--night); color:var(--white); padding:var(--s24) 0; overflow:hidden; }
 .learn .wrap { display:grid; grid-template-columns:1fr 1fr; gap:var(--s16); align-items:center; }
-.soon { display:inline-block; font-size:13px; font-weight:700; color:var(--night); background:var(--warn-soft); border-radius:var(--r-sm); padding:4px 10px; }
-.learn h2 { font-size:clamp(32px, 4.2vw, 56px); line-height:1.06; letter-spacing:-.025em; margin-top:var(--s5); max-width:14ch; }
+.learn h2 { font-size:clamp(32px, 4.2vw, 56px); line-height:1.06; letter-spacing:-.025em; max-width:14ch; }
 .learn p { margin-top:var(--s5); color:var(--mist); max-width:30em; }
 .learn ul { list-style:none; margin-top:var(--s8); border-top:1px solid var(--line-dark); }
 .learn li { padding:var(--s4) 0; border-bottom:1px solid var(--line-dark); font-size:16px; color:var(--mist); }
@@ -155,18 +152,15 @@ i { font-style:normal; }
 .cities b { color:var(--tx-1); }
 
 /* Final */
-.final { position:relative; color:var(--white); padding:var(--s32) 0; overflow:hidden; text-align:center; background:var(--brand); }
-.final .bg { position:absolute; inset:0; }
-.final .bg img { width:100%; height:100%; object-fit:cover; filter:grayscale(1); mix-blend-mode:luminosity; opacity:.35; }
-.final .wrap { position:relative; z-index:2; }
+.final { color:var(--white); padding:var(--s24) 0; text-align:center; background:var(--brand); }
+.showcase { background:var(--paper); }
+.showcase img { width:100%; height:auto; }
 .final h2 { font-size:clamp(36px, 5.4vw, 76px); line-height:1.02; letter-spacing:-.03em; max-width:14ch; margin:0 auto; }
 .final p { margin:var(--s5) auto 0; color:var(--mist); max-width:30em; }
 .final .cta { justify-content:center; margin-top:var(--s10); }
 
 footer { background:var(--night); color:var(--mist-2); font-size:13px; padding:var(--s8) 0; border-top:1px solid var(--line-dark); }
-footer .wrap { display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s4); flex-wrap:wrap; }
-footer small { display:block; margin-top:var(--s2); font-size:12px; }
-footer small a { text-decoration:underline; }
+footer .wrap { display:flex; justify-content:space-between; align-items:center; gap:var(--s4); flex-wrap:wrap; }
 .sign { color:var(--mist); }
 
 /* Responsive */
@@ -204,7 +198,6 @@ footer small a { text-decoration:underline; }
   .final { padding:var(--s24) 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .track { animation:none; }
   html { scroll-behavior:auto; }
 }
 </style>
@@ -240,8 +233,8 @@ function trimLogo(img) {
     </a>
     <nav class="top-nav">
       <a class="lnk" href="#modules">Modules</a>
-      <a class="lnk" href="#learning">Learning</a>
       <a class="lnk" href="#how">How it works</a>
+      <a class="lnk" href="#better">Better each month</a>
       <a class="btn btn-light btn-sm" href="#modules">Open CAST</a>
     </nav>
   </div>
@@ -250,28 +243,20 @@ function trimLogo(img) {
 <main>
   <section class="hero">
     <div class="hero-media">
-      <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="https://images.pexels.com/photos/12643950/pexels-photo-12643950.jpeg?auto=compress&cs=tinysrgb&w=1920">
-        <source src="hero.mp4" type="video/mp4">
-        <source src="https://videos.pexels.com/video-files/9595337/9595337-uhd_2732_1440_25fps.mp4" type="video/mp4">
-      </video>
+      <img src="landing-hero.jpg" alt="">
     </div>
     <div class="hero-veil"></div>
     <div class="wrap">
       <h1>The right people, in the right place, every day.</h1>
       <div class="hero-row">
-        <p>CAST plans Stores and Client Service centers from traffic, workload, your team and your local rules. You review, adjust and share.</p>
+        <p>CAST plans CELINE boutiques and Client Service centers from traffic, workload, your team and your local rules. You review, adjust and share.</p>
         <div class="cta">
-          <a class="btn btn-light" href="retail.html">Open Stores</a>
+          <a class="btn btn-light" href="retail.html">Open Retail</a>
           <a class="btn btn-line" href="CSC.html">Open Client Service</a>
         </div>
       </div>
     </div>
   </section>
-
-  <div class="boutiques" aria-label="CELINE boutiques planned with CAST">
-    <div class="track"><span class="st"><b>Seattle Nordstrom</b><i>US</i></span><span class="st"><b>Rome</b><i>IT</i></span><span class="st"><b>Manila Solaire</b><i>PH</i></span><span class="st"><b>Boston Copley Place</b><i>US</i></span><span class="st"><b>Doha Vendome</b><i>QA</i></span><span class="st"><b>Singapore Marina Bay Sands</b><i>SG</i></span><span class="st"><b>Bangkok EmQuartier</b><i>TH</i></span><span class="st"><b>Kuala Lumpur TRX</b><i>MY</i></span><span class="st"><b>Paris Le Bon Marché</b><i>FR</i></span><span class="st"><b>Madrid Ortega</b><i>ES</i></span><span class="st"><b>Sapporo Daimaru</b><i>JP</i></span><span class="st"><b>Atlanta</b><i>US</i></span><span class="st"><b>Gotemba Outlet</b><i>JP</i></span><span class="st"><b>Miami Design District</b><i>US</i></span><span class="st"><b>Gold Coast Pacific Fair</b><i>AU</i></span><span class="st"><b>San Diego Fashion Valley</b><i>US</i></span><span class="st"><b>Manchester Selfridges</b><i>GB</i></span><span class="st"><b>Ningbo Hankyu</b><i>CN</i></span><span class="st"><b>Greenwich Saks</b><i>US</i></span><span class="st"><b>Desert Hills Cabazon Outlet</b><i>US</i></span><span class="st"><b>Venice</b><i>IT</i></span><span class="st"><b>Osaka Umeda Hankyu</b><i>JP</i></span><span class="st"><b>Taoyuan Gloria Outlet</b><i>TW</i></span><span class="st"><b>Taipei Breeze Xin Yi</b><i>TW</i></span><span class="st"><b>Kyoto Isetan</b><i>JP</i></span><span class="st"><b>Houston Galleria</b><i>US</i></span><span class="st"><b>Copenhagen Illum</b><i>DK</i></span><span class="st"><b>Barcelona</b><i>ES</i></span><span class="st"><b>Daejeon Shinsegae</b><i>KR</i></span><span class="st"><b>Courchevel</b><i>FR</i></span><span class="st"><b>Taipei Breeze Center</b><i>TW</i></span><span class="st"><b>Hong Kong Pacific Place</b><i>HK</i></span><span class="st"><b>Bal Harbour Neiman Marcus</b><i>US</i></span><span class="st"><b>Seoul Lotte World Tower</b><i>KR</i></span><span class="st"><b>Chengdu Taikoo LI</b><i>CN</i></span><span class="st"><b>Montreal Holt Renfrew</b><i>CA</i></span><span class="st"><b>Bondi Junction</b><i>AU</i></span><span class="st"><b>Bal Harbour</b><i>US</i></span><span class="st"><b>Hong Kong Landmark</b><i>HK</i></span><span class="st"><b>Saint-Tropez</b><i>FR</i></span><span class="st"><b>Shanghai Bicester Village Outlet</b><i>CN</i></span><span class="st"><b>Amsterdam Hooftstraat</b><i>NL</i></span><span class="st"><b>Melbourne Chadstone</b><i>AU</i></span><span class="st"><b>Zhengzhou Dennis David</b><i>CN</i></span><span class="st"><b>Seoul Lotte Main Men</b><i>KR</i></span><span class="st"><b>Seoul Shinsegae Timesquare</b><i>KR</i></span><span class="st"><b>Beijing WF Central</b><i>CN</i></span><span class="st"><b>Osaka Midosuji</b><i>JP</i></span><span class="st"><b>Munich Oberpollinger</b><i>DE</i></span><span class="st"><b>McLean Tysons Galleria</b><i>US</i></span><span class="st"><b>Paris CDG</b><i>FR</i></span><span class="st"><b>Vienna</b><i>AT</i></span><span class="st"><b>Kuala Lumpur Pavilion</b><i>MY</i></span><span class="st"><b>Shanghai IFC</b><i>CN</i></span><span class="st"><b>Shanghai Florentia Outlet</b><i>CN</i></span><span class="st"><b>London Selfridges</b><i>GB</i></span><span class="st"><b>Hangzhou MixC</b><i>CN</i></span><span class="st"><b>Nashville Nordstrom</b><i>US</i></span><span class="st"><b>Riyadh Solitaire</b><i>SA</i></span><span class="st"><b>Tokyo Azabudai</b><i>JP</i></span><span class="st"><b>Seoul Shinsegae Gangnam Men</b><i>KR</i></span><span class="st"><b>Madrid El Corte Ingles</b><i>ES</i></span><span class="st"><b>Boston Saks</b><i>US</i></span><span class="st"><b>Shenzhen Bay MixC</b><i>CN</i></span><span class="st"><b>London Harrods</b><i>GB</i></span><span class="st"><b>Seoul Galleria</b><i>KR</i></span><span class="st"><b>Abu Dhabi The Grove</b><i>AE</i></span><span class="st"><b>Serravalle Outlet</b><i>IT</i></span><span class="st"><b>Hangzhou Tower</b><i>CN</i></span><span class="st"><b>Tokyo Ikebukuro Seibu</b><i>JP</i></span><span class="st"><b>Seoul Shinsegae Main</b><i>KR</i></span><span class="st"><b>Dubai Mall</b><i>AE</i></span><span class="st"><b>Osaka Abeno Kintetsu</b><i>JP</i></span><span class="st"><b>Hiroshima Fukuya</b><i>JP</i></span><span class="st"><b>Paris Printemps Haussmann</b><i>FR</i></span><span class="st"><b>Miami Aventura</b><i>US</i></span><span class="st"><b>Nagoya Matsuzakaya</b><i>JP</i></span><span class="st"><b>Busan Shinsegae Centum</b><i>KR</i></span><span class="st"><b>Dalian Olympia 66</b><i>CN</i></span><span class="st"><b>Bangkok Central Chidlom</b><i>TH</i></span><span class="st"><b>Kobe Daimaru</b><i>JP</i></span><span class="st"><b>Wuhan Heartland 66</b><i>CN</i></span><span class="st"><b>Hong Kong Harbour City</b><i>HK</i></span><span class="st"><b>Tokyo Shibuya Parco</b><i>JP</i></span><span class="st"><b>Wuhan SKP</b><i>CN</i></span><span class="st"><b>New York Bloomingdale&#x27;s</b><i>US</i></span><span class="st"><b>Nanjing Deji Plaza</b><i>CN</i></span><span class="st"><b>Cannes</b><i>FR</i></span><span class="st"><b>Tianjin Florentia Outlet</b><i>CN</i></span><span class="st"><b>Seoul Shinsegae Gangnam</b><i>KR</i></span><span class="st"><b>Narita Airport</b><i>JP</i></span><span class="st"><b>Macau The Londoner</b><i>MO</i></span><span class="st"><b>Fukuoka Iwataya</b><i>JP</i></span><span class="st"><b>Milan Rinascente</b><i>IT</i></span><span class="st"><b>Suzhou Matro</b><i>CN</i></span><span class="st"><b>Chicago Neiman Marcus</b><i>US</i></span><span class="st"><b>Leccio Outlet</b><i>IT</i></span><span class="st"><b>Cebu NuStar</b><i>PH</i></span><span class="st"><b>Nagoya Mitsukoshi</b><i>JP</i></span><span class="st"><b>Rome Rinascente</b><i>IT</i></span><span class="st"><b>Chengdu SKP</b><i>CN</i></span><span class="st"><b>Sendai Fujisaki</b><i>JP</i></span><span class="st"><b>Seoul The Hyundai</b><i>KR</i></span><span class="st"><b>New York Madison</b><i>US</i></span><span class="st"><b>Bangkok Icon Siam</b><i>TH</i></span><span class="st"><b>Beijing China World</b><i>CN</i></span><span class="st"><b>Shanghai Qiantan Taikoo LI</b><i>CN</i></span><span class="st"><b>Prague</b><i>CZ</i></span><span class="st"><b>Dubai Mall of The Emirates</b><i>AE</i></span><span class="st"><b>Shanghai Plaza 66</b><i>CN</i></span><span class="st"><b>Tokyo Ginza</b><i>JP</i></span><span class="st"><b>Suzhou Bicester Village Outlet</b><i>CN</i></span><span class="st"><b>Hong Kong Times Square</b><i>HK</i></span><span class="st"><b>Tainan Mitsukoshi</b><i>TW</i></span><span class="st"><b>Seattle Nordstrom</b><i>US</i></span><span class="st"><b>Rome</b><i>IT</i></span><span class="st"><b>Manila Solaire</b><i>PH</i></span><span class="st"><b>Boston Copley Place</b><i>US</i></span><span class="st"><b>Doha Vendome</b><i>QA</i></span><span class="st"><b>Singapore Marina Bay Sands</b><i>SG</i></span><span class="st"><b>Bangkok EmQuartier</b><i>TH</i></span><span class="st"><b>Kuala Lumpur TRX</b><i>MY</i></span><span class="st"><b>Paris Le Bon Marché</b><i>FR</i></span><span class="st"><b>Madrid Ortega</b><i>ES</i></span><span class="st"><b>Sapporo Daimaru</b><i>JP</i></span><span class="st"><b>Atlanta</b><i>US</i></span><span class="st"><b>Gotemba Outlet</b><i>JP</i></span><span class="st"><b>Miami Design District</b><i>US</i></span><span class="st"><b>Gold Coast Pacific Fair</b><i>AU</i></span><span class="st"><b>San Diego Fashion Valley</b><i>US</i></span><span class="st"><b>Manchester Selfridges</b><i>GB</i></span><span class="st"><b>Ningbo Hankyu</b><i>CN</i></span><span class="st"><b>Greenwich Saks</b><i>US</i></span><span class="st"><b>Desert Hills Cabazon Outlet</b><i>US</i></span><span class="st"><b>Venice</b><i>IT</i></span><span class="st"><b>Osaka Umeda Hankyu</b><i>JP</i></span><span class="st"><b>Taoyuan Gloria Outlet</b><i>TW</i></span><span class="st"><b>Taipei Breeze Xin Yi</b><i>TW</i></span><span class="st"><b>Kyoto Isetan</b><i>JP</i></span><span class="st"><b>Houston Galleria</b><i>US</i></span><span class="st"><b>Copenhagen Illum</b><i>DK</i></span><span class="st"><b>Barcelona</b><i>ES</i></span><span class="st"><b>Daejeon Shinsegae</b><i>KR</i></span><span class="st"><b>Courchevel</b><i>FR</i></span><span class="st"><b>Taipei Breeze Center</b><i>TW</i></span><span class="st"><b>Hong Kong Pacific Place</b><i>HK</i></span><span class="st"><b>Bal Harbour Neiman Marcus</b><i>US</i></span><span class="st"><b>Seoul Lotte World Tower</b><i>KR</i></span><span class="st"><b>Chengdu Taikoo LI</b><i>CN</i></span><span class="st"><b>Montreal Holt Renfrew</b><i>CA</i></span><span class="st"><b>Bondi Junction</b><i>AU</i></span><span class="st"><b>Bal Harbour</b><i>US</i></span><span class="st"><b>Hong Kong Landmark</b><i>HK</i></span><span class="st"><b>Saint-Tropez</b><i>FR</i></span><span class="st"><b>Shanghai Bicester Village Outlet</b><i>CN</i></span><span class="st"><b>Amsterdam Hooftstraat</b><i>NL</i></span><span class="st"><b>Melbourne Chadstone</b><i>AU</i></span><span class="st"><b>Zhengzhou Dennis David</b><i>CN</i></span><span class="st"><b>Seoul Lotte Main Men</b><i>KR</i></span><span class="st"><b>Seoul Shinsegae Timesquare</b><i>KR</i></span><span class="st"><b>Beijing WF Central</b><i>CN</i></span><span class="st"><b>Osaka Midosuji</b><i>JP</i></span><span class="st"><b>Munich Oberpollinger</b><i>DE</i></span><span class="st"><b>McLean Tysons Galleria</b><i>US</i></span><span class="st"><b>Paris CDG</b><i>FR</i></span><span class="st"><b>Vienna</b><i>AT</i></span><span class="st"><b>Kuala Lumpur Pavilion</b><i>MY</i></span><span class="st"><b>Shanghai IFC</b><i>CN</i></span><span class="st"><b>Shanghai Florentia Outlet</b><i>CN</i></span><span class="st"><b>London Selfridges</b><i>GB</i></span><span class="st"><b>Hangzhou MixC</b><i>CN</i></span><span class="st"><b>Nashville Nordstrom</b><i>US</i></span><span class="st"><b>Riyadh Solitaire</b><i>SA</i></span><span class="st"><b>Tokyo Azabudai</b><i>JP</i></span><span class="st"><b>Seoul Shinsegae Gangnam Men</b><i>KR</i></span><span class="st"><b>Madrid El Corte Ingles</b><i>ES</i></span><span class="st"><b>Boston Saks</b><i>US</i></span><span class="st"><b>Shenzhen Bay MixC</b><i>CN</i></span><span class="st"><b>London Harrods</b><i>GB</i></span><span class="st"><b>Seoul Galleria</b><i>KR</i></span><span class="st"><b>Abu Dhabi The Grove</b><i>AE</i></span><span class="st"><b>Serravalle Outlet</b><i>IT</i></span><span class="st"><b>Hangzhou Tower</b><i>CN</i></span><span class="st"><b>Tokyo Ikebukuro Seibu</b><i>JP</i></span><span class="st"><b>Seoul Shinsegae Main</b><i>KR</i></span><span class="st"><b>Dubai Mall</b><i>AE</i></span><span class="st"><b>Osaka Abeno Kintetsu</b><i>JP</i></span><span class="st"><b>Hiroshima Fukuya</b><i>JP</i></span><span class="st"><b>Paris Printemps Haussmann</b><i>FR</i></span><span class="st"><b>Miami Aventura</b><i>US</i></span><span class="st"><b>Nagoya Matsuzakaya</b><i>JP</i></span><span class="st"><b>Busan Shinsegae Centum</b><i>KR</i></span><span class="st"><b>Dalian Olympia 66</b><i>CN</i></span><span class="st"><b>Bangkok Central Chidlom</b><i>TH</i></span><span class="st"><b>Kobe Daimaru</b><i>JP</i></span><span class="st"><b>Wuhan Heartland 66</b><i>CN</i></span><span class="st"><b>Hong Kong Harbour City</b><i>HK</i></span><span class="st"><b>Tokyo Shibuya Parco</b><i>JP</i></span><span class="st"><b>Wuhan SKP</b><i>CN</i></span><span class="st"><b>New York Bloomingdale&#x27;s</b><i>US</i></span><span class="st"><b>Nanjing Deji Plaza</b><i>CN</i></span><span class="st"><b>Cannes</b><i>FR</i></span><span class="st"><b>Tianjin Florentia Outlet</b><i>CN</i></span><span class="st"><b>Seoul Shinsegae Gangnam</b><i>KR</i></span><span class="st"><b>Narita Airport</b><i>JP</i></span><span class="st"><b>Macau The Londoner</b><i>MO</i></span><span class="st"><b>Fukuoka Iwataya</b><i>JP</i></span><span class="st"><b>Milan Rinascente</b><i>IT</i></span><span class="st"><b>Suzhou Matro</b><i>CN</i></span><span class="st"><b>Chicago Neiman Marcus</b><i>US</i></span><span class="st"><b>Leccio Outlet</b><i>IT</i></span><span class="st"><b>Cebu NuStar</b><i>PH</i></span><span class="st"><b>Nagoya Mitsukoshi</b><i>JP</i></span><span class="st"><b>Rome Rinascente</b><i>IT</i></span><span class="st"><b>Chengdu SKP</b><i>CN</i></span><span class="st"><b>Sendai Fujisaki</b><i>JP</i></span><span class="st"><b>Seoul The Hyundai</b><i>KR</i></span><span class="st"><b>New York Madison</b><i>US</i></span><span class="st"><b>Bangkok Icon Siam</b><i>TH</i></span><span class="st"><b>Beijing China World</b><i>CN</i></span><span class="st"><b>Shanghai Qiantan Taikoo LI</b><i>CN</i></span><span class="st"><b>Prague</b><i>CZ</i></span><span class="st"><b>Dubai Mall of The Emirates</b><i>AE</i></span><span class="st"><b>Shanghai Plaza 66</b><i>CN</i></span><span class="st"><b>Tokyo Ginza</b><i>JP</i></span><span class="st"><b>Suzhou Bicester Village Outlet</b><i>CN</i></span><span class="st"><b>Hong Kong Times Square</b><i>HK</i></span><span class="st"><b>Tainan Mitsukoshi</b><i>TW</i></span></div>
-    <div class="track"><span class="st"><b>Chicago</b><i>US</i></span><span class="st"><b>Kisarazu Outlet</b><i>JP</i></span><span class="st"><b>Yokohama Sogo</b><i>JP</i></span><span class="st"><b>Stockholm</b><i>SE</i></span><span class="st"><b>Woodbury Outlet</b><i>US</i></span><span class="st"><b>Sanya Haitang</b><i>CN</i></span><span class="st"><b>Taichung Mitsukoshi</b><i>TW</i></span><span class="st"><b>New York Soho</b><i>US</i></span><span class="st"><b>Melbourne Collins Street</b><i>AU</i></span><span class="st"><b>Melbourne David Jones</b><i>AU</i></span><span class="st"><b>Hong Kong Elements</b><i>HK</i></span><span class="st"><b>Tokyo Shinjuku Takashimaya</b><i>JP</i></span><span class="st"><b>Berlin KaDeWe</b><i>DE</i></span><span class="st"><b>Puerto Banus</b><i>ES</i></span><span class="st"><b>Honolulu Ala Moana</b><i>US</i></span><span class="st"><b>Las Vegas Crystals</b><i>US</i></span><span class="st"><b>Kuwait Prestige The Avenues</b><i>KW</i></span><span class="st"><b>Macau Wynn</b><i>MO</i></span><span class="st"><b>Hong Kong Ocean Centre</b><i>HK</i></span><span class="st"><b>Manila Greenbelt</b><i>PH</i></span><span class="st"><b>Macau Galaxy</b><i>MO</i></span><span class="st"><b>Zurich</b><i>CH</i></span><span class="st"><b>Sydney Chatswood</b><i>AU</i></span><span class="st"><b>Taipei Sogo BR4</b><i>TW</i></span><span class="st"><b>Tokyo Ginza Matsuya</b><i>JP</i></span><span class="st"><b>Topanga</b><i>US</i></span><span class="st"><b>Singapore ION Orchard</b><i>SG</i></span><span class="st"><b>Shanghai Grand Gateway 66</b><i>CN</i></span><span class="st"><b>Taipei 101</b><i>TW</i></span><span class="st"><b>Tokyo Shinjuku Isetan</b><i>JP</i></span><span class="st"><b>Phuket</b><i>TH</i></span><span class="st"><b>Santa Clara Valley Fair</b><i>US</i></span><span class="st"><b>Paris Galeries Lafayette</b><i>FR</i></span><span class="st"><b>Nagoya Takashimaya</b><i>JP</i></span><span class="st"><b>Hong Kong IFC</b><i>HK</i></span><span class="st"><b>Tokyo Ginza Mitsukoshi</b><i>JP</i></span><span class="st"><b>Yokohama Takashimaya</b><i>JP</i></span><span class="st"><b>Suwon Galleria Gwanggyo</b><i>KR</i></span><span class="st"><b>Beverly Hills Rodeo Drive</b><i>US</i></span><span class="st"><b>Beijing Badaling Outlet</b><i>CN</i></span><span class="st"><b>Hamburg Alsterhaus</b><i>DE</i></span><span class="st"><b>Singapore Ngee Ann City</b><i>SG</i></span><span class="st"><b>Munich Maximilianstrasse</b><i>DE</i></span><span class="st"><b>Paris Montaigne</b><i>FR</i></span><span class="st"><b>Dublin Brown Thomas</b><i>IE</i></span><span class="st"><b>Okinawa DFS</b><i>JP</i></span><span class="st"><b>Beverly Hills Neiman Marcus</b><i>US</i></span><span class="st"><b>Osaka Takashimaya</b><i>JP</i></span><span class="st"><b>Bicester Village Outlet</b><i>GB</i></span><span class="st"><b>Kyoto Daimaru</b><i>JP</i></span><span class="st"><b>Daegu Shinsegae</b><i>KR</i></span><span class="st"><b>Tokyo Hankyu</b><i>JP</i></span><span class="st"><b>Tianjin MixC</b><i>CN</i></span><span class="st"><b>Yongin Shinsegae Southcity</b><i>KR</i></span><span class="st"><b>Beverly Hills Saks</b><i>US</i></span><span class="st"><b>Costa Mesa South Coast Plaza</b><i>US</i></span><span class="st"><b>Vancouver Holt Renfrew</b><i>CA</i></span><span class="st"><b>Gwangju Shinsegae</b><i>KR</i></span><span class="st"><b>Palo Alto Neiman Marcus</b><i>US</i></span><span class="st"><b>Milan Montenapoleone</b><i>IT</i></span><span class="st"><b>Shenzhen MixC</b><i>CN</i></span><span class="st"><b>Macau One Central</b><i>MO</i></span><span class="st"><b>Bangkok Siam Paragon</b><i>TH</i></span><span class="st"><b>Seoul Hyundai Main</b><i>KR</i></span><span class="st"><b>Changsha IFS</b><i>CN</i></span><span class="st"><b>Shenyang MixC</b><i>CN</i></span><span class="st"><b>Qatar Hamad Airport</b><i>QA</i></span><span class="st"><b>Seongnam Hyundai Pangyo</b><i>KR</i></span><span class="st"><b>Paris Samaritaine</b><i>FR</i></span><span class="st"><b>Seoul Galleria Men</b><i>KR</i></span><span class="st"><b>Fuzhou MixC</b><i>CN</i></span><span class="st"><b>Daejeon Galleria Timeworld</b><i>KR</i></span><span class="st"><b>Nanjing IFC</b><i>CN</i></span><span class="st"><b>San Francisco Neiman Marcus</b><i>US</i></span><span class="st"><b>Paris Grenelle</b><i>FR</i></span><span class="st"><b>Kunming Spring City 66</b><i>CN</i></span><span class="st"><b>Lotte Incheon</b><i>KR</i></span><span class="st"><b>Sydney Westfield</b><i>AU</i></span><span class="st"><b>Wuxi Center 66</b><i>CN</i></span><span class="st"><b>Scottsdale</b><i>US</i></span><span class="st"><b>Short Hills</b><i>US</i></span><span class="st"><b>Boca Raton Saks</b><i>US</i></span><span class="st"><b>Seoul Hyundai Coex</b><i>KR</i></span><span class="st"><b>Dallas Highland Park</b><i>US</i></span><span class="st"><b>New York Saks</b><i>US</i></span><span class="st"><b>Monaco</b><i>MC</i></span><span class="st"><b>Macau Four Seasons</b><i>MO</i></span><span class="st"><b>Xi&#x27;an SKP</b><i>CN</i></span><span class="st"><b>Guangzhou Taikoo Hui</b><i>CN</i></span><span class="st"><b>Seoul Cheongdam Flagship</b><i>KR</i></span><span class="st"><b>Toronto Yorkdale</b><i>CA</i></span><span class="st"><b>Kobe Sanda Outlet</b><i>JP</i></span><span class="st"><b>Hanam Shinsegae</b><i>KR</i></span><span class="st"><b>Beijing Sanlitun</b><i>CN</i></span><span class="st"><b>Frankfurt</b><i>DE</i></span><span class="st"><b>Vancouver Oakridge</b><i>CA</i></span><span class="st"><b>Kobe Hankyu</b><i>JP</i></span><span class="st"><b>Kyoto Takashimaya</b><i>JP</i></span><span class="st"><b>Beijing Daxing Airport</b><i>CN</i></span><span class="st"><b>Sydney Airport</b><i>AU</i></span><span class="st"><b>Wuhan International Plaza</b><i>CN</i></span><span class="st"><b>Tokyo Omotesando</b><i>JP</i></span><span class="st"><b>Toronto Holt Renfrew Bloor St</b><i>CA</i></span><span class="st"><b>Seoul Lotte Main</b><i>KR</i></span><span class="st"><b>Florence</b><i>IT</i></span><span class="st"><b>Beijing SKP</b><i>CN</i></span><span class="st"><b>Daegu The Hyundai</b><i>KR</i></span><span class="st"><b>Las Vegas Wynn</b><i>US</i></span><span class="st"><b>Geneva</b><i>CH</i></span><span class="st"><b>Calgary Holt Renfrew</b><i>CA</i></span><span class="st"><b>Johor Premium Outlet</b><i>MY</i></span><span class="st"><b>Fukuoka Hakata Hankyu</b><i>JP</i></span><span class="st"><b>Qingdao Hisense</b><i>CN</i></span><span class="st"><b>London New Bond Street</b><i>GB</i></span><span class="st"><b>Chicago</b><i>US</i></span><span class="st"><b>Kisarazu Outlet</b><i>JP</i></span><span class="st"><b>Yokohama Sogo</b><i>JP</i></span><span class="st"><b>Stockholm</b><i>SE</i></span><span class="st"><b>Woodbury Outlet</b><i>US</i></span><span class="st"><b>Sanya Haitang</b><i>CN</i></span><span class="st"><b>Taichung Mitsukoshi</b><i>TW</i></span><span class="st"><b>New York Soho</b><i>US</i></span><span class="st"><b>Melbourne Collins Street</b><i>AU</i></span><span class="st"><b>Melbourne David Jones</b><i>AU</i></span><span class="st"><b>Hong Kong Elements</b><i>HK</i></span><span class="st"><b>Tokyo Shinjuku Takashimaya</b><i>JP</i></span><span class="st"><b>Berlin KaDeWe</b><i>DE</i></span><span class="st"><b>Puerto Banus</b><i>ES</i></span><span class="st"><b>Honolulu Ala Moana</b><i>US</i></span><span class="st"><b>Las Vegas Crystals</b><i>US</i></span><span class="st"><b>Kuwait Prestige The Avenues</b><i>KW</i></span><span class="st"><b>Macau Wynn</b><i>MO</i></span><span class="st"><b>Hong Kong Ocean Centre</b><i>HK</i></span><span class="st"><b>Manila Greenbelt</b><i>PH</i></span><span class="st"><b>Macau Galaxy</b><i>MO</i></span><span class="st"><b>Zurich</b><i>CH</i></span><span class="st"><b>Sydney Chatswood</b><i>AU</i></span><span class="st"><b>Taipei Sogo BR4</b><i>TW</i></span><span class="st"><b>Tokyo Ginza Matsuya</b><i>JP</i></span><span class="st"><b>Topanga</b><i>US</i></span><span class="st"><b>Singapore ION Orchard</b><i>SG</i></span><span class="st"><b>Shanghai Grand Gateway 66</b><i>CN</i></span><span class="st"><b>Taipei 101</b><i>TW</i></span><span class="st"><b>Tokyo Shinjuku Isetan</b><i>JP</i></span><span class="st"><b>Phuket</b><i>TH</i></span><span class="st"><b>Santa Clara Valley Fair</b><i>US</i></span><span class="st"><b>Paris Galeries Lafayette</b><i>FR</i></span><span class="st"><b>Nagoya Takashimaya</b><i>JP</i></span><span class="st"><b>Hong Kong IFC</b><i>HK</i></span><span class="st"><b>Tokyo Ginza Mitsukoshi</b><i>JP</i></span><span class="st"><b>Yokohama Takashimaya</b><i>JP</i></span><span class="st"><b>Suwon Galleria Gwanggyo</b><i>KR</i></span><span class="st"><b>Beverly Hills Rodeo Drive</b><i>US</i></span><span class="st"><b>Beijing Badaling Outlet</b><i>CN</i></span><span class="st"><b>Hamburg Alsterhaus</b><i>DE</i></span><span class="st"><b>Singapore Ngee Ann City</b><i>SG</i></span><span class="st"><b>Munich Maximilianstrasse</b><i>DE</i></span><span class="st"><b>Paris Montaigne</b><i>FR</i></span><span class="st"><b>Dublin Brown Thomas</b><i>IE</i></span><span class="st"><b>Okinawa DFS</b><i>JP</i></span><span class="st"><b>Beverly Hills Neiman Marcus</b><i>US</i></span><span class="st"><b>Osaka Takashimaya</b><i>JP</i></span><span class="st"><b>Bicester Village Outlet</b><i>GB</i></span><span class="st"><b>Kyoto Daimaru</b><i>JP</i></span><span class="st"><b>Daegu Shinsegae</b><i>KR</i></span><span class="st"><b>Tokyo Hankyu</b><i>JP</i></span><span class="st"><b>Tianjin MixC</b><i>CN</i></span><span class="st"><b>Yongin Shinsegae Southcity</b><i>KR</i></span><span class="st"><b>Beverly Hills Saks</b><i>US</i></span><span class="st"><b>Costa Mesa South Coast Plaza</b><i>US</i></span><span class="st"><b>Vancouver Holt Renfrew</b><i>CA</i></span><span class="st"><b>Gwangju Shinsegae</b><i>KR</i></span><span class="st"><b>Palo Alto Neiman Marcus</b><i>US</i></span><span class="st"><b>Milan Montenapoleone</b><i>IT</i></span><span class="st"><b>Shenzhen MixC</b><i>CN</i></span><span class="st"><b>Macau One Central</b><i>MO</i></span><span class="st"><b>Bangkok Siam Paragon</b><i>TH</i></span><span class="st"><b>Seoul Hyundai Main</b><i>KR</i></span><span class="st"><b>Changsha IFS</b><i>CN</i></span><span class="st"><b>Shenyang MixC</b><i>CN</i></span><span class="st"><b>Qatar Hamad Airport</b><i>QA</i></span><span class="st"><b>Seongnam Hyundai Pangyo</b><i>KR</i></span><span class="st"><b>Paris Samaritaine</b><i>FR</i></span><span class="st"><b>Seoul Galleria Men</b><i>KR</i></span><span class="st"><b>Fuzhou MixC</b><i>CN</i></span><span class="st"><b>Daejeon Galleria Timeworld</b><i>KR</i></span><span class="st"><b>Nanjing IFC</b><i>CN</i></span><span class="st"><b>San Francisco Neiman Marcus</b><i>US</i></span><span class="st"><b>Paris Grenelle</b><i>FR</i></span><span class="st"><b>Kunming Spring City 66</b><i>CN</i></span><span class="st"><b>Lotte Incheon</b><i>KR</i></span><span class="st"><b>Sydney Westfield</b><i>AU</i></span><span class="st"><b>Wuxi Center 66</b><i>CN</i></span><span class="st"><b>Scottsdale</b><i>US</i></span><span class="st"><b>Short Hills</b><i>US</i></span><span class="st"><b>Boca Raton Saks</b><i>US</i></span><span class="st"><b>Seoul Hyundai Coex</b><i>KR</i></span><span class="st"><b>Dallas Highland Park</b><i>US</i></span><span class="st"><b>New York Saks</b><i>US</i></span><span class="st"><b>Monaco</b><i>MC</i></span><span class="st"><b>Macau Four Seasons</b><i>MO</i></span><span class="st"><b>Xi&#x27;an SKP</b><i>CN</i></span><span class="st"><b>Guangzhou Taikoo Hui</b><i>CN</i></span><span class="st"><b>Seoul Cheongdam Flagship</b><i>KR</i></span><span class="st"><b>Toronto Yorkdale</b><i>CA</i></span><span class="st"><b>Kobe Sanda Outlet</b><i>JP</i></span><span class="st"><b>Hanam Shinsegae</b><i>KR</i></span><span class="st"><b>Beijing Sanlitun</b><i>CN</i></span><span class="st"><b>Frankfurt</b><i>DE</i></span><span class="st"><b>Vancouver Oakridge</b><i>CA</i></span><span class="st"><b>Kobe Hankyu</b><i>JP</i></span><span class="st"><b>Kyoto Takashimaya</b><i>JP</i></span><span class="st"><b>Beijing Daxing Airport</b><i>CN</i></span><span class="st"><b>Sydney Airport</b><i>AU</i></span><span class="st"><b>Wuhan International Plaza</b><i>CN</i></span><span class="st"><b>Tokyo Omotesando</b><i>JP</i></span><span class="st"><b>Toronto Holt Renfrew Bloor St</b><i>CA</i></span><span class="st"><b>Seoul Lotte Main</b><i>KR</i></span><span class="st"><b>Florence</b><i>IT</i></span><span class="st"><b>Beijing SKP</b><i>CN</i></span><span class="st"><b>Daegu The Hyundai</b><i>KR</i></span><span class="st"><b>Las Vegas Wynn</b><i>US</i></span><span class="st"><b>Geneva</b><i>CH</i></span><span class="st"><b>Calgary Holt Renfrew</b><i>CA</i></span><span class="st"><b>Johor Premium Outlet</b><i>MY</i></span><span class="st"><b>Fukuoka Hakata Hankyu</b><i>JP</i></span><span class="st"><b>Qingdao Hisense</b><i>CN</i></span><span class="st"><b>London New Bond Street</b><i>GB</i></span></div>
-  </div>
 
   <section class="statement">
     <div class="wrap">
@@ -292,7 +277,7 @@ function trimLogo(img) {
       </div>
 
       <article class="panel">
-        <div class="duo"><img src="https://images.pexels.com/photos/29401617/pexels-photo-29401617.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Luxury boutique with handbags on display" loading="lazy"></div>
+        <div class="duo natural"><img src="landing-retail.jpg" alt="CELINE handbags on display" loading="lazy"></div>
         <div class="panel-body">
           <span class="panel-for">For boutiques and department stores</span>
           <h3>Retail</h3>
@@ -325,27 +310,6 @@ function trimLogo(img) {
     </div>
   </section>
 
-  <section class="learn" id="learning">
-    <div class="wrap">
-      <div>
-        <span class="soon">Coming soon</span>
-        <h2>It learns from your plannings.</h2>
-        <p>Every planning you validate shows CAST how your team really works. Next month, the first draft is already closer to the one you would have made yourself.</p>
-        <ul>
-          <li><b>Learns your habits.</b> Who usually opens, who closes, who prefers which days.</li>
-          <li><b>Gets better each month.</b> The more you use it, the less you have to change.</li>
-          <li><b>Rules stay first.</b> What it learns never overrides hours, rest or coverage.</li>
-        </ul>
-      </div>
-      <div class="stack" aria-hidden="true">
-        <div class="sheet"><div class="sheet-h">August<span>validated</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh o"></i><i class="sh f"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh m"></i><i class="sh c"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i></div></div>
-        <div class="sheet"><div class="sheet-h">September<span>validated</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh o"></i><i class="sh f"></i><i class="sh o"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh m"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh m"></i></div></div>
-        <div class="sheet"><div class="sheet-h">October<span>validated</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh f"></i><i class="sh m"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh f"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i></div></div>
-        <div class="sheet"><div class="sheet-h">November<span>first draft</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh f"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i></div></div>
-      </div>
-    </div>
-  </section>
-
   <section class="glimpse" id="how">
     <div class="wrap">
       <div>
@@ -373,6 +337,26 @@ function trimLogo(img) {
     </div>
   </section>
 
+  <section class="learn" id="better">
+    <div class="wrap">
+      <div>
+        <h2>CAST gets better every time you use it.</h2>
+        <p>Every planning you validate makes the next first draft closer to the one you would have made yourself.</p>
+        <ul>
+          <li><b>Your way of working.</b> Who usually opens, who closes, who prefers which days.</li>
+          <li><b>Fewer changes each month.</b> The more you use it, the less you have to adjust.</li>
+          <li><b>Rules stay first.</b> Your habits never override hours, rest or coverage.</li>
+        </ul>
+      </div>
+      <div class="stack" aria-hidden="true">
+        <div class="sheet"><div class="sheet-h">August<span>validated</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh o"></i><i class="sh f"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh m"></i><i class="sh c"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i></div></div>
+        <div class="sheet"><div class="sheet-h">September<span>validated</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh o"></i><i class="sh f"></i><i class="sh o"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh m"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh m"></i></div></div>
+        <div class="sheet"><div class="sheet-h">October<span>validated</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh f"></i><i class="sh m"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh f"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i></div></div>
+        <div class="sheet"><div class="sheet-h">November<span>first draft</span></div><div class="g"><i class="sh c"></i><i class="sh c"></i><i class="sh m"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh f"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i><i class="sh c"></i><i class="sh c"></i><i class="sh f"></i><i class="sh o"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh o"></i><i class="sh c"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh f"></i><i class="sh c"></i></div></div>
+      </div>
+    </div>
+  </section>
+
   <section class="reach">
     <div class="wrap">
       <div class="reach-grid">
@@ -384,8 +368,8 @@ function trimLogo(img) {
     </div>
   </section>
 
+  <figure class="showcase"><img src="landing-final.jpg" alt="Maisons of the LVMH group"></figure>
   <section class="final">
-    <div class="bg"><img src="https://images.pexels.com/photos/30020047/pexels-photo-30020047.jpeg?auto=compress&cs=tinysrgb&w=1920" alt="" loading="lazy"></div>
     <div class="wrap">
       <h2>Ready for next month?</h2>
       <p>Open your module, pick your store or center, and your team is already there.</p>
@@ -399,17 +383,11 @@ function trimLogo(img) {
 
 <footer>
   <div class="wrap">
-    <div>CAST - CELINE Automated Scheduling Tool. Internal tool for CELINE teams.
-      <small>Photos <a href="https://www.pexels.com">Pexels</a> and <a href="https://unsplash.com">Unsplash</a>, video <a href="https://www.pexels.com">Pexels</a></small></div>
-    <span class="sign">©Roman Inc.</span>
+    <span>CAST - CELINE Automated Scheduling Tool. Internal tool for CELINE teams.</span>
+    <span class="sign">© Roman Inc.</span>
   </div>
 </footer>
 
-<script>
-// Still image instead of the video when the visitor asks for less motion
-if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  var v = document.getElementById('hero-video'); if (v) { v.removeAttribute('autoplay'); v.pause(); }
-}
-</script>
 </body>
 </html>
+
