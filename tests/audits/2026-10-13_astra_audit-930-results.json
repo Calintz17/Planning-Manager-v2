@@ -1,0 +1,382 @@
+{
+  "results": [
+    {
+      "label": "bm",
+      "refs": false,
+      "version": "927",
+      "matched": 359,
+      "total": 867,
+      "pct": 41.40715109573241,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "bm",
+      "refs": false,
+      "version": "930",
+      "matched": 343,
+      "total": 867,
+      "pct": 39.561707035755475,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "bm",
+      "refs": true,
+      "version": "927",
+      "matched": 359,
+      "total": 867,
+      "pct": 41.40715109573241,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "bm",
+      "refs": true,
+      "version": "930",
+      "matched": 373,
+      "total": 867,
+      "pct": 43.021914648212224,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "jp",
+      "refs": false,
+      "version": "927",
+      "matched": 85,
+      "total": 295,
+      "pct": 28.8135593220339,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "jp",
+      "refs": false,
+      "version": "930",
+      "matched": 85,
+      "total": 295,
+      "pct": 28.8135593220339,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "zeroTraffic",
+      "learning": false,
+      "gateGaps": 0,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "zeroTraffic",
+      "learning": true,
+      "gateGaps": 0,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "hours30",
+      "learning": false,
+      "gateGaps": 0,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "hours30",
+      "learning": true,
+      "gateGaps": 0,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "longClose",
+      "learning": false,
+      "gateGaps": 21,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 12,
+        "cornerClose": 9,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "longClose",
+      "learning": true,
+      "gateGaps": 21,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 12,
+        "cornerClose": 9,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fewSales",
+      "learning": false,
+      "gateGaps": 179,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 65,
+        "cornerOpen": 24,
+        "cornerClose": 25,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fewSales",
+      "learning": true,
+      "gateGaps": 179,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 65,
+        "cornerOpen": 24,
+        "cornerClose": 25,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fixedInvalid",
+      "learning": false,
+      "gateGaps": 8,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 3,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 8,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fixedInvalid",
+      "learning": true,
+      "gateGaps": 8,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 3,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 8,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    }
+  ],
+  "compatibility": [
+    {
+      "version": "927",
+      "refs": false,
+      "compliant": true,
+      "score": 90.36863655756834,
+      "components": {
+        "coverage": 91.52084222506758,
+        "rest": 93.64161849710982,
+        "shiftMix": 84.68992248062015,
+        "corners": 87.29829622284325
+      }
+    },
+    {
+      "version": "930",
+      "refs": false,
+      "compliant": true,
+      "score": 90.17906211155834,
+      "components": {
+        "coverage": 91.47529328119445,
+        "rest": 93.64161849710982,
+        "shiftMix": 83.91472868217053,
+        "corners": 87.13513513513513
+      }
+    },
+    {
+      "version": "930",
+      "refs": true,
+      "compliant": true,
+      "score": 90.55403281493217,
+      "components": {
+        "coverage": 91.69050343249427,
+        "rest": 94.27480916030534,
+        "shiftMix": 84.32327166504382,
+        "corners": 87.30734360834089
+      }
+    }
+  ],
+  "probes": {
+    "blankReference": {
+      "days": 30,
+      "workMonday": 3.8918202981106256
+    },
+    "noReference": {
+      "days": 0,
+      "workMonday": 0
+    },
+    "currentOverrideExcluded": {
+      "days": 0
+    },
+    "manualOverride": {
+      "days": 1,
+      "shiftC": 0.6666666666666667,
+      "shiftO": -0.3333333333333333
+    },
+    "inactiveNoReference": {
+      "days": 0
+    },
+    "futureGlobalHabit": {
+      "C": 1
+    }
+  },
+  "gate-probe": {
+    "gate": 0,
+    "daysBelowMinimum": 30
+  },
+  "actions": {
+    "generatedPrior": "O",
+    "loggedOld": null,
+    "loggedNew": "C",
+    "reset": {
+      "before": {
+        "override": {
+          "2026-09-07": "OFF"
+        },
+        "months": [
+          "2026-09"
+        ]
+      },
+      "after": {
+        "override": {},
+        "months": [
+          "2026-09"
+        ]
+      }
+    },
+    "editRows": 1
+  }
+}
