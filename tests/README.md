@@ -17,6 +17,7 @@ Nothing here is loaded by `retail.html` or `CSC.html`. The site does not use it.
 `python3 tests/retail/bm/run_bench.py tests/builds/CAST_v9_2_7_RETAIL.html` (Python Playwright with Chromium).
 The runner prints the SHA-256 it computed, fixes the browser clock at 2026-10-31 12:00, stubs Supabase (`stub_supabase.js`), loads `setup.js` and the official JSON, then runs `check_rules.js` for four settings: base 5/5/10, 6/12/11 at 45 h (stress), a fixed contract with no hours, and a fixed 5 x 08:00-18:00 contract already in the database. On the base it also saves two contracts through the real agent editor: 5 x 08:00-18:00 must be refused with no write, 4 days with no hours must be saved.
 `retail.html` on main is the live version, not the candidate: always name the build file you test.
+Results also give the November functional compatibility (coverage, rest, shift mix, corners; weights 40/30/20/10 proposed) next to the exact match.
 Results have three states: a breach, "to fix" (a fixed contract above Labor rules, kept as the manager set it) and "not checkable" (daily rest next to an OUT day, whose hours are unknown). Not checkable is never counted as valid.
 
 ## Reference run (Claude, 2026-10-12)

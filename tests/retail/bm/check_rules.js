@@ -99,6 +99,38 @@
       });
     });
     out.match = { cells: tot, dayPct: Math.round(1000 * day / tot) / 10, exactPct: Math.round(1000 * cell / tot) / 10 };
+    // Functional compatibility (tests/audits/2026-10-13_astra_kpi-fonctionnels-import-sept-oct.md), weights 40/30/20/10 proposed, not decided
+    // 100 x (1 - sum|R-G| / sum(R+G)) per component; keys keep the day, so the right totals on the wrong days do not score 100
+    function vc(R, G) { var d = 0, t = 0; Object.keys(Object.assign({}, R, G)).forEach(function(k) { var r = R[k] || 0, g = G[k] || 0; d += Math.abs(r - g); t += r + g; }); return t ? 100 * (1 - d / t) : 100; }
+    function inc(o, k) { o[k] = (o[k] || 0) + 1; }
+    var V = { ref: { coverage: {}, rest: {}, shiftMix: {}, corners: {} }, gen: { coverage: {}, rest: {}, shiftMix: {}, corners: {} } };
+    Object.keys(OFFICIAL).forEach(function(id) {
+      var a = agents.find(function(q) { return q.id === id; }); if (!a) return;
+      var pool = poolOf(a), home = (storeCorners.find(function(q) { return q.id === a.home_corner_id; }) || {}).code;
+      Object.keys(OFFICIAL[id]).forEach(function(ds) {
+        var r = N[ds] && N[ds][id]; if (!r || getDayClosureType(ds)) return;
+        var o = OFFICIAL[id][ds], wk = monday(ds);
+        // reference
+        if (o === 'OFF') inc(V.ref.rest, id + '|' + wk);
+        else if (o !== 'ABS' && o !== 'FO') {
+          var p = o.split('-'), sh = p[0], cn = (p[1] || '').replace('HP', 'PRF').replace('SHOES', 'SHO');
+          if (o === 'CL-G') { sh = 'C'; cn = 'LG'; }
+          if (cn === 'OPS') { sh += 'S'; cn = ''; }
+          inc(V.ref.coverage, ds + '|' + pool); inc(V.ref.shiftMix, pool + '|' + sh);
+          if (pool !== 'stock') inc(V.ref.coverage, ds + '|' + (sh[0] === 'O' ? 'open' : sh[0] === 'C' ? 'close' : 'mid'));
+          if (pool === 'sales') inc(V.ref.corners, ds + '|' + (cn || home));
+        }
+        // generated
+        if (isOnsite(a, ds, r)) {
+          var wh = workHoursOf(a, ds, r), cv = coverOfHours(wh.start, wh.end, dayMinutes(ds));
+          inc(V.gen.coverage, ds + '|' + pool); inc(V.gen.shiftMix, pool + '|' + r.code);
+          if (pool !== 'stock') inc(V.gen.coverage, ds + '|' + (cv.open ? 'open' : cv.close ? 'close' : 'mid'));
+          if (pool === 'sales') inc(V.gen.corners, ds + '|' + (r.corner || home));
+        } else if (r.code !== 'OUT' && r.code !== 'A' && agentOnLeave(a.id, ds) !== 'out') inc(V.gen.rest, id + '|' + wk);
+      });
+    });
+    var comp = {}; ['coverage', 'rest', 'shiftMix', 'corners'].forEach(function(k) { comp[k] = Math.round(10 * vc(V.ref[k], V.gen[k])) / 10; });
+    out.functional = { score: Math.round(10 * (0.4 * comp.coverage + 0.3 * comp.rest + 0.2 * comp.shiftMix + 0.1 * comp.corners)) / 10, components: comp };
   }
   return JSON.stringify(out);
 })()
