@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.2.7</title>
+  <title>CAST v9.3.2</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -1887,6 +1887,7 @@ async function loadRegulations() {
     max_days_2weeks: 0,
     monthly_rest_days: 0,
     traffic_follow_pct: 100,
+    learning_references: [],
     rest_gap_hours: 11,
     trend_pct:       0,
     aht_tasks: {
@@ -1910,6 +1911,9 @@ async function loadRegulations() {
       case 'max_days':        { var vMD  = parseInt(row.rule_value, 10); regulations.max_days = isNaN(vMD) ? 5 : vMD; break; }
       case 'max_consecutive_days': { var vMC = parseInt(row.rule_value, 10); regulations.max_consecutive_days = isNaN(vMC) ? 0 : vMC; break; }
       case 'max_days_2weeks': { var vM2 = parseInt(row.rule_value, 10); regulations.max_days_2weeks = isNaN(vM2) ? 0 : vM2; break; }
+      case 'learning_references':
+        try { var vLR = JSON.parse(row.rule_value); regulations.learning_references = Array.isArray(vLR) ? vLR : []; } catch(e) {}
+        break;
       case 'traffic_follow_pct': { var vTF = parseInt(row.rule_value, 10); regulations.traffic_follow_pct = isNaN(vTF) ? 100 : Math.max(0, Math.min(100, vTF)); break; }
       case 'monthly_rest_days': { var vMR = parseInt(row.rule_value, 10); regulations.monthly_rest_days = isNaN(vMR) || vMR < 0 ? 0 : vMR; break; }
       case 'rest_gap_hours':  { var vRGH = parseFloat(row.rule_value); regulations.rest_gap_hours = isNaN(vRGH) ? 11 : vRGH; break; }
@@ -2098,6 +2102,52 @@ function fixedScheduleIssue(fx, status) {
     return tf('{h}h paid per week, above Max hours / week ({max}h)', { h: hh(paid * n), max: regulations.weekly_hours });
   return '';
 }
+// Habits learned from the manager's own decisions, never from CAST's own plannings.
+// Sources: every manual change (one value per cell, the latest choice wins) and the plannings imported as official.
+// An import declares what it really covers (Labor rules key learning_references): [{ from, to, agents }] with the
+// first and last day and the ids of the people whose whole period is in the import. Only there, a day without OFF,
+// absence or closure counts as worked. Anyone or any day not declared stays unknown and teaches nothing.
+// Six months before the month planned, recent days weigh more (half after 90 days). Team, then person, then person and weekday.
+function buildHabits(cutoffDs) {
+  var ALPHA = 8, HALF = 90, cnt = {}, n = 0;
+  var cut = new Date(cutoffDs + 'T12:00:00'), from = new Date(cut); from.setMonth(from.getMonth() - 6);
+  var fromDs = toDateStr(from), refs = regulations.learning_references || [];
+  function add(k, label, w) { var r = cnt[k] = cnt[k] || {}; r[label] = (r[label] || 0) + w; }
+  agents.forEach(function(a) {
+    var pool = poolOf(a), ov = planningOverrides[a.id] || {}, days = {};
+    refs.forEach(function(r) {
+      if (!r || !r.from || !r.to || !Array.isArray(r.agents) || r.agents.indexOf(a.id) === -1) return;
+      // Only the learning window is walked (6 months before the planned month)
+      for (var x = new Date((r.from > fromDs ? r.from : fromDs) + 'T12:00:00'); toDateStr(x) <= r.to && toDateStr(x) < cutoffDs; x.setDate(x.getDate() + 1)) days[toDateStr(x)] = '';
+    });
+    Object.keys(ov).forEach(function(ds) { days[ds] = ov[ds]; });
+    Object.keys(days).forEach(function(ds) {
+      if (ds < fromDs || ds >= cutoffDs || getDayClosureType(ds) || agentOnLeave(a.id, ds)) return;
+      var v = days[ds], shift = null;
+      if (v && v !== 'OFF') { if (!workHoursOf(a, ds, { code: v })) return; shift = v; }
+      var state = v === 'OFF' ? 'off' : 'work', dt = new Date(ds + 'T12:00:00'), dow = dt.getDay();
+      var w = Math.pow(2, -((cut - dt) / 864e5) / HALF);
+      add('p|' + pool, state, w); add('p|' + a.id, state, w); add('p|' + a.id + '|' + dow, state, w);
+      if (shift) { add('s|' + pool, shift, w); add('s|' + a.id, shift, w); add('s|' + a.id + '|' + dow, shift, w); }
+      n++;
+    });
+  });
+  function tot(r) { var t = 0; for (var k in r) t += r[k]; return t; }
+  function prob(kind, a, dow, label, fallback) {
+    var team = cnt[kind + '|' + poolOf(a)] || {}, me = cnt[kind + '|' + a.id] || {}, day = cnt[kind + '|' + a.id + '|' + dow] || {};
+    var base = tot(team) ? (team[label] || 0) / tot(team) : fallback;
+    var p = ((me[label] || 0) + ALPHA * base) / (tot(me) + ALPHA);
+    return ((day[label] || 0) + ALPHA * p) / (tot(day) + ALPHA);
+  }
+  return {
+    days: n,
+    // How much this person usually works on this weekday (log-odds, 0 when nothing is known)
+    work: function(a, dow) { if (!n) return 0; var p = Math.min(0.98, Math.max(0.02, prob('p', a, dow, 'work', 0.5))); return Math.log(p / (1 - p)); },
+    // How often this person takes this shift on this weekday, compared with an even choice (0 when nothing is known)
+    shift: function(a, dow, code, size) { var even = 1 / Math.max(1, size); return (cnt['s|' + poolOf(a)] ? prob('s', a, dow, code, even) : even) - even; },
+    knowsShifts: function(a) { return !!cnt['s|' + poolOf(a)]; }
+  };
+}
 // On the floor: a day with real working hours (OUT, absences and days off are not)
 function isOnsite(a, ds, res) { return !!workHoursOf(a, ds, res); }
 function regulationRows(storeId) {
@@ -2105,7 +2155,7 @@ function regulationRows(storeId) {
   return [
     ['saturday_rest', String(r.saturday_rest)], ['sunday_rest', String(r.sunday_rest)],
     ['weekly_hours', String(r.weekly_hours)], ['max_daily_hours', String(r.max_daily_hours)],
-    ['max_days', String(r.max_days || 5)], ['max_consecutive_days', String(dayLimits().row)], ['max_days_2weeks', String(dayLimits().twoWeeks)], ['monthly_rest_days', String(r.monthly_rest_days || 0)], ['traffic_follow_pct', String(r.traffic_follow_pct != null ? r.traffic_follow_pct : 100)],
+    ['max_days', String(r.max_days || 5)], ['max_consecutive_days', String(dayLimits().row)], ['max_days_2weeks', String(dayLimits().twoWeeks)], ['monthly_rest_days', String(r.monthly_rest_days || 0)], ['traffic_follow_pct', String(r.traffic_follow_pct != null ? r.traffic_follow_pct : 100)], ['learning_references', JSON.stringify(r.learning_references || [])],
     ['rest_gap_hours', String(r.rest_gap_hours != null ? r.rest_gap_hours : 11)],
     ['trend_pct', String(r.trend_pct)], ['aht_tasks', JSON.stringify(r.aht_tasks)],
     ['breaks', JSON.stringify(r.breaks)], ['closed_dates', JSON.stringify(r.closed_dates)],
@@ -2983,13 +3033,10 @@ async function loadPlanSnapshot() {
   var prevMonth = pm.getFullYear() + '-' + String(pm.getMonth() + 1).padStart(2, '0') + '-01';
   var res  = await sb.from('retail_planning_snapshot').select('plan').eq('store_id', storeId).eq('month', month);
   var prev = await sb.from('retail_planning_snapshot').select('plan').eq('store_id', storeId).eq('month', prevMonth);
-  var past = [1, 2, 3].map(function(k) { var d = new Date(monthlyRef.getFullYear(), monthlyRef.getMonth() - k, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01'; });
-  var hist = await sb.from('retail_planning_snapshot').select('plan').eq('store_id', storeId).in('month', past);
   if (storeId !== currentStoreId || month !== snapshotMonthKey()) return;
   var plan = (!res.error && res.data && res.data[0]) ? res.data[0].plan : null;
   planSnapshot = { storeId: storeId, month: month, ok: !res.error, plan: plan, confirmed: plan,
-                   prevPlan: (!prev.error && prev.data && prev.data[0]) ? prev.data[0].plan : null,
-                   history: (!hist.error && hist.data) ? hist.data.map(function(r) { return r.plan; }) : [] };
+                   prevPlan: (!prev.error && prev.data && prev.data[0]) ? prev.data[0].plan : null };
 }
 var snapChain = Promise.resolve(true), lastSnapSave = null;
 function savePlanSnapshot(storeId, month, plan) {
@@ -5008,6 +5055,12 @@ function renderWithAdjustMode() {
     renderMonthlyPlanning();
   }
 }
+// Trace of each change made by the manager (table retail_planning_edits, optional: without it nothing is logged)
+var editLogOff = false;
+function logManagerEdits(rows) {
+  if (editLogOff || !rows.length) return;
+  try { sb.from('retail_planning_edits').insert(rows).then(function(r) { if (r && r.error) editLogOff = true; }, function() { editLogOff = true; }); } catch (e) { editLogOff = true; }
+}
 async function applyCellOverride(value) {
   var st = cellEditorState;
   if (!st.agentId || !st.ds) return;
@@ -5016,9 +5069,11 @@ async function applyCellOverride(value) {
   if (multiSelect.length && !targets.some(function(s){ return s.agentId === st.agentId && s.ds === st.ds; })) {
     targets.push({ agentId: st.agentId, ds: st.ds });
   }
-  var succeeded = 0, failed = 0, lastErr = '';
+  var succeeded = 0, failed = 0, lastErr = '', edits = [];
   for (var ti = 0; ti < targets.length; ti++) {
     var tAgent = targets[ti].agentId, tDs = targets[ti].ds;
+    // The value the manager saw in the cell before the change (a manual change, or CAST's shift)
+    var shownV = (monthlyResult[tDs] || {})[tAgent], oldV = (planningOverrides[tAgent] || {})[tDs] || (shownV && shownV.code) || null;
     if (value === null) {
       var del = await sb.from('retail_planning_overrides')
         .delete().eq('agent_id', tAgent).eq('date', tDs);
@@ -5032,8 +5087,10 @@ async function applyCellOverride(value) {
       if (!planningOverrides[tAgent]) planningOverrides[tAgent] = {};
       planningOverrides[tAgent][tDs] = value;
     }
+    edits.push({ store_id: currentStoreId, agent_id: tAgent, date: tDs, field: 'shift', old_value: oldV, new_value: value, actor_source: 'manager_edit' });
     succeeded++;
   }
+  logManagerEdits(edits);
   if (failed) showToast(tf('{saved} saved, {failed} failed: {error}', { saved: succeeded, failed: failed, error: lastErr }), 'error');
   else showToast(succeeded > 1 ? tf('{count} cells updated \u2713', { count: succeeded }) : 'Updated \u2713');
   clearMultiSelect();
@@ -5044,6 +5101,8 @@ async function applyCornerOverride(cornerId) {
   var st = cellEditorState;
   if (!st.agentId || !st.ds) return;
   closeCellEditor();
+  var shownC = (monthlyResult[st.ds] || {})[st.agentId], oldCode = shownC && shownC.corner;
+  var oldC = (cornerOverrides[st.agentId] || {})[st.ds] || ((storeCorners.find(function(c) { return c.code === oldCode; }) || {}).id) || null;
   if (cornerId) {
     var up = await sb.from('retail_corner_overrides')
       .upsert({ agent_id: st.agentId, date: st.ds, corner_id: cornerId },
@@ -5057,6 +5116,7 @@ async function applyCornerOverride(cornerId) {
     if (del.error) { showToast('Failed to reset corner', 'error'); return; }
     if (cornerOverrides[st.agentId]) delete cornerOverrides[st.agentId][st.ds];
   }
+  logManagerEdits([{ store_id: currentStoreId, agent_id: st.agentId, date: st.ds, field: 'corner', old_value: oldC, new_value: cornerId || null, actor_source: 'manager_edit' }]);
   showToast('Corner updated \u2713');
   renderWithAdjustMode();
 }
@@ -5068,6 +5128,7 @@ async function clearMonthOverrides() {
   var last  = toDateStr(new Date(year, mIdx + 1, 0));
   var label = new Date(year, mIdx, 1).toLocaleDateString(dLoc(),
                 { month: 'long', year: 'numeric' });
+  if ((regulations.learning_references || []).some(function(r) { return r && r.from <= last && r.to >= first; })) { showToast(tf('{period} is an imported planning: its changes are kept', { period: label }), 'error'); return; }
   if (!confirm(tf('Reset all manual changes for {period}?', { period: label }))) return;
   showLoader();
   var ids = agents.map(function(a) { return a.id; });
@@ -5326,6 +5387,9 @@ function hlAddFormHtml(weekStart, weekEnd) {
     '</div>';
 }
 var fixedWarned = {};
+// Habits never add a broken rule: the plan with habits is kept only if every rule it breaks is also broken without habits
+var habitsGate = { off: false, dry: false, issues: null, last: null };
+var NO_HABITS = { days: 0, work: function() { return 0; }, shift: function() { return 0; }, knowsShifts: function() { return false; } };
 function renderMonthlyPlanning() {
   var lim = dayLimits(), maxDays = lim.week;
   var unpaidMin = unpaidMinutes();
@@ -5412,6 +5476,9 @@ function renderMonthlyPlanning() {
     weeks[wk].push(d);
   });
   var restMap = {};
+  // The manager's habits (from past manual changes and imported plannings, before this month)
+  var habits = habitsGate.off ? NO_HABITS : buildHabits(toDateStr(new Date(year, monthIdx, 1)));
+  function likes(a, d) { return habits.work(a, d.dow); }
   agents.forEach(function(a) { restMap[a.id] = {}; });
   // Absences and leaves always win
   function isBlocked(a, d) {
@@ -5674,6 +5741,11 @@ function renderMonthlyPlanning() {
     });
     if (!pool.length) return null;
     pool.sort(function(x, y) {
+      // With habits: one continuous score (habit, then share of days already given), without: the usual order
+      if (habits.days) {
+        var sc = (likes(y, d) - 3 * worked[y.id] / Math.max(1, quota[y.id])) - (likes(x, d) - 3 * worked[x.id] / Math.max(1, quota[x.id]));
+        if (sc) return sc;
+      }
       var byLoadDiff = (worked[x.id] / Math.max(1, quota[x.id])) -
                        (worked[y.id] / Math.max(1, quota[y.id]));
       if (Math.abs(byLoadDiff) > 0.01) return byLoadDiff;
@@ -5705,14 +5777,14 @@ function renderMonthlyPlanning() {
     var here = assignedMap[d.ds].filter(function(id) { var a = agents.find(function(x) { return x.id === id; }); return a && poolOf(a) === p; }).length;
     return here / Math.max(0.1, avg);
   }
-  // Fill one day up to its target, everyone together, the most days left first
+  // Fill one day up to its target, everyone together: the team that is short first, then who usually works this day, then the most days left
   function fillDay(d, target) {
     var wk = weekKey(d.date);
     while (assignedMap[d.ds].length < target) {
       var pool = agents.filter(function(a) { return free(a, d); });
       if (!pool.length) break;
       pool.sort(function(x, y) {
-        return (poolLoad(d, poolOf(x)) - poolLoad(d, poolOf(y))) || (weekLeft(y, wk) - weekLeft(x, wk)) || (prefDebt[x.id] - prefDebt[y.id]) ||
+        return (poolLoad(d, poolOf(x)) - poolLoad(d, poolOf(y))) || ((likes(y, d) + 0.5 * weekLeft(y, wk)) - (likes(x, d) + 0.5 * weekLeft(x, wk))) || (prefDebt[x.id] - prefDebt[y.id]) ||
           (prefScoreFor(y, d) - prefScoreFor(x, d)) || (x.id < y.id ? -1 : 1);
       });
       addTo(pool[0], d);
@@ -5732,8 +5804,8 @@ function renderMonthlyPlanning() {
         var days = wkDays.filter(function(d) { return free(a, d); });
         if (!days.length) break;
         days.sort(function(x, y) {
-          return (poolLoad(x, poolOf(a)) - poolLoad(y, poolOf(a))) ||
-            ((dayTarget[y.ds] || 0) - assignedMap[y.ds].length) - ((dayTarget[x.ds] || 0) - assignedMap[x.ds].length) ||
+          function want(e) { return likes(a, e) + 0.5 * ((dayTarget[e.ds] || 0) - assignedMap[e.ds].length); }
+          return (poolLoad(x, poolOf(a)) - poolLoad(y, poolOf(a))) || (want(y) - want(x)) ||
             (prefScoreFor(a, y) - prefScoreFor(a, x)) || ((y.vol || 0) - (x.vol || 0));
         });
         addTo(a, days[0]);
@@ -5848,6 +5920,42 @@ function renderMonthlyPlanning() {
       if (!changed) break;
     }
   })();
+  // Days closer to the manager's habits: two people of the same team swap a day in the same week
+  // (same number of people every day, same days each, rules kept, no fewer pairs of days off)
+  if (habits.days) (function swapToHabits() {
+    function on(a, d) { return assignedMap[d.ds].indexOf(a.id) !== -1; }
+    function free2(a, d) { return !d.past && !d.closure && !isBlocked(a, d) && !(planningOverrides[a.id] || {})[d.ds]; }
+    function pairs(a, wk) {
+      var n = 0;
+      for (var i = 0; i < monthDays.length - 1; i++) {
+        var x = monthDays[i], y = monthDays[i + 1];
+        if (weekKey(x.date) === wk && weekKey(y.date) === wk && (x.closure || !on(a, x)) && (y.closure || !on(a, y))) n++;
+      }
+      return n;
+    }
+    var movable = agents.filter(function(a) { return !isFixed(a); });
+    weekKeys.forEach(function(wk) {
+      var days = openList.filter(function(d) { return weekKey(d.date) === wk; });
+      for (var done = 0, again = true; again && done < 10; ) {
+        again = false;
+        for (var i = 0; i < movable.length && !again; i++) for (var j = 0; j < movable.length && !again; j++) {
+          var a = movable[i], b = movable[j];
+          if (a === b || poolOf(a) !== poolOf(b)) continue;
+          for (var p = 0; p < days.length && !again; p++) for (var q = 0; q < days.length && !again; q++) {
+            var x = days[p], y = days[q];
+            // a works x and not y, b works y and not x: a takes y, b takes x
+            if (x === y || !on(a, x) || on(a, y) || !on(b, y) || on(b, x) || !free2(a, x) || !free2(a, y) || !free2(b, x) || !free2(b, y)) continue;
+            var gain = likes(a, y) - likes(a, x) + likes(b, x) - likes(b, y);
+            if (gain < 0.5) continue;
+            var before = pairs(a, wk) + pairs(b, wk);
+            moveDay(a, x, y); moveDay(b, y, x);
+            if (daysOk(a, y) && daysOk(b, x) && pairs(a, wk) + pairs(b, wk) >= before) { done++; again = true; }
+            else { moveDay(a, y, x); moveDay(b, x, y); }
+          }
+        }
+      }
+    });
+  })();
   // Days not worked become days off
   monthDays.forEach(function(d) {
     if (d.closure) return;
@@ -5893,18 +6001,6 @@ function renderMonthlyPlanning() {
   var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
   var shiftPlanByDay = {};
   var shiftUse = {}, leadCloses = {};
-  // Shifts the store really uses: saved plannings of the last 3 months, the manager's own choices counting double
-  var shiftHabit = {}, habitMax = 0;
-  ((planSnapshot && planSnapshot.history) || []).forEach(function(pl) {
-    Object.keys(pl || {}).forEach(function(ds) {
-      Object.keys(pl[ds] || {}).forEach(function(id) { var c = pl[ds][id] && pl[ds][id].code; if (c) shiftHabit[c] = (shiftHabit[c] || 0) + 1; });
-    });
-  });
-  Object.keys(planningOverrides).forEach(function(id) {
-    Object.keys(planningOverrides[id] || {}).forEach(function(ds) { var c = planningOverrides[id][ds]; if (c) shiftHabit[c] = (shiftHabit[c] || 0) + 2; });
-  });
-  Object.keys(shiftHabit).forEach(function(c) { habitMax = Math.max(habitMax, shiftHabit[c]); });
-  function habitOf(code) { return habitMax ? (shiftHabit[code] || 0) / habitMax : 0; }
   // Paid minutes planned in each week: a shift that would break the weekly hours is swapped for one that fits
   var weekPaid = {};
   function paidOfCode(a, ds, code) {
@@ -6048,8 +6144,9 @@ function renderMonthlyPlanning() {
         if (nS === 1) {
           plan[sorted[0].id] = earliest.code;
         } else {
-          // One closer, the others open (deliveries come in the morning)
-          var nClo = 1;
+          // One closer, the others open (deliveries come in the morning). The one who usually closes this day closes.
+          var nClo = 1, closeS = cl.close[cl.close.length - 1].code;
+          if (habits.knowsShifts(sorted[0])) sorted.sort(function(x, y) { return habits.shift(x, d.dow, closeS, grid.length) - habits.shift(y, d.dow, closeS, grid.length); });
           // Stock opens first and closes last
           sorted.forEach(function(a, i) {
             plan[a.id] = (i < nS - nClo ? cl.open[0] : cl.close[cl.close.length - 1]).code;
@@ -6066,14 +6163,17 @@ function renderMonthlyPlanning() {
           .sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
         // Managers: one closes, the others open. The one who closed the least this month closes.
         if (leadsHere.length >= 2) {
-          var closer = leadsHere.slice().sort(function(x, y) { return ((leadCloses[x.id] || 0) - (leadCloses[y.id] || 0)) || (x.id < y.id ? -1 : 1); })
+          var closer = leadsHere.slice().sort(function(x, y) {
+            var hb = Math.round(20 * (habits.shift(y, d.dow, closeSh.code, grid.length) - habits.shift(x, d.dow, closeSh.code, grid.length)));
+            return hb || ((leadCloses[x.id] || 0) - (leadCloses[y.id] || 0)) || (x.id < y.id ? -1 : 1); })
             .find(function(a) { return restAllows(a, d.ds, closeSh.code); }) || leadsHere[0];
           var opens = leadsHere.filter(function(a) { return a !== closer; });
           opens.forEach(function(a, i) { plan[a.id] = spreadPick(cl.open, i, opens.length).code; });
           plan[closer.id] = closeSh.code; leadCloses[closer.id] = (leadCloses[closer.id] || 0) + 1;
           list = list.filter(function(a) { return leadsHere.indexOf(a) === -1; });
         } else if (leadsHere.length === 1) {
-          plan[leadsHere[0].id] = (d.num % 2 === 0 ? openSh : closeSh).code;
+          var l0 = leadsHere[0], hc = habits.shift(l0, d.dow, closeSh.code, grid.length) - habits.shift(l0, d.dow, openSh.code, grid.length);
+          plan[l0.id] = (Math.abs(hc) > 0.05 ? (hc > 0 ? closeSh : openSh) : (d.num % 2 === 0 ? openSh : closeSh)).code;
           list = list.filter(function(a){ return a.id !== leadsHere[0].id; });
         }
         if (!list.length) return;
@@ -6128,12 +6228,12 @@ function renderMonthlyPlanning() {
         return g;
       }
       function use(s) { return shiftUse[s.code] || 0; }
-      // Traffic first, then the shifts the store already uses (history and this month): a few shifts, not all of them
-      function best(cands) {
+      // Traffic first, then this person's usual shift on this weekday, then the shifts already used this month: a few shifts, not all of them
+      function best(cands, a) {
         var b = null, bs = -1, top = 1;
         cands.forEach(function(s) { top = Math.max(top, use(s)); });
         cands.forEach(function(s) {
-          var sc = gain(s) * (1 + 0.25 * habitOf(s.code) + 0.15 * use(s) / top);
+          var sc = gain(s) * (1 + habits.shift(a, d.dow, s.code, grid.length)) * (1 + 0.15 * use(s) / top);
           if (!b || sc > bs + 1e-9) { b = s; bs = sc; }
         });
         return b;
@@ -6149,16 +6249,20 @@ function renderMonthlyPlanning() {
       }
       function roomFor(s) { return left[isLate[s.code] ? 'late' : 'early'] > 0; }
       // Hard needs first: someone for the first hour, someone for the last hour
+      // How much this person usually takes one of these shifts on this weekday
+      function leans(a, shifts) { return shifts.reduce(function(m, s) { return Math.max(m, habits.shift(a, d.dow, s.code, grid.length)); }, -1); }
       function cover(key, need) {
         var have = placed.filter(function(w) { return coverOfHours(w.start, w.end, hm)[key]; }).length;
         var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
         while (have < need && shifts.length) {
+          // Who usually opens (or closes) this day goes first, the others keep the daily rotation
+          var order = pool.slice().sort(function(x, y) { return Math.round(20 * (leans(y, shifts) - leans(x, shifts))); });
           var done = false;
-          for (var k = 0; k < pool.length && !done; k++) {
-            var ok = shifts.filter(function(s) { return restOk(pool[k], s); });
+          for (var k = 0; k < order.length && !done; k++) {
+            var ok = shifts.filter(function(s) { return restOk(order[k], s); });
             if (!ok.length) continue;
             var inRoom = ok.filter(roomFor);
-            place(pool[k], best(inRoom.length ? inRoom : ok)); have++; done = true;
+            place(order[k], best(inRoom.length ? inRoom : ok, order[k])); have++; done = true;
           }
           if (!done) break;
         }
@@ -6166,12 +6270,14 @@ function renderMonthlyPlanning() {
       cover('close', minClose);
       cover('open', minOpen);
       // Everyone else: the shift that helps the traffic most, inside the late target
+      // People with the clearest habit choose first
+      pool.sort(function(x, y) { return Math.round(20 * (leans(y, byStart) - leans(x, byStart))); });
       while (pool.length) {
         var a = pool[0];
         var okS = byStart.filter(function(s) { return restOk(a, s); });
         if (!okS.length) okS = byStart;
         var inRoom = okS.filter(roomFor);
-        place(a, best(inRoom.length ? inRoom : okS));
+        place(a, best(inRoom.length ? inRoom : okS, a));
       }
       list.forEach(function(a) {
         var cur = grid.find(function(s) { return s.code === plan[a.id]; });
@@ -6672,6 +6778,88 @@ function renderMonthlyPlanning() {
       if (worked && d.dow === 0)   rh[a.id].dim++;
     });
   });
+  // Final check on the plan as shown, days still to come: store and corner minimums, days per week, days in a row,
+  // days over two weeks, hours per day and per week, rest between days. Weeks and runs that start in the previous
+  // month or end in the next one count their days there too. Each broken rule keeps its size, so a worse one is seen.
+  function brokenRules() {
+    var out = {}, byAgent = {};
+    var minO = storeSettings && storeSettings.min_opening != null ? storeSettings.min_opening : 1;
+    var minC = storeSettings && storeSettings.min_closing != null ? storeSettings.min_closing : 1;
+    var dayCap = regulations.max_daily_hours > 0 ? regulations.max_daily_hours * 60 : 0;
+    function put(k, v) { if (v > 0) out[k] = Math.max(out[k] || 0, v); }
+    agents.forEach(function(a) { var m = byAgent[a.id] = {}; agentRows[a.id].forEach(function(r) { m[r.d.ds] = r.res; }); });
+    function resAt(a, ds) { return ds in byAgent[a.id] ? byAgent[a.id][ds] : shownRes(a, ds); }
+    function hoursAt(a, ds) { var r = resAt(a, ds); return r && !r.special ? workHoursOf(a, ds, r) : null; }
+    function busyAt(a, ds) { return !!hoursAt(a, ds) || agentOnLeave(a.id, ds) === 'out'; }
+    function shift(ds, n) { var x = new Date(ds + 'T12:00:00'); x.setDate(x.getDate() + n); return toDateStr(x); }
+    monthDays.forEach(function(d) {
+      if (d.closure || d.past) return;
+      var o = 0, c = 0, cor = {};
+      agents.forEach(function(a) {
+        var res = byAgent[a.id][d.ds];
+        if (!res || res.special || poolOf(a) === 'stock') return;
+        var cv = coverOf(a, d.ds, res);
+        if (cv.open) o++; if (cv.close) c++;
+        if (poolOf(a) === 'sales') {
+          var k = res.corner || (storeCorners.find(function(q) { return q.id === a.home_corner_id; }) || {}).code;
+          var z = cor[k] = cor[k] || { n: 0, o: 0, c: 0 }; z.n++; if (cv.open) z.o++; if (cv.close) z.c++;
+        }
+      });
+      put('open|' + d.ds, minO - o);
+      put('close|' + d.ds, minC - c);
+      if (storeCorners.length > 1) storeCorners.forEach(function(q) {
+        var z = cor[q.code] || { n: 0, o: 0, c: 0 };
+        put('corner2|' + d.ds + '|' + q.code, 2 - z.n);
+        put('cornerOpen|' + d.ds + '|' + q.code, z.o ? 0 : 1);
+        put('cornerClose|' + d.ds + '|' + q.code, z.c ? 0 : 1);
+      });
+    });
+    var first = monthDays[0].ds, last = monthDays[monthDays.length - 1].ds;
+    agents.forEach(function(a) {
+      // Days in a row, counted from a month before (a long run keeps its true length) and up to the days after it
+      var run = 0;
+      for (var ds = shift(first, -31); ds <= shift(last, lim.row); ds = shift(ds, 1)) {
+        run = busyAt(a, ds) ? run + 1 : 0;
+        if (ds >= first && ds <= last && !(ds < todayDs)) put('row|' + a.id + '|' + ds, run - lim.row);
+      }
+      // Weeks touching the month, whole weeks
+      var weeks = {};
+      monthDays.forEach(function(d) { weeks[weekKey(d.date)] = true; });
+      var wd = {};
+      var wks = Object.keys(weeks).sort();
+      wks.concat([shift(wks[0], -7), shift(wks[wks.length - 1], 7)]).forEach(function(wk) {
+        var n = 0, m = 0;
+        for (var i = 0; i < 7; i++) {
+          var x = shift(wk, i), wh = hoursAt(a, x);
+          if (wh || agentOnLeave(a.id, x) === 'out') n++;
+          if (wh) { var pm = paidMinOf(wh.start, wh.end); m += pm; if (weeks[wk] && dayCap && x >= first && x <= last) put('day|' + a.id + '|' + x, pm - dayCap); }
+        }
+        wd[wk] = n;
+        if (!weeks[wk]) return;
+        put('week|' + a.id + '|' + wk, n - lim.week);
+        if (regulations.weekly_hours > 0) put('hours|' + a.id + '|' + wk, m - regulations.weekly_hours * 60);
+      });
+      Object.keys(wd).sort().forEach(function(wk) { var nx = shift(wk, 7); if (nx in wd && (weeks[wk] || weeks[nx])) put('twoWeeks|' + a.id + '|' + wk, wd[wk] + wd[nx] - lim.twoWeeks); });
+      // Rest between two working days
+      for (var ds2 = shift(first, -1); ds2 < last; ds2 = shift(ds2, 1)) {
+        var p = hoursAt(a, ds2), q = hoursAt(a, shift(ds2, 1));
+        if (p && q && shift(ds2, 1) >= todayDs) put('rest|' + a.id + '|' + shift(ds2, 1), restGapMin - (1440 + q.start - p.end));
+      }
+    });
+    return out;
+  }
+  var issues = brokenRules();
+  if (habitsGate.dry) { habitsGate.issues = issues; return; }
+  if (habits.days && !habitsGate.off) {
+    habitsGate.dry = true; habitsGate.off = true;
+    try { renderMonthlyPlanning(); } finally { habitsGate.dry = false; }
+    // A rule broken with the habits and not without them, or broken more: the habits are not kept
+    var base = habitsGate.issues || {}, added = Object.keys(issues).filter(function(k) { return issues[k] > (base[k] || 0) + 1e-6; });
+    // Kept for the bench and the audit: which plan was kept, and the rules already broken without habits (to decide, never certified)
+    habitsGate.last = { habits: !added.length, worse: added, brokenWithout: Object.keys(base).length };
+    if (added.length) { try { renderMonthlyPlanning(); } finally { habitsGate.off = false; } return; }   // without habits
+    habitsGate.off = false;
+  }
   if (snapLoaded && !planSnapshot.writeBlocked && JSON.stringify(newSnap) !== JSON.stringify(planSnapshot.plan || {})) {
     planSnapshot.plan = newSnap;
     lastSnapSave = savePlanSnapshot(currentStoreId, snapKey, newSnap);
