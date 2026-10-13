@@ -1,0 +1,423 @@
+{
+  "results": [
+    {
+      "label": "bm",
+      "refs": false,
+      "version": "927",
+      "matched": 359,
+      "total": 867,
+      "pct": 41.40715109573241,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "bm",
+      "refs": false,
+      "version": "931",
+      "matched": 331,
+      "total": 867,
+      "pct": 38.17762399077278,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "bm",
+      "refs": true,
+      "version": "927",
+      "matched": 359,
+      "total": 867,
+      "pct": 41.40715109573241,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "bm",
+      "refs": true,
+      "version": "931",
+      "matched": 360,
+      "total": 867,
+      "pct": 41.522491349480966,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "jp",
+      "refs": false,
+      "version": "927",
+      "matched": 85,
+      "total": 295,
+      "pct": 28.8135593220339,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "label": "jp",
+      "refs": false,
+      "version": "931",
+      "matched": 85,
+      "total": 295,
+      "pct": 28.8135593220339,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "zeroTraffic",
+      "learning": false,
+      "gateIssues": null,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "zeroTraffic",
+      "learning": true,
+      "gateIssues": 0,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "hours30",
+      "learning": false,
+      "gateIssues": null,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "hours30",
+      "learning": true,
+      "gateIssues": 0,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 0,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "longClose",
+      "learning": false,
+      "gateIssues": null,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 12,
+        "cornerClose": 9,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "longClose",
+      "learning": true,
+      "gateIssues": 28,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 12,
+        "cornerClose": 9,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fewSales",
+      "learning": false,
+      "gateIssues": null,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 65,
+        "cornerOpen": 24,
+        "cornerClose": 25,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fewSales",
+      "learning": true,
+      "gateIssues": 293,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 0,
+        "rest": 0,
+        "empty": 65,
+        "cornerOpen": 24,
+        "cornerClose": 25,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fixedInvalid",
+      "learning": false,
+      "gateIssues": null,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 3,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 8,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    },
+    {
+      "scenario": "fixedInvalid",
+      "learning": true,
+      "gateIssues": 18,
+      "checks": {
+        "runs": 0,
+        "weeks": 0,
+        "hours": 3,
+        "rest": 0,
+        "empty": 0,
+        "cornerOpen": 8,
+        "cornerClose": 0,
+        "storeOpen": 0,
+        "storeClose": 0,
+        "D": 0
+      }
+    }
+  ],
+  "compatibility": [
+    {
+      "version": "927",
+      "refs": false,
+      "compliant": true,
+      "score": 90.36863655756834,
+      "components": {
+        "coverage": 91.52084222506758,
+        "rest": 93.64161849710982,
+        "shiftMix": 84.68992248062015,
+        "corners": 87.29829622284325
+      }
+    },
+    {
+      "version": "931",
+      "refs": false,
+      "compliant": true,
+      "score": 90.2466707440233,
+      "components": {
+        "coverage": 91.48512031895201,
+        "rest": 93.84615384615384,
+        "shiftMix": 83.60814742967992,
+        "corners": 87.77146976660359
+      }
+    },
+    {
+      "version": "931",
+      "refs": true,
+      "compliant": true,
+      "score": 90.28710049118556,
+      "components": {
+        "coverage": 91.25881598632186,
+        "rest": 94.04990403071018,
+        "shiftMix": 83.88349514563107,
+        "corners": 87.91903858317521
+      }
+    }
+  ],
+  "targeted": {
+    "empty": {
+      "days": 0
+    },
+    "threeOff": {
+      "days": 3
+    },
+    "fourOff": {
+      "days": 30,
+      "actualKnown": 4,
+      "manufactured": 26
+    },
+    "fourOffRequests": {
+      "days": 26
+    },
+    "fourTraining": {
+      "days": 26
+    },
+    "future": {
+      "days": 0
+    },
+    "window": {
+      "days": 1
+    },
+    "twoWeekRuleRepresented": false
+  },
+  "validator-probes": {
+    "twoWeeks": {
+      "days": 9,
+      "limit": 8,
+      "agentIssues": [],
+      "twoWeekDetected": false
+    },
+    "previousMonth": {
+      "previousWorkedDays": 6,
+      "currentWorkedDays": 1,
+      "weekLimit": 5,
+      "runLimit": 5,
+      "agentIssues": []
+    },
+    "daily": {
+      "paidHours": 11,
+      "limit": 8.5,
+      "agentIssues": []
+    }
+  },
+  "actions": {
+    "generatedPrior": "O",
+    "loggedOld": "O",
+    "loggedNew": "C",
+    "reset": {
+      "before": {
+        "override": {
+          "2026-09-07": "OFF"
+        },
+        "months": [
+          "2026-09"
+        ]
+      },
+      "after": {
+        "override": {
+          "2026-09-07": "OFF"
+        },
+        "months": [
+          "2026-09"
+        ]
+      }
+    },
+    "editRows": 1
+  },
+  "probes": {
+    "blankReference": {
+      "days": 0,
+      "workMonday": 0
+    },
+    "noReference": {
+      "days": 0,
+      "workMonday": 0
+    },
+    "currentOverrideExcluded": {
+      "days": 0
+    },
+    "manualOverride": {
+      "days": 1,
+      "shiftC": 0.6666666666666667,
+      "shiftO": -0.3333333333333333
+    },
+    "inactiveNoReference": {
+      "days": 0
+    }
+  }
+}
