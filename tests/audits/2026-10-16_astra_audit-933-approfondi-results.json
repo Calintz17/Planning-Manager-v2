@@ -1,0 +1,156 @@
+{
+  "candidate": "CAST_v9_3_3_RETAIL.html",
+  "sha256": "2471359ad1d637b4472e57ba2e95454d91a605b38d8aa1150b1fab68a940dfb3",
+  "score": 58,
+  "synthetic": true,
+  "productionWrites": false,
+  "newEngineProbes": {
+    "manualBaseline": {
+      "present": 14,
+      "late": 7,
+      "open": 7,
+      "close": 5,
+      "cells": {
+        "x0": "O",
+        "x1": "C",
+        "x2": "M",
+        "x3": "M",
+        "x4": "C",
+        "x5": "O",
+        "x6": "O",
+        "x7": "O",
+        "x8": "O",
+        "x9": "O",
+        "x10": "O",
+        "x11": "C",
+        "x12": "C",
+        "x13": "C"
+      }
+    },
+    "oneManualClosing": {
+      "present": 14,
+      "late": 8,
+      "open": 6,
+      "close": 6,
+      "cells": {
+        "x0": "C",
+        "x1": "C",
+        "x2": "M",
+        "x3": "M",
+        "x4": "C",
+        "x5": "O",
+        "x6": "O",
+        "x7": "O",
+        "x8": "O",
+        "x9": "O",
+        "x10": "O",
+        "x11": "C",
+        "x12": "C",
+        "x13": "C"
+      },
+      "changedAgent": "x0"
+    },
+    "allManagerPreferredClose": {
+      "present": 2,
+      "late": 2,
+      "open": 0,
+      "close": 2,
+      "cells": {
+        "x0": "C",
+        "x1": "C"
+      }
+    },
+    "readFailure": {
+      "before": {
+        "keys": 1,
+        "lunch": {
+          "start": 15.25,
+          "dur": 1,
+          "type": "lun",
+          "label": "Lunch",
+          "color": "yellow"
+        }
+      },
+      "after": {
+        "keys": 0,
+        "lunch": {
+          "start": 13,
+          "dur": 1,
+          "type": "lun",
+          "label": "Lunch",
+          "color": "yellow"
+        }
+      }
+    }
+  },
+  "breakProfiles": [
+    {
+      "duration": 15,
+      "realFloorMinutes": 645,
+      "scoredFloorMinutes": 645.0000000000001,
+      "delta": 1.1368683772161603e-13
+    },
+    {
+      "duration": 20,
+      "realFloorMinutes": 640,
+      "scoredFloorMinutes": 645,
+      "delta": 5
+    },
+    {
+      "duration": 30,
+      "realFloorMinutes": 630,
+      "scoredFloorMinutes": 629.9999999999998,
+      "delta": -2.2737367544323206e-13
+    },
+    {
+      "duration": 45,
+      "realFloorMinutes": 615,
+      "scoredFloorMinutes": 615,
+      "delta": 0
+    },
+    {
+      "duration": 60,
+      "realFloorMinutes": 600,
+      "scoredFloorMinutes": 600.0000000000001,
+      "delta": 1.1368683772161603e-13
+    }
+  ],
+  "prototype": {
+    "errors": [],
+    "reloadDark": true,
+    "viewport": 320,
+    "scroll": 320
+  },
+  "ui": {
+    "completedConfigurations": 54,
+    "views": 9,
+    "themes": 2,
+    "viewportWidths": [
+      1440,
+      390,
+      320
+    ],
+    "jsErrors": 0,
+    "globalOverflows": 0,
+    "scope": "Firefox viewport emulation; no real mobile or corporate Firefox certification",
+    "traffic": "Final rerun blocked: browser executable unavailable. Not counted.",
+    "originalButton": [
+      66,
+      34
+    ],
+    "proposedVisibleTrack": [
+      52,
+      28
+    ],
+    "proposedHitArea": [
+      52,
+      44
+    ],
+    "contrast": {
+      "avatar": 1.32,
+      "cornerActive": 3.72,
+      "primary": 4.46,
+      "settingsActive": 4.09
+    }
+  }
+}
