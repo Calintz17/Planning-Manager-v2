@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.3.2</title>
+  <title>CAST v9.3.5</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -13,8 +13,11 @@
   --brand-on:#FFFFFF; --tx-1:#17283E; --tx-2:#52647B; --tx-3:#52647B; --line:#DCE3EC; --line-2:#BDC9D9; --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5;
   --warn-tx:#61470B; --dang-soft:#F6DDE7; --dang-tx:#82334E; --info-soft:#DBEAFE; --info-tx:#1E407A; --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
   --s6:24px; --sb-w:216px; --content-max:1664px; --day-w:32px; --name-col:184px; --sq-w:26px; --sq-h:25px; --time-w:136px; --num-w:110px; --r-sm:6px;
-  --r-md:8px; --r-lg:8px; --r-pill:999px; --sh-1:none; --sh-2:0 8px 30px #192D491C; --nav-active-bg:#183C74; --accent-strong:#183C74; --ok:#215C4B;
-  --dang:#AC304B; --info:#507BAD; }
+  --r-md:8px; --r-lg:8px; --r-pill:999px; --sh-1:none; --sh-2:0 8px 30px #192D491C; --nav-active-bg:#183C74; --brand-tx:#183C74; --toast-ok:#215C4B; --toast-err:#AC304B; --accent-strong:#183C74; --ok:#215C4B;
+  --dang:#AC304B; --info:#507BAD;
+  --pl-yellow:#F5EBCB; --pl-yellow-tx:#6B5622; --pl-green:#DCEBDF; --pl-green-tx:#2D5841; --pl-violet:#E4DDF0; --pl-violet-tx:#5C467A; --pl-slate:#E8E9EB; --pl-slate-tx:#4C586A; --bd-pop:#D4DEEB; --bd-modal:#CFDAE8; --bd-tip:#C5D3E4; --bd-tick:#D4DEEA; --bd-row:#E8EDF3; --accent-line:#88A6CE; --wk-line:#536D8E; --bd-manual:#91ACD2; --bd-chip:#FCA5A5; --hover:#F0F4FA; --nav-on:#EAF0FA; --nav-sub-on:#EEF3FB; --row-group:#F2F5F9; --col-hl:#F2F5FA; --col-hl-head:#E3EAF5; --today:#E7EFFC; --tint:#F1F5FB; --seg-bg:#EAF0F6; --manual-bg:#EDF3FC; --closed-bg:#F7F9FC; --shift-bg:#EEF1F5; --grid-q:#EEF2F7; --bar:#DBE6F5; --avatar-bg:#EAF0F8; --avatar-tx:#304D74; --hatch-1:#E9EAEE; --hatch-2:#F3F4F6; --dang-hover:#FECACA; --veil:rgba(255,255,255,.7); }
+@media screen { html[data-theme="dark"] { color-scheme:dark; --bg-app:#0D1524; --bg-base:#141E33; --bg-base-2:#17223A; --bg-base-3:#1E2B47; --brand:#4170B4; --brand-hover:#4F7DC0; --brand-tx:#8DB0E3; --toast-ok:#1F6B52; --toast-err:#A23A55; --tx-1:#E7EDF6; --tx-2:#9FB0C7; --tx-3:#9FB0C7; --line:#26355A; --line-2:#34476F; --ok-soft:#173A31; --ok-tx:#9ED8BF; --warn-soft:#3A3118; --warn-tx:#EBD287; --dang-soft:#3D1F2C; --dang-tx:#F2AFC4; --info-soft:#1C3157; --info-tx:#AFC8F0; --sh-2:0 8px 30px #00000066; --nav-active-bg:#4170B4; --accent-strong:#8DB0E3; --ok:#5DBB98; --dang:#E0718C; --info:#7FA6D8; --veil:rgba(13,21,36,.7); --pl-yellow:#3A3219; --pl-yellow-tx:#E6CF86; --pl-green:#183A2A; --pl-green-tx:#9FD6B5; --pl-violet:#2D2645; --pl-violet-tx:#C9B8EC; --pl-slate:#253047; --pl-slate-tx:#B5C0D0; --bd-pop:#2C3D62; --bd-modal:#2C3D62; --bd-tip:#34476F; --bd-tick:#25345A; --bd-row:#1F2C49; --accent-line:#4E73A8; --wk-line:#5B79A6; --bd-manual:#4E73A8; --bd-chip:#8A3B52; --hover:#1B2842; --nav-on:#1F2F52; --nav-sub-on:#1C2B4A; --row-group:#18233C; --col-hl:#1A2742; --col-hl-head:#22325A; --today:#1E3157; --tint:#1B2842; --seg-bg:#1B2741; --manual-bg:#1C2E52; --closed-bg:#111A2D; --shift-bg:#1D2A44; --grid-q:#1A253E; --bar:#2A3F66; --avatar-bg:#22335A; --avatar-tx:#C3D3EE; --hatch-1:#222E47; --hatch-2:#1A243A; --dang-hover:#5A2638; }
+  html[data-theme="dark"] .sb-wordmark, html[data-theme="dark"] .gate-wordmark { filter:brightness(0) invert(.92); } }
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { min-height:100%; width:100%; }
 button, input, select, textarea { font-family:var(--font); letter-spacing:normal; font-style:normal; }
@@ -32,8 +35,8 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .nav-item .ic { width:18px; height:18px; color:var(--tx-2); }
 .nav-item:hover { background:var(--bg-base-3); color:var(--tx-1); }
 .nav-item:hover .ic { color:var(--tx-1); }
-.nav-item.active { background:#EAF0FA; color:var(--brand); font-weight:700; box-shadow:none; }
-.nav-item.active .ic { color:var(--brand); }
+.nav-item.active { background:var(--nav-on); color:var(--brand-tx); font-weight:700; box-shadow:none; }
+.nav-item.active .ic { color:var(--brand-tx); }
 .nav-group { display:flex; flex-direction:column; }
 .nav-item.has-sub { justify-content:space-between; }
 .nav-caret { width:14px; height:14px; margin-left:auto; flex-shrink:0; transition:transform .18s ease; opacity:.8; }
@@ -42,50 +45,50 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .nav-sub.open { display:flex; }
 .nav-subitem { display:flex; align-items:center; width:100%; min-height:32px; padding:6px 10px; border:0; border-radius:5px; background:transparent; color:var(--tx-2); font-size:12px; font-weight:400; text-align:left; }
 .nav-subitem:hover { background:var(--bg-base-3); color:var(--tx-1); }
-.nav-subitem.active { background:#EEF3FB; color:var(--brand); font-weight:700; }
+.nav-subitem.active { background:var(--nav-sub-on); color:var(--brand-tx); font-weight:700; }
 .it-axis { display:flex; margin:0; width:100%; min-width:calc(184px + var(--axis-width, 920px)); height:42px; position:relative; z-index:9; background:var(--bg-base); border-bottom:1px solid var(--line); }
 .it-axis .pad { width:184px; flex:0 0 184px; position:sticky; left:0; background:var(--bg-base); z-index:10; padding:12px; font-size:11px; font-weight:700; color:var(--tx-2); }
 .it-axis .ticks { flex:1; min-width:var(--axis-width, 920px); display:flex; align-items:stretch; }
-.it-axis .ticks span { flex:1; text-align:left; font-size:10px; color:var(--tx-2); font-weight:400; border-left:1px solid #D4DEEA; padding:12px 0 0 5px; }
+.it-axis .ticks span { flex:1; text-align:left; font-size:10px; color:var(--tx-2); font-weight:400; border-left:1px solid var(--bd-tick); padding:12px 0 0 5px; }
 .it-group { margin:0; }
 .it-group:first-of-type { border-top:none; }
-.it-role { height:28px; display:flex; align-items:center; font-size:11px; font-weight:700; color:var(--tx-2); padding:0 12px; text-transform:uppercase; background:#F2F5F9; border-bottom:1px solid var(--line); position:sticky; left:0; }
-.it-row { display:flex; align-items:stretch; min-height:52px; border-bottom:1px solid #E8EDF3; }
-.it-info { width:184px; flex:0 0 184px; display:flex; align-items:center; gap:9px; min-width:0; position:sticky; left:0; z-index:3; background:var(--bg-base); padding:7px 12px; border-right:1px solid var(--line); border-left:3px solid #88A6CE; }
+.it-role { height:28px; display:flex; align-items:center; font-size:11px; font-weight:700; color:var(--tx-2); padding:0 12px; text-transform:uppercase; background:var(--row-group); border-bottom:1px solid var(--line); position:sticky; left:0; }
+.it-row { display:flex; align-items:stretch; min-height:52px; border-bottom:1px solid var(--bd-row); }
+.it-info { width:184px; flex:0 0 184px; display:flex; align-items:center; gap:9px; min-width:0; position:sticky; left:0; z-index:3; background:var(--bg-base); padding:7px 12px; border-right:1px solid var(--line); border-left:3px solid var(--accent-line); }
 .it-nm { display:block; min-width:0; font-size:12px; font-weight:700; color:var(--tx-1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .it-track { position:relative; flex:1; min-width:var(--axis-width, 920px); min-height:52px; }
 .it-grid { position:absolute; inset:0; display:flex; }
-.it-grid i { flex:1; border-left:1px solid #DCE3EC; background:repeating-linear-gradient(to right,transparent 0,transparent calc(25% - 1px),#EEF2F7 calc(25% - 1px),#EEF2F7 25%); }
+.it-grid i { flex:1; border-left:1px solid var(--line); background:repeating-linear-gradient(to right,transparent 0,transparent calc(25% - 1px),var(--grid-q) calc(25% - 1px),var(--grid-q) 25%); }
 .it-blk { position:absolute; top:14px; height:24px; border-radius:3px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; touch-action:none; user-select:none; cursor:grab; }
 .it-blk:hover { box-shadow:inset 0 0 0 1px currentColor; }
-.b-mb { background:#DBEAFE; color:#1E407A; box-shadow:none; }
-.bc-yellow { background:#F5EBCB; color:#6B5622; }
-.bc-blue { background:#DBEAFE; color:#1E407A; }
-.bc-pink { background:#F6DDE7; color:#82334E; }
-.bc-green { background:#DCEBDF; color:#2D5841; }
-.bc-violet { background:#E4DDF0; color:#5C467A; }
-.bc-slate { background:#E8E9EB; color:#4C586A; }
-.bc-teal { background:#DCEBDF; color:#2D5841; }
-.color-pop { display:none; position:fixed; z-index:700; gap:8px; padding:10px; flex-wrap:wrap; max-width:calc(100vw - 16px); background:var(--bg-base); border:1px solid #D4DEEB; border-radius:7px; box-shadow:0 8px 30px #192D491C; }
+.b-mb { background:var(--info-soft); color:var(--info-tx); box-shadow:none; }
+.bc-yellow { background:var(--pl-yellow); color:var(--pl-yellow-tx); }
+.bc-blue { background:var(--info-soft); color:var(--info-tx); }
+.bc-pink { background:var(--dang-soft); color:var(--dang-tx); }
+.bc-green { background:var(--pl-green); color:var(--pl-green-tx); }
+.bc-violet { background:var(--pl-violet); color:var(--pl-violet-tx); }
+.bc-slate { background:var(--pl-slate); color:var(--pl-slate-tx); }
+.bc-teal { background:var(--pl-green); color:var(--pl-green-tx); }
+.color-pop { display:none; position:fixed; z-index:700; gap:8px; padding:10px; flex-wrap:wrap; max-width:calc(100vw - 16px); background:var(--bg-base); border:1px solid var(--bd-pop); border-radius:7px; box-shadow:var(--sh-2); }
 .color-pop.open { display:flex; }
-.b-wel { background:#E8E9EB; color:#4C586A; box-shadow:none; }
+.b-wel { background:var(--pl-slate); color:var(--pl-slate-tx); box-shadow:none; }
 .it-blk-added { overflow:hidden; }
-.it-blk-reinf { background:#FFFFFF; color:#1E407A; border:1px dashed #1E407A; }
-.b-train { background:#DCEBDF; color:#2D5841; box-shadow:none; }
-.b-cli { background:#E4DDF0; color:#5C467A; box-shadow:none; }
+.it-blk-reinf { background:var(--bg-base); color:var(--info-tx); border:1px dashed var(--info-tx); }
+.b-train { background:var(--pl-green); color:var(--pl-green-tx); box-shadow:none; }
+.b-cli { background:var(--pl-violet); color:var(--pl-violet-tx); box-shadow:none; }
 .mm-list { max-height:260px; overflow-y:auto; }
 .mission-menu-item.is-on { background:var(--bg-base-3); box-shadow:inset 3px 0 0 var(--brand); }
 .mm-dur { margin-left:auto; font-size:12px; color:var(--tx-3); }
 .mm-form { display:flex; align-items:flex-end; gap:8px; padding:10px 4px 4px; border-top:1px solid var(--line); flex-wrap:wrap; }
 .it-track-add .it-shift { cursor:copy; }
-.mission-menu { position:fixed; z-index:9999; background:var(--bg-base); border:1px solid #D4DEEB; border-radius:7px; box-shadow:0 8px 30px #192D491C; padding:6px; width:242px; max-width:calc(100vw - 20px); max-height:calc(100dvh - 20px); overflow:auto; }
+.mission-menu { position:fixed; z-index:9999; background:var(--bg-base); border:1px solid var(--bd-pop); border-radius:7px; box-shadow:var(--sh-2); padding:6px; width:242px; max-width:calc(100vw - 20px); max-height:calc(100dvh - 20px); overflow:auto; }
 .mission-menu-item { display:flex; align-items:center; gap:11px; padding:10px; min-height:40px; font-size:12px; border:0; background:transparent; border-radius:5px; color:var(--tx-1); text-align:left; width:100%; }
-.mission-menu-item:hover { background:#F0F4FA; }
+.mission-menu-item:hover { background:var(--hover); }
 /* More actions menu: same panel as the other menus */
 .more-wrap { position:relative; display:inline-flex; }
 .more-btn { width:40px; padding:0; }
 .more-menu { display:none; position:absolute; right:0; top:calc(100% + 6px); z-index:9999; background:var(--bg-base);
-  border:1px solid #D4DEEB; border-radius:7px; box-shadow:0 8px 30px #192D491C; padding:6px; width:242px; max-width:calc(100vw - 20px); }
+  border:1px solid var(--bd-pop); border-radius:7px; box-shadow:var(--sh-2); padding:6px; width:242px; max-width:calc(100vw - 20px); }
 .more-menu.open { display:block; }
 .more-menu .mission-menu-item { cursor:pointer; font-family:var(--font); }
 .more-menu .mission-menu-item:disabled { opacity:.5; cursor:default; background:transparent; }
@@ -126,10 +129,26 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 #topbar { display:flex; align-items:center; height:65px; padding:0 32px; background:var(--bg-base); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50; }
 #topbar > .tb-inner { display:flex; align-items:center; gap:12px; width:100%; max-width:var(--content-max); margin:0 auto; min-width:0; }
 .tb-right { margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+/* Light / dark switch: sun on a blue sky, moon on a starry night */
+.theme-sw { position:relative; width:66px; height:34px; flex-shrink:0; padding:0; border:0; border-radius:var(--r-pill); overflow:hidden; cursor:pointer; background:linear-gradient(180deg,#8FD0F7,#4FA6E4); box-shadow:inset 0 1px 3px #12263E44; }
+.theme-sw:focus-visible { outline:2px solid var(--nav-active-bg); outline-offset:2px; }
+.tsw-night { position:absolute; inset:0; background:linear-gradient(180deg,#26325C,#0E1631); opacity:0; transition:opacity .5s ease; }
+.tsw-stars, .tsw-clouds { position:absolute; inset:0; width:100%; height:100%; transition:transform .5s ease, opacity .5s ease; }
+.tsw-stars { opacity:0; transform:translateY(-40%); }
+.tsw-knob { position:absolute; top:3px; left:3px; width:28px; height:28px; border-radius:50%; background:#FFC93C; box-shadow:0 0 0 4px #FFFFFF2E, 0 0 0 8px #FFFFFF17, 0 1px 3px #12263E55; transition:transform .55s cubic-bezier(.6,-.25,.3,1.3), background .5s ease; }
+.tsw-knob i { position:absolute; border-radius:50%; background:#C2C8D6; opacity:0; transition:opacity .4s ease; }
+.tsw-knob i:nth-child(1) { width:8px; height:8px; top:5px; left:12px; }
+.tsw-knob i:nth-child(2) { width:5px; height:5px; top:15px; left:6px; }
+.tsw-knob i:nth-child(3) { width:4px; height:4px; top:16px; left:16px; }
+.theme-sw[aria-checked="true"] .tsw-night { opacity:1; }
+.theme-sw[aria-checked="true"] .tsw-stars { opacity:1; transform:none; }
+.theme-sw[aria-checked="true"] .tsw-clouds { opacity:0; transform:translateY(60%); }
+.theme-sw[aria-checked="true"] .tsw-knob { transform:translateX(32px) rotate(-30deg); background:#E4E8F0; }
+.theme-sw[aria-checked="true"] .tsw-knob i { opacity:1; }
 .lang-picker { position:relative; display:flex; align-items:center; gap:6px; padding:0 9px; height:34px; border:1px solid var(--line); border-radius:6px; background:var(--bg-base); color:var(--tx-2); cursor:pointer; font-size:12px; font-weight:700; user-select:none; }
 .lang-picker .ic { width:15px; height:15px; color:var(--tx-3); }
 .lang-picker .lang-caret { width:12px; height:12px; }
-.lang-menu { display:none; position:absolute; top:calc(100% + 6px); right:0; z-index:750; background:var(--bg-base); border:1px solid #D4DEEB; border-radius:7px; box-shadow:0 8px 30px #192D491C; padding:6px; min-width:145px; }
+.lang-menu { display:none; position:absolute; top:calc(100% + 6px); right:0; z-index:750; background:var(--bg-base); border:1px solid var(--bd-pop); border-radius:7px; box-shadow:var(--sh-2); padding:6px; min-width:145px; }
 .lang-menu.open { display:block; }
 .lang-opt { display:block; width:100%; text-align:left; min-height:40px; padding:8px 10px; border:0; background:transparent; border-radius:5px; font-size:12px; font-weight:400; color:var(--tx-1); }
 .lang-opt:hover { background:var(--bg-base-3); color:var(--tx-1); }
@@ -153,16 +172,16 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .hero-spark { display:flex; align-items:flex-end; height:170px; margin-top:16px; }
 .hero-days { display:flex; gap:14px; width:100%; align-items:flex-end; }
 .hero-days > div { flex:1; display:flex; flex-direction:column; justify-content:flex-end; }
-.hero-days .bar { width:100%; background:#DBE6F5; border-radius:4px 4px 0 0; min-height:4px; }
+.hero-days .bar { width:100%; background:var(--bar); border-radius:4px 4px 0 0; min-height:4px; }
 .hero-days .bar-val { text-align:center; font-size:11px; color:var(--tx-2); margin-bottom:7px; height:14px; }
-.hero-days .bar.today { background:#507BAD; }
+.hero-days .bar.today { background:var(--info); }
 .hero-days .lbl { text-align:center; font-size:11px; color:var(--tx-2); margin-top:9px; }
 .hero-days .lbl-date { display:block; font-size:10px; color:var(--tx-2); margin-top:2px; }
 .dash-card-label { font-size:16px; font-weight:700; color:var(--tx-1); margin-bottom:16px; }
 .pool-row { display:flex; align-items:center; justify-content:space-between; padding:var(--s3) 0; border-bottom:1px solid var(--line); }
 .pool-row:last-child { border-bottom:none; }
 .pool-name { font-size:14px; font-weight:400; color:var(--tx-1); }
-.pool-count { font-size:20px; font-weight:700; color:#507BAD; }
+.pool-count { font-size:20px; font-weight:700; color:var(--info); }
 .pool-count .of { font-size:13px; font-weight:400; color:var(--tx-3); }
 .pool-agents { padding:var(--s2) 0 var(--s3); }
 .pool-agent { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); padding:5px 0; }
@@ -172,7 +191,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .pa-shift { font-size:11px; padding:2px 7px; border-radius:var(--r-pill); font-weight:700; }
 .pool-empty { font-size:12px; color:var(--tx-3); font-style:normal; padding:4px 0 var(--s3); }
 .hl-list { display:flex; flex-direction:column; gap:var(--s3); }
-.hl-item { display:flex; align-items:flex-start; gap:16px; min-width:0; padding:14px; border-radius:5px; background:var(--bg-base-2); border-left:3px solid #88A6CE; }
+.hl-item { display:flex; align-items:flex-start; gap:16px; min-width:0; padding:14px; border-radius:5px; background:var(--bg-base-2); border-left:3px solid var(--accent-line); }
 .hl-item.week { border-left-color:var(--info); }
 .hl-item.day { border-left-color:var(--warn-tx); }
 .hl-text .evt-bar { flex-shrink:0; }
@@ -206,7 +225,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .help-host { position:relative; }
 .view-switch { display:flex; gap:18px; margin:0 auto 18px; max-width:var(--content-max); border-bottom:1px solid var(--line); width:100%; background:transparent; border-radius:0; padding:0; }
 .view-switch button { min-height:40px; padding:0 0 10px; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--tx-2); font-size:12px; font-weight:400; }
-.view-switch button.active { background:transparent; color:var(--brand); border-bottom-color:var(--brand); box-shadow:none; font-weight:700; }
+.view-switch button.active { background:transparent; color:var(--brand-tx); border-bottom-color:var(--brand); box-shadow:none; font-weight:700; }
 .plan-head { align-items:flex-start; margin-bottom:var(--s4); gap:var(--s4); flex-wrap:wrap; }
 .plan-head-l { display:flex; flex-direction:column; gap:16px; min-width:0; }
 .plan-head .set-title-row { min-height:36px; }
@@ -214,7 +233,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .head-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .plan-empty { color:var(--tx-3); font-size:13px; padding:var(--s3) 0; }
 .set-rule-field .help-q, .ce-adjust-row .help-q { margin-left:var(--s2); }
-.evt-tip { display:none; position:fixed; z-index:650; max-width:min(300px,calc(100vw - 16px)); pointer-events:none; background:var(--bg-base); border:1px solid #C5D3E4; border-radius:6px; box-shadow:0 5px 22px #162D4B18; padding:11px 13px; }
+.evt-tip { display:none; position:fixed; z-index:650; max-width:min(300px,calc(100vw - 16px)); pointer-events:none; background:var(--bg-base); border:1px solid var(--bd-tip); border-radius:6px; box-shadow:0 5px 22px #162D4B18; padding:11px 13px; }
 .evt-tip.open { display:block; }
 .evt-tip-cat { display:inline-block; padding:1px var(--s2); border-radius:var(--r-sm); font-size:11px; font-weight:700; }
 .evt-tip-dates { margin-top:var(--s2); font-size:12px; font-weight:700; color:var(--tx-2); }
@@ -246,9 +265,9 @@ tr.evt-row th.c-day:hover { background:var(--bg-base-3); }
 tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:700; text-align:left; padding-left:8px; }
 .evt-bar { display:block; height:22px; line-height:22px; border-radius:3px; font-size:10px; font-weight:700; padding:0 5px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .evt-text { width:100%; box-sizing:border-box; font-family:var(--font); font-size:13px; padding:var(--s2); border:1px solid var(--line-2); border-radius:var(--r-md); resize:none; }
-.evt-local { background:#DBEAFE; color:#1E407A; }
-.evt-national { background:#F6DDE7; color:#82334E; }
-.evt-training { background:#DCECE7; color:#215C4B; }
+.evt-local { background:var(--info-soft); color:var(--info-tx); }
+.evt-national { background:var(--dang-soft); color:var(--dang-tx); }
+.evt-training { background:var(--ok-soft); color:var(--ok-tx); }
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; height:auto; padding:8px 13px; border:1px solid transparent; border-radius:6px; font-size:12px; font-weight:700; line-height:1.35; white-space:normal; text-align:center; }
 .btn .ic { width:15px; height:15px; }
 .btn-primary { background:var(--brand); color:var(--brand-on); border-color:var(--brand); }
@@ -256,13 +275,13 @@ tr.evt-row th.evt-row-label { font-size:11px; color:var(--tx-3); font-weight:700
 .btn-ghost { background:var(--bg-base); border-color:var(--line); color:var(--tx-1); }
 .btn-ghost:hover { background:var(--bg-base-3); }
 .btn-danger { background:var(--dang-soft); color:var(--dang-tx); }
-.btn-danger:hover { background:#FECACA; }
+.btn-danger:hover { background:var(--dang-hover); }
 .btn-sm { min-height:32px; padding:6px 11px; font-size:12px; }
 .btn-sq { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border:1px solid var(--line); border-radius:5px; font-size:12px; font-weight:700; background:var(--bg-base); color:var(--tx-2); }
-.btn-sq:hover { background:#FECACA; }
+.btn-sq:hover { background:var(--dang-hover); }
 .toggle { position:relative; display:inline-block; width:40px; height:22px; }
 .toggle input { opacity:0; width:0; height:0; }
-.toggle-slider { position:absolute; inset:0; background:#BDC9D9; border-radius:var(--r-pill); transition:.2s; cursor:pointer; }
+.toggle-slider { position:absolute; inset:0; background:var(--line-2); border-radius:var(--r-pill); transition:.2s; cursor:pointer; }
 .toggle-slider:before { content:""; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:var(--sh-1); }
 input:checked + .toggle-slider { background:var(--nav-active-bg); }
 input:checked + .toggle-slider:before { transform:translateX(18px); }
@@ -273,18 +292,18 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .pill-neutral { background:var(--bg-base-3); color:var(--tx-2); }
 .pill-ok { background:var(--ok-soft); color:var(--ok-tx); }
 .pill-dang { background:var(--dang-soft); color:var(--dang-tx); }
-.avatar { width:34px; height:34px; min-width:34px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#304D74; background:#EAF0F8; flex-shrink:0; line-height:1; }
+.avatar { width:34px; height:34px; min-width:34px; border-radius:5px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--avatar-tx); background:var(--avatar-bg); flex-shrink:0; line-height:1; }
 .tbl { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
 .tbl th { background:var(--bg-base-2); color:var(--tx-2); font-size:11px; font-weight:700; text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); }
 .tbl td { padding:12px; border-bottom:1px solid var(--line); vertical-align:middle; }
 .tbl tr:last-child td { border-bottom:none; }
 .tbl tbody tr:hover { background:var(--bg-base-2); }
 #status-bar { margin-left:var(--sb-w); background:transparent; color:var(--tx-2); font-size:10px; padding:12px 32px; display:flex; justify-content:flex-end; }
-#loader { display:none; position:fixed; inset:0; background:rgba(255,255,255,.7); z-index:999; align-items:center; justify-content:center; font-size:14px; color:var(--tx-2); }
+#loader { display:none; position:fixed; inset:0; background:var(--veil); z-index:999; align-items:center; justify-content:center; font-size:14px; color:var(--tx-2); }
 #loader.active { display:flex; }
 #toast { position:fixed; bottom:var(--s6); right:var(--s6); color:#fff; padding:11px 16px; border-radius:var(--r-md); font-size:13px; display:none; z-index:1000; box-shadow:var(--sh-2); }
-#toast.success { background:var(--ok); }
-#toast.error { background:var(--dang); }
+#toast.success { background:var(--toast-ok); }
+#toast.error { background:var(--toast-err); }
 .mth-wrap { overflow-x:auto; overflow-y:hidden; max-height:none; border:1px solid var(--line); border-radius:6px; background:var(--bg-base); overscroll-behavior-x:contain; }
 .mth { border-collapse:separate; border-spacing:0; font-size:12px; width:100%; table-layout:fixed; }
 .mth th.c-agent, .mth td.c-agent { position:sticky; left:0; z-index:3; background:var(--bg-base); text-align:left; white-space:normal; width:184px; min-width:184px; max-width:184px; overflow:hidden; text-overflow:ellipsis; padding:4px 12px; border-right:1px solid var(--line-2); }
@@ -294,12 +313,12 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth thead th .dow { display:block; font-size:9px; color:var(--tx-3); font-weight:400; }
 .mth thead th .dnum { display:block; font-size:12px; color:var(--tx-1); font-weight:700; }
 .mth thead th.is-weekend { background:var(--bg-base-3); }
-.mth thead th.is-today .dnum { color:var(--nav-active-bg); }
+.mth thead th.is-today .dnum { color:var(--brand-tx); }
 .mth td { border-bottom:1px solid var(--line); }
 .mth tbody tr:last-child td { border-bottom:none; }
 .mth td.is-weekend { background:var(--bg-base-2); }
 .mth td.is-closed { background:var(--bg-base-3); }
-.mth .wk-start { border-left:2px solid #536D8E; }
+.mth .wk-start { border-left:2px solid var(--wk-line); }
 .mth th.c-rh, .mth td.c-rh { width:38px; min-width:38px; text-align:center; font-weight:700; background:var(--bg-base-2); border-left:1px solid var(--line); color:var(--tx-2); font-size:12px; }
 .mth th.c-rh:first-of-type, .mth td.c-rh:first-of-type { border-left:2px solid var(--line-2); }
 .mth tr.st-row td.c-agent { font-weight:400; color:var(--tx-1); }
@@ -311,14 +330,14 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth tr.blk td.c-agent { background:var(--bg-base-3); }
 .mth tr.sub td { background:var(--bg-base-2); font-weight:700; font-size:12px; color:var(--tx-2); }
 .mth tr.sub td.c-agent { background:var(--bg-base-2); }
-.mth tbody tr:hover td { background:#F0F4FA; }
-.mth tbody tr:hover td.c-agent { background:#F0F4FA; }
-.mth.xh td.col-hl { background:#F2F5FA; }
-.mth.xh thead th.col-hl { background:#E3EAF5; }
+.mth tbody tr:hover td { background:var(--hover); }
+.mth tbody tr:hover td.c-agent { background:var(--hover); }
+.mth.xh td.col-hl { background:var(--col-hl); }
+.mth.xh thead th.col-hl { background:var(--col-hl-head); }
 .sh { display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:25px; padding:0 3px; border-radius:3px; font-size:10px; font-weight:700; white-space:nowrap; }
 .sh-cnr { position:relative; display:inline-flex; align-items:center; justify-content:center; }
 .sh-cnr-tag { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:1px; font-size:8px; font-weight:700; color:var(--accent-strong); letter-spacing:normal; line-height:1; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
-.mth-group td { height:28px; background:#F2F5F9; border-bottom:1px solid var(--line); padding:0; }
+.mth-group td { height:28px; background:var(--row-group); border-bottom:1px solid var(--line); padding:0; }
 .mth-group td.mth-group-lbl { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; padding:6px 12px; }
 .mth thead th.c-agent, .mth tr.evt-row th.evt-row-label, .mth-group td.mth-group-lbl, .mth tr.blk td.c-agent { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; padding-left:12px; }
 .lbl-s { display:none; }
@@ -328,37 +347,37 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .cnr-chip-code { font-weight:700; color:var(--tx-2); }
 .cnr-chip-n { font-weight:700; color:var(--accent-strong); }
 .sh-half { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:25px; border-radius:3px; overflow:hidden; font-size:10px; font-weight:700; z-index:0; }
-.sh-half::after { content:""; position:absolute; inset:0; z-index:0; background:repeating-linear-gradient(135deg,#E9EAEE 0 4px,#F3F4F6 4px 8px); }
+.sh-half::after { content:""; position:absolute; inset:0; z-index:0; background:repeating-linear-gradient(135deg,var(--hatch-1) 0 4px,var(--hatch-2) 4px 8px); }
 .sh-half-pm::after { clip-path:polygon(0 0, 0 100%, 100% 100%); }
 .sh-half-am::after { clip-path:polygon(0 0, 100% 0, 100% 100%); }
 .sh-half-lbl { position:relative; z-index:1; }
-.sh-open { background:#DBEAFE; color:#1E407A; }
-.sh-mid { background:#F5EBCB; color:#6B5622; }
-.sh-close { background:#DCEBDF; color:#2D5841; }
-.sh-late { background:#F5EBCB; color:#6B5622; }
-.sh-dsun { background:#E4DDF0; color:#5C467A; }
-.sh-violet { background:#E4DDF0; color:#5C467A; }
-.sh-pt { background:#E8E9EB; color:#4C586A; }
-.sh-teal { background:#DCEBDF; color:#2D5841; }
-.sh-pink { background:#F6DDE7; color:#82334E; }
-.sh-slate { background:#E8E9EB; color:#4C586A; }
+.sh-open { background:var(--info-soft); color:var(--info-tx); }
+.sh-mid { background:var(--pl-yellow); color:var(--pl-yellow-tx); }
+.sh-close { background:var(--pl-green); color:var(--pl-green-tx); }
+.sh-late { background:var(--pl-yellow); color:var(--pl-yellow-tx); }
+.sh-dsun { background:var(--pl-violet); color:var(--pl-violet-tx); }
+.sh-violet { background:var(--pl-violet); color:var(--pl-violet-tx); }
+.sh-pt { background:var(--pl-slate); color:var(--pl-slate-tx); }
+.sh-teal { background:var(--pl-green); color:var(--pl-green-tx); }
+.sh-pink { background:var(--dang-soft); color:var(--dang-tx); }
+.sh-slate { background:var(--pl-slate); color:var(--pl-slate-tx); }
 .sh-stock { background:var(--bg-base); color:var(--tx-2); border:1px dashed var(--line-2); }
-.sh-stock.sh-open { background:var(--bg-base); border:1px dashed #1E407A; color:#1E407A; }
-.sh-stock.sh-mid { background:var(--bg-base); border:1px dashed #6B5622; color:#6B5622; }
-.sh-stock.sh-close { background:var(--bg-base); border:1px dashed #2D5841; color:#2D5841; }
-.sh-stock.sh-late { background:var(--bg-base); border:1px dashed #6B5622; color:#6B5622; }
-.sh-stock.sh-teal { background:var(--bg-base); border:1px dashed #2D5841; color:#2D5841; }
-.sh-stock.sh-pink { background:var(--bg-base); border:1px dashed #82334E; color:#82334E; }
-.sh-stock.sh-slate { background:var(--bg-base); border:1px dashed #4C586A; color:#4C586A; }
-.sh-off { background:#E8E9EB; color:#4C586A; font-weight:400; }
-.sh-stock.sh-violet { background:var(--bg-base); border:1px dashed #5C467A; color:#5C467A; }
+.sh-stock.sh-open { background:var(--bg-base); border:1px dashed var(--info-tx); color:var(--info-tx); }
+.sh-stock.sh-mid { background:var(--bg-base); border:1px dashed var(--pl-yellow-tx); color:var(--pl-yellow-tx); }
+.sh-stock.sh-close { background:var(--bg-base); border:1px dashed var(--pl-green-tx); color:var(--pl-green-tx); }
+.sh-stock.sh-late { background:var(--bg-base); border:1px dashed var(--pl-yellow-tx); color:var(--pl-yellow-tx); }
+.sh-stock.sh-teal { background:var(--bg-base); border:1px dashed var(--pl-green-tx); color:var(--pl-green-tx); }
+.sh-stock.sh-pink { background:var(--bg-base); border:1px dashed var(--dang-tx); color:var(--dang-tx); }
+.sh-stock.sh-slate { background:var(--bg-base); border:1px dashed var(--pl-slate-tx); color:var(--pl-slate-tx); }
+.sh-off { background:var(--pl-slate); color:var(--pl-slate-tx); font-weight:400; }
+.sh-stock.sh-violet { background:var(--bg-base); border:1px dashed var(--pl-violet-tx); color:var(--pl-violet-tx); }
 .sh-cp { background:var(--dang-soft); color:var(--dang-tx); }
 .sh-none { color:var(--tx-3); }
 .cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; }
 .cal-dow { text-align:center; font-size:11px; font-weight:700; color:var(--tx-3); text-transform:uppercase; letter-spacing:normal; padding-bottom:var(--s2); }
 .cal-cell { min-height:104px; border:1px solid var(--line); border-radius:5px; padding:10px 11px; background:var(--bg-base); font-size:12px; position:relative; min-width:0; }
 .cal-cell.empty { background:transparent; border:none; }
-.cal-cell.today { border-color:#88A6CE; box-shadow:inset 0 0 0 1px #88A6CE; }
+.cal-cell.today { border-color:var(--accent-line); box-shadow:inset 0 0 0 1px var(--accent-line); }
 .cal-cell.holiday { background:var(--warn-soft); cursor:pointer; }
 .cal-cell.holiday.forced-open { background:var(--ok-soft); }
 .cal-cell.weekend { background:var(--bg-base-2); }
@@ -381,7 +400,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .cal-mini-cell.today { outline:1.5px solid var(--nav-active-bg); font-weight:700; color:var(--tx-1); }
 .cal-mini-cell.holiday { background:var(--warn-soft); color:var(--warn-tx); font-weight:700; cursor:pointer; }
 .cal-mini-cell.holiday.forced-open { background:var(--ok-soft); color:var(--ok-tx); }
-#leave-popup, #dayopen-popup, #week-picker-popup { display:none; position:fixed; background:var(--bg-base); border:1px solid #CFDAE8; border-radius:7px; padding:16px; box-shadow:0 8px 30px #192D491C; z-index:600; width:300px; max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); overflow:auto; }
+#leave-popup, #dayopen-popup, #week-picker-popup { display:none; position:fixed; background:var(--bg-base); border:1px solid var(--bd-modal); border-radius:7px; padding:16px; box-shadow:var(--sh-2); z-index:600; width:300px; max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); overflow:auto; }
 .sft-title { font-size:14px; font-weight:700; color:var(--tx-1); margin-bottom:2px; }
 .sft-subtitle { font-size:12px; color:var(--tx-3); margin-bottom:var(--s4); }
 .sft-row { display:flex; align-items:center; justify-content:center; gap:var(--s4); }
@@ -396,7 +415,7 @@ input[type=date][data-dp] { display:none; }
 .dp-btn.is-open { border-color:var(--brand); box-shadow:0 0 0 3px rgba(31,31,31,.07); }
 .dp-btn .ic { width:15px; height:15px; color:var(--tx-2); flex-shrink:0; }
 .dp-btn.is-empty { color:var(--tx-3); }
-.dp-pop { display:none; position:fixed; z-index:900; width:276px; max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); overflow:auto; padding:12px; background:var(--bg-base); border:1px solid #CFDAE8; border-radius:7px; box-shadow:0 8px 30px #192D491C; }
+.dp-pop { display:none; position:fixed; z-index:900; width:276px; max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); overflow:auto; padding:12px; background:var(--bg-base); border:1px solid var(--bd-modal); border-radius:7px; box-shadow:var(--sh-2); }
 .dp-pop.open { display:block; }
 .dp-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s2); }
 .dp-title { font-size:14px; font-weight:700; color:var(--tx-1); }
@@ -469,7 +488,7 @@ input[type=date][data-dp] { display:none; }
 .form-actions { display:flex; justify-content:flex-end; gap:var(--s2); margin-top:var(--s4); }
 .modal-overlay { display:none; position:fixed; inset:0; z-index:800; background:#12263E44; backdrop-filter:blur(2px); align-items:center; justify-content:center; padding:20px; }
 .modal-overlay.open { display:flex; }
-.modal { background:var(--bg-base); border:1px solid #CFDAE8; border-radius:10px; width:100%; max-width:460px; box-shadow:0 18px 60px #12263E26; overflow:hidden; display:flex; flex-direction:column; max-height:calc(100dvh - 40px); }
+.modal { background:var(--bg-base); border:1px solid var(--bd-modal); border-radius:10px; width:100%; max-width:460px; box-shadow:0 18px 60px #12263E26; overflow:hidden; display:flex; flex-direction:column; max-height:calc(100dvh - 40px); }
 .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:20px; border-bottom:1px solid var(--line); flex-shrink:0; }
 .modal-title { font-size:18px; font-weight:700; color:var(--tx-1); }
 .modal-sub { font-size:13px; color:var(--tx-3); margin-top:2px; }
@@ -478,8 +497,8 @@ input[type=date][data-dp] { display:none; }
 .sb-scope { position:relative; margin-top:22px; padding:12px 0 4px; border-top:1px solid var(--line); }
 #store-gate { display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(16,24,40,.28); backdrop-filter:blur(6px); }
 #store-gate.show { display:flex; animation:gateFade .2s ease-out; }
-.gate-card { width:400px; max-width:calc(100vw - 32px); background:var(--bg-base); border:1px solid #CFDAE8; border-radius:10px; box-shadow:0 18px 60px #12263E26; padding:28px; text-align:center; max-height:calc(100dvh - 32px); overflow:auto; }
-.gate-logo { font-size:22px; font-weight:700; letter-spacing:normal; color:var(--nav-active-bg); margin-bottom:var(--s5); display:flex; justify-content:center; }
+.gate-card { width:400px; max-width:calc(100vw - 32px); background:var(--bg-base); border:1px solid var(--bd-modal); border-radius:10px; box-shadow:0 18px 60px #12263E26; padding:28px; text-align:center; max-height:calc(100dvh - 32px); overflow:auto; }
+.gate-logo { font-size:22px; font-weight:700; letter-spacing:normal; color:var(--brand-tx); margin-bottom:var(--s5); display:flex; justify-content:center; }
 .gate-wordmark { height:44px; width:auto; display:block; }
 .gate-title { font-size:18px; font-weight:700; color:var(--tx-1); margin-bottom:var(--s2); }
 .gate-sub { font-size:13px; color:var(--tx-3); line-height:1.5; margin-bottom:var(--s6); }
@@ -523,7 +542,7 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .tone-chip.on { border-color:var(--tx-1); }
 .tr-days { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
 .tr-day { border:1px solid var(--line); border-radius:5px; padding:10px; background:var(--bg-base-2); }
-.tr-day.is-manual { border-color:#91ACD2; background:#EDF3FC; }
+.tr-day.is-manual { border-color:var(--bd-manual); background:var(--manual-bg); }
 .tr-day.is-closed { background:var(--bg-base-3); border-style:dashed; opacity:.75; }
 .tr-closed { height:30px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--tx-3); text-transform:uppercase; }
 .tr-day-h { font-size:11px; font-weight:700; color:var(--tx-2); margin-bottom:7px; text-align:center; }
@@ -533,10 +552,10 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .day-chips { display:flex; gap:6px; flex-wrap:wrap; }
 .day-chip { width:38px; height:32px; border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--bg-base); color:var(--tx-2); cursor:pointer; font-family:var(--font); font-size:12px; font-weight:400; display:inline-flex; align-items:center; justify-content:center; transition:background .12s, color .12s, border-color .12s; }
 .day-chip:hover { background:var(--bg-base-3); }
-.day-chip.on { background:var(--dang-soft); color:var(--dang-tx); border-color:#FCA5A5; font-weight:700; }
+.day-chip.on { background:var(--dang-soft); color:var(--dang-tx); border-color:var(--bd-chip); font-weight:700; }
 .mth td.is-editable { cursor:pointer; }
 .mth td.is-editable:hover { box-shadow:inset 0 0 0 2px var(--nav-active-bg); }
-#cell-editor { display:none; position:fixed; z-index:700; background:var(--bg-base); border:1px solid #CFDAE8; border-radius:10px; box-shadow:0 8px 30px #192D491C; padding:16px; width:460px; max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); overflow-y:auto; }
+#cell-editor { display:none; position:fixed; z-index:700; background:var(--bg-base); border:1px solid var(--bd-modal); border-radius:10px; box-shadow:var(--sh-2); padding:16px; width:460px; max-width:calc(100vw - 16px); max-height:calc(100dvh - 16px); overflow-y:auto; }
 .ce-head { padding:0 var(--s2) var(--s3); }
 .ce-title { font-size:13px; font-weight:700; color:var(--tx-1); }
 .ce-sub { font-size:12px; color:var(--tx-3); margin-top:1px; }
@@ -555,11 +574,11 @@ body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events
 .ce-cnr-opt.is-current { background:var(--info-soft); color:var(--accent-strong); border-color:var(--accent-strong); }
 .ce-cnr-opt.ce-reset { color:var(--tx-3); font-style:normal; font-weight:400; }
 .ae-fixed-note { font-size:11px; color:var(--tx-3); line-height:1.4; display:block; }
-.corner-tabs { display:flex; gap:0; flex-wrap:wrap; margin-bottom:0; width:fit-content; border-radius:6px; padding:3px; background:#EAF0F6; }
+.corner-tabs { display:flex; gap:0; flex-wrap:wrap; margin-bottom:0; width:fit-content; border-radius:6px; padding:3px; background:var(--seg-bg); }
 .corner-tabs:empty { display:none; }
 .corner-tab { height:30px; padding:0 14px; border:0; background:transparent; border-radius:4px; font-size:12px; font-weight:400; color:var(--tx-2); }
 .corner-tab:hover { background:var(--bg-base-3); }
-.corner-tab.active { background:var(--bg-base); color:var(--brand); font-weight:700; }
+.corner-tab.active { background:var(--bg-base); color:var(--brand-tx); font-weight:700; }
 button { cursor:pointer; }
 button:disabled { cursor:default; opacity:.55; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
@@ -569,7 +588,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .sb-logo-row { display:flex; align-items:center; gap:10px; }
 .sb-wordmark { height:34px; width:auto; display:block; flex-shrink:0; }
 .sb-wordmark.is-off { display:none; }
-.sb-logo-txt { display:none; font-size:28px; font-weight:700; color:var(--brand); line-height:1; white-space:nowrap; }
+.sb-logo-txt { display:none; font-size:28px; font-weight:700; color:var(--brand-tx); line-height:1; white-space:nowrap; }
 .sb-logo-txt.is-on { display:inline; }
 #scope-fields { padding:12px 10px 4px; background:var(--bg-base-2); border:1px solid var(--line); border-radius:6px; }
 .breadcrumb { display:flex; align-items:center; gap:9px; font-size:12px; color:var(--tx-2); min-width:0; }
@@ -582,30 +601,30 @@ textarea { resize:vertical; line-height:1.5; }
 #tab-planning > .view-switch { display:none; }
 .settings-tabs { display:flex; gap:22px; overflow-x:auto; flex-wrap:nowrap; border-bottom:1px solid var(--line); margin-bottom:20px; }
 .settings-tabs button { flex-shrink:0; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--tx-2); font-size:12px; padding:0 0 12px; min-height:40px; }
-.settings-tabs button.active { color:var(--brand); border-bottom-color:var(--brand); font-weight:700; }
+.settings-tabs button.active { color:var(--brand-tx); border-bottom-color:var(--brand); font-weight:700; }
 .dash-col .card { margin:0; }
 .metric-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-bottom:18px; }
 .metric-card { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:22px; min-height:102px; background:var(--bg-base); border:1px solid var(--line); border-radius:8px; }
 .metric-card span { font-size:13px; color:var(--tx-2); }
-.metric-card strong { font-size:32px; color:#507BAD; font-weight:700; line-height:1.1; }
+.metric-card strong { font-size:32px; color:var(--info); font-weight:700; line-height:1.1; }
 .hl-add .dp-btn, .hl-add input[type=text] { width:100%; min-width:0; height:36px; }
 .mini-empty, .pool-empty { font-size:12px; color:var(--tx-2); padding:8px 0; }
-.mth th.c-day.is-today, .mth td.c-day.is-today { background:#E7EFFC; }
-.mth tbody tr:hover td.is-today { background:#E7EFFC; }
+.mth th.c-day.is-today, .mth td.c-day.is-today { background:var(--today); }
+.mth tbody tr:hover td.is-today { background:var(--today); }
 .mth .mth-group td.c-day { height:28px; }
-.mth-group td.c-agent { background:#F2F5F9; }
+.mth-group td.c-agent { background:var(--row-group); }
 .mth tr.evt-row th { position:static; height:26px; padding:2px 1px; }
 .mth tr.evt-row th.c-agent { position:sticky; left:0; top:auto; z-index:5; background:var(--bg-base-2); padding-left:12px; }
 .mth .person-name { display:block; font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mth .person-role { display:block; font-size:11px; color:var(--tx-2); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .person-initials { display:none; }
 .mth .person-cell { display:block; line-height:1.4; min-width:0; }
-.sh-pink, .sh-cp { background:#F6DDE7; color:#82334E; }
-.sh-out { background:var(--bg-base); color:#4C586A; border:1px dashed #4C586A; }
+.sh-pink, .sh-cp { background:var(--dang-soft); color:var(--dang-tx); }
+.sh-out { background:var(--bg-base); color:var(--pl-slate-tx); border:1px dashed var(--pl-slate-tx); }
 .coverage-card { padding:0; overflow:hidden; }
 .coverage-card > summary { display:flex; align-items:center; gap:12px; cursor:pointer; padding:18px 22px; list-style:none; font-size:16px; font-weight:700; }
 .coverage-card > summary::-webkit-details-marker { display:none; }
-.coverage-expander { width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:5px; background:#F1F5FB; font-size:18px; color:var(--brand); font-weight:400; }
+.coverage-expander { width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:5px; background:var(--tint); font-size:18px; color:var(--brand-tx); font-weight:400; }
 .coverage-card > summary .coverage-expander::after { content:"+"; }
 .coverage-card[open] > summary .coverage-expander::after { content:"-"; }
 .coverage-card .mth-wrap { border:0; border-top:1px solid var(--line); border-radius:0; max-height:none; }
@@ -617,7 +636,7 @@ textarea { resize:vertical; line-height:1.5; }
 .ca-table .ca-name { white-space:nowrap; font-weight:700; }
 .ca-table .ca-n { text-align:center; width:64px; font-variant-numeric:tabular-nums; }
 .ca-table .ca-tot { font-weight:700; }
-.ca-btn { border:0; background:transparent; font:inherit; color:var(--brand); font-weight:700; cursor:pointer; min-width:32px; min-height:28px; border-radius:4px; }
+.ca-btn { border:0; background:transparent; font:inherit; color:var(--brand-tx); font-weight:700; cursor:pointer; min-width:32px; min-height:28px; border-radius:4px; }
 .ca-btn:hover { background:var(--bg-base-3); }
 .ca-detail { padding:10px 22px 14px; font-size:12px; color:var(--tx-2); display:flex; flex-wrap:wrap; gap:6px; }
 .ca-detail:empty { display:none; }
@@ -627,9 +646,9 @@ textarea { resize:vertical; line-height:1.5; }
 .it-info .sh { font-size:9px; min-width:24px; height:22px; flex-shrink:0; }
 .it-person { display:block; min-width:0; line-height:1.4; }
 .it-person small { display:block; font-size:11px; font-weight:400; color:var(--tx-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.it-closed-zone { position:absolute; top:0; bottom:0; background:#F7F9FC; pointer-events:none; }
-.it-track .it-shift { position:absolute; top:14px; height:24px; border-radius:4px; border:1px solid #DCE3EC; background:#EEF1F5; color:#52647B; display:flex; align-items:center; justify-content:space-between; padding:0 5px; font-size:10px; font-weight:400; overflow:hidden; }
-.it-track .it-shift.pre { border-radius:4px 0 0 4px; opacity:1; background:#F5F7FA; }
+.it-closed-zone { position:absolute; top:0; bottom:0; background:var(--closed-bg); pointer-events:none; }
+.it-track .it-shift { position:absolute; top:14px; height:24px; border-radius:4px; border:1px solid var(--line); background:var(--shift-bg); color:var(--tx-2); display:flex; align-items:center; justify-content:space-between; padding:0 5px; font-size:10px; font-weight:400; overflow:hidden; }
+.it-track .it-shift.pre { border-radius:4px 0 0 4px; opacity:1; background:var(--bg-app); }
 .it-track .it-shift.pre + .it-shift { border-radius:0 4px 4px 0; }
 .mm-form .fld { flex:1 1 0; min-width:0; }
 .mm-form .fld:first-child { flex:0 0 auto; }
@@ -689,6 +708,7 @@ textarea { resize:vertical; line-height:1.5; }
  }
 @keyframes spinner {  to { transform:rotate(360deg); }  }
 @media (prefers-reduced-motion: reduce) {
+  .theme-sw *, .theme-sw *::before { transition:none; }
   #btn-forecast::before, #btn-forecast::after, .ai-star { animation:none; }
 }
 @media (min-width:1700px) {
@@ -717,7 +737,7 @@ textarea { resize:vertical; line-height:1.5; }
   .sb-brand { display:none; }
   .sb-tagline, #sidebar .sb-field, #sidebar #scope-fields, .sb-foot span, .nav-caret, .nav-item > span { display:none; }
   .nav-item, .nav-item.has-sub { width:44px; height:44px; min-height:44px; padding:0; margin:0 auto; justify-content:center; gap:0; }
-  .nav-sub { position:fixed; left:70px; width:200px; background:var(--bg-base); border:1px solid #D4DEEB; box-shadow:0 8px 30px #192D491C; border-radius:7px; padding:6px; margin:0; z-index:110; }
+  .nav-sub { position:fixed; left:70px; width:200px; background:var(--bg-base); border:1px solid var(--bd-pop); box-shadow:var(--sh-2); border-radius:7px; padding:6px; margin:0; z-index:110; }
   .nav-subitem { min-height:44px; }
   .sb-store-btn { display:flex; align-items:center; justify-content:center; width:44px; height:44px; border:0; background:transparent; color:var(--tx-2); margin:0 auto; }
   .sb-store-btn-lbl { display:none; }
@@ -865,6 +885,18 @@ textarea { resize:vertical; line-height:1.5; }
 }
 </style>
 <script>
+// Saved light / dark choice, applied before the page shows
+try { if (localStorage.getItem('cast_theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+function toggleTheme() {
+  var dark = document.documentElement.getAttribute('data-theme') !== 'dark';
+  if (dark) document.documentElement.setAttribute('data-theme', 'dark'); else document.documentElement.removeAttribute('data-theme');
+  var b = document.getElementById('theme-switch'); if (b) b.setAttribute('aria-checked', String(dark));
+  try { localStorage.setItem('cast_theme', dark ? 'dark' : 'light'); } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', function() {
+  var b = document.getElementById('theme-switch');
+  if (b) b.setAttribute('aria-checked', String(document.documentElement.getAttribute('data-theme') === 'dark'));
+});
 // Logo: cut the white margins of the repo image, so it lines up with the menu
 function trimLogo(img) {
   if (img.dataset.trimmed) return;
@@ -1001,6 +1033,7 @@ function trimLogo(img) {
         </div>
       </div>
       <button class="btn btn-ghost top-help" onclick="openPageHelp()" title="Help"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .3c0 1.5-2.5 1.7-2.5 3.7M12 16.5h.01"/></svg><span>Help</span></button>
+      <button type="button" id="theme-switch" class="theme-sw" role="switch" aria-checked="false" title="Dark mode" aria-label="Dark mode" onclick="toggleTheme()"><span class="tsw-night"></span><svg class="tsw-stars" viewBox="0 0 66 34" aria-hidden="true"><g fill="#FFFFFF"><circle cx="9" cy="9" r="1.2"/><circle cx="17" cy="20" r="0.9"/><circle cx="24" cy="8" r="0.8"/><circle cx="12" cy="25" r="0.7"/><path d="M19 11.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/></g></svg><svg class="tsw-clouds" viewBox="0 0 66 34" aria-hidden="true"><g fill="#FFFFFF"><path opacity=".75" d="M33 25a4 4 0 0 1 3.6-4 5.5 5.5 0 0 1 10.4-1.6A4.3 4.3 0 0 1 52 23.5V25z"/><path d="M40 30a4.5 4.5 0 0 1 4-4.4 6 6 0 0 1 11.4-1.8 4.8 4.8 0 0 1 6.6 4.4V30z"/></g></svg><span class="tsw-knob"><i></i><i></i><i></i></span></button>
     </div>
     </div>
   </header>
@@ -1536,7 +1569,7 @@ function showToast(msg, type) {
   el.className     = type || 'success';
   el.style.display = 'block';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function() { el.style.display = 'none'; }, 3000);
+  toastTimer = setTimeout(function() { el.style.display = 'none'; }, type === 'error' ? 6000 : 3000);
 }
 function switchTab(name, btn) {
   document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
@@ -2145,7 +2178,15 @@ function buildHabits(cutoffDs) {
     work: function(a, dow) { if (!n) return 0; var p = Math.min(0.98, Math.max(0.02, prob('p', a, dow, 'work', 0.5))); return Math.log(p / (1 - p)); },
     // How often this person takes this shift on this weekday, compared with an even choice (0 when nothing is known)
     shift: function(a, dow, code, size) { var even = 1 / Math.max(1, size); return (cnt['s|' + poolOf(a)] ? prob('s', a, dow, code, even) : even) - even; },
-    knowsShifts: function(a) { return !!cnt['s|' + poolOf(a)]; }
+    knowsShifts: function(a) { return !!cnt['s|' + poolOf(a)]; },
+    // This person's own choice of shift (no team average): on this weekday when seen at least twice, else overall when
+    // seen at least four times. Compared with an even choice, 0 when not enough is known.
+    own: function(a, dow, code, size) {
+      var even = 1 / Math.max(1, size), me = cnt['s|' + a.id] || {}, day = cnt['s|' + a.id + '|' + dow] || {};
+      if (tot(day) >= 2) return (day[code] || 0) / tot(day) - even;
+      if (tot(me) >= 4) return (me[code] || 0) / tot(me) - even;
+      return 0;
+    }
   };
 }
 // On the floor: a day with real working hours (OUT, absences and days off are not)
@@ -2326,8 +2367,8 @@ function applyRegulationsForm() {
   if (md > 0)    regulations.max_daily_hours = md;
   if (wh > 0)    regulations.weekly_hours = wh;
   if (!storeSettings) storeSettings = {};
-  if (document.getElementById('thr-open'))  storeSettings.min_opening   = (isNaN(mo) || mo < 0) ? 1 : mo;
-  if (document.getElementById('thr-close')) storeSettings.min_closing   = (isNaN(mc) || mc < 0) ? 1 : mc;
+  if (document.getElementById('thr-open'))  storeSettings.min_opening   = (isNaN(mo) || mo < 1) ? 1 : mo;
+  if (document.getElementById('thr-close')) storeSettings.min_closing   = (isNaN(mc) || mc < 1) ? 1 : mc;
   if (document.getElementById('thr-ratio')) storeSettings.closing_ratio = (isNaN(rr) || rr < 0 || rr > 100) ? 0.50 : rr / 100;
   Object.keys(dayHours).forEach(function(k) { regulations.day_hours[k] = dayHours[k]; });
   regulations.breaks = newBreaks;
@@ -2346,7 +2387,7 @@ var SETTINGS_HELP = {
       'Max hours / day and Max hours / week: the longest day and the longest week allowed by the contract. The lunch break is not counted.',
       'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.',
       'Opening minimum and Closing minimum: how many people must be there, at least, during the first hour and the last hour of the day (store or each corner).',
-      'Late shifts target: the share of your advisors who start in the later half of your shifts. Example: 70% means about 7 out of 10 start late. CAST then picks the exact shifts that best follow your hourly traffic.',
+      'Late shifts target: the share of your advisors on your latest shifts, the last quarter of your shift list (for example the last 2 of 7 shifts). Example: 70% means about 7 out of 10 work a late shift. CAST then picks the exact shifts that best follow your hourly traffic.',
       'Switches at the bottom: turn a rule on or off. Click ? next to a switch to understand it.'],
     important: 'Changes are saved automatically. The laws differ by country and by agreement: ask HR for the right numbers. CAST applies them but does not check them against the law.' },
   hours: { n: 2, title: 'Operating hours',
@@ -2445,7 +2486,7 @@ var SETTINGS_HELP = {
     steps: [
       'Choose the day with the arrows or the date at the top right.',
       'Each line is one person. The colored bar shows their working hours.',
-      'Breaks (lunch and short breaks) are placed automatically within the windows set in Settings when possible. To maintain opening and closing coverage, an automatic break may move outside its window. Drag a break to move it.',
+      'Breaks (lunch and short breaks) are placed automatically within the windows set in Settings. You can drag a break anywhere, even outside its window: your choice is kept.',
       'Click on a bar to add a mission, like the morning brief (MB) or Welcome.',
       'Set lunch and break windows in Settings.',
       'Excel and PDF: export the day.'],
@@ -2819,10 +2860,10 @@ function renderRegulations() {
         rrow('Staffing follows traffic', 'How much the number of people per day follows the traffic. 100% follows it fully, 0% gives the same team every day',
           '<input type="number" id="reg-traffic-follow" class="set-rule-input" value="' + (regulations.traffic_follow_pct != null ? regulations.traffic_follow_pct : 100) + '" min="0" max="100" step="10">', '%') +
         rrow('Opening minimum', 'How many advisors are needed at minimum to open a store or a corner',
-          '<input type="number" id="thr-open" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1) + '" min="0" max="20" step="1">', 'CA') +
+          '<input type="number" id="thr-open" class="set-rule-input" value="' + minCover('open') + '" min="1" max="20" step="1">', 'CA') +
         rrow('Closing minimum', 'How many advisors are needed at minimum to close a store or a corner',
-          '<input type="number" id="thr-close" class="set-rule-input" value="' + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1) + '" min="0" max="20" step="1">', 'CA') +
-        rrow('Late shifts target', 'Share of advisors who start in the later half of your shifts',
+          '<input type="number" id="thr-close" class="set-rule-input" value="' + minCover('close') + '" min="1" max="20" step="1">', 'CA') +
+        rrow('Late shifts target', 'Share of advisors on your latest shifts (the last quarter of your shift list)',
           '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.50) * 100) + '" min="0" max="100" step="5">', '%') +
         rrowToggle('Sunday single shift', 'One shift D on Sundays (uncheck for wide-amplitude stores that need O/C on Sunday)',
           'sunday-single-toggle', 'toggleSundaySingle', !(storeSettings && storeSettings.sunday_single_shift === false), 'sunday') +
@@ -3324,6 +3365,18 @@ function shiftClusters(grid, ds) {
   var mid = list.filter(function(s) { return openG.indexOf(s) === -1 && closeG.indexOf(s) === -1; });
   return { open: openG, mid: mid, close: closeG, covers: covers };
 }
+// Opening or closing minimum of an open day: always at least one person, more when the store asks for it
+function minCover(key) {
+  var v = storeSettings && storeSettings[key === 'open' ? 'min_opening' : 'min_closing'];
+  return Math.max(1, v != null ? +v || 0 : 1);
+}
+// Late shifts: the last quarter of the shift list (sorted by start, then end), rounded up
+function lateCodes(grid) {
+  var list = (grid || []).slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
+  var first = list.length - Math.ceil(list.length / 4), late = {};
+  list.forEach(function(s, k) { late[s.code] = list.length > 1 && k >= first; });
+  return late;
+}
 // Present for the first hour (opening) and for the last hour (closing)
 function coverOfHours(start, end, h) {
   return { open: start <= h.open && end >= Math.min(h.close, h.open + 60),
@@ -3824,23 +3877,23 @@ function initHourlyCurve(keepValues) {
     '<svg id="curve-svg" viewBox="0 0 '+W+' '+H+'" style="width:100%;min-width:500px;height:auto;display:block;'+
       'touch-action:none;user-select:none;">'+
       '<g id="cv-grid"></g>'+
-      '<path id="cv-area" fill="#507BAD" fill-opacity="0.12"></path>'+
-      '<path id="cv-line" fill="none" stroke="#507BAD" stroke-width="2.5" '+
+      '<path id="cv-area" style="fill:var(--info)" fill-opacity="0.12"></path>'+
+      '<path id="cv-line" fill="none" style="stroke:var(--info)" stroke-width="2.5" '+
         'stroke-linejoin="round" stroke-linecap="round"></path>'+
       '<g id="cv-points"></g><g id="cv-values"></g><g id="cv-labels"></g>'+
     '</svg>'+
     '<div style="display:flex;justify-content:flex-end;margin-top:10px;">'+
       '<span style="font-size:12px;color:var(--tx-3)">Total '+
-      '<span id="cv-total" style="color:#166534;font-weight:700">100%</span></span></div>';
+      '<span id="cv-total" style="color:var(--ok-tx);font-weight:700">100%</span></span></div>';
   var svg = document.getElementById('curve-svg');
   function xAt(i){ return padL + (plotW * i / (N - 1)); }
   function yAt(v){ return padT + plotH - (plotH * (v / maxPct)); }
   var grid = '';
   for (var p = 0; p <= maxPct; p += 5) {
     var gy = yAt(p);
-    grid += '<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="#E7EDF5"></line>'+
+    grid += '<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" style="stroke:var(--line)"></line>'+
             '<text x="'+(padL-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="11" '+
-            'fill="#52647B" style="font-family:var(--font)">'+p+'%</text>';
+            'style="fill:var(--tx-2);font-family:var(--font)">'+p+'%</text>';
   }
   document.getElementById('cv-grid').innerHTML = grid;
   function smooth(pts, close) {
@@ -3861,15 +3914,15 @@ function initHourlyCurve(keepValues) {
     var ph='', vh='', lh='';
     for (var i=0;i<N;i++){
       var x=xAt(i), y=yAt(curveValues[i]);
-      ph += '<circle class="cv-hit" data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="6.5" fill="#fff" '+
-            'stroke="#507BAD" stroke-width="2.5" style="cursor:grab"></circle>' +
+      ph += '<circle class="cv-hit" data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="6.5" style="fill:var(--bg-base);stroke:var(--info);cursor:grab" '+
+            'stroke-width="2.5"></circle>' +
             '<circle data-i="'+i+'" cx="'+x+'" cy="'+y+'" r="15" fill="transparent" style="cursor:grab"></circle>';
       var ly = y-14; if (ly < padT-4) ly = y+20;
       vh += '<text x="'+x+'" y="'+ly+'" text-anchor="middle" font-size="11" '+
-            'font-weight="bold" fill="#507BAD" style="font-family:var(--font);pointer-events:none">'+
+            'font-weight="bold" style="fill:var(--info);font-family:var(--font);pointer-events:none">'+
             curveValues[i].toFixed(1)+'%</text>';
       lh += '<text x="'+x+'" y="'+(H-padB+16)+'" text-anchor="middle" font-size="11" '+
-            'fill="#52647B" style="font-family:var(--font)">'+String(curveHours[i]).padStart(2,'0')+'h</text>';
+            'style="fill:var(--tx-2);font-family:var(--font)">'+String(curveHours[i]).padStart(2,'0')+'h</text>';
     }
     document.getElementById('cv-points').innerHTML = ph;
     document.getElementById('cv-values').innerHTML = vh;
@@ -4045,7 +4098,7 @@ function renderIntraday(ds) {
     };
     var byC = {}; storeCorners.forEach(function(c){ byC[c.id]=[]; });
     working.forEach(function(a){ if (poolOf(a)==='sales'){ var cid=effCornerId(a); if (cid&&byC[cid]) byC[cid].push(a); } });
-    var minOpen = (storeSettings.min_opening != null) ? storeSettings.min_opening : 1;
+    var minOpen = minCover('open');
     var hourWeight = function(h){
       var idx = hourlyCurveIndex(h * 60);
       if (idx < 0 || idx >= curve.length) return 0;
@@ -4180,7 +4233,10 @@ function renderIntraday(ds) {
       var we = Math.min(brk.window_end, si.endMin / 60) - dur;
       var starts = [];
       for (var st = ws; st <= we + 1e-9; st += Q) starts.push(Math.round(st * 4) / 4);
-      if (!starts.length) return;
+      // A break the manager placed is kept even when its window leaves no automatic place
+      var mine = intradayOverrides[a.id + ':' + edgeTypeByIdx[bi]];
+      if (!starts.length && mine == null) return;
+      if (!starts.length) starts = [mine / 60];
       var rank = {};
       spreadOrder(starts.length).forEach(function(k, r) { rank[k] = r; });
       jobs.push({ a: a, bi: bi, dur: dur, starts: starts, rank: rank, st: null });
@@ -4322,12 +4378,11 @@ function renderIntraday(ds) {
     relaxMgrLunch = false;
     if (b) j.st = b.st;
   });
-  // Repair boundary coverage using displayed break positions; manual choices stay locked.
+  // Repair boundary coverage using displayed break positions. A break placed by the manager is kept where it is,
+  // even outside its window or outside the shift.
   function edgeOverride(j) {
     var value = intradayOverrides[j.a.id + ':' + edgeTypeByIdx[j.bi]];
-    if (value == null) return null;
-    var st = value / 60, si = shiftInfo[j.a.id];
-    return st >= si.startMin / 60 && st + j.dur <= si.endMin / 60 ? st : null;
+    return value == null || !isFinite(value) ? null : value / 60;
   }
   function edgeQuarter(i) {
     var hq = q0 + i * Q;
@@ -4388,15 +4443,14 @@ function renderIntraday(ds) {
     var without = edgeEmpty();
     j.st = keep;
     if (without >= base) return;
-    var si = shiftInfo[j.a.id], brk = breaks[j.bi], found = null;
-    for (var st = Math.ceil((si.startMin / 60 + 1) / Q - 1e-9) * Q; st + j.dur <= si.endMin / 60 + 1e-9; st += Q) {
-      st = Math.round(st * 4) / 4;
-      if (!edgeFits(j, st)) continue;
+    // Automatic breaks stay inside their window: the Settings limit CAST, not the manager
+    var found = null;
+    j.starts.forEach(function(st) {
+      if (!edgeFits(j, st)) return;
       j.st = st;
-      var outside = st < brk.window_start - 1e-9 || st + j.dur > brk.window_end + 1e-9;
-      var sc = [edgeEmpty(), outside ? 1 : 0, Math.abs(st - keep)];
+      var sc = [edgeEmpty(), Math.abs(st - keep)];
       if (!found || lexLess(sc, found.sc)) found = { st: st, sc: sc };
-    }
+    });
     j.st = (found && found.sc[0] < base) ? found.st : keep;
   });
   jobs.forEach(function(j) {
@@ -4529,11 +4583,9 @@ function renderIntraday(ds) {
       var toneCls = 'sh-' + (sh.tone || 'close');
       var blocks = [];
       function withOverride(agentId, type, calcStart, durH) {
+        // The manager's position wins, inside or outside the shift
         var ov = intradayOverrides[agentId + ':' + type];
-        if (ov == null) return calcStart;
-        var ovH = ov / 60;
-        if (ovH >= sH && ovH + durH <= eH) return ovH;
-        return calcStart;
+        return ov == null || !isFinite(ov) ? calcStart : ov / 60;
       }
       if (mbPlan[a.id] != null) {
         blocks.push([withOverride(a.id, 'mb', mbPlan[a.id], 0.25), 0.25, 'mb', 'MB']);
@@ -4649,8 +4701,6 @@ function initIntradayDrag(root, T0, span, ds) {
       var track = blk.parentElement;
       var trackRect = track.getBoundingClientRect();
       var dur   = parseFloat(blk.dataset.dur);
-      var sMin  = parseInt(blk.dataset.smin);
-      var eMin  = parseInt(blk.dataset.emin);
       var startX = e.clientX;
       var startLeftPct = parseFloat(blk.style.left);
       blk.style.cursor = 'grabbing';
@@ -4664,8 +4714,8 @@ function initIntradayDrag(root, T0, span, ds) {
         var newLeftPct = startLeftPct + dPct;
         var newH = pctToH(newLeftPct);
         newH = Math.round(newH * 4) / 4;
-        var minH = sMin / 60, maxH = eMin / 60 - dur;
-        newH = Math.max(minH, Math.min(maxH, newH));
+        // Anywhere on the day: the manager is free to go outside the shift and the windows
+        newH = Math.max(T0, Math.min(T0 + span - dur, newH));
         blk.style.left = hToPct(newH) + '%';
         blk.dataset.curH = newH;
       }
@@ -4675,20 +4725,8 @@ function initIntradayDrag(root, T0, span, ds) {
         blk.removeEventListener('pointerup', onUp);
         blk.style.cursor = 'grab';
         blk.style.zIndex = '';
+        // In the Intraday the manager has no limit: any place, even over another task
         var finalH = parseFloat(blk.dataset.curH);
-        if (!isNaN(finalH)) {
-          var clash = Array.prototype.some.call(track.querySelectorAll('.it-blk'), function(o) {
-            if (o === blk) return false;
-            var oS = pctToH(parseFloat(o.style.left)), oD = parseFloat(o.dataset.dur) || 0;
-            return finalH < oS + oD - 1e-6 && finalH + dur > oS + 1e-6;
-          });
-          if (clash) {
-            blk.style.left = startLeftPct + '%';
-            delete blk.dataset.curH;
-            showToast('Tasks cannot overlap', 'error');
-            return;
-          }
-        }
         if (!isNaN(finalH)) {
           if (blk.dataset.mid) {
             saveAddedMissionPos(blk.dataset.mid, Math.round(finalH * 60));
@@ -4755,17 +4793,10 @@ async function addMissionFromMenu() {
   var def = missionDef(st.type);
   var startMin = hourMinValue('mm-start');
   var durMin = def.free ? parseInt(document.getElementById('mm-dur').value, 10) : def.dur;
-  if (startMin == null || startMin < st.smin || startMin + durMin > st.emin) {
-    showToast('The mission must fit inside the shift', 'error'); return;
-  }
-  var row = intradayExport && intradayExport.rows.find(function(r) { return r.agentId === st.agentId; });
-  if (def.brk && ((addedMissions[st.agentId] || []).some(function(m) { return m.type === st.type; }) ||
-      (row && row.blocks.some(function(b) { return b.label === def.label && (b.type === 'lun' || /^brk/.test(b.type)); })))) {
-    showToast(tf('{mission} is already planned for this person: drag it to move it', { mission: t(def.label) }), 'error'); return;
-  }
-  var sh = startMin / 60, durH = durMin / 60;
-  if (row && row.blocks.some(function(b) { return sh < b.start + b.dur - 1e-6 && sh + durH > b.start + 1e-6; })) {
-    showToast('Tasks cannot overlap', 'error'); return;
+  // The manager may place a mission outside the shift; only a real time inside the day is needed
+  var T0m = intradayAxis ? intradayAxis.T0 * 60 : 0, T1m = intradayAxis ? intradayAxis.T1 * 60 : 1440;
+  if (startMin == null || !(durMin > 0) || startMin < T0m || startMin + durMin > T1m) {
+    showToast('The mission must fit inside the day', 'error'); return;
   }
   var storeId = currentStoreId, ds = currentIntradayDate;
   if (!storeId) return;
@@ -5061,6 +5092,43 @@ function logManagerEdits(rows) {
   if (editLogOff || !rows.length) return;
   try { sb.from('retail_planning_edits').insert(rows).then(function(r) { if (r && r.error) editLogOff = true; }, function() { editLogOff = true; }); } catch (e) { editLogOff = true; }
 }
+// A manual change of the Monthly is first tried in memory. Order of priority: the law first, then the manager, then
+// every calculation. So a change is refused only when it breaks a legal rule the planning kept before: Labor rules
+// (days, hours, rest) and at least one person for the first and the last hour. Store minimums above one, corners and
+// the late target are calculations: the manager's change wins over them.
+function manualChangeIssue(apply, undo) {
+  function issuesNow() {
+    var keep = manualMode;
+    if (cellAdjustMode) manualMode = false;
+    habitsGate.dry = true; habitsGate.issues = null;
+    try { renderMonthlyPlanning(); } finally { habitsGate.dry = false; manualMode = keep; }
+    return habitsGate.issues || {};
+  }
+  // Totals per rule (and per person or corner): a gap that only moves to another day is not a new one
+  var LEGAL = { openNone: 1, closeNone: 1, week: 1, hours: 1, twoWeeks: 1, row: 1, day: 1, rest: 1 };
+  function family(k) { var p = k.split('|'); return p[0] === 'openNone' || p[0] === 'closeNone' ? p[0] : p[0] + '|' + p[1]; }
+  function totals(m) { var t = {}; Object.keys(m).forEach(function(k) { var f = family(k); t[f] = (t[f] || 0) + m[k]; }); return t; }
+  var before = issuesNow(), after;
+  apply();
+  try { after = issuesNow(); } finally { undo(); }
+  var tb = totals(before), ta = totals(after);
+  var key = Object.keys(after).sort().find(function(k) { var f = family(k); return LEGAL[k.split('|')[0]] && ta[f] > (tb[f] || 0) + 1e-6 && after[k] > (before[k] || 0) + 1e-6; });
+  if (!key) return '';
+  var p = key.split('|'), a = agents.find(function(x) { return x.id === p[1]; });
+  var who = a ? ((a.first_name || '') + ' ' + (a.last_name || '')).trim() : '', lim = dayLimits();
+  var day = formatDateDisplay(p[0] === 'week' || p[0] === 'hours' || p[0] === 'twoWeeks' || p[0] === 'row' || p[0] === 'day' || p[0] === 'rest' ? p[2] : p[1]);
+  var why = {
+    openNone: tf('{date}: nobody would open the store', { date: day }),
+    closeNone: tf('{date}: nobody would close the store', { date: day }),
+    week: tf('{name}: more than {n} days in the week of {date}', { name: who, n: lim.week, date: day }),
+    hours: tf('{name}: more than {n} h in the week of {date}', { name: who, n: regulations.weekly_hours, date: day }),
+    twoWeeks: tf('{name}: more than {n} days over two weeks from {date}', { name: who, n: lim.twoWeeks, date: day }),
+    row: tf('{name}: more than {n} days in a row on {date}', { name: who, n: lim.row, date: day }),
+    day: tf('{name}: more than {n} h on {date}', { name: who, n: regulations.max_daily_hours, date: day }),
+    rest: tf('{name}: less than {n} h of rest before {date}', { name: who, n: regulations.rest_gap_hours, date: day })
+  }[p[0]];
+  return tf('Not saved. {reason}. Change another cell first.', { reason: why || key });
+}
 async function applyCellOverride(value) {
   var st = cellEditorState;
   if (!st.agentId || !st.ds) return;
@@ -5068,6 +5136,18 @@ async function applyCellOverride(value) {
   var targets = multiSelect.length ? multiSelect.slice() : [{ agentId: st.agentId, ds: st.ds }];
   if (multiSelect.length && !targets.some(function(s){ return s.agentId === st.agentId && s.ds === st.ds; })) {
     targets.push({ agentId: st.agentId, ds: st.ds });
+  }
+  // An absence is a fact and is always saved; any other change must keep the rules (see manualChangeIssue)
+  if (value !== 'A') {
+    var was = targets.map(function(x) { return (planningOverrides[x.agentId] || {})[x.ds]; });
+    showLoader();
+    var issue = manualChangeIssue(function() {
+      targets.forEach(function(x) { var o = planningOverrides[x.agentId] = planningOverrides[x.agentId] || {}; if (value === null) delete o[x.ds]; else o[x.ds] = value; });
+    }, function() {
+      targets.forEach(function(x, i) { var o = planningOverrides[x.agentId] = planningOverrides[x.agentId] || {}; if (was[i] == null) delete o[x.ds]; else o[x.ds] = was[i]; });
+    });
+    hideLoader();
+    if (issue) { showToast(issue, 'error'); clearMultiSelect(); renderMonthlyPlanning(); return; }
   }
   var succeeded = 0, failed = 0, lastErr = '', edits = [];
   for (var ti = 0; ti < targets.length; ti++) {
@@ -5103,6 +5183,15 @@ async function applyCornerOverride(cornerId) {
   closeCellEditor();
   var shownC = (monthlyResult[st.ds] || {})[st.agentId], oldCode = shownC && shownC.corner;
   var oldC = (cornerOverrides[st.agentId] || {})[st.ds] || ((storeCorners.find(function(c) { return c.code === oldCode; }) || {}).id) || null;
+  var wasC = (cornerOverrides[st.agentId] || {})[st.ds];
+  showLoader();
+  var issue = manualChangeIssue(function() {
+    var o = cornerOverrides[st.agentId] = cornerOverrides[st.agentId] || {}; if (cornerId) o[st.ds] = cornerId; else delete o[st.ds];
+  }, function() {
+    var o = cornerOverrides[st.agentId] = cornerOverrides[st.agentId] || {}; if (wasC == null) delete o[st.ds]; else o[st.ds] = wasC;
+  });
+  hideLoader();
+  if (issue) { showToast(issue, 'error'); renderMonthlyPlanning(); return; }
   if (cornerId) {
     var up = await sb.from('retail_corner_overrides')
       .upsert({ agent_id: st.agentId, date: st.ds, corner_id: cornerId },
@@ -5389,7 +5478,9 @@ function hlAddFormHtml(weekStart, weekEnd) {
 var fixedWarned = {};
 // Habits never add a broken rule: the plan with habits is kept only if every rule it breaks is also broken without habits
 var habitsGate = { off: false, dry: false, issues: null, last: null };
-var NO_HABITS = { days: 0, work: function() { return 0; }, shift: function() { return 0; }, knowsShifts: function() { return false; } };
+// A learned shift is the manager's choice when it is clearly above an even share (0.25 = 25 points above)
+var HABIT_CLEAR = 0.25;
+var NO_HABITS = { days: 0, work: function() { return 0; }, shift: function() { return 0; }, knowsShifts: function() { return false; }, own: function() { return 0; } };
 function renderMonthlyPlanning() {
   var lim = dayLimits(), maxDays = lim.week;
   var unpaidMin = unpaidMinutes();
@@ -5812,8 +5903,7 @@ function renderMonthlyPlanning() {
       }
     });
   });
-  var minFloor = ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1)
-               + ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
+  var minFloor = minCover('open') + minCover('close');
   // Floors of each open day, whatever the traffic: the store minimums, and two sellers in every corner (one opens, one closes)
   var liveCorners = storeCorners.length > 1 ? 2 * storeCorners.length : 0;
   var agentById = {};
@@ -6000,24 +6090,27 @@ function renderMonthlyPlanning() {
   // Traffic covered by each shift
   var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
   var shiftPlanByDay = {};
-  var shiftUse = {}, leadCloses = {};
+  var leadCloses = {};
   // Paid minutes planned in each week: a shift that would break the weekly hours is swapped for one that fits
   var weekPaid = {};
   function paidOfCode(a, ds, code) {
     var wh = workHoursOf(a, ds, { code: code });
     return wh ? paidMinOf(wh.start, wh.end) : 0;
   }
+  // Days of the week outside the month: worked ones count, days of the next month not planned yet stay possible
+  var weekOut = {};
   function seedWeek(a, wk) {
     weekPaid[a.id] = weekPaid[a.id] || {};
     if (weekPaid[a.id][wk] != null) return;
-    var total = 0, monday = new Date(wk + 'T12:00:00');
+    var total = 0, monday = new Date(wk + 'T12:00:00'), out = (weekOut[a.id] = weekOut[a.id] || {})[wk] = { worked: 0, open: 0 };
     for (var i = 0; i < 7; i++) {
       var x = new Date(monday); x.setDate(monday.getDate() + i);
       if (x.getFullYear() === year && x.getMonth() === monthIdx) continue;
       var xs = toDateStr(x), ov = (planningOverrides[a.id] || {})[xs];
       var res = ov ? { code: ov } : ((snapPlan[xs] || {})[a.id] || (planSnapshot && planSnapshot.prevPlan && (planSnapshot.prevPlan[xs] || {})[a.id]));
       var wh = res && workHoursOf(a, xs, res);
-      if (wh) total += paidMinOf(wh.start, wh.end);
+      if (wh) { total += paidMinOf(wh.start, wh.end); out.worked++; }
+      else if (!res && x > monthDays[monthDays.length - 1].date && !getDayClosureType(xs)) out.open++;
     }
     weekPaid[a.id][wk] = total;
   }
@@ -6030,6 +6123,11 @@ function renderMonthlyPlanning() {
     var minPaid = grid.reduce(function(m, g) { return Math.min(m, paidMinOf(g.startMin, g.endMin)); }, Infinity);
     if (!isFinite(minPaid)) minPaid = 0;
     var later = monthDays.filter(function(x) { return x.ds > d.ds && weekKey(x.date) === wk && (assignedMap[x.ds] || []).indexOf(a.id) !== -1; }).length;
+    // Room kept for the days of this week in the next month that this person may still work
+    var inMonth = monthDays.filter(function(x) { return weekKey(x.date) === wk && (assignedMap[x.ds] || []).indexOf(a.id) !== -1; }).length;
+    var out = weekOut[a.id][wk];
+    var maxDays = Math.min(dayLimits().week, minPaid ? Math.floor(regulations.weekly_hours * 60 / minPaid + 1e-6) : 7);
+    later += Math.min(out.open, Math.max(0, maxDays - inMonth - out.worked));
     var room = regulations.weekly_hours * 60 - used - later * minPaid;
     return paidMinOf(s.startMin, s.endMin) <= room + 1e-6;
   }
@@ -6050,8 +6148,7 @@ function renderMonthlyPlanning() {
         if (!sb || poolOf(b) === 'stock' || poolOf(b) !== poolOf(a) && poolOf(a) === 'stock') return;
         var cb = coverOfHours(sb.startMin, sb.endMin, hm); if (cb.open) role.open++; if (cb.close) role.close++;
       });
-      var minO2 = storeSettings && storeSettings.min_opening != null ? storeSettings.min_opening : 1;
-      var minC2 = storeSettings && storeSettings.min_closing != null ? storeSettings.min_closing : 1;
+      var minO2 = minCover('open'), minC2 = minCover('close');
       // The shift is needed for the opening / closing minimum: free one later day of the week instead
       var needed = poolOf(a) !== 'stock' && ((cov.open && role.open - 1 < minO2) || (cov.close && role.close - 1 < minC2));
       if (needed) {
@@ -6124,13 +6221,16 @@ function renderMonthlyPlanning() {
       var grid = RETAIL_SHIFTS[g] || [];
       if (!list.length || !grid.length) return;
       var cl = shiftClusters(grid, d.ds);
-      // Preferred shift of an advisor, kept when the rest rule allows it
+      // The manager's shift of the day first, then the preferred shift of an advisor when the rest rule allows it.
+      // Both count in the late target and in the coverage of the day.
       var prefSales = [];
       list = list.filter(function(a) {
+        var mc = (planningOverrides[a.id] || {})[d.ds], ms = mc && grid.find(function(s) { return s.code === mc; });
+        if (ms) { plan[a.id] = ms.code; if (poolOf(a) === 'sales') prefSales.push(ms.code); return false; }
         var pc = (agentPrefs[a.id] || {}).preferred_shift;
         var ps = pc && grid.find(function(s) { return s.code === pc; });
         if (!ps || !restAllows(a, d.ds, ps.code)) return true;
-        plan[a.id] = ps.code; shiftUse[ps.code] = (shiftUse[ps.code] || 0) + 1;
+        plan[a.id] = ps.code;
         if (poolOf(a) === 'sales') prefSales.push(ps.code);
         return false;
       });
@@ -6195,14 +6295,12 @@ function renderMonthlyPlanning() {
       var nTotal = list.length + prefSales.length;
       var frozen = d.past;
       var lateRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
-      var minOpen  = frozen ? 1 : ((storeSettings && storeSettings.min_opening != null) ? storeSettings.min_opening : 1);
-      var minClose = frozen ? 1 : ((storeSettings && storeSettings.min_closing != null) ? storeSettings.min_closing : 1);
+      var minOpen  = frozen ? 1 : minCover('open');
+      var minClose = frozen ? 1 : minCover('close');
       function restOk(a, s) { return !s || restAllows(a, d.ds, s.code); }
-      // Early and late halves of the shift list (middle shift goes late)
+      // Late shifts (last quarter of the list) and the others
       var byStart = grid.slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
-      var halfAt = Math.floor(byStart.length / 2);
-      var isLate = {};
-      byStart.forEach(function(s, k) { isLate[s.code] = byStart.length > 1 && k >= halfAt; });
+      var isLate = lateCodes(grid);
       var nLate = byStart.length > 1 ? Math.max(0, Math.min(nTotal, Math.round(nTotal * lateRatio))) : 0;
       var left = { early: nTotal - nLate, late: nLate };
       prefSales.forEach(function(c) { left[isLate[c] ? 'late' : 'early']--; });
@@ -6213,37 +6311,69 @@ function renderMonthlyPlanning() {
         var wv = (curveArr && curveArr.length && ci >= 0 && ci < curveArr.length) ? (+curveArr[ci] || 0) : 1;
         slots.push({ t: tm, w: Math.max(wv, 0.0001), cov: 0 });
       }
-      function addCov(st, en) { slots.forEach(function(sl) { if (sl.t >= st && sl.t + 15 <= en) sl.cov++; }); }
+      // Time on the floor of a shift, slot by slot: lunch and breaks are taken anywhere in their window,
+      // from one hour after arrival, so an early arrival can break earlier
+      var floorCache = {};
+      function floorOf(st, en) {
+        var key = st + '-' + en;
+        if (floorCache[key]) return floorCache[key];
+        // Share of each quarter hour inside the shift, so a 9:50 start counts its 10 minutes
+        function part(a, b, t) { return Math.max(0, Math.min(b, t + 15) - Math.max(a, t)) / 15; }
+        var p = slots.map(function(sl) { return part(st, en, sl.t); });
+        (regulations.breaks || []).forEach(function(b) {
+          var dur = b.duration || 0;
+          if (!(dur > 0) || !(b.window_end > b.window_start)) return;
+          var lo = Math.ceil(Math.max(b.window_start * 60, st + 60) / 15) * 15, hi = Math.min(b.window_end * 60, en) - dur;
+          if (hi < lo) return;
+          var n = Math.floor((hi - lo) / 15) + 1;
+          slots.forEach(function(sl, k) {
+            if (!p[k]) return;
+            var away = 0;
+            for (var x = lo; x <= hi; x += 15) away += part(x, x + dur, sl.t);
+            p[k] = Math.max(0, p[k] - away / n);
+          });
+        });
+        return (floorCache[key] = p);
+      }
+      function addCov(st, en, k) { var p = floorOf(st, en); slots.forEach(function(sl, i) { sl.cov += (k || 1) * p[i]; }); }
       // People already placed (managers, fixed hours) count
       var placed = [];
       Object.keys(plan).forEach(function(id) {
         var ag = agents.find(function(x) { return x.id === id; });
         var wh = ag && workHoursOf(ag, d.ds, { code: plan[id] });
-        if (wh) { addCov(wh.start, wh.end); placed.push(wh); }
+        if (wh) { addCov(wh.start, wh.end); placed.push({ start: wh.start, end: wh.end, sales: poolOf(ag) === 'sales' }); }
       });
-      // Value of a shift: traffic it covers, less where people are already there
+      // Need of each quarter hour: the floor time the whole team could give, spread like the hourly traffic.
+      // Same rule with 3 or 30 people and any number of shifts; time outside opening hours meets no need.
+      var Wsum = slots.reduce(function(t, sl) { return t + sl.w; }, 0);
+      var Fmax = byStart.reduce(function(m, s) { return Math.max(m, floorOf(s.startMin, s.endMin).reduce(function(t, x) { return t + x; }, 0)); }, 0);
+      slots.forEach(function(sl) { sl.need = sl.w / Wsum * (placed.length + list.length) * Fmax; });
+      // Value of a shift: how much it closes the gap between the people on the floor and the need (sum of squared gaps),
+      // so one person too many somewhere costs as much as one missing elsewhere
       function gain(s) {
-        var g = 0;
-        slots.forEach(function(sl) { if (sl.t >= s.startMin && sl.t + 15 <= s.endMin) g += sl.w / (sl.cov + 1); });
+        var p = floorOf(s.startMin, s.endMin), g = 0;
+        slots.forEach(function(sl, i) { if (p[i]) g += p[i] * (2 * (sl.need - sl.cov) - p[i]); });
         return g;
       }
-      function use(s) { return shiftUse[s.code] || 0; }
-      // Traffic first, then this person's usual shift on this weekday, then the shifts already used this month: a few shifts, not all of them
+      // Shifts that keep the weekly hours first (a longer shift would later cost a day). Then traffic: among the shifts
+      // within 10% of the best traffic value, this person's usual shift on this weekday wins, then the best value, then the first one.
       function best(cands, a) {
-        var b = null, bs = -1, top = 1;
-        cands.forEach(function(s) { top = Math.max(top, use(s)); });
-        cands.forEach(function(s) {
-          var sc = gain(s) * (1 + habits.shift(a, d.dow, s.code, grid.length)) * (1 + 0.15 * use(s) / top);
-          if (!b || sc > bs + 1e-9) { b = s; bs = sc; }
+        var fit = cands.filter(function(s) { return fitsWeek(a, d, s); });
+        if (fit.length) cands = fit;
+        var gs = cands.map(gain), top = Math.max.apply(null, gs), tol = 0.1 * Math.abs(top) + 1e-9, b = null, bh = 0, bg = 0;
+        cands.forEach(function(s, i) {
+          if (gs[i] < top - tol) return;
+          var h = habits.shift(a, d.dow, s.code, grid.length);
+          if (!b || h > bh + 1e-9 || (Math.abs(h - bh) <= 1e-9 && gs[i] > bg + 1e-9)) { b = s; bh = h; bg = gs[i]; }
         });
         return b;
       }
       var pool = list.slice();
       var rot = pool.length ? (d.num % pool.length) : 0;
       pool = pool.slice(rot).concat(pool.slice(0, rot));
+      var movable = pool.slice();
       function place(a, s) {
-        plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start: s.startMin, end: s.endMin });
-        shiftUse[s.code] = use(s) + 1;
+        plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start: s.startMin, end: s.endMin, sales: poolOf(a) === 'sales' });
         left[isLate[s.code] ? 'late' : 'early']--;
         pool.splice(pool.indexOf(a), 1);
       }
@@ -6251,8 +6381,8 @@ function renderMonthlyPlanning() {
       // Hard needs first: someone for the first hour, someone for the last hour
       // How much this person usually takes one of these shifts on this weekday
       function leans(a, shifts) { return shifts.reduce(function(m, s) { return Math.max(m, habits.shift(a, d.dow, s.code, grid.length)); }, -1); }
-      function cover(key, need) {
-        var have = placed.filter(function(w) { return coverOfHours(w.start, w.end, hm)[key]; }).length;
+      function cover(key, need, salesOnly) {
+        var have = placed.filter(function(w) { return (!salesOnly || w.sales) && coverOfHours(w.start, w.end, hm)[key]; }).length;
         var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
         while (have < need && shifts.length) {
           // Who usually opens (or closes) this day goes first, the others keep the daily rotation
@@ -6267,8 +6397,42 @@ function renderMonthlyPlanning() {
           if (!done) break;
         }
       }
+      // Order of the day: the legal minimum (one person for the first and the last hour), then what the manager
+      // usually does (learned from the manager's own changes), then the calculations (store minimums, corners,
+      // late target, traffic)
+      var learned = {};
+      pool.slice().forEach(function(a) {
+        var top = null;
+        byStart.forEach(function(s) {
+          if (!restOk(a, s) || !fitsWeek(a, d, s)) return;
+          var h = habits.own(a, d.dow, s.code, grid.length);
+          if (h >= HABIT_CLEAR && (!top || h > top.h)) top = { s: s, h: h };
+        });
+        if (top) { place(a, top.s); learned[a.id] = true; }
+      });
+      cover('close', 1);
+      cover('open', 1);
+      // The law before the manager: if nobody else can open or close, one learned choice gives way
+      ['close', 'open'].forEach(function(key) {
+        if (placed.some(function(w) { return coverOfHours(w.start, w.end, hm)[key]; })) return;
+        var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
+        movable.some(function(a) {
+          var cur = learned[a.id] && grid.find(function(s) { return s.code === plan[a.id]; });
+          var ok = cur && shifts.filter(function(s) { return restOk(a, s); });
+          if (!ok || !ok.length) return false;
+          var s2 = best(ok, a), i = placed.findIndex(function(w) { return w.start === cur.startMin && w.end === cur.endMin; });
+          addCov(cur.startMin, cur.endMin, -1); if (i !== -1) placed.splice(i, 1);
+          left[isLate[cur.code] ? 'late' : 'early']++;
+          pool.push(a); place(a, s2); delete learned[a.id];
+          return true;
+        });
+      });
       cover('close', minClose);
       cover('open', minOpen);
+      // Every corner needs one seller who opens and one who closes
+      var cornerNeed = storeCorners.length > 1 ? storeCorners.length : 0;
+      cover('close', cornerNeed, true);
+      cover('open', cornerNeed, true);
       // Everyone else: the shift that helps the traffic most, inside the late target
       // People with the clearest habit choose first
       pool.sort(function(x, y) { return Math.round(20 * (leans(y, byStart) - leans(x, byStart))); });
@@ -6278,6 +6442,35 @@ function renderMonthlyPlanning() {
         if (!okS.length) okS = byStart;
         var inRoom = okS.filter(roomFor);
         place(a, best(inRoom.length ? inRoom : okS, a));
+      }
+      // Then each person takes again the best shift with everyone else in place: same group (late or not),
+      // opening and closing minimums kept, for the store and the corners. Stops when nobody moves (6 rounds at most).
+      function covers(key, skip, salesOnly) {
+        return Object.keys(plan).filter(function(id) {
+          var ag = id !== skip && agents.find(function(x) { return x.id === id; });
+          var wh = ag && poolOf(ag) !== 'stock' && (!salesOnly || poolOf(ag) === 'sales') && workHoursOf(ag, d.ds, { code: plan[id] });
+          return wh && coverOfHours(wh.start, wh.end, hm)[key];
+        }).length;
+      }
+      for (var pass = 0; pass < 6; pass++) {
+        var moved = false;
+        movable.forEach(function(a) {
+          if (learned[a.id]) return;
+          var cur = grid.find(function(s) { return s.code === plan[a.id]; });
+          if (!cur) return;
+          addCov(cur.startMin, cur.endMin, -1);
+          var cc = coverOfHours(cur.startMin, cur.endMin, hm), o = covers('open', a.id), c = covers('close', a.id);
+          var oKeep = o >= minOpen && covers('open', a.id, true) >= cornerNeed, cKeep = c >= minClose && covers('close', a.id, true) >= cornerNeed;
+          var cands = [cur].concat(byStart.filter(function(s) {
+            var cv = coverOfHours(s.startMin, s.endMin, hm);
+            return s !== cur && isLate[s.code] === isLate[cur.code] && restOk(a, s) &&
+              (!cc.open || cv.open || oKeep) && (!cc.close || cv.close || cKeep);
+          }));
+          var b = best(cands, a);
+          if (b !== cur) { plan[a.id] = b.code; moved = true; }
+          addCov(b.startMin, b.endMin);
+        });
+        if (!moved) break;
       }
       list.forEach(function(a) {
         var cur = grid.find(function(s) { return s.code === plan[a.id]; });
@@ -6317,8 +6510,7 @@ function renderMonthlyPlanning() {
             var wh = workHoursOf(b, x.ds, { code: shiftPlanByDay[x.ds][bid] }); if (!wh) return;
             var cv = coverOfHours(wh.start, wh.end, hm); if (cv.open) o++; if (cv.close) c++;
           });
-          var mo = storeSettings && storeSettings.min_opening != null ? storeSettings.min_opening : 1;
-          var mc = storeSettings && storeSettings.min_closing != null ? storeSettings.min_closing : 1;
+          var mo = minCover('open'), mc = minCover('close');
           return ((mine.open && o - 1 < mo) || (mine.close && c - 1 < mc)) ? 1 : 0;
         }
         var drop = cands.sort(function(x, y) { return (needed(x) - needed(y)) || ((x.vol || 0) - (y.vol || 0)); })[0];
@@ -6550,15 +6742,8 @@ function renderMonthlyPlanning() {
   (function repairDisplayedCoverage() {
     var grid = RETAIL_SHIFTS.sales || [];
     if (!grid.length) return;
-    var sortedGrid = grid.slice().sort(function(x, y) {
-      return (x.startMin - y.startMin) || (x.endMin - y.endMin);
-    });
-    var late = {};
-    sortedGrid.forEach(function(s, i) {
-      late[s.code] = sortedGrid.length > 1 && i >= Math.floor(sortedGrid.length / 2);
-    });
-    var minO = storeSettings && storeSettings.min_opening != null ? storeSettings.min_opening : 1;
-    var minC = storeSettings && storeSettings.min_closing != null ? storeSettings.min_closing : 1;
+    var late = lateCodes(grid), lateRatio = storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
+    var minO = minCover('open'), minC = minCover('close');
     function effective(a, ds, replacement) {
       var ov = (planningOverrides[a.id] || {})[ds];
       if (ov) return { code: ov };
@@ -6604,6 +6789,10 @@ function renderMonthlyPlanning() {
     monthDays.forEach(function(d) {
       if (d.closure || d.past || _freeze || isSpecialDay(d)) return;
       var hm = dayMinutes(d.ds), groups = {};
+      // Late target of the day, on the sellers working this day
+      var sellers = agents.filter(function(a) { return poolOf(a) === 'sales' && workHoursOf(a, d.ds, effective(a, d.ds)); });
+      var lateTarget = Math.round(sellers.length * lateRatio);
+      var dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
       agents.forEach(function(a) {
         if (storeCorners.length > 1 ? poolOf(a) !== 'sales' : poolOf(a) === 'stock') return;
         if (!workHoursOf(a, d.ds, effective(a, d.ds))) return;
@@ -6662,7 +6851,7 @@ function renderMonthlyPlanning() {
               var wh = workHoursOf(x.a, d.ds, effective(x.a, d.ds));
               return sum + Math.abs(findShiftDef(x.code).startMin - wh.start);
             }, 0);
-            var score = [changes.length, after.missing, Math.abs(after.late - before.late), pressure(after), distance];
+            var score = [changes.length, after.missing, Math.abs(dayLate - before.late + after.late - lateTarget), pressure(after), distance];
             if (!best || less(score, best.score)) best = { changes: changes, score: score };
           }
           options.forEach(function(x) { consider([x]); });
@@ -6672,6 +6861,7 @@ function renderMonthlyPlanning() {
           }
           if (!best) break;
           best.changes.forEach(function(x) { shiftPlanByDay[d.ds][x.a.id] = x.code; });
+          dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
         }
       });
     });
@@ -6717,8 +6907,9 @@ function renderMonthlyPlanning() {
     var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
     if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
     if (isFixedTimed(agent)) {
+      // Fixed hours keep the corner given by the corner balance, like everyone else
       return fixedWorksOn(agent, day)
-        ? { code: 'PT' }
+        ? (automatic.corner ? { code: 'PT', corner: automatic.corner } : { code: 'PT' })
         : { code: 'OFF', cls: 'sh-off', special: 'off' };
     }
     if (st === 'rest_override' || st === 'rest_parttime')
@@ -6783,8 +6974,7 @@ function renderMonthlyPlanning() {
   // month or end in the next one count their days there too. Each broken rule keeps its size, so a worse one is seen.
   function brokenRules() {
     var out = {}, byAgent = {};
-    var minO = storeSettings && storeSettings.min_opening != null ? storeSettings.min_opening : 1;
-    var minC = storeSettings && storeSettings.min_closing != null ? storeSettings.min_closing : 1;
+    var minO = minCover('open'), minC = minCover('close');
     var dayCap = regulations.max_daily_hours > 0 ? regulations.max_daily_hours * 60 : 0;
     function put(k, v) { if (v > 0) out[k] = Math.max(out[k] || 0, v); }
     agents.forEach(function(a) { var m = byAgent[a.id] = {}; agentRows[a.id].forEach(function(r) { m[r.d.ds] = r.res; }); });
@@ -6807,6 +6997,9 @@ function renderMonthlyPlanning() {
       });
       put('open|' + d.ds, minO - o);
       put('close|' + d.ds, minC - c);
+      // The legal minimum: one person for the first hour and one for the last hour
+      put('openNone|' + d.ds, o ? 0 : 1);
+      put('closeNone|' + d.ds, c ? 0 : 1);
       if (storeCorners.length > 1) storeCorners.forEach(function(q) {
         var z = cor[q.code] || { n: 0, o: 0, c: 0 };
         put('corner2|' + d.ds + '|' + q.code, 2 - z.n);
@@ -6853,8 +7046,9 @@ function renderMonthlyPlanning() {
   if (habits.days && !habitsGate.off) {
     habitsGate.dry = true; habitsGate.off = true;
     try { renderMonthlyPlanning(); } finally { habitsGate.dry = false; }
-    // A rule broken with the habits and not without them, or broken more: the habits are not kept
-    var base = habitsGate.issues || {}, added = Object.keys(issues).filter(function(k) { return issues[k] > (base[k] || 0) + 1e-6; });
+    // Learned choices are the manager's: only a legal rule (Labor rules, one person for the first and last hour) stops them
+    var legal = /^(openNone|closeNone|week|hours|twoWeeks|row|day|rest)\|/;
+    var base = habitsGate.issues || {}, added = Object.keys(issues).filter(function(k) { return legal.test(k) && issues[k] > (base[k] || 0) + 1e-6; });
     // Kept for the bench and the audit: which plan was kept, and the rules already broken without habits (to decide, never certified)
     habitsGate.last = { habits: !added.length, worse: added, brokenWithout: Object.keys(base).length };
     if (added.length) { try { renderMonthlyPlanning(); } finally { habitsGate.off = false; } return; }   // without habits
@@ -7452,7 +7646,8 @@ async function buildPlanningPdf(view) {
     var headEnd = headEl ? headEl.getBoundingClientRect().bottom - top : 0;
     var cuts = Array.prototype.map.call(box.querySelectorAll(view === 'monthly' ? '.mth tbody tr' : '.it-row'),
       function(r) { return r.getBoundingClientRect().bottom - top; });
-    var canvas = await html2canvas(box, { scale: 2, backgroundColor: '#ffffff', logging: false });
+    var canvas = await html2canvas(box, { scale: 2, backgroundColor: '#ffffff', logging: false,
+      onclone: function(doc) { doc.documentElement.removeAttribute('data-theme'); } });   // the PDF stays light in dark mode
     var k = canvas.width / box.offsetWidth;
     var doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     var pw = 297, ph = 210, mg = 8, w = pw - 2 * mg, mmPerPx = w / canvas.width;
@@ -7497,14 +7692,13 @@ function sendSubject(info) { return tf('Planning {store} - {scope} - {period}', 
 async function openSendMenu(ev, view) {
   ev.stopPropagation();
   closeExportMenu();
-  var canShare = !!(navigator.share && navigator.canShare);
   var m = document.createElement('div');
   m.id = 'export-menu'; m.className = 'mission-menu';
   m.exportTrigger = ev.currentTarget;
   m.innerHTML =
-    (canShare ? '<button type="button" class="mission-menu-item xm-item" data-act="share" disabled>' +
+    '<button type="button" class="mission-menu-item xm-item" data-act="share" disabled>' +
       '<svg class="ic xm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>' +
-      '<span>' + t('Share...') + '</span></button>' : '') +
+      '<span>' + t('Share...') + '</span></button>' +
     '<button type="button" class="mission-menu-item xm-item" data-act="mail" disabled>' +
       '<svg class="ic xm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22 6 12 13 2 6"/></svg>' +
       '<span>' + t('Email') + '</span></button>' +
@@ -7525,26 +7719,33 @@ async function openSendMenu(ev, view) {
   if (document.getElementById('export-menu') !== m) return;
   m.querySelector('.xm-note').remove();
   var shareBtn = m.querySelector('[data-act=share]'), mailBtn = m.querySelector('[data-act=mail]');
-  if (shareBtn) {
-    var ok = false;
-    try { ok = navigator.canShare({ files: [built.file] }); } catch (e) {}
-    if (ok) {
-      shareBtn.disabled = false;
-      shareBtn.onclick = function() {
-        closeExportMenu();
-        navigator.share({ files: [built.file], title: sendSubject(built.info), text: sendText(built.info) })
-          .catch(function(err) { if (err && err.name !== 'AbortError') showToast(t('Share failed'), 'error'); });
-      };
-    } else shareBtn.remove();
-  }
-  mailBtn.disabled = false;
-  mailBtn.onclick = function() {
-    closeExportMenu();
-    var url = URL.createObjectURL(built.file);
-    var a = document.createElement('a');
+  function savePdf() {
+    var url = URL.createObjectURL(built.file), a = document.createElement('a');
     a.href = url; a.download = built.file.name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+  }
+  var native = false;
+  try { native = !!(navigator.share && navigator.canShare && navigator.canShare({ files: [built.file] })); } catch (e) {}
+  shareBtn.disabled = false;
+  shareBtn.onclick = function() {
+    closeExportMenu();
+    if (native) {
+      navigator.share({ files: [built.file], title: sendSubject(built.info), text: sendText(built.info) })
+        .catch(function(err) { if (err && err.name !== 'AbortError') showToast(t('Share failed'), 'error'); });
+      return;
+    }
+    // Browsers without file sharing (Firefox on a computer): the PDF is saved and the message copied, to paste in any app
+    savePdf();
+    var msg = sendSubject(built.info) + '\n\n' + sendText(built.info);
+    var done = function() { showToast(t('PDF saved and message copied: attach the file in Teams, Outlook or your chat app')); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(msg).then(done, function() { showToast(t('PDF saved: attach it in Teams, Outlook or your chat app')); });
+    else showToast(t('PDF saved: attach it in Teams, Outlook or your chat app'));
+  };
+  mailBtn.disabled = false;
+  mailBtn.onclick = function() {
+    closeExportMenu();
+    savePdf();
     setTimeout(function() {
       window.location.href = 'mailto:?subject=' + encodeURIComponent(sendSubject(built.info)) +
         '&body=' + encodeURIComponent(sendText(built.info));
@@ -8898,3 +9099,4 @@ init();
 </div>
 </body>
 </html>
+
