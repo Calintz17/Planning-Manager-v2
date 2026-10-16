@@ -1,0 +1,1000 @@
+{
+  "date": "2026-10-16",
+  "candidate": {
+    "version": "9.3.3",
+    "commit": "7ddcdc25ae1089845682246f6c879ba3b8114a1c",
+    "sha256": "2471359ad1d637b4472e57ba2e95454d91a605b38d8aa1150b1fab68a940dfb3"
+  },
+  "score": 78,
+  "productionChanged": false,
+  "databaseChanged": false,
+  "engine": [
+    {
+      "kind": "bm",
+      "version": "932",
+      "adherence": {
+        "days": 30,
+        "adherence": 89.1,
+        "worstDay": 85.1,
+        "floorHoursPerPersonDay": 6.93,
+        "mix": {
+          "C": 180,
+          "M": 4,
+          "O": 168
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 3,
+          "2": 12,
+          "3": 7,
+          "4": 65,
+          "5": 254
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 14,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "kind": "bm",
+      "version": "933",
+      "adherence": {
+        "days": 30,
+        "adherence": 89.2,
+        "worstDay": 85.1,
+        "floorHoursPerPersonDay": 6.93,
+        "mix": {
+          "C": 183,
+          "O": 165,
+          "M": 4
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 3,
+          "2": 12,
+          "3": 7,
+          "4": 65,
+          "5": 254
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 14,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "kind": "jpA",
+      "version": "932",
+      "adherence": {
+        "days": 30,
+        "adherence": 90.4,
+        "worstDay": 89.5,
+        "floorHoursPerPersonDay": 6.48,
+        "mix": {
+          "10A": 69,
+          "11C": 77,
+          "12D": 6
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "5": 108
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 0,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "kind": "jpA",
+      "version": "933",
+      "adherence": {
+        "days": 30,
+        "adherence": 95,
+        "worstDay": 92.2,
+        "floorHoursPerPersonDay": 6.28,
+        "mix": {
+          "09C": 48,
+          "12D": 69,
+          "11C": 7,
+          "10A": 21,
+          "11A": 7
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "5": 108
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 0,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "kind": "jpB",
+      "version": "932",
+      "adherence": {
+        "days": 30,
+        "adherence": 87.5,
+        "worstDay": 87.1,
+        "floorHoursPerPersonDay": 6.61,
+        "mix": {
+          "10D": 438
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "5": 264
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 2,
+        "restUnknown": 0,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 8,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "kind": "jpB",
+      "version": "933",
+      "adherence": {
+        "days": 30,
+        "adherence": 87.5,
+        "worstDay": 87.2,
+        "floorHoursPerPersonDay": 6.59,
+        "mix": {
+          "10C": 23,
+          "10D": 415
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "5": 264
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 2,
+        "restUnknown": 0,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 8,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "kind": "jpB50",
+      "version": "932",
+      "adherence": {
+        "days": 30,
+        "adherence": 89.3,
+        "worstDay": 88.8,
+        "floorHoursPerPersonDay": 6.72,
+        "mix": {
+          "10D": 211,
+          "11A": 179,
+          "11C": 48
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "5": 264
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 2,
+        "restUnknown": 0,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "kind": "jpB50",
+      "version": "933",
+      "adherence": {
+        "days": 30,
+        "adherence": 90.1,
+        "worstDay": 89.7,
+        "floorHoursPerPersonDay": 6.58,
+        "mix": {
+          "10D": 202,
+          "12D": 31,
+          "12C": 17,
+          "12A": 18,
+          "11C": 135,
+          "11A": 22,
+          "10C": 9,
+          "12B": 4
+        }
+      },
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "5": 264
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 2,
+        "restUnknown": 0,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "scenario": "zeroTraffic",
+      "version": "932",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 3,
+          "2": 12,
+          "3": 7,
+          "4": 65,
+          "5": 254
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 13,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 1,
+          "cornerEmptyQuarter": 12
+        }
+      }
+    },
+    {
+      "scenario": "zeroTraffic",
+      "version": "933",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 3,
+          "2": 12,
+          "3": 7,
+          "4": 65,
+          "5": 254
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 13,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 0,
+          "cornerNoClose": 0,
+          "cornerEmptyQuarter": 0
+        }
+      }
+    },
+    {
+      "scenario": "hours30",
+      "version": "932",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 5,
+          "2": 16,
+          "3": 56,
+          "4": 264
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 8,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 1,
+          "cornerNoClose": 1,
+          "cornerEmptyQuarter": 20
+        }
+      }
+    },
+    {
+      "scenario": "hours30",
+      "version": "933",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 5,
+          "2": 16,
+          "3": 56,
+          "4": 264
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 8,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 1,
+          "cornerNoClose": 1,
+          "cornerEmptyQuarter": 20
+        }
+      }
+    },
+    {
+      "scenario": "longClose",
+      "version": "932",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 3,
+          "2": 12,
+          "3": 7,
+          "4": 180,
+          "5": 139
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 13,
+        "fixedToFix": 0,
+        "hoursOver": 3,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 0,
+          "cornerNoOpen": 8,
+          "cornerNoClose": 18,
+          "cornerEmptyQuarter": 150
+        }
+      }
+    },
+    {
+      "scenario": "longClose",
+      "version": "933",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "1": 3,
+          "2": 12,
+          "3": 7,
+          "4": 184,
+          "5": 135
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 13,
+        "fixedToFix": 0,
+        "hoursOver": 8,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 2,
+          "cornerNoOpen": 14,
+          "cornerNoClose": 16,
+          "cornerEmptyQuarter": 180
+        }
+      }
+    },
+    {
+      "scenario": "fewSales",
+      "version": "932",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "2": 1,
+          "3": 2,
+          "4": 51,
+          "5": 95
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 6,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 71,
+          "cornerNoOpen": 27,
+          "cornerNoClose": 20,
+          "cornerEmptyQuarter": 548
+        }
+      }
+    },
+    {
+      "scenario": "fewSales",
+      "version": "933",
+      "rules": {
+        "clock": "2026-10-31",
+        "limits": {
+          "week": 5,
+          "row": 5,
+          "twoWeeks": 10
+        },
+        "weekDays": {
+          "2": 1,
+          "3": 2,
+          "4": 51,
+          "5": 95
+        },
+        "runOver": 0,
+        "weekOver": 0,
+        "twoWeeksOver": 0,
+        "restShort": 0,
+        "restUnknown": 6,
+        "fixedToFix": 0,
+        "hoursOver": 0,
+        "nov": {
+          "noOpen": 0,
+          "noClose": 0,
+          "cornerEmpty": 71,
+          "cornerNoOpen": 27,
+          "cornerNoClose": 20,
+          "cornerEmptyQuarter": 548
+        }
+      }
+    }
+  ],
+  "probes": {
+    "932": {
+      "learning": {
+        "empty": 0,
+        "threeOff": 3,
+        "fourOffNoRef": 4,
+        "requestsOnly": 0,
+        "trainingOnly": 0,
+        "declaredMonth": 30,
+        "otherAgentNotDeclared": 34,
+        "declaredHalfMonth": 16,
+        "declaredWithRequests": 26,
+        "wideRangeClamped": 184,
+        "malformed": 0,
+        "future": 0
+      },
+      "validator": {
+        "nineDaysOverTwoWeeks": {
+          "twoWeeks|a09|2026-11-02": 1
+        },
+        "runFromOctober": {
+          "row|a09|2026-11-01": 2,
+          "week|a09|2026-10-26": 2,
+          "hours|a09|2026-10-26": 900
+        },
+        "longDay": {
+          "day|a09|2026-11-03": 30
+        }
+      }
+    },
+    "933": {
+      "learning": {
+        "empty": 0,
+        "threeOff": 3,
+        "fourOffNoRef": 4,
+        "requestsOnly": 0,
+        "trainingOnly": 0,
+        "declaredMonth": 30,
+        "otherAgentNotDeclared": 34,
+        "declaredHalfMonth": 16,
+        "declaredWithRequests": 26,
+        "wideRangeClamped": 184,
+        "malformed": 0,
+        "future": 0
+      },
+      "validator": {
+        "nineDaysOverTwoWeeks": {
+          "twoWeeks|a09|2026-11-02": 1
+        },
+        "runFromOctober": {
+          "row|a09|2026-11-01": 2,
+          "week|a09|2026-10-26": 2,
+          "hours|a09|2026-10-26": 900
+        },
+        "longDay": {
+          "day|a09|2026-11-03": 30
+        }
+      }
+    }
+  },
+  "manual": {
+    "automatic": [
+      {
+        "agent": "probe0",
+        "lunch": [
+          {
+            "start": 9,
+            "duration": 1,
+            "withinWindow": false
+          }
+        ]
+      },
+      {
+        "agent": "probe1",
+        "lunch": [
+          {
+            "start": 10,
+            "duration": 1,
+            "withinWindow": true
+          }
+        ]
+      }
+    ],
+    "manualWithNoAutomaticWindow": {
+      "storedStartMin": 795,
+      "renderedLunch": null
+    }
+  },
+  "profile": {
+    "window": "11:00-21:00",
+    "noBreaks": true,
+    "first": {
+      "shift": "11:50-20:20",
+      "actualMinutes": 510,
+      "scoredMinutes": 495
+    },
+    "second": {
+      "shift": "12:00-20:30",
+      "actualMinutes": 510,
+      "scoredMinutes": 510
+    },
+    "historyCounterexample": {
+      "gainA": 10,
+      "habitA": -0.3333333333333333,
+      "scoreA": 6.666666666666666,
+      "gainB": 9,
+      "habitB": 0.6666666666666666,
+      "scoreB": 15
+    }
+  },
+  "futureClockStress": [
+    {
+      "version": "932",
+      "clock": "2026-09-30",
+      "hoursOver": 0,
+      "cornerEmpty": 2,
+      "cornerNoOpen": 10,
+      "cornerNoClose": 16,
+      "emptyCornerQuarters": 170
+    },
+    {
+      "version": "933",
+      "clock": "2026-09-30",
+      "hoursOver": 0,
+      "cornerEmpty": 2,
+      "cornerNoOpen": 13,
+      "cornerNoClose": 22,
+      "emptyCornerQuarters": 200
+    }
+  ],
+  "browser": {
+    "engine": "Firefox 153.0 Playwright",
+    "configurations": 54,
+    "errors": [],
+    "overflowCount": 0,
+    "functionalChecks": [
+      {
+        "width": 1440,
+        "test": "theme persists on reload",
+        "dark": true,
+        "checked": "true"
+      },
+      {
+        "width": 1440,
+        "test": "cell editor",
+        "visible": true
+      },
+      {
+        "width": 1440,
+        "test": "agent editor",
+        "bounds": {
+          "x": 430,
+          "y": 101,
+          "width": 580,
+          "height": 748
+        }
+      },
+      {
+        "test": "actual PDF generated in dark theme",
+        "view": "monthly",
+        "bytes": 2375893
+      },
+      {
+        "test": "actual PDF generated in dark theme",
+        "view": "intraday",
+        "bytes": 882053
+      },
+      {
+        "test": "share fallback without Web Share",
+        "view": "monthly",
+        "file": "CAST_Store_A_Monthly_2026-11.pdf",
+        "clipboard": true,
+        "toast": "PDF saved and message copied: attach the file in Teams, Outlook or your chat app"
+      },
+      {
+        "test": "share fallback without Web Share",
+        "view": "intraday",
+        "file": "CAST_Store_A_Intraday_2026-11-14.pdf",
+        "clipboard": true,
+        "toast": "PDF saved and message copied: attach the file in Teams, Outlook or your chat app"
+      },
+      {
+        "test": "clipboard denied",
+        "toast": "PDF saved: attach it in Teams, Outlook or your chat app"
+      },
+      {
+        "test": "manual lunch outside settings window survives render",
+        "target": 15.25,
+        "info": {
+          "agent": "a00",
+          "start": 9.5,
+          "end": 18,
+          "dur": 1,
+          "track": {
+            "x": 456,
+            "y": 328.5,
+            "width": 936,
+            "height": 52,
+            "top": 328.5,
+            "right": 1392,
+            "bottom": 380.5,
+            "left": 456
+          },
+          "axis": {
+            "T0": 8,
+            "T1": 21
+          }
+        },
+        "saved": {
+          "override": 915,
+          "writes": [
+            {
+              "table": "retail_intraday_overrides",
+              "op": "update",
+              "args": [
+                {
+                  "start_min": 915
+                }
+              ]
+            },
+            {
+              "table": "retail_intraday_overrides",
+              "op": "insert",
+              "args": [
+                {
+                  "store_id": "bm",
+                  "date": "2026-11-14",
+                  "agent_id": "a00",
+                  "block_type": "lun",
+                  "start_min": 915
+                }
+              ]
+            }
+          ]
+        },
+        "rendered": 15.25
+      },
+      {
+        "test": "computed dark colors",
+        "body": "rgb(13, 21, 36)",
+        "card": "rgb(20, 30, 51)",
+        "print": null
+      },
+      {
+        "width": 390,
+        "test": "theme persists on reload",
+        "dark": true,
+        "checked": "true"
+      },
+      {
+        "width": 390,
+        "test": "cell editor",
+        "visible": true
+      },
+      {
+        "width": 390,
+        "test": "agent editor",
+        "bounds": {
+          "x": 10,
+          "y": 14.75,
+          "width": 370,
+          "height": 920.5
+        }
+      },
+      {
+        "width": 320,
+        "test": "theme persists on reload",
+        "dark": true,
+        "checked": "true"
+      },
+      {
+        "width": 320,
+        "test": "cell editor",
+        "visible": true
+      },
+      {
+        "width": 320,
+        "test": "agent editor",
+        "bounds": {
+          "x": 10,
+          "y": 10,
+          "width": 300,
+          "height": 930
+        }
+      }
+    ]
+  },
+  "exports": [
+    {
+      "file": "CAST_Retail_Intraday_2026-11-14.xlsx",
+      "pane": {
+        "xSplit": "3",
+        "ySplit": "6",
+        "topLeftCell": "D7",
+        "activePane": "bottomRight",
+        "state": "frozen"
+      },
+      "page": {
+        "orientation": "landscape",
+        "paperSize": "8",
+        "fitToWidth": "1",
+        "fitToHeight": "1"
+      }
+    },
+    {
+      "file": "CAST_Retail_Monthly_2026-11.xlsx",
+      "pane": {
+        "xSplit": "2",
+        "ySplit": "6",
+        "topLeftCell": "C7",
+        "activePane": "bottomRight",
+        "state": "frozen"
+      },
+      "page": {
+        "orientation": "landscape",
+        "paperSize": "8",
+        "fitToWidth": "1",
+        "fitToHeight": "0"
+      }
+    }
+  ],
+  "capturedFixtureComparison": [
+    {
+      "label": "bm",
+      "version": "932",
+      "fixtureCapture": "2026-10-13",
+      "matched": 331,
+      "total": 867,
+      "exactPct": 38.17762399077278,
+      "issues": 0,
+      "habitDays": {
+        "habits": true,
+        "worse": [],
+        "brokenWithout": 0
+      }
+    },
+    {
+      "label": "bm",
+      "version": "933",
+      "fixtureCapture": "2026-10-13",
+      "matched": 334,
+      "total": 867,
+      "exactPct": 38.523644752018456,
+      "issues": 0,
+      "habitDays": {
+        "habits": true,
+        "worse": [],
+        "brokenWithout": 0
+      }
+    },
+    {
+      "label": "jp",
+      "version": "932",
+      "fixtureCapture": "2026-10-13",
+      "matched": 85,
+      "total": 295,
+      "exactPct": 28.8135593220339,
+      "issues": 0,
+      "habitDays": {
+        "habits": true,
+        "worse": [],
+        "brokenWithout": 0
+      }
+    },
+    {
+      "label": "jp",
+      "version": "933",
+      "fixtureCapture": "2026-10-13",
+      "matched": 87,
+      "total": 295,
+      "exactPct": 29.491525423728813,
+      "issues": 0,
+      "habitDays": {
+        "habits": true,
+        "worse": [],
+        "brokenWithout": 0
+      }
+    }
+  ]
+}
