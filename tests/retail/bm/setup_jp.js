@@ -1,15 +1,15 @@
 // Synthetic Japan-style store for the shift ventilation bench (no real names). Run after the page loads, like setup.js.
-// window.JP = 'shibuya' (7 sales shifts from 9:00, store 11-21, real hourly curve shape) or 'osaka' (19 shifts, flat curve).
+// window.JP = 'A' (7 sales shifts from 9:00, store 11-21, real hourly curve shape) or 'B' (19 shifts, flat curve).
 (function(){
-var V = window.JP || 'shibuya';
+var V = window.JP || 'A';
 currentStoreId='jp'; currentStoreName='Store J';
 var g=document.getElementById('store-gate'); if(g){g.style.display='none';g.classList.remove('show');} document.body.classList.remove('gate-open');
 var ld=document.getElementById('loader'); if(ld) ld.style.display='none';
 function sh(code,a,b){ return {code:code,startMin:a,endMin:b,tone:'mid',label:code}; }
-var dh={}, oh = V === 'osaka' ? {open:11,close:20} : {open:11,close:21};
+var dh={}, oh = V === 'B' ? {open:11,close:20} : {open:11,close:21};
 ['mon','tue','wed','thu','fri','sat','sun'].forEach(k=>dh[k]=Object.assign({},oh));
 regulations.day_hours=dh; regulations.saturday_rest=false; regulations.sunday_rest=false; regulations.max_days=5; regulations.public_holidays=[]; regulations.closed_dates=[];
-if (V === 'osaka') {
+if (V === 'B') {
   regulations.weekly_hours=40; regulations.max_daily_hours=8.5; regulations.rest_gap_hours=11;
   regulations.breaks=[{name:'Lunch',duration:60,window_start:12,window_end:15},{name:'Break',duration:30,window_start:17,window_end:19.5}];
   var list=[['08C',510,1020],['09A',540,1050],['09B',555,1065],['09C',570,1080],['09D',585,1095],['10A',600,1110],['10B',615,1110],['10C',630,1140],['10D',645,1155],
@@ -24,7 +24,7 @@ if (V === 'osaka') {
   storeSettings={closing_ratio:0.5,min_opening:1,min_closing:1,sunday_single_shift:false,fairness_rotation:false,intraday_reinforcement:false,hourly_curve:[7.1,7.1,10.5,7.1,11.8,12.8,11.7,9.7,8.2,7.1,7.1]};
 }
 storeCorners=[]; cornerTrafficMonthly={};
-var n = V === 'osaka' ? 20 : 7;
+var n = V === 'B' ? 20 : 7;
 agents=[{id:'j00',first_name:'Agent',last_name:'01',status:'SM',work_pct:100,home_corner_id:null},{id:'j01',first_name:'Agent',last_name:'02',status:'MANAGER',work_pct:100,home_corner_id:null}];
 for (var i=0;i<n;i++) agents.push({id:'j'+String(i+2).padStart(2,'0'),first_name:'Agent',last_name:String(i+3).padStart(2,'0'),status:'SA',work_pct:100,home_corner_id:null});
 agentLeaves=[]; agentPrefs={};
