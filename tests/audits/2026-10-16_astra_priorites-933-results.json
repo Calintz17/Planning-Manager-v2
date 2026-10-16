@@ -1,0 +1,169 @@
+{
+  "candidate_sha256": "2471359ad1d637b4472e57ba2e95454d91a605b38d8aa1150b1fab68a940dfb3",
+  "scope": "Synthetic isolated tests; no production database writes",
+  "priority_probes": {
+    "lateCatalogue": [
+      {
+        "catalogueSize": 2,
+        "currentLate": 1,
+        "requiredLate": 1
+      },
+      {
+        "catalogueSize": 3,
+        "currentLate": 2,
+        "requiredLate": 1
+      },
+      {
+        "catalogueSize": 4,
+        "currentLate": 2,
+        "requiredLate": 1
+      },
+      {
+        "catalogueSize": 5,
+        "currentLate": 3,
+        "requiredLate": 2
+      },
+      {
+        "catalogueSize": 7,
+        "currentLate": 4,
+        "requiredLate": 2
+      },
+      {
+        "catalogueSize": 17,
+        "currentLate": 9,
+        "requiredLate": 5
+      },
+      {
+        "catalogueSize": 28,
+        "currentLate": 14,
+        "requiredLate": 7
+      },
+      {
+        "catalogueSize": 30,
+        "currentLate": 15,
+        "requiredLate": 8
+      }
+    ],
+    "allManualEarly": {
+      "manualValues": {
+        "p0": {
+          "2026-11-14": "O"
+        },
+        "p1": {
+          "2026-11-14": "O"
+        }
+      },
+      "opening": 2,
+      "closing": 0,
+      "rows": [
+        {
+          "id": "p0",
+          "cell": {
+            "code": "O"
+          },
+          "coverage": {
+            "open": true,
+            "close": false
+          }
+        },
+        {
+          "id": "p1",
+          "cell": {
+            "code": "O"
+          },
+          "coverage": {
+            "open": true,
+            "close": false
+          }
+        }
+      ]
+    },
+    "manualWeekOverHours": {
+      "allowedHours": 37.5,
+      "actualHours": 40,
+      "rows": [
+        {
+          "ds": "2026-11-02",
+          "code": "C"
+        },
+        {
+          "ds": "2026-11-03",
+          "code": "C"
+        },
+        {
+          "ds": "2026-11-04",
+          "code": "C"
+        },
+        {
+          "ds": "2026-11-05",
+          "code": "C"
+        },
+        {
+          "ds": "2026-11-06",
+          "code": "C"
+        }
+      ]
+    },
+    "zeroMinima": {
+      "settings": {
+        "opening": 0,
+        "closing": 0
+      },
+      "opening": 2,
+      "closing": 0
+    },
+    "hourCoverage": [
+      {
+        "open": true,
+        "close": false
+      },
+      {
+        "open": false,
+        "close": false
+      },
+      {
+        "open": false,
+        "close": false
+      },
+      {
+        "open": false,
+        "close": true
+      },
+      {
+        "open": false,
+        "close": false
+      },
+      {
+        "open": false,
+        "close": false
+      }
+    ]
+  },
+  "actual_save_path_stub": {
+    "writes": [
+      {
+        "table": "retail_planning_overrides",
+        "op": "upsert",
+        "args": [
+          {
+            "agent_id": "p0",
+            "date": "2026-11-14",
+            "value": "O"
+          },
+          {
+            "onConflict": "agent_id,date"
+          }
+        ]
+      }
+    ],
+    "closing": 0,
+    "after": {
+      "p0": {
+        "code": "O"
+      },
+      "p1": {
+        "code": "O"
+      }
+    }
+  }
+}
