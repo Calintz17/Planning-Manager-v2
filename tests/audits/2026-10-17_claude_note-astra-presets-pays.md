@@ -31,6 +31,9 @@ Ce n'est pas un avis juridique. Chaque ligne « à vérifier » doit être confi
 
 **Le format japonais** : les offres et le planning de Shibuya parlent en heures par jour et en jours de repos (par an, ou « 公休 » par mois), pas en heures par semaine. La loi fixe 40 h par semaine en moyenne. Pour CAST : heures par semaine = heures par jour × 5 comme partout, plus « Rest days per month » pour les boutiques qui comptent en jours.
 
+## 3 bis. Précision de Roman (17-10, soir)
+« Mon point c'était de prendre le tronc commun de la loi et de le pré-remplir par pays. Les managers peuvent toujours ajuster après. » Les pré-réglages sont un point de départ légal commun, pas une homologation : le manager les corrige pour sa boutique. Pour le Canada et les États-Unis, prendre la règle de la province ou de l'État de la boutique quand elle est connue, sinon un tronc commun écrit comme tel dans l'aide du réglage.
+
 ## 4. Demande à Astra
 1. **Pré-réglages par pays** (France, Japon, Chine, Corée, Royaume-Uni, Allemagne, Italie, États-Unis, Canada), dans les clés existantes de `retail_regulations` :
    - `weekly_hours` (défaut de la boutique),
