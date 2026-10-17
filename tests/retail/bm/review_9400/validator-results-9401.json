@@ -1,0 +1,24 @@
+{
+  "selected": {
+    "ds": "2026-11-01",
+    "id": "a09"
+  },
+  "original": {
+    "status": "checked",
+    "mandatory": 0
+  },
+  "missing": {
+    "status": "incomplete",
+    "unknown": [
+      "cell|a09|2026-11-01"
+    ],
+    "mandatory": []
+  },
+  "invalid": {
+    "status": "violation",
+    "unknown": [],
+    "mandatory": [
+      "data|a09|2026-11-01"
+    ]
+  }
+}
