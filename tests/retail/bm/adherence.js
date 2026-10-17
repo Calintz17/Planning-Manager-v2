@@ -25,7 +25,11 @@
       var t0 = t / 60, t1 = t0 + 0.25;
       function part(a, b) { return Math.max(0, Math.min(b, t1) - Math.max(a, t0)) / 0.25; }
       c.push(rows.reduce(function(sum, r) {
-        var away = r.blocks.reduce(function(x, b) { return /^(lun|brk)/.test(b.type) ? x + part(b.start, b.start + b.dur) : x; }, 0);
+        // Lunch and breaks off the floor, counted once when they overlap (union of the intervals inside the shift)
+        var iv = r.blocks.filter(function(b) { return /^(lun|brk)/.test(b.type); }).map(function(b) { return [Math.max(b.start, r.startH), Math.min(b.start + b.dur, r.endH)]; })
+          .filter(function(x) { return x[1] > x[0]; }).sort(function(x, y) { return x[0] - y[0]; }), away = 0, cs = -1, ce = -1;
+        iv.forEach(function(x) { if (x[0] > ce) { if (ce > cs) away += part(cs, ce); cs = x[0]; ce = x[1]; } else ce = Math.max(ce, x[1]); });
+        if (ce > cs) away += part(cs, ce);
         return sum + Math.max(0, part(r.startH, r.endH) - away);
       }, 0));
     }

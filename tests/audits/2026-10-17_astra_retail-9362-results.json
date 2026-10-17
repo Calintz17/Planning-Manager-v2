@@ -1,0 +1,174 @@
+{
+  "baseCommit": "ceb6ae4d8860488109c14f3d1844af2499021a92",
+  "candidateSha256": "46cbec3ce8c6596295b3201cba44af3b8b80c17b626db82d0827535c814ed795",
+  "contractsBefore": {
+    "movedViolation": "",
+    "resultProtection": {
+      "protected": false
+    },
+    "stalePaint": {
+      "blocked": false
+    },
+    "invalidSave": {
+      "mandatory": 518,
+      "writes": 1
+    }
+  },
+  "contractsAfter": {
+    "movedViolation": "Not saved. 15 Nov 2026: nobody would close the store. Change another cell first.",
+    "resultProtection": {
+      "protected": true
+    },
+    "stalePaint": {
+      "blocked": true,
+      "returned": false
+    },
+    "invalidSave": {
+      "mandatory": 518,
+      "writes": 0,
+      "diagnostics": {
+        "status": "unresolved",
+        "validationScope": "existing-monthly-validator",
+        "mandatoryIssuesCount": 518
+      }
+    }
+  },
+  "round2": {
+    "domUnchanged": true,
+    "paintSucceeded": true,
+    "sameDisplayed": true,
+    "staleSettings": true,
+    "validSave": true,
+    "snapshotMatches": true
+  },
+  "claudeProbes": {
+    "probe_pure_compute_9361.js": {
+      "globalsSame": true,
+      "domSame": true,
+      "sameTwice": true
+    },
+    "probe_mandatory_936.js": {
+      "withSeller": {
+        "m1": "O",
+        "m2": "O",
+        "sa": "C"
+      },
+      "sellerAbsent": {
+        "m1": "O",
+        "m2": "C",
+        "sa": "A"
+      },
+      "bothLockedO": {
+        "overrides": {
+          "m1": "O"
+        },
+        "writes": 1,
+        "toast": "Not saved. 14 Nov 2026: nobody would close the store. Change another cell first."
+      }
+    },
+    "changedGlobals": []
+  },
+  "regression": [
+    {
+      "case": "bm",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    },
+    {
+      "case": "jpA",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    },
+    {
+      "case": "jpB",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    },
+    {
+      "case": "zeroTraffic",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    },
+    {
+      "case": "hours30",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    },
+    {
+      "case": "longClose",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    },
+    {
+      "case": "fewSales",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    },
+    {
+      "case": "learned",
+      "sameCells": true,
+      "sameIssues": true,
+      "mandatory": 0
+    }
+  ],
+  "ui": {
+    "browser": "Firefox 153",
+    "views": 60,
+    "errors": [],
+    "globalOverflows": [],
+    "controls": [
+      {
+        "test": "Space toggles to light",
+        "viewport": 1440,
+        "dark": false
+      },
+      {
+        "test": "Enter toggles to dark",
+        "viewport": 1440,
+        "dark": true
+      },
+      {
+        "test": "reload persists dark",
+        "viewport": 1440,
+        "dark": true
+      },
+      {
+        "test": "Space toggles to light",
+        "viewport": 390,
+        "dark": false
+      },
+      {
+        "test": "Enter toggles to dark",
+        "viewport": 390,
+        "dark": true
+      },
+      {
+        "test": "reload persists dark",
+        "viewport": 390,
+        "dark": true
+      },
+      {
+        "test": "Space toggles to light",
+        "viewport": 320,
+        "dark": false
+      },
+      {
+        "test": "Enter toggles to dark",
+        "viewport": 320,
+        "dark": true
+      },
+      {
+        "test": "reload persists dark",
+        "viewport": 320,
+        "dark": true
+      }
+    ]
+  }
+}
