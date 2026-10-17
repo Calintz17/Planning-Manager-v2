@@ -1,0 +1,45 @@
+{
+  "rest": {
+    "key": "rest|a00|2026-12-01",
+    "violation": 30,
+    "last": {
+      "code": "X"
+    },
+    "nextMonthRows": []
+  },
+  "run": {
+    "key": "row|a00|2026-12-01",
+    "violation": 1,
+    "last": {
+      "code": "O"
+    },
+    "nextMonthRows": [
+      "row|a00|2026-12-01"
+    ]
+  },
+  "restSafe": {
+    "key": "rest|a00|2026-12-01",
+    "violation": 0,
+    "last": {
+      "code": "X"
+    },
+    "nextMonthRows": []
+  },
+  "runSafe": {
+    "key": "row|a00|2026-12-01",
+    "violation": 0,
+    "last": {
+      "code": "O"
+    },
+    "nextMonthRows": []
+  },
+  "nextOnly": {
+    "key": "row|a00|2026-12-01",
+    "violation": 0,
+    "last": {
+      "code": "OFF",
+      "special": "off"
+    },
+    "nextMonthRows": []
+  }
+}
