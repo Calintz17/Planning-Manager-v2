@@ -1,0 +1,16 @@
+{
+  "boundary": {
+    "withOutside": 0,
+    "withoutOutside": 7.5
+  },
+  "offHoliday": {
+    "work": 0,
+    "credit": 0
+  },
+  "closedBypass": {
+    "status": "violation",
+    "data": [
+      "data|a09|2026-11-02"
+    ]
+  }
+}

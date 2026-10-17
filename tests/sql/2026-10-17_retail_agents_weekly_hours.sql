@@ -3,7 +3,8 @@
 -- work_pct stays readable for the advisors whose weekly hours are still empty.
 alter table public.retail_agents add column if not exists weekly_hours numeric;
 do $$ begin
-  if not exists (select 1 from pg_constraint where conname = 'retail_agents_weekly_hours_check') then
+  if not exists (select 1 from pg_constraint where conname = 'retail_agents_weekly_hours_check'
+                   and conrelid = 'public.retail_agents'::regclass) then
     alter table public.retail_agents add constraint retail_agents_weekly_hours_check
       check (weekly_hours is null or (weekly_hours > 0 and weekly_hours <= 80));
   end if;
