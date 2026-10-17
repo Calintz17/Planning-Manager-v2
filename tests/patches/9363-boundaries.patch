@@ -1,0 +1,31 @@
+--- a/tests/builds/CAST_v9_3_63_RETAIL_TEST.html
++++ b/tests/builds/CAST_v9_3_63_RETAIL_TEST.html
+@@ -3,7 +3,7 @@
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+-  <title>CAST v9.3.62 TEST</title>
++  <title>CAST v9.3.63 TEST</title>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+   <style>
+@@ -7030,7 +7030,9 @@
+       var run = 0;
+       for (var ds = shift(first, -31); ds <= shift(last, lim.row); ds = shift(ds, 1)) {
+         run = busyAt(a, ds) ? run + 1 : 0;
+-        if (ds >= first && ds <= last && !(ds < todayDs)) put('row|' + a.id + '|' + ds, run - lim.row);
++        // Include a run ending next month only when it contains a day of this month.
++        if (ds >= first && ds >= todayDs && (ds <= last || shift(ds, 1 - run) <= last))
++          put('row|' + a.id + '|' + ds, run - lim.row);
+       }
+       // Weeks touching the month, whole weeks
+       var weeks = {};
+@@ -7051,7 +7053,7 @@
+       });
+       Object.keys(wd).sort().forEach(function(wk) { var nx = shift(wk, 7); if (nx in wd && (weeks[wk] || weeks[nx])) put('twoWeeks|' + a.id + '|' + wk, wd[wk] + wd[nx] - lim.twoWeeks); });
+       // Rest between two working days
+-      for (var ds2 = shift(first, -1); ds2 < last; ds2 = shift(ds2, 1)) {
++      for (var ds2 = shift(first, -1); ds2 <= last; ds2 = shift(ds2, 1)) {
+         var p = hoursAt(a, ds2), q = hoursAt(a, shift(ds2, 1));
+         if (p && q && shift(ds2, 1) >= todayDs) put('rest|' + a.id + '|' + shift(ds2, 1), restGapMin - (1440 + q.start - p.end));
+       }
