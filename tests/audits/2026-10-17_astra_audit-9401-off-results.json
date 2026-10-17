@@ -1,0 +1,1121 @@
+{
+  "allPersonWeeks": 290,
+  "allOffDistribution": {
+    "2": 226,
+    "3": 50,
+    "5": 10,
+    "0": 4
+  },
+  "ordinaryFullTime": 238,
+  "ordinaryOffDistribution": {
+    "2": 200,
+    "3": 38
+  },
+  "ordinaryExceptions": [
+    {
+      "month": "2026-10",
+      "week": "2026-10-05",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "OS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-05",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-05",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "CS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-05",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OFF",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-12",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "CS",
+        "CS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-12",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "OS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-12",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-12",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OFF",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-19",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-19",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-19",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "week": "2026-10-19",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OFF",
+        "CS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-02",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-02",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OS",
+        "OS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-02",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OS",
+        "OFF",
+        "OFF",
+        "CS",
+        "CS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-09",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS",
+        "CS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-09",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-09",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OFF",
+        "OS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-16",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-16",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-16",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-16",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OFF",
+        "OS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-23",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-23",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OFF",
+        "OS",
+        "OS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-23",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "OFF",
+        "OS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-11",
+      "week": "2026-11-23",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "CS",
+        "OFF",
+        "CS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-07",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-07",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-07",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-07",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OFF",
+        "CS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-14",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "OS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-14",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-14",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "CS",
+        "CS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-14",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OFF",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-21",
+      "id": "a05",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "CS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-21",
+      "id": "a06",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OS",
+        "OFF",
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "CS"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-21",
+      "id": "a07",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "CS",
+        "OS",
+        "OS",
+        "OS",
+        "OFF"
+      ]
+    },
+    {
+      "month": "2026-12",
+      "week": "2026-12-21",
+      "id": "a08",
+      "pool": "stock",
+      "partTime": false,
+      "contract": 37.5,
+      "off": 3,
+      "absence": 0,
+      "training": 0,
+      "worked": 4,
+      "closed": 0,
+      "unknown": 0,
+      "paid": 32,
+      "codes": [
+        "OFF",
+        "OFF",
+        "OS",
+        "CS",
+        "OFF",
+        "OS",
+        "OS"
+      ]
+    }
+  ],
+  "stockProbe": [
+    {
+      "mode": "original",
+      "rows": [
+        {
+          "id": "a05",
+          "codes": [
+            "OFF",
+            "OFF",
+            "OFF",
+            "CS",
+            "OS",
+            "OS",
+            "CS"
+          ],
+          "off": 3,
+          "paid": 32
+        },
+        {
+          "id": "a06",
+          "codes": [
+            "OS",
+            "OFF",
+            "OFF",
+            "OS",
+            "OS",
+            "OS",
+            "OFF"
+          ],
+          "off": 3,
+          "paid": 32
+        },
+        {
+          "id": "a07",
+          "codes": [
+            "OFF",
+            "CS",
+            "OFF",
+            "A",
+            "OFF",
+            "OS",
+            "OS"
+          ],
+          "off": 3,
+          "paid": 24
+        },
+        {
+          "id": "a08",
+          "codes": [
+            "CS",
+            "OS",
+            "OFF",
+            "OFF",
+            "CS",
+            "CS",
+            "OFF"
+          ],
+          "off": 3,
+          "paid": 32
+        }
+      ]
+    },
+    {
+      "mode": "allStock7h30",
+      "rows": [
+        {
+          "id": "a05",
+          "codes": [
+            "OS",
+            "OFF",
+            "OFF",
+            "CS",
+            "OS",
+            "OS",
+            "CS"
+          ],
+          "off": 2,
+          "paid": 37.5
+        },
+        {
+          "id": "a06",
+          "codes": [
+            "OFF",
+            "OFF",
+            "OS",
+            "OS",
+            "OS",
+            "OS",
+            "OS"
+          ],
+          "off": 2,
+          "paid": 37.5
+        },
+        {
+          "id": "a07",
+          "codes": [
+            "OS",
+            "OFF",
+            "CS",
+            "A",
+            "OFF",
+            "OS",
+            "OS"
+          ],
+          "off": 2,
+          "paid": 30
+        },
+        {
+          "id": "a08",
+          "codes": [
+            "CS",
+            "OFF",
+            "OS",
+            "OS",
+            "CS",
+            "CS",
+            "OFF"
+          ],
+          "off": 2,
+          "paid": 37.5
+        }
+      ]
+    },
+    {
+      "mode": "oneShortStock",
+      "rows": [
+        {
+          "id": "a05",
+          "codes": [
+            "OFF",
+            "OFF",
+            "OFF",
+            "CS",
+            "OS",
+            "OS",
+            "CS"
+          ],
+          "off": 3,
+          "paid": 32
+        },
+        {
+          "id": "a06",
+          "codes": [
+            "OS",
+            "OFF",
+            "OFF",
+            "OS",
+            "OS",
+            "OS",
+            "OFF"
+          ],
+          "off": 3,
+          "paid": 32
+        },
+        {
+          "id": "a07",
+          "codes": [
+            "OFF",
+            "CS",
+            "OFF",
+            "A",
+            "OFF",
+            "OS",
+            "OS"
+          ],
+          "off": 3,
+          "paid": 24
+        },
+        {
+          "id": "a08",
+          "codes": [
+            "CS",
+            "OS",
+            "OFF",
+            "OFF",
+            "CS",
+            "CS",
+            "OFF"
+          ],
+          "off": 3,
+          "paid": 32
+        }
+      ]
+    }
+  ],
+  "weeklyWitness": {
+    "status": "checked",
+    "mandatory": [],
+    "agent": "a05",
+    "workedDays": 5,
+    "paid": 37.5,
+    "off": 2
+  }
+}
