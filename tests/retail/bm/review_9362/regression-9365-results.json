@@ -1,0 +1,114 @@
+[
+  {
+    "case": "bm",
+    "changedCells": 0,
+    "changedSample": [],
+    "changedIssues": 0,
+    "issuesSample": [],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 325
+  },
+  {
+    "case": "jpA",
+    "changedCells": 0,
+    "changedSample": [],
+    "changedIssues": 0,
+    "issuesSample": [],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 99
+  },
+  {
+    "case": "jpB",
+    "changedCells": 0,
+    "changedSample": [],
+    "changedIssues": 0,
+    "issuesSample": [],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 258
+  },
+  {
+    "case": "zeroTraffic",
+    "changedCells": 0,
+    "changedSample": [],
+    "changedIssues": 0,
+    "issuesSample": [],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 333
+  },
+  {
+    "case": "hours30",
+    "changedCells": 0,
+    "changedSample": [],
+    "changedIssues": 0,
+    "issuesSample": [],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 309
+  },
+  {
+    "case": "longClose",
+    "changedCells": 190,
+    "changedSample": [
+      "2026-11-03 a18 {\"code\":\"C\",\"tone\":\"close\",\"corner\":\"RTW\"} -> {\"code\":\"O\",\"tone\":\"open\",\"corner\":\"RTW\"}",
+      "2026-11-03 a19 {\"code\":\"O\",\"tone\":\"open\",\"corner\":\"RTW\"} -> {\"code\":\"C\",\"tone\":\"close\",\"corner\":\"RTW\"}",
+      "2026-11-04 a17 {\"code\":\"M\",\"tone\":\"mid\",\"corner\":\"PRF\"} -> {\"code\":\"C\",\"tone\":\"close\",\"corner\":\"PRF\"}",
+      "2026-11-05 a17 {\"code\":\"M\",\"tone\":\"mid\",\"corner\":\"LG\"} -> {\"code\":\"C\",\"tone\":\"close\",\"corner\":\"LG\"}",
+      "2026-11-05 a27 {\"code\":\"C\",\"tone\":\"close\",\"corner\":\"PRF\"} -> {\"code\":\"O\",\"tone\":\"open\",\"corner\":\"PRF\"}",
+      "2026-11-06 a13 {\"code\":\"O\",\"tone\":\"open\",\"corner\":\"PRF\"} -> {\"code\":\"M\",\"tone\":\"mid\",\"corner\":\"PRF\"}"
+    ],
+    "changedIssues": 36,
+    "issuesSample": [
+      "cornerClose|2026-11-07|PRF 0 -> 1",
+      "cornerOpen|2026-11-10|PRF 0 -> 1",
+      "cornerClose|2026-11-10|RTW 0 -> 1",
+      "cornerClose|2026-11-13|SHO 0 -> 1",
+      "cornerClose|2026-11-15|PRF 0 -> 1",
+      "cornerOpen|2026-11-16|PRF 0 -> 1",
+      "corner2|2026-11-22|RTW 0 -> 1",
+      "cornerClose|2026-11-22|RTW 0 -> 1"
+    ],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 323
+  },
+  {
+    "case": "fewSales",
+    "changedCells": 0,
+    "changedSample": [],
+    "changedIssues": 0,
+    "issuesSample": [],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 149
+  },
+  {
+    "case": "learned",
+    "changedCells": 0,
+    "changedSample": [],
+    "changedIssues": 0,
+    "issuesSample": [],
+    "mandatoryBefore": 0,
+    "mandatoryAfter": 0,
+    "before": "incomplete",
+    "status": "incomplete",
+    "unknown": 159
+  }
+]
