@@ -127,3 +127,23 @@
 | 09-10-2026 | CAST_V9.0.11 | Translation bug fixes. |
 | 10-10-2026 | CAST_V9.1.0 | Design update. |
 | 10-10-2026 | CAST_V9.1.5 | New logo, pastel colors and ABS counter. Alerts removed, bug fixes. |
+| 11-10-2026 | CAST_V9.1.10 | Bug fixes. |
+| 11-10-2026 | CAST_V9.2.1 | Engine learns from past plannings. Leave form update. |
+| 12-10-2026 | CAST_V9.2.4 | Added OUT status, corner rotation and rest days per month. Skills removed. |
+| 12-10-2026 | CAST_V9.2.5 | Fixed part-time bug fixes. |
+| 12-10-2026 | CAST_V9.2.6 | Two sellers per corner. Added weekly rest check. |
+| 12-10-2026 | CAST_V9.2.7 | Reworked labor rules. Fixed contracts checked on save. |
+| 12-10-2026 | CAST_LANDING_V1 | Added landing page. |
+| 13-10-2026 | CAST_V9.3.0 | Engine learns manager changes. |
+| 13-10-2026 | CAST_V9.3.1 | Learning bug fixes. |
+| 13-10-2026 | CAST_V9.3.2 | Added imported plannings. Final planning check. |
+| 16-10-2026 | CAST_V9.3.3 | Shifts follow hourly traffic. Added dark mode. Share bug fix on Firefox. |
+| 16-10-2026 | CAST_V9.3.4 | Late shifts target update. Manual changes checked on save. |
+| 16-10-2026 | CAST_V9.3.5 | New priority order. Intraday free for managers. |
+| 16-10-2026 | CAST_V9.3.6 | Opening / closing coverage bug fix. Dark mode update. |
+| 16-10-2026 | CAST_V9.3.61 | Engine cleanup. |
+| 17-10-2026 | CAST_V9.3.62 | Engine bug fixes. |
+| 17-10-2026 | CAST_V9.3.63 | Bug fix on month boundaries. |
+| 17-10-2026 | CAST_V9.3.64 | Final planning check update. Multi-cell save bug fix. |
+| 17-10-2026 | CAST_V9.3.65 | Training counted in hours. Engine update. |
+| 17-10-2026 | CAST_V9.4.0.0 | Weekly hours per advisor and month counter. Work % and preferred shift removed. Bug fix on hours. |
