@@ -1,0 +1,92 @@
+[
+  {
+    "month": 9,
+    "type": "A",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 9,
+    "type": "OUT",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 9,
+    "type": "conflict",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 10,
+    "type": "A",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 10,
+    "type": "OUT",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 10,
+    "type": "conflict",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 11,
+    "type": "A",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 11,
+    "type": "OUT",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  },
+  {
+    "month": 11,
+    "type": "conflict",
+    "sameCells": true,
+    "sameHours": true,
+    "mandatory": [
+      0,
+      0
+    ]
+  }
+]
