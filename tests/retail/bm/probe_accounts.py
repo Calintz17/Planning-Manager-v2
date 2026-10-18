@@ -1,4 +1,4 @@
-# Sign-in and menus by role, 9.5.0.0 (9.5.0.2: the stub filters regions, countries and stores like the base) (fictional accounts and stores, Supabase replaced by stub_supabase_auth.js).
+# Sign-in and menus by role, 9.5.0.0 (9.5.0.2: the stub filters regions, countries and stores like the base; 9.5.0.3: flat store list for managers, load error retry) (fictional accounts and stores, Supabase replaced by stub_supabase_auth.js).
 # Usage: python3 probe_accounts.py [build.html]. Writes screens/accounts-results.json and screenshots. Exit 1 on failure.
 import sys, os, json, shutil, tempfile, http.server, threading, functools
 from playwright.sync_api import sync_playwright
@@ -102,9 +102,29 @@ with sync_playwright() as p:
     check('manager 2 stores: picks Store Two', not s['gate'] and s['store'] == 'Store Two' and s['storeField'])
     pg.reload(); pg.wait_for_timeout(900); s = st(pg)
     check('manager 2 stores: remembers Store Two after reload', not s['gate'] and s['store'] == 'Store Two', s['store']); ctx.close()
-    # 3. Manager with stores in 2 countries: country menu kept so he can reach both
+    # 3. Manager with stores in 2 countries: one flat list of his stores, no region or country menu (9.5.0.3)
     ctx, pg, errs = page('manager.wide@test.fr'); s = st(pg)
-    check('manager 2 countries: country menu, no region menu', s['gate'] and not s['region'] and s['country'] and s['countries'] == ['France', 'United Kingdom'], s); ctx.close()
+    check('manager 2 countries: flat store list, no region or country menu', s['gate'] and not s['region'] and not s['country'] and s['storeField'] and s['stores'] == ['Store One', 'Store Three'], s)
+    pg.screenshot(path=OUT + '/manager-wide-gate-light-1440.png')
+    pg.select_option('#store-select', label='Store Three'); pg.wait_for_timeout(600)
+    sc = pg.evaluate("[currentStoreName, currentCountryIso, currentRegionName, currentRegionCity]")
+    check('manager 2 countries: Store Three sets its country and region', sc == ['Store Three', 'GB', 'EMEA', 'Paris'], sc)
+    pg.select_option('#store-select', label='Store One'); pg.wait_for_timeout(600)
+    sc = pg.evaluate("[currentStoreName, currentCountryIso, currentRegionName]")
+    check('manager 2 countries: Store One sets France', sc == ['Store One', 'FR', 'EMEA'], sc)
+    pg.reload(); pg.wait_for_timeout(900); s = st(pg)
+    check('manager 2 countries: remembers Store One after reload', not s['gate'] and s['store'] == 'Store One' and pg.evaluate('currentCountryIso') == 'FR', s['store'])
+    check('no JavaScript error (flow 3)', not errs, errs[:2]); ctx.close()
+    # 3b. The places cannot be loaded: signed out with a message, signing in again works (Astra 9.5.0.1)
+    ctx = b.new_context(viewport={'width': 1440, 'height': 900})
+    ctx.add_init_script('window.__AUTH = ' + json.dumps({'db': DB, 'accounts': accounts, 'sessionUser': ACC['manager.one@test.fr'], 'failOnce': {'retail_regions': 1}}) + ';')
+    pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.route('**/*', lambda r: r.fulfill(body=stub, content_type='application/javascript') if 'supabase-js' in r.request.url else (r.continue_() if '127.0.0.1' in r.request.url else r.abort()))
+    pg.goto('http://127.0.0.1:%d/index.html' % port); pg.wait_for_timeout(900); s = st(pg)
+    check('load error: back to sign in with a message', s['login'] and s['err'] == 'Could not load your account. Try again.', s['err'])
+    pg.fill('#login-email', 'manager.one@test.fr'); pg.fill('#login-pw', 'admin'); pg.click('#login-btn'); pg.wait_for_timeout(900); s = st(pg)
+    check('load error: signing in again opens the store', not s['login'] and s['store'] == 'Store One' and not pg.evaluate("document.getElementById('login-btn').disabled"), s['store'])
+    check('no JavaScript error (flow 3b)', not errs, errs[:2]); ctx.close()
     # 4. Director: region fixed, country and store limited to his region
     ctx, pg, errs = page('director.emea@test.fr'); s = st(pg)
     check('director: no region menu (single region), countries of EMEA only', s['gate'] and not s['region'] and s['country'] and s['countries'] == ['France', 'United Kingdom'], s)

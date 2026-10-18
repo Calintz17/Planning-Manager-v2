@@ -623,5 +623,8 @@
   "{n} fixed days in a row, above Max days in a row ({max})": "고정 근무일 {n}일 연속, 최대 연속 근무일({max}) 초과",
   "{n} fixed days over 2 weeks, above Max days over 2 weeks ({max})": "2주간 고정 근무일 {n}일, 2주 최대 근무일({max}) 초과",
   "{n} fixed days, above Max working days / week ({max})": "고정 근무일 {n}일, 주간 최대 근무일 수({max}) 초과",
-  "{period} is an imported planning: its changes are kept": "{period}은(는) 가져온 근무표입니다: 변경 사항이 유지됩니다"
+  "{period} is an imported planning: its changes are kept": "{period}은(는) 가져온 근무표입니다: 변경 사항이 유지됩니다",
+  "Could not load your account. Try again.": "계정을 불러오지 못했습니다. 다시 시도해 주세요.",
+  "No store is linked to your account. Contact your administrator.": "계정에 연결된 매장이 없습니다. 관리자에게 문의하세요.",
+  "Your account is not active. Contact your administrator.": "계정이 활성화되어 있지 않습니다. 관리자에게 문의하세요."
 }

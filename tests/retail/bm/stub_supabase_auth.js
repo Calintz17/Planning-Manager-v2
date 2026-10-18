@@ -1,5 +1,5 @@
 // Supabase stand-in for the sign-in tests (9.5.0.0). Set window.__AUTH before the page loads:
-// { db: { table: [rows] }, accounts: [{ email, password, user }], sessionUser }. Session kept in sessionStorage.
+// { db: { table: [rows] }, accounts: [{ email, password, user }], sessionUser, failOnce: { table: n } }. Session kept in sessionStorage.
 (function () {
   var A = window.__AUTH || {}, DB = A.db || {};
   var log = window.__authLog = [];
@@ -32,6 +32,8 @@
       insert: function () { write = true; return p; }, upsert: function () { write = true; return p; },
       update: function () { write = true; return p; }, delete: function () { write = true; return p; },
       then: function (ok, err) {
+        // A.failOnce = { table: n }: the next n reads of that table fail (network or base error)
+        if (!write && A.failOnce && A.failOnce[t] > 0) { A.failOnce[t]--; return Promise.resolve({ data: null, error: { message: 'Failed' } }).then(ok, err); }
         var data = write ? [] : (single ? (rows[0] || null) : rows);
         return Promise.resolve({ data: data, error: null }).then(ok, err);
       }

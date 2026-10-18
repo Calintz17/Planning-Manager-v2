@@ -623,5 +623,8 @@
   "{n} fixed days in a row, above Max days in a row ({max})": "連續 {n} 個固定工作日，超出最多連續工作天數（{max}）",
   "{n} fixed days over 2 weeks, above Max days over 2 weeks ({max})": "兩週內 {n} 個固定工作日，超出兩週最多工作天數（{max}）",
   "{n} fixed days, above Max working days / week ({max})": "{n} 個固定工作日，超出每週最多工作天數（{max}）",
-  "{period} is an imported planning: its changes are kept": "{period} 為匯入的排班：其修改將被保留"
+  "{period} is an imported planning: its changes are kept": "{period} 為匯入的排班：其修改將被保留",
+  "Could not load your account. Try again.": "無法載入您的帳戶，請重試。",
+  "No store is linked to your account. Contact your administrator.": "您的帳戶未連結任何門市，請聯絡管理員。",
+  "Your account is not active. Contact your administrator.": "您的帳戶未啟用，請聯絡管理員。"
 }

@@ -623,5 +623,8 @@
   "{n} fixed days in a row, above Max days in a row ({max})": "固定日が{n}日連続、連続勤務日数の上限（{max}）を超えています",
   "{n} fixed days over 2 weeks, above Max days over 2 weeks ({max})": "2週間で固定日が{n}日、2週間の最大勤務日数（{max}）を超えています",
   "{n} fixed days, above Max working days / week ({max})": "固定日が{n}日、週最大勤務日数（{max}）を超えています",
-  "{period} is an imported planning: its changes are kept": "{period}はインポートされたスケジュールです：変更は保持されます"
+  "{period} is an imported planning: its changes are kept": "{period}はインポートされたスケジュールです：変更は保持されます",
+  "Could not load your account. Try again.": "アカウントを読み込めませんでした。もう一度お試しください。",
+  "No store is linked to your account. Contact your administrator.": "アカウントに店舗が紐づいていません。管理者にお問い合わせください。",
+  "Your account is not active. Contact your administrator.": "アカウントが有効ではありません。管理者にお問い合わせください。"
 }
