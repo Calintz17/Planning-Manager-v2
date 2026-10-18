@@ -1,2 +1,5 @@
-(function(){function Q(){var p=Promise.resolve({data:[],error:null});var q=new Proxy(function(){}, {get:(t,k)=>k==='then'?p.then.bind(p):(k==='catch'?p.catch.bind(p):()=>q), apply:()=>q});return q;}
-window.supabase={createClient:()=>({from:()=>Q(),rpc:()=>Q(),auth:{getSession:()=>Promise.resolve({data:{session:null}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getUser:()=>Promise.resolve({data:{user:null}})},channel:()=>({on(){return this},subscribe(){return this}})})};})();
+(function(){function Q(d){var p=Promise.resolve({data:d===undefined?[]:d,error:null});var q=new Proxy(function(){}, {get:(t,k)=>k==='then'?p.then.bind(p):(k==='catch'?p.catch.bind(p):()=>q), apply:()=>q});return q;}
+// Signed in as a test admin (9.5.0.0 sign in); older builds never read the profile, so nothing changes for them
+var U={id:'test-admin',email:'admin@test.local',user_metadata:{pw_changed:true}};
+var P={user_id:U.id,email:U.email,full_name:'Test Admin',role:'admin',region_id:null,active:true};
+window.supabase={createClient:()=>({from:(t)=>Q(t==='retail_profiles'?P:undefined),rpc:()=>Q(),auth:{getSession:()=>Promise.resolve({data:{session:{user:U}}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),getUser:()=>Promise.resolve({data:{user:U}}),signInWithPassword:()=>Promise.resolve({data:{user:U},error:null}),signOut:()=>Promise.resolve({error:null}),updateUser:()=>Promise.resolve({data:{user:U},error:null})},channel:()=>({on(){return this},subscribe(){return this}})})};})();

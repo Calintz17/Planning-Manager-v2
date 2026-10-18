@@ -1,0 +1,247 @@
+[
+ {
+  "test": "part1: anon still reads agents (live page unchanged)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "part1: anon cannot read profiles",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "part1: anon cannot create an account",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "create: password hash checks out",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "create: identity row",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "create: duplicate refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "create: unknown store refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "create: director without region refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "create: signed-in user cannot call it",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "profile: reads own row only",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "profile: admin reads all",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "profile: cannot promote self",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "profile: cannot add a store to self",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "switch: anon reads nothing",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "switch: anon cannot write",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "switch: anon cannot list stores",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "read scope admin: regions, countries, stores, agents = (2, 3, 4, 4)",
+  "pass": true,
+  "detail": "(2, 3, 4, 4)"
+ },
+ {
+  "test": "read scope dir: regions, countries, stores, agents = (1, 2, 3, 3)",
+  "pass": true,
+  "detail": "(1, 2, 3, 3)"
+ },
+ {
+  "test": "read scope m1: regions, countries, stores, agents = (1, 1, 1, 1)",
+  "pass": true,
+  "detail": "(1, 1, 1, 1)"
+ },
+ {
+  "test": "read scope m12: regions, countries, stores, agents = (1, 1, 2, 2)",
+  "pass": true,
+  "detail": "(1, 1, 2, 2)"
+ },
+ {
+  "test": "read scope off: regions, countries, stores, agents = (0, 0, 0, 0)",
+  "pass": true,
+  "detail": "(0, 0, 0, 0)"
+ },
+ {
+  "test": "read scope none: regions, countries, stores, agents = (0, 0, 0, 0)",
+  "pass": true,
+  "detail": "(0, 0, 0, 0)"
+ },
+ {
+  "test": "m1 writes own store",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 cannot write store two",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 cannot move an agent to store two",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 cannot touch agent of store two (0 rows)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 cannot give a corner of store two",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 planning square own agent",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 planning square with corner of store two refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 planning square agent of store two refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 leave: agent of store two under store one refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m1 leave own agent",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "m12 writes store two",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director writes store three (UK, EMEA)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director cannot write store four (Japan)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director cannot rename a store",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "admin writes store four",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "admin renames a store",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "inactive account writes nothing",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "account without profile writes nothing",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "edit log: insert own store",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "edit log: signed by the server",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "edit log: cannot read",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "edit log: cannot sign as someone else",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "edit log: other store refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "unused region tables: manager refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "old functions closed",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "no truncate",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "switch can be replayed, same scope after",
+  "pass": true,
+  "detail": ""
+ }
+]
