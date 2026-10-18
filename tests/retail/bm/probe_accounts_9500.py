@@ -4,7 +4,7 @@ import sys, os, json, shutil, tempfile, http.server, threading, functools
 from playwright.sync_api import sync_playwright
 B = os.path.dirname(os.path.abspath(__file__)); R = os.path.abspath(B + '/../../..')
 build = sys.argv[1] if len(sys.argv) > 1 else R + '/tests/builds/CAST_v9_5_0_0_RETAIL_TEST.html'
-OUT = B + '/review_9500'; os.makedirs(OUT, exist_ok=True)
+OUT = B + '/review_' + ('9501' if '9_5_0_1' in build else '9500'); os.makedirs(OUT, exist_ok=True)
 U = tempfile.mkdtemp(); shutil.copy(build, U + '/index.html'); shutil.copytree(R + '/logo', U + '/logo')
 class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -132,6 +132,6 @@ with sync_playwright() as p:
         check('account menu inside the screen ' + tag, box[0] >= 0 and box[1] <= w, box)
         check('no JavaScript error ' + tag, not errs, errs[:2]); ctx.close()
     b.close()
-json.dump(res, open(OUT + '/accounts-9500-results.json', 'w'), indent=1)
+json.dump(res, open(OUT + '/accounts-results.json', 'w'), indent=1)
 print(len(res), 'checks,', len(fails), 'failures'); [print('FAIL', f, [r['got'] for r in res if r['test'] == f][0]) for f in fails]
 sys.exit(1 if fails else 0)
