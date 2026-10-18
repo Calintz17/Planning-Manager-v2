@@ -1,0 +1,436 @@
+{
+  "version": "9.4.0.6",
+  "commit": "c29a42fc9af924c407cab82e3ee826d9db7693c3",
+  "scope": "Synthetic fixture tests and static/browser checks only. No Supabase-derived month data included.",
+  "markerTests": [
+    {
+      "month": 9,
+      "type": "A",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 9,
+      "type": "OUT",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 9,
+      "type": "conflict",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 10,
+      "type": "A",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 10,
+      "type": "OUT",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 10,
+      "type": "conflict",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 11,
+      "type": "A",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 11,
+      "type": "OUT",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    },
+    {
+      "month": 11,
+      "type": "conflict",
+      "sameCells": true,
+      "sameHours": true,
+      "mandatory": [
+        0,
+        0
+      ]
+    }
+  ],
+  "ui": {
+    "configurations": 40,
+    "errors": [],
+    "overflows": []
+  },
+  "css": [
+    {
+      "selector": "|body",
+      "rules": [
+        {
+          "line": 22,
+          "body": "min-height:100%;width:100%"
+        },
+        {
+          "line": 24,
+          "body": "font-family:var(--font);font-size:14px;line-height:1.5;background:var(--bg-app);color:var(--tx-1);-webkit-font-smoothing:antialiased"
+        }
+      ]
+    },
+    {
+      "selector": "|button",
+      "rules": [
+        {
+          "line": 23,
+          "body": "font-family:var(--font);letter-spacing:normal;font-style:normal"
+        },
+        {
+          "line": 583,
+          "body": "cursor:pointer"
+        }
+      ]
+    },
+    {
+      "selector": "|input",
+      "rules": [
+        {
+          "line": 23,
+          "body": "font-family:var(--font);letter-spacing:normal;font-style:normal"
+        },
+        {
+          "line": 599,
+          "body": "border:1px solid var(--line-2);border-radius:5px;background:var(--bg-base);color:var(--tx-1);font-size:13px;min-height:36px;padding:7px 9px;max-width:100%"
+        }
+      ]
+    },
+    {
+      "selector": "|select",
+      "rules": [
+        {
+          "line": 23,
+          "body": "font-family:var(--font);letter-spacing:normal;font-style:normal"
+        },
+        {
+          "line": 254,
+          "body": "font-family:var(--font);font-size:13px;color:var(--tx-1);height:36px;padding:0 10px;border:1px solid var(--line-2);border-radius:var(--r-md);background:var(--bg-base);transition:border-color .15s, box-shadow .15s"
+        },
+        {
+          "line": 599,
+          "body": "border:1px solid var(--line-2);border-radius:5px;background:var(--bg-base);color:var(--tx-1);font-size:13px;min-height:36px;padding:7px 9px;max-width:100%"
+        }
+      ]
+    },
+    {
+      "selector": "|textarea",
+      "rules": [
+        {
+          "line": 23,
+          "body": "font-family:var(--font);letter-spacing:normal;font-style:normal"
+        },
+        {
+          "line": 599,
+          "body": "border:1px solid var(--line-2);border-radius:5px;background:var(--bg-base);color:var(--tx-1);font-size:13px;min-height:36px;padding:7px 9px;max-width:100%"
+        },
+        {
+          "line": 601,
+          "body": "resize:vertical;line-height:1.5"
+        }
+      ]
+    },
+    {
+      "selector": "|.pdf-shot .mth .c-agent",
+      "rules": [
+        {
+          "line": 102,
+          "body": "position:static"
+        },
+        {
+          "line": 672,
+          "body": "position:static"
+        },
+        {
+          "line": 679,
+          "body": "width:184px;min-width:184px;max-width:184px;text-align:left;padding:4px 12px"
+        }
+      ]
+    },
+    {
+      "selector": "|.pdf-shot .mth thead th",
+      "rules": [
+        {
+          "line": 102,
+          "body": "position:static"
+        },
+        {
+          "line": 103,
+          "body": "box-shadow:none"
+        },
+        {
+          "line": 672,
+          "body": "position:static"
+        },
+        {
+          "line": 680,
+          "body": "height:48px"
+        }
+      ]
+    },
+    {
+      "selector": "|.xm-xl",
+      "rules": [
+        {
+          "line": 113,
+          "body": "background:var(--ok)"
+        },
+        {
+          "line": 661,
+          "body": "background:var(--bg-base-3);color:var(--tx-2)"
+        }
+      ]
+    },
+    {
+      "selector": "|.xm-pdf",
+      "rules": [
+        {
+          "line": 114,
+          "body": "background:var(--dang)"
+        },
+        {
+          "line": 661,
+          "body": "background:var(--bg-base-3);color:var(--tx-2)"
+        }
+      ]
+    },
+    {
+      "selector": "|.tsw-stars",
+      "rules": [
+        {
+          "line": 137,
+          "body": "position:absolute;inset:0;width:100%;height:100%;transition:transform 320ms ease, opacity 240ms ease"
+        },
+        {
+          "line": 138,
+          "body": "opacity:0;transform:translateY(-40%)"
+        }
+      ]
+    },
+    {
+      "selector": "|.pool-empty",
+      "rules": [
+        {
+          "line": 193,
+          "body": "font-size:12px;color:var(--tx-3);font-style:normal;padding:4px 0 var(--s3)"
+        },
+        {
+          "line": 612,
+          "body": "font-size:12px;color:var(--tx-2);padding:8px 0"
+        }
+      ]
+    },
+    {
+      "selector": "|.hl-add input[type=text]",
+      "rules": [
+        {
+          "line": 207,
+          "body": "width:100%;font-family:var(--font);font-size:13px;padding:9px 11px;border:1px solid var(--line-2);border-radius:var(--r-md);color:var(--tx-1);background:var(--bg-base);height:36px;box-sizing:border-box"
+        },
+        {
+          "line": 611,
+          "body": "width:100%;min-width:0;height:36px"
+        }
+      ]
+    },
+    {
+      "selector": "|.mini-empty",
+      "rules": [
+        {
+          "line": 216,
+          "body": "font-size:13px;color:var(--tx-3);font-style:normal;padding:var(--s2) 0"
+        },
+        {
+          "line": 612,
+          "body": "font-size:12px;color:var(--tx-2);padding:8px 0"
+        }
+      ]
+    },
+    {
+      "selector": "|.mth thead th.c-agent",
+      "rules": [
+        {
+          "line": 311,
+          "body": "background:var(--bg-base-2);z-index:5"
+        },
+        {
+          "line": 343,
+          "body": "font-size:11px;font-weight:700;color:var(--tx-2);text-transform:uppercase;padding-left:12px"
+        }
+      ]
+    },
+    {
+      "selector": "|.mth tr.blk td.c-agent",
+      "rules": [
+        {
+          "line": 331,
+          "body": "background:var(--bg-base-3)"
+        },
+        {
+          "line": 343,
+          "body": "font-size:11px;font-weight:700;color:var(--tx-2);text-transform:uppercase;padding-left:12px"
+        }
+      ]
+    },
+    {
+      "selector": "|.mth-group td.mth-group-lbl",
+      "rules": [
+        {
+          "line": 342,
+          "body": "font-size:11px;font-weight:700;color:var(--tx-2);text-transform:uppercase;padding:6px 12px"
+        },
+        {
+          "line": 343,
+          "body": "font-size:11px;font-weight:700;color:var(--tx-2);text-transform:uppercase;padding-left:12px"
+        }
+      ]
+    },
+    {
+      "selector": "|.sh-pink",
+      "rules": [
+        {
+          "line": 363,
+          "body": "background:var(--dang-soft);color:var(--dang-tx)"
+        },
+        {
+          "line": 623,
+          "body": "background:var(--dang-soft);color:var(--dang-tx)"
+        }
+      ]
+    },
+    {
+      "selector": "|.sh-cp",
+      "rules": [
+        {
+          "line": 375,
+          "body": "background:var(--dang-soft);color:var(--dang-tx)"
+        },
+        {
+          "line": 623,
+          "body": "background:var(--dang-soft);color:var(--dang-tx)"
+        }
+      ]
+    },
+    {
+      "selector": "|.ce-adjust-row",
+      "rules": [
+        {
+          "line": 566,
+          "body": "display:flex;align-items:center;justify-content:space-between;padding:4px 2px"
+        },
+        {
+          "line": 664,
+          "body": "grid-column:1 / -1"
+        }
+      ]
+    },
+    {
+      "selector": "|.ce-sep",
+      "rules": [
+        {
+          "line": 570,
+          "body": "height:1px;background:var(--line);margin:var(--s2) 0"
+        },
+        {
+          "line": 664,
+          "body": "grid-column:1 / -1"
+        }
+      ]
+    },
+    {
+      "selector": "|.ce-cnr-lbl",
+      "rules": [
+        {
+          "line": 571,
+          "body": "font-size:11px;font-weight:700;color:var(--tx-3);text-transform:uppercase;letter-spacing:normal;padding:0 var(--s2) 4px"
+        },
+        {
+          "line": 664,
+          "body": "grid-column:1 / -1"
+        }
+      ]
+    },
+    {
+      "selector": "|.ce-cnr",
+      "rules": [
+        {
+          "line": 572,
+          "body": "display:flex;flex-wrap:wrap;gap:5px;padding:0 var(--s2) 2px"
+        },
+        {
+          "line": 664,
+          "body": "grid-column:1 / -1"
+        }
+      ]
+    },
+    {
+      "selector": "|.pdf-shot .mth tr.evt-row th.evt-row-label",
+      "rules": [
+        {
+          "line": 672,
+          "body": "position:static"
+        },
+        {
+          "line": 685,
+          "body": "font-size:11px"
+        }
+      ]
+    },
+    {
+      "selector": "media (max-width:600px)|.mth-group td.mth-group-lbl",
+      "rules": [
+        {
+          "line": 803,
+          "body": "font-size:9px;padding:4px"
+        },
+        {
+          "line": 804,
+          "body": "padding-left:4px;font-size:9px"
+        }
+      ]
+    }
+  ]
+}
