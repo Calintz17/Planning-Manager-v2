@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.4.0.6</title>
+  <title>CAST v9.5.0.0</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -99,7 +99,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .xm-note { padding:8px 10px; font-size:11px; color:var(--tx-2); }
 .pdf-shot { --name-col:184px; position:fixed; left:-20000px; top:0; width:max-content; background:#fff; padding:16px; }
 .pdf-shot .mth-wrap, .pdf-shot .it-wrap { overflow:visible; max-height:none; }
-.pdf-shot .mth .c-agent, .pdf-shot .mth thead th { position:static; }
 .pdf-shot .mth thead th, .pdf-shot .mth td { box-shadow:none; }
 .pdf-shot.is-intraday { width:max-content; min-width:1200px; }
 .pdf-shot-head { display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s4); font-size:13px; color:var(--tx-2); margin-bottom:var(--s3); }
@@ -110,8 +109,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .pdf-brand span { font-size:9px; line-height:1.4; color:#52647B; }
 .xm-logo { width:18px; height:18px; object-fit:contain; flex-shrink:0; display:block; }
 .xm-fb { display:inline-flex; align-items:center; justify-content:center; border-radius:3px; font-size:10px; font-weight:700; color:var(--tx-2); background:var(--bg-base-3); width:20px; height:20px; }
-.xm-xl { background:var(--ok); }
-.xm-pdf { background:var(--dang); }
 .mm-chip { font-size:10px; font-weight:700; padding:2px 7px; border-radius:var(--r-pill); }
 .sb-field { padding:0; margin-bottom:10px; }
 .sb-field label { display:block; font-size:11px; font-weight:700; color:var(--tx-2); margin-bottom:5px; }
@@ -190,7 +187,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .pa-meta { display:flex; align-items:center; gap:var(--s2); }
 .pa-role { font-size:11px; color:var(--tx-3); font-weight:700; letter-spacing:normal; }
 .pa-shift { font-size:11px; padding:2px 7px; border-radius:var(--r-pill); font-weight:700; }
-.pool-empty { font-size:12px; color:var(--tx-3); font-style:normal; padding:4px 0 var(--s3); }
 .hl-list { display:flex; flex-direction:column; gap:var(--s3); }
 .hl-item { display:flex; align-items:flex-start; gap:16px; min-width:0; padding:14px; border-radius:5px; background:var(--bg-base-2); border-left:3px solid var(--accent-line); }
 .hl-item.week { border-left-color:var(--info); }
@@ -213,7 +209,6 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .mini-item .dot.abs { background:var(--dang); }
 .mini-item .dot.hol { background:var(--warn-tx); }
 .mini-item .nm { color:var(--tx-1); font-weight:400; }
-.mini-empty { font-size:13px; color:var(--tx-3); font-style:normal; padding:var(--s2) 0; }
 .card-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap; }
 .card-sub { font-size:13px; color:var(--tx-2); margin-top:2px; }
 .set-head { align-items:flex-start; margin-bottom:var(--s4); }
@@ -508,6 +503,23 @@ input[type=date][data-dp] { display:none; }
 #scope-modal-slot select { width:100%; }
 body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events:none; user-select:none; }
 .sb-store-btn { display:none; }
+/* Sign in and account (9.5.0.0) */
+#login-gate { display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center; padding:16px; background:var(--bg-app); }
+#login-gate.show { display:flex; }
+.login-form { display:flex; flex-direction:column; gap:var(--s4); text-align:left; }
+.login-err { font-size:12px; color:var(--dang); min-height:16px; }
+.login-note { font-size:12px; color:var(--tx-3); text-align:center; line-height:1.5; }
+.sb-fixed-val { font-size:13px; font-weight:700; color:var(--tx-1); padding:2px 0 4px; }
+body.one-store .sb-store-btn { display:none !important; }
+.acct-wrap { position:relative; display:inline-flex; }
+.acct-btn { position:relative; width:36px; height:36px; padding:0; border:0; border-radius:var(--r-pill); background:var(--bg-base-3); color:var(--tx-1); font-family:var(--font); font-size:12px; font-weight:700; }
+.acct-dot { display:none; position:absolute; top:-1px; right:-1px; width:10px; height:10px; border-radius:var(--r-pill); background:var(--dang); border:2px solid var(--bg-base); }
+.acct-btn.needs-pw .acct-dot { display:block; }
+.acct-head { padding:8px 10px 10px; border-bottom:1px solid var(--line); margin-bottom:4px; display:flex; flex-direction:column; gap:2px; }
+.acct-name { font-size:13px; font-weight:700; color:var(--tx-1); }
+.acct-sub { font-size:12px; color:var(--tx-2); overflow-wrap:anywhere; }
+.acct-warn { font-size:12px; line-height:1.4; color:var(--dang-tx); background:var(--dang-soft); border-radius:5px; padding:8px 10px; margin:4px 0; }
+.acct-out { color:var(--dang); }
 .set-tbl { table-layout:fixed; width:100%; min-width:580px; }
 .set-tbl th { font-weight:700; }
 .set-tbl td { vertical-align:middle; }
@@ -609,7 +621,7 @@ textarea { resize:vertical; line-height:1.5; }
 .metric-card span { font-size:13px; color:var(--tx-2); }
 .metric-card strong { font-size:32px; color:var(--info); font-weight:700; line-height:1.1; }
 .hl-add .dp-btn, .hl-add input[type=text] { width:100%; min-width:0; height:36px; }
-.mini-empty, .pool-empty { font-size:12px; color:var(--tx-2); padding:8px 0; }
+.mini-empty, .pool-empty { font-size:12px; color:var(--tx-2); font-style:normal; padding:8px 0; }
 .mth th.c-day.is-today, .mth td.c-day.is-today { background:var(--today); }
 .mth tbody tr:hover td.is-today { background:var(--today); }
 .mth .mth-group td.c-day { height:28px; }
@@ -936,6 +948,22 @@ function trimLogo(img) {
   </div>
 </div>
 
+<!-- SIGN IN -->
+<div id="login-gate">
+  <form class="gate-card" onsubmit="event.preventDefault(); signIn();">
+    <div class="gate-logo"><img src="logo/CAST_LOGO_TEXTE.png" alt="CAST" class="gate-wordmark" onload="trimLogo(this)" onerror="this.outerHTML='CAST'"></div>
+    <div class="gate-title">Sign in</div>
+    <div class="gate-sub">Use the email and password given by your administrator.</div>
+    <div class="login-form">
+      <div class="fld"><label for="login-email">Email</label><input type="email" id="login-email" autocomplete="username" required></div>
+      <div class="fld"><label for="login-pw">Password</label><input type="password" id="login-pw" autocomplete="current-password" required></div>
+      <div class="login-err" id="login-err" role="alert"></div>
+      <button type="submit" class="btn btn-primary" id="login-btn">Sign in</button>
+      <div class="login-note">Forgot your password? Contact your administrator.</div>
+    </div>
+  </form>
+</div>
+
 <!-- WEEK PICKER -->
 <div id="week-picker-popup">
   <div class="wkp-header">
@@ -990,17 +1018,25 @@ function trimLogo(img) {
     </div>
   </div>
   <div id="scope-fields">
-  <div class="sb-field">
+  <div class="sb-field" id="fixed-region" hidden>
+    <label>Region</label>
+    <div class="sb-fixed-val" id="fixed-region-val" data-no-i18n></div>
+  </div>
+  <div class="sb-field" id="region-field">
     <label for="region-select">Region</label>
     <select id="region-select"><option value="">- Select region -</option></select>
   </div>
-  <div class="sb-field">
+  <div class="sb-field" id="country-field">
     <label for="country-select">Country</label>
     <select id="country-select" disabled><option value="">- All countries -</option></select>
   </div>
-  <div class="sb-field">
+  <div class="sb-field" id="store-field">
     <label for="store-select">Store</label>
     <select id="store-select" disabled><option value="">- All stores -</option></select>
+  </div>
+  <div class="sb-field" id="fixed-store" hidden>
+    <label>Store</label>
+    <div class="sb-fixed-val" id="fixed-store-val" data-no-i18n></div>
   </div>
   </div>
   </div>
@@ -1035,6 +1071,15 @@ function trimLogo(img) {
       </div>
       <button class="btn btn-ghost top-help" onclick="openPageHelp()" title="Help"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .3c0 1.5-2.5 1.7-2.5 3.7M12 16.5h.01"/></svg><span>Help</span></button>
       <button type="button" id="theme-switch" class="theme-sw" role="switch" aria-checked="false" title="Dark mode" aria-label="Dark mode" onclick="toggleTheme()"><span class="tsw-track"><span class="tsw-night"></span><svg class="tsw-stars" viewBox="0 0 66 34" aria-hidden="true"><g fill="#FFFFFF"><circle cx="9" cy="9" r="1.2"/><circle cx="17" cy="20" r="0.9"/><circle cx="24" cy="8" r="0.8"/><circle cx="12" cy="25" r="0.7"/><path d="M19 11.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/></g></svg><svg class="tsw-clouds" viewBox="0 0 66 34" aria-hidden="true"><g fill="#FFFFFF"><path opacity=".75" d="M33 25a4 4 0 0 1 3.6-4 5.5 5.5 0 0 1 10.4-1.6A4.3 4.3 0 0 1 52 23.5V25z"/><path d="M40 30a4.5 4.5 0 0 1 4-4.4 6 6 0 0 1 11.4-1.8 4.8 4.8 0 0 1 6.6 4.4V30z"/></g></svg><span class="tsw-knob"><i></i><i></i><i></i></span></span></button>
+      <div class="acct-wrap">
+        <button type="button" class="acct-btn" id="acct-btn" onclick="toggleAcctMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-label="Account"><span id="acct-initials" data-no-i18n></span><span class="acct-dot"></span></button>
+        <div class="more-menu" id="acct-menu" role="menu" onclick="event.stopPropagation()">
+          <div class="acct-head"><div class="acct-name" id="acct-name" data-no-i18n></div><div class="acct-sub" id="acct-email" data-no-i18n></div><div class="acct-sub" id="acct-role"></div></div>
+          <div class="acct-warn" id="acct-warn" hidden>You still use the password you were given. Please change it.</div>
+          <button type="button" class="mission-menu-item" role="menuitem" onclick="closeAcctMenu();openPwEditor()">Change password</button>
+          <button type="button" class="mission-menu-item acct-out" role="menuitem" onclick="signOut()">Sign out</button>
+        </div>
+      </div>
     </div>
     </div>
   </header>
@@ -1689,13 +1734,27 @@ async function init() {
   await switchLang(CURRENT_LANG);
   updateWeekLabel();
   updateMonthlyLabel();
+  sb.auth.onAuthStateChange(function(event) { if (event === 'SIGNED_OUT' && me) location.reload(); });
+  var sess = await sb.auth.getSession();
+  var user = sess && sess.data && sess.data.session && sess.data.session.user;
+  if (!user) { showLogin(''); return; }
+  if (await loadMe(user)) await startWorkspace();
+}
+// The workspace opens once the account is known: regions, countries and stores are limited to the account
+// (the base enforces the same limits; the menus only follow them).
+var workspaceStarted = false;
+async function startWorkspace() {
+  if (workspaceStarted) return;
+  workspaceStarted = true;
   showLoader();
   const { data, error } = await sb.from('retail_regions').select('*').order('name');
   hideLoader();
   if (error) { showToast('Failed to load regions', 'error'); return; }
   const sel = document.getElementById('region-select');
   sel.innerHTML = '<option value="">- Select region -</option>';
-  data.forEach(function(r) {
+  var allowed = (data || []).filter(regionAllowed);
+  if (me.role === 'director' && allowed[0]) setText('fixed-region-val', allowed[0].name);
+  allowed.forEach(function(r) {
     const opt = document.createElement('option');
     opt.value        = r.id;
     opt.dataset.city = r.city;
@@ -1708,17 +1767,147 @@ async function init() {
   var sSel = document.getElementById('store-select');
   if (sSel) sSel.addEventListener('change', onStoreChange);
   if (await restoreScope()) return;
+  if (allowed.length === 1) {
+    sel.value = allowed[0].id;
+    await onRegionChange();
+    if (currentStoreId) return;
+  }
   openStoreGate();
+}
+// Account
+var me = null;
+function setText(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
+function scopeKey() { return 'cora_scope' + (me ? '_' + me.id : ''); }
+function regionAllowed(r) {
+  if (!me || me.role === 'admin') return true;
+  if (me.role === 'director') return r.id === me.regionId;
+  return me.regionIds.indexOf(r.id) !== -1;
+}
+function countryAllowed(c) { return !me || me.role !== 'manager' || me.countryIds.indexOf(c.id) !== -1; }
+function storeAllowed(s) { return !me || me.role !== 'manager' || me.storeIds.indexOf(s.id) !== -1; }
+function showLogin(msg) {
+  setText('login-err', msg ? t(msg) : '');
+  document.getElementById('login-gate').classList.add('show');
+  var em = document.getElementById('login-email'); if (em && !em.value) em.focus();
+}
+async function signIn() {
+  var email = document.getElementById('login-email').value.trim(), pw = document.getElementById('login-pw').value;
+  var btn = document.getElementById('login-btn');
+  setText('login-err', '');
+  btn.disabled = true;
+  var res = await sb.auth.signInWithPassword({ email: email, password: pw });
+  btn.disabled = false;
+  if (res.error || !res.data || !res.data.user) { setText('login-err', t('Wrong email or password.')); return; }
+  document.getElementById('login-pw').value = '';
+  if (await loadMe(res.data.user)) {
+    document.getElementById('login-gate').classList.remove('show');
+    await startWorkspace();
+  }
+}
+async function refuseAccount(msg) {
+  me = null;
+  await sb.auth.signOut();
+  showLogin(msg);
+  return false;
+}
+// Reads the profile of the signed-in account: role, region (director) and stores (manager)
+async function loadMe(user) {
+  var p = await sb.from('retail_profiles').select('*').eq('user_id', user.id).maybeSingle();
+  if (p.error) return refuseAccount('Could not load your account. Try again.');
+  if (!p.data || p.data.active === false) return refuseAccount('Your account is not active. Contact your administrator.');
+  me = { id: user.id, email: p.data.email || user.email || '', name: p.data.full_name || '', role: p.data.role,
+    regionId: p.data.region_id, storeIds: [], countryIds: [], regionIds: [],
+    pwChanged: !!(user.user_metadata && user.user_metadata.pw_changed) };
+  if (me.role === 'manager') {
+    var ps = await sb.from('retail_profile_stores').select('store_id').eq('user_id', user.id);
+    me.storeIds = ((ps && ps.data) || []).map(function(r) { return r.store_id; });
+    if (!me.storeIds.length) return refuseAccount('No store is linked to your account. Contact your administrator.');
+    var st = await sb.from('retail_stores').select('id, country_id').in('id', me.storeIds);
+    (st.data || []).forEach(function(r) { if (me.countryIds.indexOf(r.country_id) === -1) me.countryIds.push(r.country_id); });
+    var ct = me.countryIds.length ? await sb.from('retail_countries').select('id, region_id').in('id', me.countryIds) : { data: [] };
+    (ct.data || []).forEach(function(r) { if (me.regionIds.indexOf(r.region_id) === -1) me.regionIds.push(r.region_id); });
+  }
+  renderAccount();
+  applyScopeRules();
+  return true;
+}
+// Menus by role: manager = his store(s) only; director = his region (fixed), country and store; admin = everything
+function applyScopeRules() {
+  var r = me.role, oneStore = r === 'manager' && me.storeIds.length === 1;
+  // A manager with stores in several countries still gets the menus needed to reach them
+  document.getElementById('region-field').hidden = r === 'director' || (r === 'manager' && me.regionIds.length <= 1);
+  document.getElementById('fixed-region').hidden = r !== 'director';
+  document.getElementById('country-field').hidden = r === 'manager' && me.countryIds.length <= 1;
+  document.getElementById('store-field').hidden = oneStore;
+  document.getElementById('fixed-store').hidden = !oneStore;
+  document.body.classList.toggle('one-store', oneStore);
+  var sub = document.querySelector('#store-gate .gate-sub');
+  if (sub) sub.textContent = t(r === 'manager' ? 'Choose one of your stores.'
+    : r === 'director' ? 'Choose a country and a store in your region.'
+    : 'To navigate your workspace, please choose a region, a country and a store.');
+}
+var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
+function renderAccount() {
+  var base = me.name || me.email.split('@')[0];
+  var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
+  setText('acct-initials', ini || '?');
+  setText('acct-name', me.name || me.email);
+  setText('acct-email', me.email);
+  setText('acct-role', t(ROLE_LABEL[me.role] || me.role));
+  document.getElementById('acct-btn').classList.toggle('needs-pw', !me.pwChanged);
+  document.getElementById('acct-warn').hidden = me.pwChanged;
+}
+function toggleAcctMenu(e) {
+  e.stopPropagation();
+  var m = document.getElementById('acct-menu'), open = !m.classList.contains('open');
+  m.classList.toggle('open', open);
+  document.getElementById('acct-btn').setAttribute('aria-expanded', String(open));
+}
+function closeAcctMenu() {
+  var m = document.getElementById('acct-menu');
+  if (m) m.classList.remove('open');
+  var b = document.getElementById('acct-btn'); if (b) b.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', closeAcctMenu);
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeAcctMenu(); });
+async function signOut() {
+  closeAcctMenu();
+  await sb.auth.signOut();
+  location.reload();
+}
+function openPwEditor() {
+  ['pw-cur', 'pw-new', 'pw-new2'].forEach(function(id) { document.getElementById(id).value = ''; });
+  setText('pw-err', '');
+  document.getElementById('pw-editor').classList.add('open');
+  document.getElementById('pw-cur').focus();
+}
+function closePwEditor() { document.getElementById('pw-editor').classList.remove('open'); }
+async function savePassword() {
+  var cur = document.getElementById('pw-cur').value, n1 = document.getElementById('pw-new').value, n2 = document.getElementById('pw-new2').value;
+  var err = n1.length < 6 ? 'At least 6 characters.' : n1 !== n2 ? 'The two new passwords are different.'
+    : n1 === cur ? 'Choose a password different from the current one.' : '';
+  if (err) { setText('pw-err', t(err)); return; }
+  var btn = document.getElementById('pw-save');
+  btn.disabled = true;
+  var chk = await sb.auth.signInWithPassword({ email: me.email, password: cur });
+  if (chk.error) { btn.disabled = false; setText('pw-err', t('The current password is wrong.')); return; }
+  var up = await sb.auth.updateUser({ password: n1, data: { pw_changed: true } });
+  btn.disabled = false;
+  if (up.error) { setText('pw-err', t('Could not change the password.') + ' ' + up.error.message); return; }
+  me.pwChanged = true;
+  renderAccount();
+  closePwEditor();
+  showToast('Password changed \u2713', 'success');
 }
 function saveScope() {
   try {
-    localStorage.setItem('cora_scope', JSON.stringify({
+    localStorage.setItem(scopeKey(), JSON.stringify({
       region: currentRegionId, country: currentCountryId, store: currentStoreId
     }));
   } catch (e) {}
 }
 async function restoreScope() {
-  var raw; try { raw = localStorage.getItem('cora_scope'); } catch (e) { return false; }
+  var raw; try { raw = localStorage.getItem(scopeKey()); } catch (e) { return false; }
   if (!raw) return false;
   var sc; try { sc = JSON.parse(raw); } catch (e) { return false; }
   if (!sc || !sc.region || !sc.store) return false;
@@ -1783,7 +1972,7 @@ async function loadCountries() {
   var res = await sb.from('retail_countries').select('*')
     .eq('region_id', currentRegionId).order('sort_order');
   if (res.error) { showToast('Could not load countries', 'error'); return; }
-  countries = res.data || [];
+  countries = (res.data || []).filter(countryAllowed);
   countries.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
   sel.innerHTML = '<option value="">- All countries -</option>';
   countries.forEach(function(c) {
@@ -1801,10 +1990,10 @@ async function loadCountries() {
   }
   if (countries.length > 1) {
     var ids = countries.map(function(c) { return c.id; });
-    var st = await sb.from('retail_stores').select('country_id').in('country_id', ids);
+    var st = await sb.from('retail_stores').select('id, country_id').in('country_id', ids);
     if (!st.error && st.data && st.data.length) {
       var withStores = [];
-      st.data.forEach(function(r) {
+      st.data.filter(storeAllowed).forEach(function(r) {
         if (withStores.indexOf(r.country_id) === -1) withStores.push(r.country_id);
       });
       if (withStores.length === 1) {
@@ -1834,7 +2023,7 @@ async function loadStores() {
   var res = await sb.from('retail_stores').select('*')
     .eq('country_id', currentCountryId).order('sort_order');
   if (res.error) { showToast('Could not load stores', 'error'); return; }
-  stores = (res.data || []).filter(function(s) { return s.is_active !== false; });
+  stores = (res.data || []).filter(function(s) { return s.is_active !== false && storeAllowed(s); });
   stores.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
   sel.innerHTML = stores.length
     ? '<option value="">- All stores -</option>'
@@ -1857,6 +2046,7 @@ async function onStoreChange() {
   var st = stores.find(function(s) { return s.id === currentStoreId; });
   currentStoreName = st ? st.name : '';
   currentStoreCity = st ? (st.city || st.location || '') : '';
+  setText('fixed-store-val', currentStoreName);
   if (!currentStoreId) {
     // No store selected: empty every page
     agents = []; monthlyResult = {}; intradayExport = null; lastCoverage = null;
@@ -2760,8 +2950,7 @@ async function saveShiftConfigNow() {
     rows.push({
       store_id: currentStoreId, code: code, grid: grid, label: code,
       start_min: start, end_min: end, tone: tone,
-      sort_order: counters[grid], is_active: true,
-      is_opening: false, is_closing: false
+      sort_order: counters[grid], is_active: true
     });
   });
   if (problem) { showToast(problem, 'error'); return; }
@@ -5574,7 +5763,7 @@ function computeMonthlyPlanOn(opt, ctx) {
   var snapLoaded = !!(planSnapshot && planSnapshot.storeId === currentStoreId && planSnapshot.month === snapKey && planSnapshot.ok);
   var snapPlan = (snapLoaded && planSnapshot.plan) || {};
   var recalcFromToday = forceRecalc || !manualMode;
-  var todayDs = toDateStr(new Date());
+  var todayDs = ctx.today;
   // Shown result of one agent on one day
   function shownRes(a, ds) {
     var ov = (planningOverrides[a.id] || {})[ds];
@@ -5626,7 +5815,7 @@ function computeMonthlyPlanOn(opt, ctx) {
   var lastDay  = new Date(year, monthIdx + 1, 0);
   var nDays    = lastDay.getDate();
   var monthDays = [];
-  var _todayStr = toDateStr(new Date());
+  var _todayStr = ctx.today;
   var _snapReady = !!(planSnapshot && planSnapshot.storeId === currentStoreId &&
                       planSnapshot.month === snapshotMonthKey() && planSnapshot.ok);
   var _freeze = ((typeof manualMode !== 'undefined') ? manualMode : true) && !_snapReady;
@@ -7929,7 +8118,6 @@ async function saveAgentEditor() {
   }
   var prevPref = agentPrefs[agentId] || {};
   var prefRow = { agent_id: agentId, avoid_days: readDayChips('ae-avoid'), fixed_schedule: fixedSchedule,
-    preferred_shift: null,
     rotates: storeCorners.length > 1 ? document.getElementById('ae-rotates').checked : prevPref.rotates !== false };
   var res = await sb.from('retail_agents').update(upd).eq('id', agentId);
   if (res.error) { showToast('Save failed: ' + res.error.message, 'error'); return false; }
@@ -8006,7 +8194,7 @@ function printableExport(contentHtml, titleText, fitWidth) {
     '* { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }';
   var stamp = esc(currentStoreName + ' - ' + titleText);
   w.document.write('<!DOCTYPE html><html lang="' + docLang() + '"><head><meta charset="utf-8">' +
-    '<title>CAST v9.4.0.6</title>' +
+    '<title>' + stamp + '</title>' +
     '<style>' + siteCss + '</style><style>' + printCss + '</style></head><body>' +
     '<div class="pdf-head">' + pdfBrandHtml() + '<div style="text-align:right"><div class="pdf-title">' + stamp + '</div>' +
     '<div class="pdf-meta">' + new Date().toLocaleDateString(dLoc()) + '</div></div></div>' +
@@ -9460,6 +9648,30 @@ init();
 </div>
 
 <!-- EVENT EDITOR -->
+<div id="pw-editor" class="modal-overlay" onclick="if(event.target===this)closePwEditor()">
+  <form class="modal" style="max-width:400px" onsubmit="event.preventDefault(); savePassword();">
+    <div class="modal-head">
+      <div><div class="modal-title">Change password</div></div>
+      <button type="button" class="icon-btn" onclick="closePwEditor()" aria-label="Close">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body login-form">
+      <div class="fld"><label for="pw-cur">Current password</label><input type="password" id="pw-cur" autocomplete="current-password" required></div>
+      <div class="fld"><label for="pw-new">New password</label><input type="password" id="pw-new" autocomplete="new-password" required></div>
+      <div class="fld"><label for="pw-new2">Confirm new password</label><input type="password" id="pw-new2" autocomplete="new-password" required></div>
+      <div class="login-err" id="pw-err" role="alert"></div>
+    </div>
+    <div class="modal-foot">
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button type="button" class="btn btn-ghost" onclick="closePwEditor()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="pw-save">Save</button>
+      </div>
+    </div>
+  </form>
+</div>
+
 <div id="event-editor" class="modal-overlay" onclick="if(event.target===this)closeEventEditor()">
   <div class="modal" style="max-width:400px">
     <div class="modal-head">
