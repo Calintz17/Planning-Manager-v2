@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.4.0.4</title>
+  <title>CAST v9.4.0.5</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -5662,6 +5662,9 @@ function computeMonthlyPlanOn(opt, ctx) {
   // Absences and leaves always win
   function isBlocked(a, d) {
     if (d.closure) return true;
+    // A day the manager set as not worked (OFF, absence, training) is never given to the advisor
+    var ovB = (planningOverrides[a.id] || {})[d.ds];
+    if (ovB && !workHoursOf(a, d.ds, { code: ovB })) return true;
     if (!_freeze) {
       if (agentOnLeave(a.id, d.ds)) return true;
       var st = (availability[a.id] && availability[a.id][d.ds]) || null;
@@ -5914,6 +5917,15 @@ function computeMonthlyPlanOn(opt, ctx) {
   var byLoad = openList.slice().sort(function(x, y) { return (y.vol || 0) - (x.vol || 0); });
   var takenByDay = {};
   openList.forEach(function(d){ takenByDay[d.ds] = {}; });
+  // The manager's working days are placed first: they count in the advisor's week, so CAST adds only the days
+  // still missing (before, a manual day was not counted and a manual OFF could take one of the week's days)
+  openList.forEach(function(d) {
+    agents.forEach(function(a) {
+      var ov = (planningOverrides[a.id] || {})[d.ds];
+      if (!ov || isFixed(a) || !workHoursOf(a, d.ds, { code: ov }) || assignedMap[d.ds].indexOf(a.id) !== -1) return;
+      assign(a, d); assignedMap[d.ds].push(a.id); takenByDay[d.ds][a.id] = true;
+    });
+  });
   function pickFor(d, filterFn) {
     var taken = takenByDay[d.ds];
     var pool = agents.filter(function(a) {
