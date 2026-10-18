@@ -1,0 +1,609 @@
+{
+  "manual-off-9405-results.json": {
+    "CAST_v9_4_0_4_RETAIL_TEST.html": {
+      "people": 6,
+      "weekDays": {
+        "3": 15,
+        "4": 9
+      },
+      "short": 24,
+      "mandatory": 0
+    },
+    "CAST_v9_4_0_5_RETAIL_TEST.html": {
+      "people": 6,
+      "weekDays": {
+        "5": 24
+      },
+      "short": 0,
+      "mandatory": 0
+    }
+  },
+  "manual-matrix-results.json": [
+    {
+      "mode": "off",
+      "cells": [
+        "OFF",
+        "OFF",
+        "O",
+        "O",
+        "O",
+        "M",
+        "C"
+      ],
+      "hours": [
+        0,
+        0,
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "issues": {},
+      "status": "incomplete"
+    },
+    {
+      "mode": "work",
+      "cells": [
+        "O",
+        "C",
+        "C",
+        "OFF",
+        "OFF",
+        "O",
+        "C"
+      ],
+      "hours": [
+        450,
+        450,
+        450,
+        0,
+        0,
+        450,
+        450
+      ],
+      "issues": {},
+      "status": "incomplete"
+    },
+    {
+      "mode": "out",
+      "cells": [
+        "OUT",
+        "OFF",
+        "O",
+        "O",
+        "C",
+        "M",
+        "OFF"
+      ],
+      "hours": [
+        450,
+        0,
+        450,
+        450,
+        450,
+        450,
+        0
+      ],
+      "issues": {
+        "data|a12|2026-11-02": 1
+      },
+      "status": "violation"
+    },
+    {
+      "mode": "absence",
+      "cells": [
+        "A",
+        "O",
+        "C",
+        "C",
+        "O",
+        "M",
+        "OFF"
+      ],
+      "hours": [
+        0,
+        450,
+        450,
+        450,
+        450,
+        450,
+        0
+      ],
+      "issues": {},
+      "status": "incomplete"
+    },
+    {
+      "mode": "leaveOut",
+      "cells": [
+        "OUT",
+        "OFF",
+        "OFF",
+        "C",
+        "C",
+        "O",
+        "C"
+      ],
+      "hours": [
+        450,
+        0,
+        0,
+        450,
+        450,
+        450,
+        450
+      ],
+      "issues": {},
+      "status": "incomplete"
+    },
+    {
+      "mode": "leaveAbsence",
+      "cells": [
+        "A",
+        "OFF",
+        "OFF",
+        "C",
+        "C",
+        "O",
+        "C"
+      ],
+      "hours": [
+        0,
+        0,
+        0,
+        450,
+        450,
+        450,
+        450
+      ],
+      "issues": {},
+      "status": "incomplete"
+    },
+    {
+      "mode": "sixManual",
+      "cells": [
+        "O",
+        "O",
+        "O",
+        "O",
+        "O",
+        "O",
+        "OFF"
+      ],
+      "hours": [
+        450,
+        450,
+        450,
+        450,
+        450,
+        450,
+        0
+      ],
+      "issues": {
+        "row|a12|2026-11-07": 1,
+        "week|a12|2026-11-02": 1,
+        "hours|a12|2026-11-02": 450
+      },
+      "status": "violation"
+    },
+    {
+      "mode": "conflictLeave",
+      "cells": [
+        "O",
+        "C",
+        "OFF",
+        "OFF",
+        "OFF",
+        "O",
+        "M"
+      ],
+      "hours": [
+        450,
+        450,
+        0,
+        0,
+        0,
+        450,
+        450
+      ],
+      "issues": {},
+      "status": "incomplete"
+    }
+  ],
+  "regression-9405-results.json": [
+    {
+      "case": "bm",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    },
+    {
+      "case": "jpA",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    },
+    {
+      "case": "jpB",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    },
+    {
+      "case": "zeroTraffic",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    },
+    {
+      "case": "hours30",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    },
+    {
+      "case": "longClose",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    },
+    {
+      "case": "fewSales",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    },
+    {
+      "case": "learned",
+      "sameCells": true,
+      "mandatoryBefore": 0,
+      "mandatoryAfter": 0,
+      "added": [],
+      "before": "incomplete",
+      "status": "incomplete"
+    }
+  ],
+  "stock-probe-results.json": [
+    {
+      "mode": "original",
+      "rows": [
+        {
+          "id": "a05",
+          "codes": [
+            "OFF",
+            "OFF",
+            "OFF",
+            "CS",
+            "OS",
+            "OS",
+            "CS"
+          ],
+          "off": 3,
+          "paid": 32
+        },
+        {
+          "id": "a06",
+          "codes": [
+            "OS",
+            "OFF",
+            "OFF",
+            "OS",
+            "OS",
+            "OS",
+            "OFF"
+          ],
+          "off": 3,
+          "paid": 32
+        },
+        {
+          "id": "a07",
+          "codes": [
+            "OFF",
+            "CS",
+            "OFF",
+            "A",
+            "OFF",
+            "OS",
+            "OS"
+          ],
+          "off": 3,
+          "paid": 24
+        },
+        {
+          "id": "a08",
+          "codes": [
+            "CS",
+            "OS",
+            "OFF",
+            "OFF",
+            "CS",
+            "CS",
+            "OFF"
+          ],
+          "off": 3,
+          "paid": 32
+        }
+      ]
+    },
+    {
+      "mode": "allStock7h30",
+      "rows": [
+        {
+          "id": "a05",
+          "codes": [
+            "OS",
+            "OFF",
+            "OFF",
+            "CS",
+            "OS",
+            "OS",
+            "CS"
+          ],
+          "off": 2,
+          "paid": 37.5
+        },
+        {
+          "id": "a06",
+          "codes": [
+            "OFF",
+            "OFF",
+            "OS",
+            "OS",
+            "OS",
+            "OS",
+            "OS"
+          ],
+          "off": 2,
+          "paid": 37.5
+        },
+        {
+          "id": "a07",
+          "codes": [
+            "OS",
+            "OFF",
+            "CS",
+            "A",
+            "OFF",
+            "OS",
+            "OS"
+          ],
+          "off": 2,
+          "paid": 30
+        },
+        {
+          "id": "a08",
+          "codes": [
+            "CS",
+            "OFF",
+            "OS",
+            "OS",
+            "CS",
+            "CS",
+            "OFF"
+          ],
+          "off": 2,
+          "paid": 37.5
+        }
+      ]
+    },
+    {
+      "mode": "oneShortStock",
+      "rows": [
+        {
+          "id": "a05",
+          "codes": [
+            "S7",
+            "OFF",
+            "OFF",
+            "S7",
+            "S7",
+            "S7",
+            "S7"
+          ],
+          "off": 2,
+          "paid": 37.5
+        },
+        {
+          "id": "a06",
+          "codes": [
+            "OFF",
+            "OFF",
+            "S7",
+            "S7",
+            "S7",
+            "S7",
+            "S7"
+          ],
+          "off": 2,
+          "paid": 37.5
+        },
+        {
+          "id": "a07",
+          "codes": [
+            "OS",
+            "OFF",
+            "CS",
+            "A",
+            "OFF",
+            "OS",
+            "OS"
+          ],
+          "off": 2,
+          "paid": 32
+        },
+        {
+          "id": "a08",
+          "codes": [
+            "S7",
+            "OFF",
+            "S7",
+            "S7",
+            "S7",
+            "S7",
+            "OFF"
+          ],
+          "off": 2,
+          "paid": 37.5
+        }
+      ]
+    }
+  ],
+  "history-results.json": [
+    {
+      "current": 37.5,
+      "historical": 37.5,
+      "worked": 20,
+      "reference": 9642.857142857141,
+      "used": 9000
+    },
+    {
+      "current": 21,
+      "historical": 37.5,
+      "worked": 20,
+      "reference": 9642.857142857141,
+      "used": 9000
+    }
+  ],
+  "ui": {
+    "views": 40,
+    "errors": [],
+    "overflows": [],
+    "controls": [
+      {
+        "test": "Space toggles to light",
+        "width": 52,
+        "dark": false,
+        "checked": "false",
+        "height": 44,
+        "x": 1356,
+        "y": 10,
+        "right": 1408,
+        "knobTransform": "none",
+        "knobColor": "rgb(213, 180, 109)",
+        "stars": "0",
+        "clouds": "1",
+        "transition": "0.32s, 0.24s",
+        "viewport": 1440,
+        "scroll": 1440,
+        "bodyBg": "rgb(245, 247, 250)",
+        "focus": true
+      },
+      {
+        "test": "Enter toggles to dark",
+        "width": 52,
+        "dark": true,
+        "checked": "true",
+        "height": 44,
+        "x": 1356,
+        "y": 10,
+        "right": 1408,
+        "knobTransform": "matrix(0.906308, -0.422618, 0.422618, 0.906308, 24, 0)",
+        "knobColor": "rgb(230, 233, 238)",
+        "stars": "1",
+        "clouds": "0",
+        "transition": "0.32s, 0.24s",
+        "viewport": 1440,
+        "scroll": 1440,
+        "bodyBg": "rgb(20, 24, 30)",
+        "focus": true
+      },
+      {
+        "test": "reload persists dark",
+        "width": 52,
+        "dark": true,
+        "checked": "true",
+        "height": 44,
+        "x": 1356,
+        "y": 10,
+        "right": 1408,
+        "knobTransform": "matrix(0.906308, -0.422618, 0.422618, 0.906308, 24, 0)",
+        "knobColor": "rgb(230, 233, 238)",
+        "stars": "1",
+        "clouds": "0",
+        "transition": "0.32s, 0.24s",
+        "viewport": 1440,
+        "scroll": 1440,
+        "bodyBg": "rgb(20, 24, 30)",
+        "focus": false
+      },
+      {
+        "test": "Space toggles to light",
+        "width": 52,
+        "dark": false,
+        "checked": "false",
+        "height": 44,
+        "x": 328,
+        "y": 5.5,
+        "right": 380,
+        "knobTransform": "none",
+        "knobColor": "rgb(213, 180, 109)",
+        "stars": "0",
+        "clouds": "1",
+        "transition": "0.32s, 0.24s",
+        "viewport": 390,
+        "scroll": 390,
+        "bodyBg": "rgb(245, 247, 250)",
+        "focus": true
+      },
+      {
+        "test": "Enter toggles to dark",
+        "width": 52,
+        "dark": true,
+        "checked": "true",
+        "height": 44,
+        "x": 328,
+        "y": 5.5,
+        "right": 380,
+        "knobTransform": "matrix(0.906308, -0.422618, 0.422618, 0.906308, 24, 0)",
+        "knobColor": "rgb(230, 233, 238)",
+        "stars": "1",
+        "clouds": "0",
+        "transition": "0.32s, 0.24s",
+        "viewport": 390,
+        "scroll": 390,
+        "bodyBg": "rgb(20, 24, 30)",
+        "focus": true
+      },
+      {
+        "test": "reload persists dark",
+        "width": 52,
+        "dark": true,
+        "checked": "true",
+        "height": 44,
+        "x": 328,
+        "y": 5.5,
+        "right": 380,
+        "knobTransform": "matrix(0.906308, -0.422618, 0.422618, 0.906308, 24, 0)",
+        "knobColor": "rgb(230, 233, 238)",
+        "stars": "1",
+        "clouds": "0",
+        "transition": "0.32s, 0.24s",
+        "viewport": 390,
+        "scroll": 390,
+        "bodyBg": "rgb(20, 24, 30)",
+        "focus": false
+      }
+    ]
+  }
+}
