@@ -1,0 +1,15 @@
+{
+  "multiCountryManager": {
+    "regionHidden": false,
+    "countryHidden": false,
+    "storeHidden": false
+  },
+  "retryAfterRegionError": {
+    "queries": 1,
+    "workspaceStarted": true
+  },
+  "signInNetworkFailure": {
+    "caught": "network failure",
+    "buttonDisabled": true
+  }
+}
