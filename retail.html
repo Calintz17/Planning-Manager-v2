@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.4.0.5</title>
+  <title>CAST v9.4.0.6</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -5660,17 +5660,23 @@ function computeMonthlyPlanOn(opt, ctx) {
   function likes(a, d) { return habits.work(a, d.dow); }
   agents.forEach(function(a) { restMap[a.id] = {}; });
   // Absences and leaves always win
+  // One decision per advisor and day, read by the quotas, the blocking and the display (in that priority):
+  // the manager's cell, then a leave (Calendar), then an absence. kind: 'shift' | 'off' | 'absence' | 'training'.
+  // An absence or a training reduces the days to give; a day off does not; a manager's shift is already given.
+  function dayMarker(a, ds) {
+    var ov = (planningOverrides[a.id] || {})[ds];
+    if (ov) return { kind: ov === 'OFF' ? 'off' : ov === 'A' ? 'absence' : ov === 'OUT' ? 'training' : 'shift' };
+    if (_freeze) return null;
+    var lt = agentOnLeave(a.id, ds);
+    if (lt) return { kind: lt === 'out' ? 'training' : lt === 'off_request' ? 'off' : 'absence' };
+    if ((availability[a.id] || {})[ds] === 'absent') return { kind: 'absence' };
+    return null;
+  }
+  function reducesDays(m) { return !!m && (m.kind === 'absence' || m.kind === 'training'); }
   function isBlocked(a, d) {
     if (d.closure) return true;
-    // A day the manager set as not worked (OFF, absence, training) is never given to the advisor
-    var ovB = (planningOverrides[a.id] || {})[d.ds];
-    if (ovB && !workHoursOf(a, d.ds, { code: ovB })) return true;
-    if (!_freeze) {
-      if (agentOnLeave(a.id, d.ds)) return true;
-      var st = (availability[a.id] && availability[a.id][d.ds]) || null;
-      if (st === 'absent') return true;
-    }
-    return false;
+    var m = dayMarker(a, d.ds);
+    return !!m && m.kind !== 'shift';
   }
   // Preference balance per agent
   var prefDebt = {};
@@ -5688,7 +5694,8 @@ function computeMonthlyPlanOn(opt, ctx) {
     for (var i = 0; i < 7; i++) {
       var dd = new Date(monday); dd.setDate(dd.getDate() + i);
       var ds = toDateStr(dd);
-      if (getDayClosureType(ds) || (!_freeze && (agentOnLeave(a.id, ds) || (availability[a.id] || {})[ds] === 'absent'))) continue;
+      var mk = dayMarker(a, ds);
+      if (getDayClosureType(ds) || (mk && mk.kind !== 'shift')) continue;
       if (dd.getFullYear() === year && dd.getMonth() === monthIdx) { inside++; continue; }
       var res = (planningOverrides[a.id] || {})[ds];
       if (res) res = { code: res };
@@ -5718,9 +5725,7 @@ function computeMonthlyPlanOn(opt, ctx) {
         var dds = toDateStr(dd);
         if (getDayClosureType(dds)) continue;
         openW++;
-        var stAv = (availability[a.id] && availability[a.id][dds]) || null;
-        var ltW = agentOnLeave(a.id, dds);
-        if (!_freeze && ((ltW && ltW !== 'off_request') || stAv === 'absent')) absW++;
+        if (reducesDays(dayMarker(a, dds))) absW++;
       }
       if (isVolant) {
         var target = contractDays(a, wk) - absW;
@@ -5741,10 +5746,7 @@ function computeMonthlyPlanOn(opt, ctx) {
   var restPerMonth = regulations.monthly_rest_days > 0 ? regulations.monthly_rest_days : 0;
   if (restPerMonth) agents.forEach(function(a) {
     if (isFixed(a)) return;
-    var away = monthDays.filter(function(d) {
-      var lt = agentOnLeave(a.id, d.ds);
-      return !d.closure && !_freeze && ((lt && lt !== 'off_request') || (availability[a.id] || {})[d.ds] === 'absent');
-    }).length;
+    var away = monthDays.filter(function(d) { return !d.closure && reducesDays(dayMarker(a, d.ds)); }).length;
     // Share of a full contract over the month, each day with its own hours (a later change never touches this month)
     var share = regulations.weekly_hours > 0 ? monthDays.reduce(function(sum, d) {
       return sum + Math.min(1, contractHours(a, d.ds) / regulations.weekly_hours); }, 0) / Math.max(1, monthDays.length) : 1;
@@ -5768,9 +5770,9 @@ function computeMonthlyPlanOn(opt, ctx) {
   agents.forEach(function(a) { workedInWeek[a.id] = {}; });
   // Worked day for the day limits: OUT counts, weeks across two months included
   function workedOn(a, ds) {
-    if (agentOnLeave(a.id, ds) === 'out') return true;
     var ov = (planningOverrides[a.id] || {})[ds];
-    if (ov) return !!workHoursOf(a, ds, { code: ov });
+    if (ov) return ov === 'OUT' || !!workHoursOf(a, ds, { code: ov });
+    if (agentOnLeave(a.id, ds) === 'out') return true;
     if (assignedMap[ds]) return assignedMap[ds].indexOf(a.id) !== -1;
     var known = (snapPlan[ds] || {})[a.id] || (planSnapshot && planSnapshot.prevPlan && (planSnapshot.prevPlan[ds] || {})[a.id]) || (planSnapshot && planSnapshot.nextPlan && (planSnapshot.nextPlan[ds] || {})[a.id]);
     return !!(known && workHoursOf(a, ds, known));
@@ -7027,6 +7029,7 @@ function computeMonthlyPlanOn(opt, ctx) {
     if (ov) {
       if (ov === 'OFF') return { code: 'OFF', special: 'off' };
       if (ov === 'A')   return { code: 'A',   special: 'leave' };
+      if (ov === 'OUT') return { code: 'OUT', cls: 'sh-out', special: 'out' };
       return automatic.corner ? { code: ov, corner: automatic.corner } : { code: ov };
     }
     var lt = agentOnLeave(agent.id, day.ds);
@@ -8003,7 +8006,7 @@ function printableExport(contentHtml, titleText, fitWidth) {
     '* { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }';
   var stamp = esc(currentStoreName + ' - ' + titleText);
   w.document.write('<!DOCTYPE html><html lang="' + docLang() + '"><head><meta charset="utf-8">' +
-    '<title>' + stamp + '</title>' +
+    '<title>CAST v9.4.0.6</title>' +
     '<style>' + siteCss + '</style><style>' + printCss + '</style></head><body>' +
     '<div class="pdf-head">' + pdfBrandHtml() + '<div style="text-align:right"><div class="pdf-title">' + stamp + '</div>' +
     '<div class="pdf-meta">' + new Date().toLocaleDateString(dLoc()) + '</div></div></div>' +
