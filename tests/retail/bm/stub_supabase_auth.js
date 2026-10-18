@@ -34,6 +34,8 @@
       then: function (ok, err) {
         // A.failOnce = { table: n }: the next n reads of that table fail (network or base error)
         if (!write && A.failOnce && A.failOnce[t] > 0) { A.failOnce[t]--; return Promise.resolve({ data: null, error: { message: 'Failed' } }).then(ok, err); }
+        // A.rejectOnce = { table: n }: the next n reads of that table throw (the network is down)
+        if (!write && A.rejectOnce && A.rejectOnce[t] > 0) { A.rejectOnce[t]--; return Promise.reject(new Error('network down')).then(ok, err); }
         var data = write ? [] : (single ? (rows[0] || null) : rows);
         return Promise.resolve({ data: data, error: null }).then(ok, err);
       }

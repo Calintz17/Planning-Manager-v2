@@ -125,6 +125,17 @@ with sync_playwright() as p:
     pg.fill('#login-email', 'manager.one@test.fr'); pg.fill('#login-pw', 'admin'); pg.click('#login-btn'); pg.wait_for_timeout(900); s = st(pg)
     check('load error: signing in again opens the store', not s['login'] and s['store'] == 'Store One' and not pg.evaluate("document.getElementById('login-btn').disabled"), s['store'])
     check('no JavaScript error (flow 3b)', not errs, errs[:2]); ctx.close()
+    # 3c. Same when the read throws instead of answering an error (Astra 9.5.0.3 audit, B)
+    for tbl in ('retail_regions', 'retail_stores', 'retail_profiles'):
+        ctx = b.new_context(viewport={'width': 1440, 'height': 900})
+        ctx.add_init_script('window.__AUTH = ' + json.dumps({'db': DB, 'accounts': accounts, 'sessionUser': ACC['manager.one@test.fr'], 'rejectOnce': {tbl: 1}}) + ';')
+        pg = ctx.new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+        pg.route('**/*', lambda r: r.fulfill(body=stub, content_type='application/javascript') if 'supabase-js' in r.request.url else (r.continue_() if '127.0.0.1' in r.request.url else r.abort()))
+        pg.goto('http://127.0.0.1:%d/index.html' % port); pg.wait_for_timeout(900); s = st(pg)
+        check('network down on ' + tbl + ': sign in with a message, loader hidden', s['login'] and s['err'] == 'Could not load your account. Try again.' and not pg.evaluate("document.getElementById('loader').classList.contains('active')"), s['err'])
+        pg.fill('#login-email', 'manager.one@test.fr'); pg.fill('#login-pw', 'admin'); pg.click('#login-btn'); pg.wait_for_timeout(900); s = st(pg)
+        check('network down on ' + tbl + ': signing in again opens the store', not s['login'] and s['store'] == 'Store One', s['store'])
+        check('no JavaScript error (network down on ' + tbl + ')', not errs, errs[:2]); ctx.close()
     # 4. Director: region fixed, country and store limited to his region
     ctx, pg, errs = page('director.emea@test.fr'); s = st(pg)
     check('director: no region menu (single region), countries of EMEA only', s['gate'] and not s['region'] and s['country'] and s['countries'] == ['France', 'United Kingdom'], s)

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.5.0.3 TEST</title>
+  <title>CAST v9.5.0.4 TEST</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -14,7 +14,7 @@
   --warn-tx:#61470B; --dang-soft:#F6DDE7; --dang-tx:#82334E; --info-soft:#DBEAFE; --info-tx:#1E407A; --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
   --s6:24px; --sb-w:216px; --content-max:1664px; --day-w:32px; --name-col:184px; --sq-w:26px; --sq-h:25px; --time-w:136px; --num-w:110px; --r-sm:6px;
   --r-md:8px; --r-lg:8px; --r-pill:999px; --sh-1:none; --sh-2:0 8px 30px #192D491C; --nav-active-bg:#183C74; --brand-tx:#183C74; --toast-ok:#215C4B; --toast-err:#AC304B; --accent-strong:#183C74; --ok:#215C4B;
-  --dang:#AC304B; --info:#507BAD;
+  --dang:#AC304B; --info:#507BAD; --absence-bg:#82334E; --absence-fg:#FFFFFF;
   --pl-yellow:#F5EBCB; --pl-yellow-tx:#6B5622; --pl-green:#DCEBDF; --pl-green-tx:#2D5841; --pl-violet:#E4DDF0; --pl-violet-tx:#5C467A; --pl-slate:#E8E9EB; --pl-slate-tx:#4C586A; --pl-work:#EAD8CC; --pl-work-tx:#624638; --bd-pop:#D4DEEB; --bd-modal:#CFDAE8; --bd-tip:#C5D3E4; --bd-tick:#D4DEEA; --bd-row:#E8EDF3; --accent-line:#88A6CE; --wk-line:#536D8E; --bd-manual:#91ACD2; --bd-chip:#FCA5A5; --hover:#F0F4FA; --nav-on:#EAF0FA; --nav-sub-on:#EEF3FB; --row-group:#F2F5F9; --col-hl:#F2F5FA; --col-hl-head:#E3EAF5; --today:#E7EFFC; --tint:#F1F5FB; --seg-bg:#EAF0F6; --manual-bg:#EDF3FC; --closed-bg:#F7F9FC; --shift-bg:#EEF1F5; --grid-q:#EEF2F7; --bar:#DBE6F5; --avatar-bg:#EAF0F8; --avatar-tx:#304D74; --hatch-1:#E9EAEE; --hatch-2:#F3F4F6; --dang-hover:#FECACA; --veil:rgba(255,255,255,.7); }
 @media screen { html[data-theme="dark"] { color-scheme:dark; --bg-app:#14181E; --bg-base:#1B2027; --bg-base-2:#222831; --bg-base-3:#2A313A; --brand:#3D5E80; --brand-hover:#486C8E; --brand-tx:#A7B9CD; --toast-ok:#215C4B; --toast-err:#82334E; --tx-1:#E8E6E1; --tx-2:#B6BCC4; --tx-3:#B6BCC4; --line:#343C46; --line-2:#46515D; --ok-soft:#28382F; --ok-tx:#B5C9BB; --warn-soft:#373128; --warn-tx:#D0C3B1; --dang-soft:#3B2B30; --dang-tx:#D6B6BE; --info-soft:#26323F; --info-tx:#B4C4D6; --sh-2:0 8px 30px #00000059; --nav-active-bg:#3D5E80; --accent-strong:#A7B9CD; --ok:#8FBFA6; --dang:#D69AA8; --info:#93ABC4; --veil:rgba(20,24,30,.7); --pl-yellow:#373128; --pl-yellow-tx:#D0C3B1; --pl-green:#28382F; --pl-green-tx:#B5C9BB; --pl-violet:#342D35; --pl-violet-tx:#C9BAC9; --pl-slate:#2A3038; --pl-slate-tx:#B6BCC4; --pl-work:#3B302A; --pl-work-tx:#D8BFAE; --bd-pop:#343C46; --bd-modal:#343C46; --bd-tip:#46515D; --bd-tick:#2A313A; --bd-row:#262C34; --accent-line:#5A7290; --wk-line:#5A6B7E; --bd-manual:#5A7290; --bd-chip:#6E4652; --hover:#252B33; --nav-on:#293541; --nav-sub-on:#262F3A; --row-group:#20252C; --col-hl:#232A33; --col-hl-head:#2A3440; --today:#293541; --tint:#232A33; --seg-bg:#222831; --manual-bg:#293541; --closed-bg:#171B21; --shift-bg:#262C35; --grid-q:#20262D; --bar:#34414F; --avatar-bg:#2A313A; --avatar-tx:#D2D6DB; --hatch-1:#2A3038; --hatch-2:#22272E; --dang-hover:#4A3038; }
   html[data-theme="dark"] .sb-wordmark, html[data-theme="dark"] .gate-wordmark { filter:brightness(0) invert(.92); } }
@@ -159,7 +159,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .card:last-child { margin-bottom:0; }
 .dash-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; }
 .dash-eyebrow { font-size:12px; color:var(--tx-2); margin-bottom:8px; font-weight:400; }
-.dash-title { font-size:26px; font-weight:700; line-height:1.25; color:var(--tx-1); }
+.dash-title { font-size:26px; font-weight:700; line-height:32px; color:var(--tx-1); }
 .dash-sub { font-size:13px; color:var(--tx-2); margin-top:7px; }
 .dash-grid { display:grid; grid-template-columns:2fr 1fr; gap:18px; align-items:start; }
 .dash-col { display:flex; flex-direction:column; gap:18px; min-width:0; }
@@ -213,7 +213,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .card-sub { font-size:13px; color:var(--tx-2); margin-top:2px; }
 .set-head { align-items:flex-start; margin-bottom:var(--s4); }
 .set-title-row { display:flex; align-items:center; gap:var(--s2); }
-.set-title { font-size:18px; font-weight:700; line-height:1.35; color:var(--tx-1); }
+.set-title, .card-title { font-size:16px; font-weight:700; line-height:24px; color:var(--tx-1); }
 .help-q { width:var(--sq-h); height:var(--sq-h); padding:0; border:1px solid var(--line-2); border-radius:var(--r-pill); background:var(--bg-base); color:var(--tx-2); font-family:var(--font); font-size:12px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:background .15s, color .15s; }
 .help-q:hover { background:var(--brand); color:var(--brand-on); border-color:var(--brand); }
 .help-q.is-hidden { visibility:hidden; }
@@ -385,7 +385,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .cal-bar { position:absolute; left:0; right:0; height:16px; line-height:16px; font-size:11px; font-weight:400; padding:0 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; border-radius:var(--r-sm); }
 .cal-bar .cb-s { display:none; }
 /* Absence types. Absence: dark red with light text, the same in light and dark mode */
-.lv-absence { background:#82334E; color:#FFFFFF; }
+.lv-absence { background:var(--absence-bg); color:var(--absence-fg); }
 .lv-out { background:var(--pl-green); color:var(--pl-green-tx); }
 .lv-off_request { background:var(--pl-slate); color:var(--pl-slate-tx); }
 .lv-leave { background:var(--pl-yellow); color:var(--pl-yellow-tx); }
@@ -477,7 +477,7 @@ input[type=date][data-dp] { display:none; }
 .month-nav { display:inline-flex; align-items:center; gap:2px; }
 .month-lbl { font-size:13px; font-weight:700; color:var(--tx-1); padding:5px 12px; border-radius:var(--r-sm); cursor:pointer; min-width:120px; text-align:center; user-select:none; }
 .month-lbl:hover { background:var(--bg-base-3); }
-.page-title { font-size:26px; font-weight:700; line-height:1.25; color:var(--tx-1); }
+.page-title { font-size:26px; font-weight:700; line-height:32px; color:var(--tx-1); }
 .card > .page-head:first-child { margin-bottom:var(--s4); }
 .agent-row { display:flex; align-items:center; gap:16px; padding:14px 16px; border-bottom:1px solid var(--line); }
 .agent-row:hover { background:var(--bg-base-2); }
@@ -501,7 +501,7 @@ input[type=date][data-dp] { display:none; }
 .modal-overlay.open { display:flex; }
 .modal { background:var(--bg-base); border:1px solid var(--bd-modal); border-radius:10px; width:100%; max-width:460px; box-shadow:0 18px 60px #12263E26; overflow:hidden; display:flex; flex-direction:column; max-height:calc(100dvh - 40px); }
 .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:20px; border-bottom:1px solid var(--line); flex-shrink:0; }
-.modal-title { font-size:18px; font-weight:700; color:var(--tx-1); }
+.modal-title { font-size:18px; font-weight:700; line-height:24px; color:var(--tx-1); }
 .modal-sub { font-size:13px; color:var(--tx-3); margin-top:2px; }
 .modal-body { padding:20px; overflow-y:auto; flex:1 1 auto; min-height:0; }
 .modal-foot { display:flex; align-items:center; gap:8px; padding:16px 20px; background:var(--bg-base-2); border-top:1px solid var(--line); flex-shrink:0; flex-wrap:wrap; }
@@ -632,7 +632,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .breadcrumb { display:flex; align-items:center; gap:9px; font-size:12px; color:var(--tx-2); min-width:0; }
 .breadcrumb .ic { width:12px; height:12px; }
 .breadcrumb b { font-size:12px; color:var(--tx-1); font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.plan-head .set-title { font-size:26px; line-height:1.25; }
+.plan-head .set-title { font-size:26px; line-height:32px; }
 input, select, textarea { border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--bg-base); color:var(--tx-1); font-size:13px; min-height:36px; padding:7px 9px; max-width:100%; }
 input[type=checkbox] { min-height:0; padding:0; }
 textarea { resize:vertical; line-height:1.5; }
@@ -800,8 +800,7 @@ textarea { resize:vertical; line-height:1.5; }
   .lang-picker .ic { display:none; }
   .top-help span { display:none; }
   .card { padding:16px 12px; margin-bottom:14px; }
-  .page-title, .dash-title, .plan-head .set-title { font-size:22px; }
-  .set-title { font-size:16px; }
+  .page-title, .dash-title, .plan-head .set-title { font-size:22px; line-height:28px; }
   .page-head { gap:12px; }
   .btn { min-height:40px; padding:8px 10px; font-size:11px; }
   .btn .ic { width:15px; height:15px; }
@@ -860,7 +859,6 @@ textarea { resize:vertical; line-height:1.5; }
   .modal-body { padding:16px; }
   .modal-foot { padding:14px 18px; }
   .modal-foot .btn { min-height:44px; }
-  .modal-title { font-size:16px; }
   #cell-editor { width:calc(100vw - 16px); padding:12px; }
   .ce-opt { min-height:44px; padding:6px; gap:6px; }
   .ce-lbl { font-size:10px; }
@@ -908,6 +906,8 @@ textarea { resize:vertical; line-height:1.5; }
   .gate-wordmark { height:36px; }
   .gate-sub { margin-bottom:var(--s5); }
 }
+/* Very narrow phones: the page name stays in the page title, the top bar keeps its buttons */
+@media (max-width:360px) { .breadcrumb { display:none; } }
 /* Phones and tablets: 16px fields so iOS does not zoom in, and 44px touch targets */
 @media (max-width:600px), (pointer:coarse) {
   #login-gate input, #store-gate select, #pw-editor input { font-size:16px; min-height:44px; }
@@ -922,9 +922,13 @@ textarea { resize:vertical; line-height:1.5; }
   .tsw-track { top:8px; }
   .corner-tab { height:40px; }
   .cal-agent-item { display:flex; align-items:center; min-height:44px; }
+  .cal-nav { display:flex; width:100%; min-width:0; }
+  .cal-month-label { flex:1; min-width:0; }
+  .cal-nav-btn { flex:0 0 44px; }
   .help-q { position:relative; }
   .help-q::after { content:""; position:absolute; inset:-8px; }
   .fld-ro { min-height:44px; font-size:16px; line-height:26px; }
+  .modal-overlay input:not([type=checkbox]):not([type=radio]), .modal-overlay select, .modal-overlay textarea { font-size:16px; }
 }
 @media print {
   body { --name-col:184px; background:#fff; font-size:11px; }
@@ -1749,17 +1753,17 @@ async function startWorkspace() {
   if (workspaceStarted) return;
   workspaceStarted = true;
   showLoader();
-  const { data, error } = await sb.from('retail_regions').select('*').order('name');
+  const { data, error } = await safeRead(sb.from('retail_regions').select('*').order('name'));
   hideLoader();
-  if (error) { workspaceStarted = false; refuseAccount('Could not load your account. Try again.'); return; }
+  if (error) { workspaceStarted = false; await refuseAccount('Could not load your account. Try again.'); return; }
   myRegions = data || [];
-  if (!myRegions.length && me.role !== 'admin') { workspaceStarted = false; refuseAccount('No store is linked to your account. Contact your administrator.'); return; }
+  if (!myRegions.length && me.role !== 'admin') { workspaceStarted = false; await refuseAccount('No store is linked to your account. Contact your administrator.'); return; }
   document.getElementById('region-select').onchange = onRegionChange;
   document.getElementById('country-select').onchange = onCountryChange;
   document.getElementById('store-select').onchange = onStoreChange;
   // A manager sees one flat list of his stores, whatever their country: no region or country menu
   if (me.role === 'manager') {
-    if (!(await loadManagerStores())) { workspaceStarted = false; refuseAccount('Could not load your account. Try again.'); return; }
+    if (!(await loadManagerStores())) { workspaceStarted = false; await refuseAccount('Could not load your account. Try again.'); return; }
     if (await restoreScope()) return;
     if (stores.length === 1) {
       document.getElementById('store-select').value = stores[0].id;
@@ -1789,8 +1793,8 @@ async function startWorkspace() {
 }
 // Manager: all his stores in one menu. The store's country and region are set when it is chosen.
 async function loadManagerStores() {
-  var c = await sb.from('retail_countries').select('*');
-  var st = await sb.from('retail_stores').select('*');
+  var c = await safeRead(sb.from('retail_countries').select('*'));
+  var st = await safeRead(sb.from('retail_stores').select('*'));
   if (c.error || st.error) return false;
   countries = c.data || [];
   stores = (st.data || []).filter(function(x) { return x.is_active !== false; });
@@ -1836,14 +1840,16 @@ async function signIn() {
 }
 async function refuseAccount(msg) {
   me = null;
-  await sb.auth.signOut();
+  try { await sb.auth.signOut(); } catch (e) {}
   showLogin(msg);
   return false;
 }
+// A read of the base: a network failure (thrown) comes back as an error, like a refused read
+async function safeRead(q) { try { return await q; } catch (e) { return { data: null, error: e }; } }
 // Reads the profile of the signed-in account. Its regions, countries and stores come from the base, which only
 // sends the account's own places.
 async function loadMe(user) {
-  var p = await sb.from('retail_profiles').select('*').eq('user_id', user.id).maybeSingle();
+  var p = await safeRead(sb.from('retail_profiles').select('*').eq('user_id', user.id).maybeSingle());
   if (p.error) return refuseAccount('Could not load your account. Try again.');
   if (!p.data || p.data.active === false) return refuseAccount('Your account is not active. Contact your administrator.');
   me = { id: user.id, email: p.data.email || user.email || '', name: p.data.full_name || '', role: p.data.role,
@@ -4029,7 +4035,7 @@ async function renderTraffic(localeOnly) {
   var tr = computeTrend(year);
   html += '<div class="card" onchange="saveMonthlyTraffic(event)">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<h2 class="page-title">' + t('Monthly traffic') + ' ' + year + '</h2>';
+  html +=     '<h2 class="card-title">' + t('Monthly traffic') + ' ' + year + '</h2>';
   html +=   '</div>';
   if (tr.n > 0) {
     var sign = tr.pct >= 0 ? '+' : '';
@@ -4085,7 +4091,7 @@ async function renderTraffic(localeOnly) {
   var keys   = Object.keys(spread).sort();
   html += '<div class="card" onchange="saveDailyTraffic()">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<div><h2 class="page-title">' + t('Daily breakdown') + ' - ' + mName + '</h2>';
+  html +=     '<div><h2 class="card-title">' + t('Daily breakdown') + ' - ' + mName + '</h2>';
   html +=     '<div class="card-sub">Computed from the monthly total. ' +
               'Edit any day to override it - the rest adjusts around it.</div></div>';
   html +=     '<div style="display:flex;gap:var(--s3)">';
@@ -4122,7 +4128,7 @@ async function renderTraffic(localeOnly) {
   // Card 3: hourly traffic curve
   html += '<div class="card">';
   html +=   '<div class="page-head" style="margin-bottom:var(--s3)">';
-  html +=     '<div><h2 class="page-title">Hourly traffic curve</h2>';
+  html +=     '<div><h2 class="card-title">Hourly traffic curve</h2>';
   html +=     '<div class="card-sub">' + t('Drag any point to reshape the day. The rest adjusts to keep the total at 100%.') + '</div></div>';
   html +=     '<div style="display:flex;gap:var(--s3)">';
   html +=       '<button class="btn btn-ghost btn-sm" onclick="resetHourlyCurve()">Reset curve</button>';
@@ -7664,7 +7670,9 @@ function monthlyInputs() {
   };
 }
 function useMonthlyInputs(v) {
-  currentStoreId = v.currentStoreId; currentStoreName = v.currentStoreName; monthlyRef = v.monthlyRef;
+  var m = typeof v.monthlyRef === 'string' ? v.monthlyRef.split('-') : null;
+  currentStoreId = v.currentStoreId; currentStoreName = v.currentStoreName;
+  monthlyRef = m ? new Date(+m[0], +m[1] - 1, +m[2]) : v.monthlyRef;
   currentCornerView = v.currentCornerView; CURRENT_LANG = v.CURRENT_LANG; manualMode = v.manualMode;
   forceRecalc = v.forceRecalc; agents = v.agents; agentPrefs = v.agentPrefs; agentLeaves = v.agentLeaves;
   planningOverrides = v.planningOverrides; cornerOverrides = v.cornerOverrides;
@@ -7680,10 +7688,14 @@ function copyMonthlyValue(v) {
   var o = {}; Object.keys(v).forEach(function(k) { o[k] = copyMonthlyValue(v[k]); });
   return o;
 }
-function monthlyFingerprint(inputs, today) { return JSON.stringify([today, inputs]); }
+// Same text for the same inputs, whether the month is a Date (live) or its text (context)
+function monthlyFingerprint(inputs, today) {
+  return JSON.stringify([today, inputs], function(k, v) { return k === 'monthlyRef' && this[k] instanceof Date ? toDateStr(this[k]) : v; });
+}
 function buildMonthlyContext(change) {
   var inputs = copyMonthlyValue(monthlyInputs()), today = toDateStr(new Date());
   if (change) change(inputs);
+  if (inputs.monthlyRef instanceof Date) inputs.monthlyRef = toDateStr(inputs.monthlyRef);
   return Object.freeze({ inputs: freezeMonthlyValue(inputs), today: today, fingerprint: monthlyFingerprint(inputs, today) });
 }
 // Final check of any plan (computed, saved or sent) with the inputs it was made with, away from the screen:
