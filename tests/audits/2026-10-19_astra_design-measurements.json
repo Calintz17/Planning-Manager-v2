@@ -1,0 +1,238 @@
+{
+  "version": "9.5.0.3",
+  "data": "fictional local accounts; Firefox headless; external services blocked",
+  "states": 136,
+  "validPopupGeometryChecks": 76,
+  "popupOutside": [],
+  "headingsDesktop": {
+    "dashboard": [
+      {
+        "text": "This week at a glance",
+        "class": "dash-title",
+        "font": "26px",
+        "line": "32.5px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Highlights & reminders",
+        "class": "dash-card-label",
+        "font": "16px",
+        "line": "24px",
+        "weight": "700",
+        "mb": "16px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Planning events - November 2026",
+        "class": "dash-card-label",
+        "font": "16px",
+        "line": "24px",
+        "weight": "700",
+        "mb": "16px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "My store at a glance",
+        "class": "dash-card-label",
+        "font": "16px",
+        "line": "24px",
+        "weight": "700",
+        "mb": "16px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Absences this week",
+        "class": "dash-card-label",
+        "font": "16px",
+        "line": "24px",
+        "weight": "700",
+        "mb": "16px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Public holidays",
+        "class": "dash-card-label",
+        "font": "16px",
+        "line": "24px",
+        "weight": "700",
+        "mb": "16px",
+        "color": "rgb(23, 40, 62)"
+      }
+    ],
+    "monthly": [
+      {
+        "text": "Monthly planning",
+        "class": "set-title",
+        "font": "26px",
+        "line": "32.5px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      }
+    ],
+    "settings": [
+      {
+        "text": "Settings",
+        "class": "page-title",
+        "font": "26px",
+        "line": "32.5px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Operating hours",
+        "class": "set-title",
+        "font": "18px",
+        "line": "24.3px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Corners",
+        "class": "set-title",
+        "font": "18px",
+        "line": "24.3px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      }
+    ],
+    "traffic": [
+      {
+        "text": "Traffic",
+        "class": "page-title",
+        "font": "26px",
+        "line": "32.5px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Monthly traffic 2026",
+        "class": "page-title",
+        "font": "26px",
+        "line": "32.5px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Daily breakdown - October",
+        "class": "page-title",
+        "font": "26px",
+        "line": "32.5px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      },
+      {
+        "text": "Hourly traffic curve",
+        "class": "page-title",
+        "font": "26px",
+        "line": "32.5px",
+        "weight": "700",
+        "mb": "0px",
+        "color": "rgb(23, 40, 62)"
+      }
+    ]
+  },
+  "smallEditableFieldsAt390": {
+    "agent": [
+      {
+        "tag": "INPUT",
+        "id": "ae-first",
+        "cls": "",
+        "font": 13,
+        "w": 336,
+        "h": 44
+      },
+      {
+        "tag": "INPUT",
+        "id": "ae-last",
+        "cls": "",
+        "font": 13,
+        "w": 336,
+        "h": 44
+      },
+      {
+        "tag": "INPUT",
+        "id": "ae-hours",
+        "cls": "",
+        "font": 13,
+        "w": 336,
+        "h": 44
+      }
+    ],
+    "parttime": [
+      {
+        "tag": "INPUT",
+        "id": "ae-first",
+        "cls": "",
+        "font": 13,
+        "w": 336,
+        "h": 44
+      },
+      {
+        "tag": "INPUT",
+        "id": "ae-last",
+        "cls": "",
+        "font": 13,
+        "w": 336,
+        "h": 44
+      },
+      {
+        "tag": "INPUT",
+        "id": "ae-hours",
+        "cls": "",
+        "font": 13,
+        "w": 336,
+        "h": 44
+      }
+    ],
+    "event": [
+      {
+        "tag": "TEXTAREA",
+        "id": "evt-label-input",
+        "cls": "evt-text",
+        "font": 13,
+        "w": 336,
+        "h": 77
+      }
+    ],
+    "shift": [
+      {
+        "tag": "INPUT",
+        "id": "sc-code",
+        "cls": "",
+        "font": 13,
+        "w": 336,
+        "h": 44
+      }
+    ]
+  },
+  "labelGaps": {
+    "fld": 5,
+    "hl-field": 4,
+    "leave-label": 4
+  },
+  "dialogLineHeights": {
+    "modal-title": 27,
+    "help-modal .modal-title.set-title": 24.3
+  },
+  "contrastPairs": {
+    "darkPrimary": 13.13,
+    "darkSecondary": 8.56,
+    "whiteOnAbsence": 8.29,
+    "darkControlBorder": 2.02
+  },
+  "escapeClosesShiftModal": false,
+  "limits": [
+    "No Safari or physical iPhone keyboard test",
+    "Date popup four geometries tested separately after harness reset fix",
+    "No claim of accessibility certification or exhaustive contrast coverage"
+  ]
+}
