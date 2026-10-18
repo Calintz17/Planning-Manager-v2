@@ -1,4 +1,0 @@
-const {context}=require('../review_9362/runner.cjs'),vm=require('vm'),fs=require('fs');let out=[];
-for(const mode of ['original','allStock7h30','oneShortStock']){let c=context('CAST_v9_4_0_1_RETAIL_TEST.html');let mod=mode==='allStock7h30'?`RETAIL_SHIFTS.stock.forEach(s=>s.endMin-=30);`:mode==='oneShortStock'?`RETAIL_SHIFTS.stock.push({code:'S7',startMin:600,endMin:1110,tone:'mid',label:'S7'});`:'';
-vm.runInContext(mod,c);let r=JSON.parse(vm.runInContext(`JSON.stringify((()=>{const p=pickMonthlyPlan();return agents.filter(a=>poolOf(a)==='stock').map(a=>{let codes=[],paid=0;for(let d=2;d<=8;d++){let ds='2026-11-'+String(d).padStart(2,'0'),r=p.cells[ds][a.id];codes.push(r.code);let h=ruleHours(a,ds,r);paid+=h?h.paid:0;}return {id:a.id,codes,off:codes.filter(x=>x==='OFF').length,paid:paid/60};});})())`,c,{timeout:180000}));out.push({mode,rows:r});}
-fs.writeFileSync(__dirname+'/stock-probe-results.json',JSON.stringify(out,null,2));console.log(out);
