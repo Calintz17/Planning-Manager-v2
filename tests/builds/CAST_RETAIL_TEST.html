@@ -1385,7 +1385,6 @@ function applyLang(lang) {
   CURRENT_LANG = lang;
   try { localStorage.setItem('cora_lang', lang); } catch(e) {}
   document.documentElement.setAttribute('lang', docLang());
-  var d = I18N[lang] || null;
   if (typeof currentStoreId !== 'undefined' && currentStoreId) {
     if (typeof renderMonthlyPlanning === 'function') renderMonthlyPlanning();
     if (typeof renderDashboard === 'function') renderDashboard();
@@ -1419,31 +1418,7 @@ function applyLang(lang) {
       category: t(category.charAt(0).toUpperCase() + category.slice(1))
     });
   }
-  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-  var nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(function(node) {
-    var p = node.parentNode; if (!p) return;
-    if (p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE' || (p.closest && p.closest('[data-no-i18n]'))) return;
-    var trimmed = (node.nodeValue || '').trim();
-    if (!trimmed) return;
-    if (node.__en == null) node.__en = enOf(trimmed);
-    var en = node.__en;
-    var lead = node.nodeValue.match(/^\s*/)[0];
-    var tail = node.nodeValue.match(/\s*$/)[0];
-    if (lang === 'en') { node.nodeValue = lead + en + tail; return; }
-    if (d && d[en]) node.nodeValue = lead + d[en] + tail;
-  });
-  ['placeholder','title','aria-label'].forEach(function(attr) {
-    document.querySelectorAll('['+attr+']').forEach(function(el) {
-      if (el.closest && el.closest('[data-no-i18n]')) return;
-      var ck = '__en_'+attr;
-      if (el[ck] == null) el[ck] = enOf(el.getAttribute(attr));
-      var en = el[ck];
-      if (lang === 'en') { el.setAttribute(attr, en); return; }
-      if (d && d[en]) el.setAttribute(attr, d[en]);
-    });
-  });
+  translateDom(lang);
   var cur = document.getElementById('lang-current');
   if (cur) cur.textContent = (LANGS[lang] || LANGS.en).label;
 }
@@ -1558,33 +1533,7 @@ let agentLeaves       = [];
 let calMonth          = new Date();
 let currentCalView    = 'annual';
 let agents            = [];
-let regulations = {
-  saturday_rest:   true,
-  sunday_rest:     true,
-  weekly_hours:    40,
-  max_daily_hours: 8.5,
-  max_days: 5,
-  monthly_rest_days: 0,
-  traffic_follow_pct: 100,
-  rest_gap_hours: 11,
-  trend_pct:       0,
-  aht_tasks: {
-    FRAUD:        10,
-    CALL:         10,
-    CHAT:         8,
-    MAIL:         5,
-    CLIENTELING:  15,
-    'BACK-OFFICE': 10,
-  },
-  breaks: [
-    { name: 'Lunch', duration: 60, window_start: 12, window_end: 14 },
-    { name: 'Break', duration: 15, window_start: 11, window_end: 12 },
-    { name: 'Break', duration: 15, window_start: 14, window_end: 17 },
-  ],
-  closed_dates:    [],
-  public_holidays: [],
-  day_hours:       buildDefaultDayHours(10, 18),
-};
+let regulations = defaultRegulations({ open: 10, close: 18, saturday_rest: true, sunday_rest: true, weekly_hours: 40 });
 // Date helpers
 function getMondayOfCurrentWeek() {
   const today = new Date();
@@ -1682,8 +1631,10 @@ function enOf(s) {
   if (!I18N_REV) { I18N_REV = {}; Object.keys(I18N).forEach(function(l) { Object.keys(I18N[l]).forEach(function(k) { if (!(I18N[l][k] in I18N_REV)) I18N_REV[I18N[l][k]] = k; }); }); }
   return I18N_REV[s] || s;
 }
-function retranslate() {
-  var d = I18N[CURRENT_LANG]; if (!d) return;
+function retranslate() { if (I18N[CURRENT_LANG]) translateDom(CURRENT_LANG); }
+// Every text and label of the page in one language; English gives back the original words
+function translateDom(lang) {
+  var d = I18N[lang] || null;
   var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
   var nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach(function(node) {
@@ -1693,14 +1644,17 @@ function retranslate() {
     if (node.__en == null) node.__en = enOf(trimmed);
     var en = node.__en;
     var lead = node.nodeValue.match(/^\s*/)[0], tail = node.nodeValue.match(/\s*$/)[0];
-    if (d[en]) node.nodeValue = lead + d[en] + tail;
+    if (lang === 'en') node.nodeValue = lead + en + tail;
+    else if (d && d[en]) node.nodeValue = lead + d[en] + tail;
   });
   ['placeholder','title','aria-label'].forEach(function(attr) {
     document.querySelectorAll('['+attr+']').forEach(function(el) {
       if (el.closest && el.closest('[data-no-i18n]')) return;
       var ck = '__en_'+attr;
       if (el[ck] == null) el[ck] = enOf(el.getAttribute(attr));
-      if (d[el[ck]]) el.setAttribute(attr, d[el[ck]]);
+      var en = el[ck];
+      if (lang === 'en') el.setAttribute(attr, en);
+      else if (d && d[en]) el.setAttribute(attr, d[en]);
     });
   });
 }
@@ -2176,15 +2130,9 @@ async function onStoreChange() {
   if (CURRENT_LANG !== 'en') retranslate();
 }
 // Load settings
-async function loadRegulations() {
-  var sid = currentStoreId;
-  const { data, error } = await sb
-    .from('retail_regulations').select('*')
-    .eq('store_id', currentStoreId);
-  if (sid !== currentStoreId) return;
-  if (error) { showToast('Error loading regulations', 'error'); return; }
-  const def = REGION_DEFAULTS[currentRegionCity] || REGION_DEFAULTS['Paris'];
-  regulations = {
+// Labor rules of a store before its own saved rules are read: the region's hours and rest days, standard limits
+function defaultRegulations(def) {
+  return {
     saturday_rest:   def.saturday_rest,
     sunday_rest:     def.sunday_rest,
     weekly_hours:    def.weekly_hours,
@@ -2196,10 +2144,6 @@ async function loadRegulations() {
     traffic_follow_pct: 100,
     learning_references: [],
     rest_gap_hours: 11,
-    trend_pct:       0,
-    aht_tasks: {
-      FRAUD: 10, CALL: 10, CHAT: 8, MAIL: 5, CLIENTELING: 15, 'BACK-OFFICE': 10,
-    },
     breaks: [
       { name: 'Lunch', duration: 60, window_start: 12, window_end: 14 },
       { name: 'Break', duration: 15, window_start: 11, window_end: 12 },
@@ -2209,6 +2153,16 @@ async function loadRegulations() {
     public_holidays: [],
     day_hours:       buildDefaultDayHours(def.open, def.close),
   };
+}
+async function loadRegulations() {
+  var sid = currentStoreId;
+  const { data, error } = await sb
+    .from('retail_regulations').select('*')
+    .eq('store_id', currentStoreId);
+  if (sid !== currentStoreId) return;
+  if (error) { showToast('Error loading regulations', 'error'); return; }
+  const def = REGION_DEFAULTS[currentRegionCity] || REGION_DEFAULTS['Paris'];
+  regulations = defaultRegulations(def);
   (data || []).forEach(function(row) {
     switch (row.rule_key) {
       case 'saturday_rest':   regulations.saturday_rest = row.rule_value === 'true'; break;
@@ -2224,10 +2178,6 @@ async function loadRegulations() {
       case 'traffic_follow_pct': { var vTF = parseInt(row.rule_value, 10); regulations.traffic_follow_pct = isNaN(vTF) ? 100 : Math.max(0, Math.min(100, vTF)); break; }
       case 'monthly_rest_days': { var vMR = parseInt(row.rule_value, 10); regulations.monthly_rest_days = isNaN(vMR) || vMR < 0 ? 0 : vMR; break; }
       case 'rest_gap_hours':  { var vRGH = parseFloat(row.rule_value); regulations.rest_gap_hours = isNaN(vRGH) ? 11 : vRGH; break; }
-      case 'trend_pct':       regulations.trend_pct     = parseFloat(row.rule_value) || 0; break;
-      case 'aht_tasks':
-        try { regulations.aht_tasks = JSON.parse(row.rule_value); } catch(e) {}
-        break;
       case 'breaks':
         try { regulations.breaks = JSON.parse(row.rule_value); } catch(e) {}
         break;
@@ -2245,22 +2195,11 @@ async function loadRegulations() {
   if (!data || data.length === 0) await seedRegulations();
   if (sid !== currentStoreId) return;
 }
+// First opening of a store: its region's rules are saved. The day limits stay unset, so they follow Max working days.
 async function seedRegulations() {
-  const rows = [
-    { store_id: currentStoreId, rule_key: 'saturday_rest',   rule_value: String(regulations.saturday_rest) },
-    { store_id: currentStoreId, rule_key: 'sunday_rest',     rule_value: String(regulations.sunday_rest) },
-    { store_id: currentStoreId, rule_key: 'weekly_hours',    rule_value: String(regulations.weekly_hours) },
-    { store_id: currentStoreId, rule_key: 'trend_pct',       rule_value: '0' },
-    { store_id: currentStoreId, rule_key: 'aht_tasks',       rule_value: JSON.stringify(regulations.aht_tasks) },
-    { store_id: currentStoreId, rule_key: 'breaks',          rule_value: JSON.stringify(regulations.breaks) },
-    { store_id: currentStoreId, rule_key: 'closed_dates',    rule_value: '[]' },
-    { store_id: currentStoreId, rule_key: 'public_holidays', rule_value: '[]' },
-    { store_id: currentStoreId, rule_key: 'day_hours',       rule_value: JSON.stringify(regulations.day_hours) },
-  ];
-  rows.forEach(function(r) {
-    if (r.rule_value === undefined || r.rule_value === null) r.rule_value = '';
-  });
-  await sb.from('retail_regulations').upsert(rows, { onConflict: 'store_id,rule_key' });
+  var keep = ['saturday_rest', 'sunday_rest', 'weekly_hours', 'breaks', 'closed_dates', 'public_holidays', 'day_hours'];
+  await sb.from('retail_regulations').upsert(regulationRows(currentStoreId).filter(function(r) { return keep.indexOf(r.rule_key) !== -1; }),
+    { onConflict: 'store_id,rule_key' });
 }
 var BREAK_COLORS = ['yellow', 'blue', 'pink', 'green', 'violet', 'teal', 'slate'];
 var BREAK_PICKER_COLORS = ['yellow','teal','blue','violet','pink','slate'];
@@ -2473,7 +2412,6 @@ function regulationRows(storeId) {
     ['weekly_hours', String(r.weekly_hours)], ['max_daily_hours', String(r.max_daily_hours)],
     ['max_days', String(r.max_days || 5)], ['max_consecutive_days', String(dayLimits().row)], ['max_days_2weeks', String(dayLimits().twoWeeks)], ['monthly_rest_days', String(r.monthly_rest_days || 0)], ['traffic_follow_pct', String(r.traffic_follow_pct != null ? r.traffic_follow_pct : 100)], ['learning_references', JSON.stringify(r.learning_references || [])],
     ['rest_gap_hours', String(r.rest_gap_hours != null ? r.rest_gap_hours : 11)],
-    ['trend_pct', String(r.trend_pct)], ['aht_tasks', JSON.stringify(r.aht_tasks)],
     ['breaks', JSON.stringify(r.breaks)], ['closed_dates', JSON.stringify(r.closed_dates)],
     ['public_holidays', JSON.stringify(r.public_holidays)], ['day_hours', JSON.stringify(r.day_hours)]
   ].map(function(kv) {
@@ -3726,11 +3664,11 @@ function accountDay(a, ds, res) {
 function monthHoursUsed(a, cells, dsList, outside) {
   var inList = {}, weeks = {}, tot = 0;
   dsList.forEach(function(ds) { inList[ds] = true; });
-  dsList.forEach(function(ds) { var x = new Date(ds + 'T12:00:00'), wd = x.getDay(); x.setDate(x.getDate() - (wd === 0 ? 6 : wd - 1)); weeks[toDateStr(x)] = true; });
+  dsList.forEach(function(ds) { weeks[weekKey(ds + 'T12:00:00')] = true; });
   Object.keys(weeks).forEach(function(wk) {
     var acc = [];
     for (var i = 0; i < 7; i++) {
-      var x = new Date(wk + 'T12:00:00'); x.setDate(x.getDate() + i); var ds = toDateStr(x);
+      var ds = shiftDay(wk, i);
       var r = inList[ds] ? (cells[ds] || {})[a.id] : (outside ? outside(a, ds) : null);
       acc.push({ ds: ds, day: accountDay(a, ds, r || null) });
     }
@@ -4620,14 +4558,20 @@ function renderIntraday(ds) {
     j.manual = ov != null;
     if (j.manual) j.st = ov;
   });
-  function planScore() {
-    var away = {}, unplaced = 0, empty = 0, over = 0, pressure = 0;
+  // Quarters each advisor is away (breaks placed by hand, then the placed jobs)
+  function awayNow() {
+    var away = {};
     Object.keys(manualBreakAway).forEach(function(aid) { away[aid] = Object.assign({}, manualBreakAway[aid]); });
     jobs.forEach(function(j) {
-      if (j.st == null) { unplaced++; return; }
+      if (j.st == null) return;
       var arr = away[j.a.id] = away[j.a.id] || {};
       for (var i = Math.max(0, Math.floor((j.st - q0) / Q + 1e-9)); i < nQ && q0 + i * Q < j.st + j.dur - 1e-9; i++) arr[i] = true;
     });
+    return away;
+  }
+  function planScore() {
+    var away = awayNow(), empty = 0, over = 0, pressure = 0;
+    var unplaced = jobs.filter(function(j) { return j.st == null; }).length;
     for (var i = 0; i < nQ; i++) {
       var serving = 0;
       for (var s = 0; s < siloKeys.length; s++) {
@@ -4647,19 +4591,21 @@ function renderIntraday(ds) {
     }
     return [unplaced, empty, over, Math.round(pressure * 1e6) / 1e6];
   }
-  function fits(j, st) {
+  // A break fits at st: no overlap with the advisor's own blocks, nor (when the managers' lunches are kept apart) with
+  // another manager's lunch. strict: every manager lunch counts (edge pass); otherwise only manual ones, unless relaxed.
+  function fits(j, st, strict) {
     function overlaps(start, dur) {
       return st < start + dur - 1e-9 && st + j.dur > start + 1e-9;
     }
     if ((manualBusy[j.a.id] || []).some(function(b) { return overlaps(b[0], b[1] - b[0]); })) return false;
-    var isManagerLunch = breaks[j.bi] === lunch && poolOf(j.a) === 'mgmt';
+    var isManagerLunch = breaks[j.bi] === lunch && poolOf(j.a) === 'mgmt', apart = isManagerLunch && (strict || !relaxMgrLunch);
     for (var k = 0; k < jobs.length; k++) {
       var o = jobs[k];
       if (o === j || o.st == null) continue;
-      if ((o.a === j.a || (isManagerLunch && !relaxMgrLunch && breaks[o.bi] === lunch && poolOf(o.a) === 'mgmt' && (j.manual || o.manual))) &&
+      if ((o.a === j.a || (apart && breaks[o.bi] === lunch && poolOf(o.a) === 'mgmt' && (strict || j.manual || o.manual))) &&
           overlaps(o.st, o.dur)) return false;
     }
-    if (isManagerLunch && !relaxMgrLunch && working.some(function(a) {
+    if (apart && working.some(function(a) {
       return a !== j.a && poolOf(a) === 'mgmt' && (addedMissions[a.id] || []).some(function(m) {
         return m.type === 'brk:' + lunch.name && overlaps(m.start, missionDurH(m));
       });
@@ -4765,13 +4711,7 @@ function renderIntraday(ds) {
            intersects(Math.max(openH, closeH - 1), closeH);
   }
   function edgeEmpty() {
-    var away = {}, n = 0;
-    Object.keys(manualBreakAway).forEach(function(aid) { away[aid] = Object.assign({}, manualBreakAway[aid]); });
-    jobs.forEach(function(j) {
-      if (j.st == null) return;
-      var arr = away[j.a.id] = away[j.a.id] || {};
-      for (var i = Math.max(0, Math.floor((j.st - q0) / Q + 1e-9)); i < nQ && q0 + i * Q < j.st + j.dur - 1e-9; i++) arr[i] = true;
-    });
+    var away = awayNow(), n = 0;
     for (var i = 0; i < nQ; i++) {
       if (!edgeQuarter(i)) continue;
       siloKeys.forEach(function(k) {
@@ -4787,25 +4727,6 @@ function renderIntraday(ds) {
     }
     return n;
   }
-  function edgeFits(j, st) {
-    function overlaps(start, dur) {
-      return st < start + dur - 1e-9 && st + j.dur > start + 1e-9;
-    }
-    if ((manualBusy[j.a.id] || []).some(function(b) { return overlaps(b[0], b[1] - b[0]); })) return false;
-    var isManagerLunch = breaks[j.bi] === lunch && poolOf(j.a) === 'mgmt';
-    for (var k = 0; k < jobs.length; k++) {
-      var o = jobs[k];
-      if (o === j || o.st == null) continue;
-      if ((o.a === j.a || (isManagerLunch && breaks[o.bi] === lunch && poolOf(o.a) === 'mgmt')) &&
-          overlaps(o.st, o.dur)) return false;
-    }
-    if (isManagerLunch && working.some(function(a) {
-      return a !== j.a && poolOf(a) === 'mgmt' && (addedMissions[a.id] || []).some(function(m) {
-        return m.type === 'brk:' + lunch.name && overlaps(m.start, missionDurH(m));
-      });
-    })) return false;
-    return true;
-  }
   jobs.forEach(function(j) {
     if (j.st == null || edgeOverride(j) != null) return;
     var base = edgeEmpty();
@@ -4818,7 +4739,7 @@ function renderIntraday(ds) {
     // Automatic breaks stay inside their window: the Settings limit CAST, not the manager
     var found = null;
     j.starts.forEach(function(st) {
-      if (!edgeFits(j, st)) return;
+      if (!fits(j, st, true)) return;
       j.st = st;
       var sc = [edgeEmpty(), Math.abs(st - keep)];
       if (!found || lexLess(sc, found.sc)) found = { st: st, sc: sc };
@@ -5836,71 +5757,996 @@ var NO_HABITS = { days: 0, work: function() { return 0; }, shift: function() { r
 // Monthly in two parts. computeMonthlyPlan(opt) builds a full plan in memory, runs the final check once on it and
 // returns { issues, habitsDays, fixedIssues, cells, paint }: no screen change and no save. paint() shows and saves it.
 // renderMonthlyPlanning() picks the plan (with learned choices unless they break a mandatory rule) and paints it.
+// Monthly engine, in parts. Each part reads mp, the month state that computeMonthlyPlanOn fills as it goes: the month,
+// its days, the days given to each advisor, the shifts placed, the hours of each week and the rows of the plan.
+// A day already known: the saved planning of the month, then the month before or after
+function knownRes(mp, a, ds) { return (mp.snapPlan[ds] || {})[a.id] || neighbourRes(a, ds); }
+// Shown result of one agent on one day
+function shownRes(mp, a, ds) {
+  var ov = (planningOverrides[a.id] || {})[ds];
+  if (ov) return { code: ov };
+  var saved = (mp.snapPlan[ds] || {})[a.id];
+  if (saved && (!mp.recalcFromToday || ds < mp.todayDs)) return saved;
+  var pc = (mp.shiftPlanByDay[ds] || {})[a.id];
+  if (pc) return { code: pc, half: mp.volantHalfDay && (mp.volantHalfDay[a.id] || {})[ds] };
+  return neighbourRes(a, ds);
+}
+// The daily rest with the day before is kept
+function restAllows(mp, a, ds, code) {
+  var prevDs = shiftDay(ds, -1);
+  var pres = fixedRes(a, prevDs) || shownRes(mp, a, prevDs);
+  var ph = ruleHours(a, prevDs, pres);
+  var th = workHoursOf(a, ds, { code: code });
+  return !ph || !th || (1440 + th.start - ph.end) >= mp.restGapMin;
+}
+function medianPaid(mp, a) {
+  var grid = RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [];
+  var lens = grid.map(function(s) { return s.endMin - s.startMin; }).sort(function(x, y) { return x - y; });
+  return (lens.length ? lens[Math.floor((lens.length - 1) / 2)] : 0) - mp.unpaidMin;
+}
+// Days a week the contract hours allow (whole days), and the same with the fraction (flexible part-time half days)
+// Most days a week the contract allows: as many days as the shortest shift of the catalogue fits in the weekly
+// hours (fitsWeek then picks shifts that keep the hours). With a 7 h 30 shift, 37 h 30 gives 5 days even when the
+// other shifts are 8 h. Hours of a week: the ones valid on its Monday.
+function minPaidOf(a) {
+  var grid = RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [];
+  return grid.reduce(function(m, g) { return Math.min(m, paidMinOf(g.startMin, g.endMin)); }, Infinity);
+}
+function weekCap(mp, a, wk) {
+  var paid = minPaidOf(a), h = contractHours(a, wk);
+  if (!(h > 0) || !(paid > 0) || !isFinite(paid)) return mp.maxDays;
+  return Math.min(mp.maxDays, Math.floor(h * 60 / paid + 1e-9));
+}
+function contractDays(mp, a, wk) {
+  var paid = medianPaid(mp, a), h = contractHours(a, wk);
+  if (!(h > 0) || paid <= 0) return mp.maxDays;
+  return Math.min(mp.maxDays, h * 60 / paid);
+}
+// A date n days later (or earlier)
+function shiftDay(ds, n) { var x = new Date(ds + 'T12:00:00'); x.setDate(x.getDate() + n); return toDateStr(x); }
+// Monday of the week of a date
+function weekKey(d) {
+  var dd = new Date(d);
+  var day = dd.getDay();
+  var diff = day === 0 ? -6 : 1 - day;
+  dd.setDate(dd.getDate() + diff);
+  return toDateStr(dd);
+}
+function isLead(a)  { return poolOf(a) === 'mgmt'; }
+function isStock(a) { return poolOf(a) === 'stock'; }
+function isSales(a) { return poolOf(a) === 'sales'; }
+// Fixed part-time schedules
+function fixedSchedOf(a) {
+  var p = agentPrefs[a.id];
+  var fx = p && p.fixed_schedule;
+  return (fx && fx.enabled && fx.days && fx.days.length) ? fx : null;
+}
+function isFixed(a) { return !!fixedSchedOf(a); }
+function fixedHasTime(a) {
+  var fx = fixedSchedOf(a);
+  return !!(fx && (fx.start || fx.end));
+}
+function isFixedTimed(a) { return isFixed(a) && fixedHasTime(a); }
+function fixedWorksOn(a, d) {
+  var fx = fixedSchedOf(a);
+  return fx && fx.days.indexOf(d.date.getDay()) !== -1;
+}
+function agentOf(mp, id) { return mp.agentById[id]; }
+function salesOn(mp, d) { return mp.assignedMap[d.ds].filter(function(id) { var a = agentOf(mp, id); return a && poolOf(a) === 'sales'; }).length; }
+// Paid minutes of a shift; a flexible part-time half day pays its half only
+function paidOfCode(mp, a, ds, code) {
+  var wh = workHoursOf(a, ds, { code: code, half: (mp.volantHalfDay[a.id] || {})[ds] });
+  return wh ? paidMinOf(wh.start, wh.end) : 0;
+}
+function seedWeek(mp, a, wk) {
+  mp.weekPaid[a.id] = mp.weekPaid[a.id] || {};
+  if (mp.weekPaid[a.id][wk] != null) return;
+  var total = 0, out = (mp.weekOut[a.id] = mp.weekOut[a.id] || {})[wk] = { worked: 0, open: 0 };
+  for (var i = 0; i < 7; i++) {
+    var xs = shiftDay(wk, i), x = new Date(xs + 'T12:00:00'), fixed = fixedRes(a, xs);
+    // Training days of this month count their standard hours before any shift is placed
+    if (x.getFullYear() === mp.year && x.getMonth() === mp.monthIdx) { if (fixed && fixed.code === 'OUT') total += TRAINING_DAY.paid; continue; }
+    var res = fixed || knownRes(mp, a, xs);
+    var wh = res && ruleHours(a, xs, res);
+    if (wh) { total += wh.paid; out.worked++; }
+    else if (!res && x > mp.monthDays[mp.monthDays.length - 1].date && !getDayClosureType(xs)) out.open++;
+  }
+  mp.weekPaid[a.id][wk] = total;
+}
+// Weekly hours are strict for automatic shifts: the shift fits with the days still to come in the week
+function fitsWeek(mp, a, d, s) {
+  var wk = weekKey(d.date), hW = contractHours(a, wk);
+  if (!(hW > 0)) return true;
+  seedWeek(mp, a, wk);
+  var used = mp.weekPaid[a.id][wk];
+  var grid = RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || [];
+  var minPaid = grid.reduce(function(m, g) { return Math.min(m, paidMinOf(g.startMin, g.endMin)); }, Infinity);
+  if (!isFinite(minPaid)) minPaid = 0;
+  var laterDays = mp.monthDays.filter(function(x) { return x.ds > d.ds && weekKey(x.date) === wk && (mp.assignedMap[x.ds] || []).indexOf(a.id) !== -1; });
+  // Room kept for the later days of the week, a half day keeping only its half
+  var minCode = grid.reduce(function(m, g) { return !m || paidMinOf(g.startMin, g.endMin) < paidMinOf(m.startMin, m.endMin) ? g : m; }, null);
+  var laterPaid = laterDays.reduce(function(sum, x) { return sum + ((mp.volantHalfDay[a.id] || {})[x.ds] && minCode ? paidOfCode(mp, a, x.ds, minCode.code) : minPaid); }, 0);
+  // Room kept for the days of this week in the next month that this person may still work
+  var inMonth = mp.monthDays.filter(function(x) { return weekKey(x.date) === wk && (mp.assignedMap[x.ds] || []).indexOf(a.id) !== -1; }).length;
+  var out = mp.weekOut[a.id][wk];
+  var maxDays = Math.min(dayLimits().week, minPaid ? Math.floor(hW * 60 / minPaid + 1e-6) : 7);
+  var room = hW * 60 - used - laterPaid - Math.min(out.open, Math.max(0, maxDays - inMonth - out.worked)) * minPaid;
+  return paidOfCode(mp, a, d.ds, s.code) <= room + 1e-6;
+}
+// The shifts of a day that would break the weekly hours are changed for ones that fit
+function settleWeekHours(mp, d, plan) {
+  var hm = dayMinutes(d.ds);
+  Object.keys(plan).forEach(function(id) {
+    var a = agents.find(function(x) { return x.id === id; });
+    if (!a || (planningOverrides[id] || {})[d.ds]) return;
+    var grid = RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || [];
+    if (plan[id] === 'D') grid = [{ code: 'D', startMin: hm.open, endMin: hm.close }];
+    var cur = grid.find(function(s) { return s.code === plan[id]; });
+    if (!cur || fitsWeek(mp, a, d, cur)) return;
+    var cov = coverOfHours(cur.startMin, cur.endMin, hm);
+    // Who opens and who closes today, to keep the minimums when this shift must change
+    var role = { open: 0, close: 0 };
+    Object.keys(plan).forEach(function(bid) {
+      var b = agents.find(function(x) { return x.id === bid; }), sb = b && grid.find(function(q) { return q.code === plan[bid]; });
+      if (!sb || poolOf(b) === 'stock' || poolOf(b) !== poolOf(a) && poolOf(a) === 'stock') return;
+      var cb = coverOfHours(sb.startMin, sb.endMin, hm); if (cb.open) role.open++; if (cb.close) role.close++;
+    });
+    var minO2 = minCover('open'), minC2 = minCover('close');
+    // The shift is needed for the opening / closing minimum: free one later day of the week instead
+    var needed = poolOf(a) !== 'stock' && ((cov.open && role.open - 1 < minO2) || (cov.close && role.close - 1 < minC2));
+    if (needed) {
+      var wkD = weekKey(d.date);
+      var lat = mp.monthDays.filter(function(x) { return x.ds > d.ds && weekKey(x.date) === wkD && (mp.assignedMap[x.ds] || []).indexOf(id) !== -1 && !(planningOverrides[id] || {})[x.ds]; }).pop();
+      if (lat) {
+        mp.assignedMap[lat.ds].splice(mp.assignedMap[lat.ds].indexOf(id), 1); mp.worked[id]--; mp.workedInWeek[id][wkD]--;
+        mp.restMap[id][lat.ds] = true;
+        if (fitsWeek(mp, a, d, cur)) return;
+      }
+      return;   // kept for now: the weekly check below removes the least useful day of the week
+    }
+    // A shift that fits: keeping the opening / closing minimums if possible, else any shift that fits
+    var alt = grid.filter(function(s) { return fitsWeek(mp, a, d, s) && restAllows(mp, a, d.ds, s.code); }).sort(function(x, y) {
+      function rank(s) {
+        var cv = coverOfHours(s.startMin, s.endMin, hm);
+        var keeps = poolOf(a) === 'stock' || ((!cov.open || cv.open || role.open - 1 >= minO2) && (!cov.close || cv.close || role.close - 1 >= minC2));
+        return (keeps ? 0 : 2) + ((cv.open === cov.open && cv.close === cov.close) ? 0 : 1);
+      }
+      return (rank(x) - rank(y)) || (Math.abs(x.startMin - cur.startMin) - Math.abs(y.startMin - cur.startMin));
+    })[0];
+    if (alt) { plan[id] = alt.code; return; }
+    // Nothing fits the contract: the advisor does not work this day (never more hours than the contract)
+    delete plan[id];
+    var ix = mp.assignedMap[d.ds].indexOf(id);
+    if (ix !== -1) { mp.assignedMap[d.ds].splice(ix, 1); mp.worked[id]--; mp.workedInWeek[id][weekKey(d.date)]--; }
+    mp.restMap[id][d.ds] = true;
+  });
+  Object.keys(plan).forEach(function(id) {
+    var a = agents.find(function(x) { return x.id === id; });
+    if (!a) return;
+    var code = (planningOverrides[id] || {})[d.ds] || plan[id], wk = weekKey(d.date);
+    seedWeek(mp, a, wk);
+    mp.weekPaid[id][wk] += paidOfCode(mp, a, d.ds, code);
+  });
+}
+function isSpecialDay(d) {
+  var sundaySingle = !storeSettings || storeSettings.sunday_single_shift !== false;
+  return sundaySingle && (d.date.getDay() === 0 || !!calHolidays[d.ds]);
+}
+// Shifts of one open day: who opens, who closes, the minimums, the corners and the weekly hours
+function placeShiftsOfDay(mp, d) {
+  if (d.closure) return;
+  var dow2 = d.date.getDay();
+  var dh = (regulations.day_hours && regulations.day_hours[
+    ['sun','mon','tue','wed','thu','fri','sat'][dow2]]) || { open: 10, close: 18 };
+  if (calHours[d.ds]) dh = calHours[d.ds];
+  var present = mp.assignedMap[d.ds].slice();
+  var plan = {};
+  present = present.filter(function(id) {
+    var a = agents.find(function(x){ return x.id === id; });
+    if (a && isFixedTimed(a)) { plan[id] = 'PT'; return false; }
+    return true;
+  });
+  // Sundays and open holidays: single shift D
+  if (isSpecialDay(d)) {
+    present.forEach(function(id){ plan[id] = 'D'; });
+    settleWeekHours(mp, d, plan);
+    mp.shiftPlanByDay[d.ds] = plan;
+    return;
+  }
+  var byGrid = { sales: [], stock: [] };
+  present.forEach(function(id) {
+    var a = agents.find(function(x){ return x.id === id; });
+    if (!a) return;
+    var g = RETAIL_STATUS[retailStatusOf(a)].grid;
+    (byGrid[g] || byGrid.sales).push(a);
+  });
+  Object.keys(byGrid).forEach(function(g) {
+    var list = byGrid[g];
+    var grid = RETAIL_SHIFTS[g] || [];
+    if (!list.length || !grid.length) return;
+    var cl = shiftClusters(grid, d.ds);
+    // The manager's shift of the day first. It counts in the late target and in the coverage of the day.
+    // (Preferred shifts are gone, Roman 17-10: the manager places people by hand and CAST learns it.)
+    var fixedCodes = [];
+    list = list.filter(function(a) {
+      var mc = (planningOverrides[a.id] || {})[d.ds], ms = mc && grid.find(function(s) { return s.code === mc; });
+      if (ms) { plan[a.id] = ms.code; fixedCodes.push(ms.code); return false; }
+      return true;
+    });
+    if (!list.length) return;
+    if (g === 'stock') {
+      var earliest = grid.reduce(function(a, b){ return b.startMin < a.startMin ? b : a; });
+      var nS = list.length;
+      var sorted = list.slice();
+      var rotS = nS ? (d.num % nS) : 0;
+      sorted = sorted.slice(rotS).concat(sorted.slice(0, rotS));
+      if (nS === 1) {
+        plan[sorted[0].id] = earliest.code;
+      } else {
+        // One closer, the others open (deliveries come in the morning). The one who usually closes this day closes.
+        var nClo = 1, closeS = cl.close[cl.close.length - 1].code;
+        if (mp.habits.knowsShifts(sorted[0])) sorted.sort(function(x, y) { return mp.habits.shift(x, d.dow, closeS, grid.length) - mp.habits.shift(y, d.dow, closeS, grid.length); });
+        // Stock opens first and closes last
+        sorted.forEach(function(a, i) {
+          plan[a.id] = (i < nS - nClo ? cl.open[0] : cl.close[cl.close.length - 1]).code;
+        });
+      }
+      return;
+    }
+    if (g === 'sales') {
+      // Managers open first and close last
+      var openSh  = cl.open[0];
+      var closeSh = cl.close[cl.close.length - 1];
+      // Stable order, so managers really alternate
+      var leadsHere = list.filter(function(a){ return poolOf(a) === 'mgmt'; })
+        .sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
+      // Managers: one closes, the others open. The one who closed the least this month closes.
+      if (leadsHere.length >= 2) {
+        var closer = leadsHere.slice().sort(function(x, y) {
+          var hb = Math.round(20 * (mp.habits.shift(y, d.dow, closeSh.code, grid.length) - mp.habits.shift(x, d.dow, closeSh.code, grid.length)));
+          return hb || ((mp.leadCloses[x.id] || 0) - (mp.leadCloses[y.id] || 0)) || (x.id < y.id ? -1 : 1); })
+          .find(function(a) { return restAllows(mp, a, d.ds, closeSh.code); }) || leadsHere[0];
+        var opens = leadsHere.filter(function(a) { return a !== closer; });
+        opens.forEach(function(a, i) { plan[a.id] = spreadPick(cl.open, i, opens.length).code; });
+        plan[closer.id] = closeSh.code; mp.leadCloses[closer.id] = (mp.leadCloses[closer.id] || 0) + 1;
+        leadsHere.forEach(function(a) { fixedCodes.push(plan[a.id]); });   // managers count in the late target
+        list = list.filter(function(a) { return leadsHere.indexOf(a) === -1; });
+      } else if (leadsHere.length === 1) {
+        var l0 = leadsHere[0], hc = mp.habits.shift(l0, d.dow, closeSh.code, grid.length) - mp.habits.shift(l0, d.dow, openSh.code, grid.length);
+        plan[l0.id] = (Math.abs(hc) > 0.05 ? (hc > 0 ? closeSh : openSh) : (d.num % 2 === 0 ? openSh : closeSh)).code;
+        fixedCodes.push(plan[l0.id]);
+        list = list.filter(function(a){ return a.id !== leadsHere[0].id; });
+      }
+      if (!list.length) return;
+    }
+    var mid = (dh.open + dh.close) / 2;
+    function avgCurve(fromH, toH) {
+      if (!mp.curveArr || !mp.curveArr.length) return 1;
+      var sum = 0, n = 0;
+      for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
+        var ci = hourlyCurveIndex(h * 60);
+        if (ci >= 0 && ci < mp.curveArr.length) { sum += mp.curveArr[ci]; n++; }
+      }
+      return n ? sum / n : 1;
+    }
+    var wMorning = avgCurve(dh.open, mid);
+    var wEvening = avgCurve(mid, dh.close) * CLOSING_BIAS;
+    var wSum = (wMorning + wEvening) || 1;
+    var eveningShare = wEvening / wSum;
+    var nTotal = list.length + fixedCodes.length;
+    var frozen = d.past;
+    var lateRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
+    var minOpen  = frozen ? 1 : minCover('open');
+    var minClose = frozen ? 1 : minCover('close');
+    function restOk(a, s) { return !s || restAllows(mp, a, d.ds, s.code); }
+    // Late shifts (last quarter of the list) and the others
+    var byStart = grid.slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
+    var isLate = lateCodes(grid);
+    var nLate = byStart.length > 1 ? Math.max(0, Math.min(nTotal, Math.round(nTotal * lateRatio))) : 0;
+    var left = { early: nTotal - nLate, late: nLate };
+    fixedCodes.forEach(function(c) { left[isLate[c] ? 'late' : 'early']--; });
+    // Hourly traffic of the day, in 15 min slots
+    var hm = dayMinutes(d.ds), slots = [];
+    for (var tm = hm.open; tm < hm.close; tm += 15) {
+      var ci = hourlyCurveIndex(tm);
+      var wv = (mp.curveArr && mp.curveArr.length && ci >= 0 && ci < mp.curveArr.length) ? (+mp.curveArr[ci] || 0) : 1;
+      slots.push({ t: tm, w: Math.max(wv, 0.0001), cov: 0 });
+    }
+    // Time on the floor of a shift, slot by slot: lunch and breaks are taken anywhere in their window,
+    // from one hour after arrival, so an early arrival can break earlier
+    var floorCache = {};
+    function floorOf(st, en) {
+      var key = st + '-' + en;
+      if (floorCache[key]) return floorCache[key];
+      // Share of each quarter hour inside the shift, so a 9:50 start counts its 10 minutes
+      function part(a, b, t) { return Math.max(0, Math.min(b, t + 15) - Math.max(a, t)) / 15; }
+      var p = slots.map(function(sl) { return part(st, en, sl.t); });
+      (regulations.breaks || []).forEach(function(b) {
+        var dur = b.duration || 0;
+        if (!(dur > 0) || !(b.window_end > b.window_start)) return;
+        var lo = Math.ceil(Math.max(b.window_start * 60, st + 60) / 15) * 15, hi = Math.min(b.window_end * 60, en) - dur;
+        if (hi < lo) return;
+        var n = Math.floor((hi - lo) / 15) + 1;
+        slots.forEach(function(sl, k) {
+          if (!p[k]) return;
+          var away = 0;
+          for (var x = lo; x <= hi; x += 15) away += part(x, x + dur, sl.t);
+          p[k] = Math.max(0, p[k] - away / n);
+        });
+      });
+      return (floorCache[key] = p);
+    }
+    function addCov(st, en, k) { var p = floorOf(st, en); slots.forEach(function(sl, i) { sl.cov += (k || 1) * p[i]; }); }
+    // People already placed (managers, fixed hours) count
+    var placed = [];
+    Object.keys(plan).forEach(function(id) {
+      var ag = agents.find(function(x) { return x.id === id; });
+      var wh = ag && workHoursOf(ag, d.ds, { code: plan[id] });
+      if (wh) { addCov(wh.start, wh.end); placed.push({ start: wh.start, end: wh.end, sales: poolOf(ag) === 'sales' }); }
+    });
+    // Need of each quarter hour: the floor time the whole team could give, spread like the hourly traffic.
+    // Same rule with 3 or 30 people and any number of shifts; time outside opening hours meets no need.
+    var Wsum = slots.reduce(function(t, sl) { return t + sl.w; }, 0);
+    var Fmax = byStart.reduce(function(m, s) { return Math.max(m, floorOf(s.startMin, s.endMin).reduce(function(t, x) { return t + x; }, 0)); }, 0);
+    slots.forEach(function(sl) { sl.need = sl.w / Wsum * (placed.length + list.length) * Fmax; });
+    // Value of a shift: how much it closes the gap between the people on the floor and the need (sum of squared gaps),
+    // so one person too many somewhere costs as much as one missing elsewhere
+    function gain(s) {
+      var p = floorOf(s.startMin, s.endMin), g = 0;
+      slots.forEach(function(sl, i) { if (p[i]) g += p[i] * (2 * (sl.need - sl.cov) - p[i]); });
+      return g;
+    }
+    // Shifts that keep the weekly hours first (a longer shift would later cost a day). Then traffic: among the shifts
+    // within 10% of the best traffic value, this person's usual shift on this weekday wins, then the best value, then the first one.
+    function best(cands, a) {
+      var fit = cands.filter(function(s) { return fitsWeek(mp, a, d, s); });
+      if (fit.length) cands = fit;
+      var gs = cands.map(gain), top = Math.max.apply(null, gs), tol = 0.1 * Math.abs(top) + 1e-9, b = null, bh = 0, bg = 0;
+      cands.forEach(function(s, i) {
+        if (gs[i] < top - tol) return;
+        var h = mp.habits.shift(a, d.dow, s.code, grid.length);
+        if (!b || h > bh + 1e-9 || (Math.abs(h - bh) <= 1e-9 && gs[i] > bg + 1e-9)) { b = s; bh = h; bg = gs[i]; }
+      });
+      return b;
+    }
+    var pool = list.slice();
+    var rot = pool.length ? (d.num % pool.length) : 0;
+    pool = pool.slice(rot).concat(pool.slice(0, rot));
+    var movable = pool.slice();
+    function place(a, s) {
+      plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start: s.startMin, end: s.endMin, sales: poolOf(a) === 'sales' });
+      left[isLate[s.code] ? 'late' : 'early']--;
+      pool.splice(pool.indexOf(a), 1);
+    }
+    function roomFor(s) { return left[isLate[s.code] ? 'late' : 'early'] > 0; }
+    // Hard needs first: someone for the first hour, someone for the last hour
+    // How much this person usually takes one of these shifts on this weekday
+    function leans(a, shifts) { return shifts.reduce(function(m, s) { return Math.max(m, mp.habits.shift(a, d.dow, s.code, grid.length)); }, -1); }
+    function cover(key, need, salesOnly) {
+      var have = placed.filter(function(w) { return (!salesOnly || w.sales) && coverOfHours(w.start, w.end, hm)[key]; }).length;
+      var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
+      while (have < need && shifts.length) {
+        // Who usually opens (or closes) this day goes first, the others keep the daily rotation
+        var order = pool.slice().sort(function(x, y) { return Math.round(20 * (leans(y, shifts) - leans(x, shifts))); });
+        var done = false;
+        for (var k = 0; k < order.length && !done; k++) {
+          var ok = shifts.filter(function(s) { return restOk(order[k], s); });
+          if (!ok.length) continue;
+          var inRoom = ok.filter(roomFor);
+          place(order[k], best(inRoom.length ? inRoom : ok, order[k])); have++; done = true;
+        }
+        if (!done) break;
+      }
+    }
+    // Order of the day: mandatory coverage (one person for the first and the last hour), then what the manager
+    // usually does (learned from the manager's own changes), then the calculations (store minimums, corners,
+    // late target, traffic)
+    var learned = {};
+    pool.slice().forEach(function(a) {
+      var top = null;
+      byStart.forEach(function(s) {
+        if (!restOk(a, s) || !fitsWeek(mp, a, d, s)) return;
+        var h = mp.habits.own(a, d.dow, s.code, grid.length);
+        if (h >= HABIT_CLEAR && (!top || h > top.h)) top = { s: s, h: h };
+      });
+      if (top) { place(a, top.s); learned[a.id] = true; }
+    });
+    cover('close', 1);
+    cover('open', 1);
+    // Mandatory rules before the manager: if nobody else can open or close, one learned choice gives way
+    ['close', 'open'].forEach(function(key) {
+      if (placed.some(function(w) { return coverOfHours(w.start, w.end, hm)[key]; })) return;
+      var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
+      movable.some(function(a) {
+        var cur = learned[a.id] && grid.find(function(s) { return s.code === plan[a.id]; });
+        var ok = cur && shifts.filter(function(s) { return restOk(a, s); });
+        if (!ok || !ok.length) return false;
+        var s2 = best(ok, a), i = placed.findIndex(function(w) { return w.start === cur.startMin && w.end === cur.endMin; });
+        addCov(cur.startMin, cur.endMin, -1); if (i !== -1) placed.splice(i, 1);
+        left[isLate[cur.code] ? 'late' : 'early']++;
+        pool.push(a); place(a, s2); delete learned[a.id];
+        return true;
+      });
+    });
+    cover('close', minClose);
+    cover('open', minOpen);
+    // Every corner needs one seller who opens and one who closes
+    var cornerNeed = storeCorners.length > 1 ? storeCorners.length : 0;
+    cover('close', cornerNeed, true);
+    cover('open', cornerNeed, true);
+    // Everyone else: the shift that helps the traffic most, inside the late target
+    // People with the clearest habit choose first
+    pool.sort(function(x, y) { return Math.round(20 * (leans(y, byStart) - leans(x, byStart))); });
+    while (pool.length) {
+      var a = pool[0];
+      var okS = byStart.filter(function(s) { return restOk(a, s); });
+      if (!okS.length) okS = byStart;
+      var inRoom = okS.filter(roomFor);
+      place(a, best(inRoom.length ? inRoom : okS, a));
+    }
+    // Then each person takes again the best shift with everyone else in place: same group (late or not),
+    // opening and closing minimums kept, for the store and the corners. Stops when nobody moves (6 rounds at most).
+    function covers(key, skip, salesOnly) {
+      return Object.keys(plan).filter(function(id) {
+        var ag = id !== skip && agents.find(function(x) { return x.id === id; });
+        var wh = ag && poolOf(ag) !== 'stock' && (!salesOnly || poolOf(ag) === 'sales') && workHoursOf(ag, d.ds, { code: plan[id] });
+        return wh && coverOfHours(wh.start, wh.end, hm)[key];
+      }).length;
+    }
+    for (var pass = 0; pass < 6; pass++) {
+      var moved = false;
+      movable.forEach(function(a) {
+        if (learned[a.id]) return;
+        var cur = grid.find(function(s) { return s.code === plan[a.id]; });
+        if (!cur) return;
+        addCov(cur.startMin, cur.endMin, -1);
+        var cc = coverOfHours(cur.startMin, cur.endMin, hm), o = covers('open', a.id), c = covers('close', a.id);
+        var oKeep = o >= minOpen && covers('open', a.id, true) >= cornerNeed, cKeep = c >= minClose && covers('close', a.id, true) >= cornerNeed;
+        var cands = [cur].concat(byStart.filter(function(s) {
+          var cv = coverOfHours(s.startMin, s.endMin, hm);
+          return s !== cur && isLate[s.code] === isLate[cur.code] && restOk(a, s) &&
+            (!cc.open || cv.open || oKeep) && (!cc.close || cv.close || cKeep);
+        }));
+        var b = best(cands, a);
+        if (b !== cur) { plan[a.id] = b.code; moved = true; }
+        addCov(b.startMin, b.endMin);
+      });
+      if (!moved) break;
+    }
+    list.forEach(function(a) {
+      var cur = grid.find(function(s) { return s.code === plan[a.id]; });
+      if (!cur || restOk(a, cur)) return;
+      var mate = list.find(function(b) {
+        var bs = grid.find(function(s) { return s.code === plan[b.id]; });
+        return b !== a && bs && restOk(a, bs) && restOk(b, cur);
+      });
+      if (mate) { var tmp = plan[mate.id]; plan[mate.id] = plan[a.id]; plan[a.id] = tmp; return; }
+      var ok = grid.filter(function(s) { return restOk(a, s); }).sort(function(x, y) { return x.startMin - y.startMin; })[0];
+      if (ok) plan[a.id] = ok.code;
+    });
+  });
+  // Mandatory coverage on the whole day, whoever gives it (sellers or managers). If nobody covers the first or the
+  // last hour, one person whose shift the manager did not set moves to a shift that covers it: preferences,
+  // learned choices and the usual manager closing give way. The other boundary is kept when possible.
+  if (!d.past) ['open', 'close'].forEach(function(key) {
+    var hmD = dayMinutes(d.ds), other = key === 'open' ? 'close' : 'open';
+    var floor = Object.keys(plan).map(function(id) { return agents.find(function(x) { return x.id === id; }); })
+      .filter(function(a) { return a && poolOf(a) !== 'stock'; });
+    function cv(a, code) { var wh = workHoursOf(a, d.ds, { code: code || plan[a.id] }); return wh ? coverOfHours(wh.start, wh.end, hmD) : {}; }
+    if (floor.some(function(a) { return cv(a)[key]; })) return;
+    var nOther = floor.filter(function(a) { return cv(a)[other]; }).length;
+    floor.filter(function(a) { return !(planningOverrides[a.id] || {})[d.ds] && plan[a.id] !== 'PT'; })
+      .sort(function(x, y) { return (cv(x)[other] ? 1 : 0) - (cv(y)[other] ? 1 : 0); })
+      .some(function(a) {
+        var keepOther = cv(a)[other] && nOther <= 1, cur = findShiftDef(plan[a.id]) || { startMin: 0 };
+        var s2 = (RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || []).filter(function(s) {
+          var c2 = cv(a, s.code); return c2[key] && (!keepOther || c2[other]) && restAllows(mp, a, d.ds, s.code);
+        }).sort(function(x, y) { return Math.abs(x.startMin - cur.startMin) - Math.abs(y.startMin - cur.startMin); })[0];
+        if (s2) { plan[a.id] = s2.code; return true; }
+        return false;
+      });
+  });
+  settleWeekHours(mp, d, plan);
+  mp.shiftPlanByDay[d.ds] = plan;
+}
+// Weekly hours, last check for one advisor: a week over the contract loses its least useful day
+function weekHoursPass(mp, a) {
+  if (isFixedTimed(a)) return;
+  mp.weekKeys.forEach(function(wk) {
+    if (!(contractHours(a, wk) > 0)) return;
+    for (var guard = 0; guard < 7; guard++) {
+      var anyDay = mp.monthDays.find(function(x) { return weekKey(x.date) === wk; });
+      if (!anyDay) return;
+      var total = weekPaidWith(mp, a, anyDay, (planningOverrides[a.id] || {})[anyDay.ds] || (mp.shiftPlanByDay[anyDay.ds] || {})[a.id]);
+      if (total <= contractHours(a, wk) * 60 + 1e-6) return;
+      var cands = mp.monthDays.filter(function(x) {
+        return weekKey(x.date) === wk && !x.past && (mp.shiftPlanByDay[x.ds] || {})[a.id] && !(planningOverrides[a.id] || {})[x.ds];
+      });
+      if (!cands.length) return;
+      function needed(x) {
+        var hm = dayMinutes(x.ds), me = workHoursOf(a, x.ds, { code: mp.shiftPlanByDay[x.ds][a.id] });
+        if (!me || poolOf(a) === 'stock') return 0;
+        if (poolOf(a) === 'sales' && salesOn(mp, x) - 1 < mp.liveCorners) return 1;
+        var mine = coverOfHours(me.start, me.end, hm), o = 0, c = 0;
+        Object.keys(mp.shiftPlanByDay[x.ds]).forEach(function(bid) {
+          var b = agents.find(function(q) { return q.id === bid; }); if (!b || poolOf(b) === 'stock') return;
+          var wh = workHoursOf(b, x.ds, { code: mp.shiftPlanByDay[x.ds][bid] }); if (!wh) return;
+          var cv = coverOfHours(wh.start, wh.end, hm); if (cv.open) o++; if (cv.close) c++;
+        });
+        var mo = minCover('open'), mc = minCover('close');
+        return ((mine.open && o - 1 < mo) || (mine.close && c - 1 < mc)) ? 1 : 0;
+      }
+      var drop = cands.sort(function(x, y) { return (needed(x) - needed(y)) || ((x.vol || 0) - (y.vol || 0)); })[0];
+      delete mp.shiftPlanByDay[drop.ds][a.id];
+      var ix = mp.assignedMap[drop.ds].indexOf(a.id);
+      if (ix !== -1) { mp.assignedMap[drop.ds].splice(ix, 1); mp.worked[a.id]--; mp.workedInWeek[a.id][wk]--; }
+      mp.restMap[a.id][drop.ds] = true;
+    }
+  });
+}
+// Paid minutes of a whole week on the final planning, with one shift replaced
+function weekPaidWith(mp, a, d, code) {
+  var wk = weekKey(d.date), total = 0;
+  for (var i = 0; i < 7; i++) {
+    var ds = shiftDay(wk, i), res;
+    var half = (mp.volantHalfDay[a.id] || {})[ds];
+    if (ds === d.ds) res = { code: code, half: half };
+    else if (fixedRes(a, ds)) res = fixedRes(a, ds);
+    else if (mp.shiftPlanByDay[ds]) res = mp.shiftPlanByDay[ds][a.id] ? { code: mp.shiftPlanByDay[ds][a.id], half: half } : null;
+    else res = shownRes(mp, a, ds);
+    var wh = res && ruleHours(a, ds, res);
+    if (wh) total += wh.paid;
+  }
+  return total;
+}
+// A change of shift stays within the weekly hours, or adds nothing to a week already over them by manual changes
+function weekFits(mp, a, d, code) {
+  var hD = contractHours(a, weekKey(d.date));
+  if (!(hD > 0)) return true;
+  var after = weekPaidWith(mp, a, d, code);
+  return after <= hD * 60 + 1e-6 || after <= weekPaidWith(mp, a, d, (mp.shiftPlanByDay[d.ds] || {})[a.id]) + 1e-6;
+}
+// Daily rest, last check for one day: a shift too close to the day before is swapped or moved later
+function restPass(mp, d) {
+  if (d.closure || d.past) return;
+  var plan = mp.shiftPlanByDay[d.ds]; if (!plan) return;
+  Object.keys(plan).forEach(function(aid) {
+    var a = agents.find(function(x) { return x.id === aid; });
+    if (!a || (planningOverrides[aid] || {})[d.ds]) return;
+    var code = plan[aid];
+    if (restAllows(mp, a, d.ds, code)) return;
+    var corner = (mp.cornerAssign[aid] || {})[d.ds];
+    var mateId = Object.keys(plan).find(function(bid) {
+      var b = agents.find(function(x) { return x.id === bid; });
+      return bid !== aid && b && poolOf(b) === poolOf(a) && !(planningOverrides[bid] || {})[d.ds] &&
+        (mp.cornerAssign[bid] || {})[d.ds] === corner && restAllows(mp, a, d.ds, plan[bid]) && restAllows(mp, b, d.ds, code) &&
+        weekFits(mp, a, d, plan[bid]) && weekFits(mp, b, d, code);
+    });
+    if (mateId) { plan[aid] = plan[mateId]; plan[mateId] = code; return; }
+    if (!isSpecialDay(d)) {
+      var cur = findShiftDef(code) || { startMin: -1 };
+      var alt = (RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [])
+        .filter(function(s) { return s.startMin > cur.startMin && restAllows(mp, a, d.ds, s.code) && weekFits(mp, a, d, s.code); })
+        .sort(function(x, y) { return x.startMin - y.startMin; })[0];
+      if (alt) { plan[aid] = alt.code; return; }
+    }
+  });
+}
+// Real coverage on screen after the rest pass: opening and closing minimums repaired, manual cells untouched
+function repairDisplayedCoverage(mp) {
+  var grid = RETAIL_SHIFTS.sales || [];
+  if (!grid.length) return;
+  var late = lateCodes(grid), lateRatio = storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
+  var minO = minCover('open'), minC = minCover('close');
+  function effective(a, ds, replacement) {
+    var ov = (planningOverrides[a.id] || {})[ds];
+    if (ov) return { code: ov };
+    var day = mp.monthDays.find(function(d) { return d.ds === ds; });
+    if (!day) return shownRes(mp, a, ds);
+    var lv = leaveRes(a, ds);
+    if (lv) return lv;
+    if (isFixedTimed(a)) return fixedWorksOn(a, day) ? { code: 'PT' } : { code: 'OFF', special: 'off' };
+    var saved = (mp.snapPlan[ds] || {})[a.id];
+    if (saved && (!mp.recalcFromToday || ds < mp.todayDs)) return saved;
+    if ((mp.restMap[a.id] || {})[ds]) return { code: 'OFF', special: 'off' };
+    var code = replacement != null ? replacement : (mp.shiftPlanByDay[ds] || {})[a.id];
+    return { code: code, half: (mp.volantHalfDay[a.id] || {})[ds] };
+  }
+  function mutable(a, d) {
+    return poolOf(a) === 'sales' && !isFixedTimed(a) && !(planningOverrides[a.id] || {})[d.ds] &&
+      !(mp.snapPlan[d.ds] && mp.snapPlan[d.ds][a.id] && !mp.recalcFromToday) &&
+      mp.assignedMap[d.ds].indexOf(a.id) !== -1 && !!workHoursOf(a, d.ds, effective(a, d.ds));
+  }
+  function cornerOf(a, ds) {
+    return (cornerOverrides[a.id] || {})[ds] || (mp.cornerAssign[a.id] || {})[ds] || a.home_corner_id;
+  }
+  function restFits(a, d, code) {
+    var now = workHoursOf(a, d.ds, effective(a, d.ds, code));
+    if (!now) return false;
+    var prevDs = shiftDay(d.ds, -1);
+    var nextDs = shiftDay(d.ds, 1);
+    var prev = workHoursOf(a, prevDs, effective(a, prevDs));
+    var next = workHoursOf(a, nextDs, effective(a, nextDs));
+    return (!prev || 1440 + now.start - prev.end >= mp.restGapMin) &&
+           (!next || 1440 + next.start - now.end >= mp.restGapMin);
+  }
+  function less(x, y) {
+    for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i];
+    return false;
+  }
+  mp.monthDays.forEach(function(d) {
+    if (d.closure || d.past || mp._freeze || isSpecialDay(d)) return;
+    var hm = dayMinutes(d.ds), groups = {};
+    // Late target of the day, on the sellers and managers working this day (never stock, they are not on the floor)
+    var sellers = agents.filter(function(a) { return poolOf(a) !== 'stock' && workHoursOf(a, d.ds, effective(a, d.ds)); });
+    var lateTarget = Math.round(sellers.length * lateRatio);
+    var dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
+    agents.forEach(function(a) {
+      if (storeCorners.length > 1 ? poolOf(a) !== 'sales' : poolOf(a) === 'stock') return;
+      if (!workHoursOf(a, d.ds, effective(a, d.ds))) return;
+      var cid = storeCorners.length > 1 ? cornerOf(a, d.ds) : '_store';
+      if (!cid) return;
+      (groups[cid] = groups[cid] || []).push(a);
+    });
+    Object.keys(groups).forEach(function(cid) {
+      var list = groups[cid];
+      function state(changes) {
+        var o = 0, c = 0, nLate = 0, hours = [];
+        list.forEach(function(a) {
+          var move = changes.find(function(x) { return x.a.id === a.id; });
+          var res = effective(a, d.ds, move ? move.code : null);
+          var wh = workHoursOf(a, d.ds, res);
+          if (!wh) return;
+          var cv = coverOfHours(wh.start, wh.end, hm);
+          if (cv.open) o++; if (cv.close) c++;
+          if (late[res.code]) nLate++;
+          hours.push(wh);
+        });
+        return { o: o, c: c, late: nLate, hours: hours,
+          missing: Math.max(0, minO - o) + Math.max(0, minC - c) };
+      }
+      function pressure(st) {
+        var value = 0;
+        for (var t = hm.open; t + 15 <= hm.close; t += 15) {
+          var ci = hourlyCurveIndex(t);
+          var w = mp.curveArr && ci >= 0 && ci < mp.curveArr.length ? (+mp.curveArr[ci] || 0) : 1;
+          var present = st.hours.filter(function(h) { return h.start <= t && h.end >= t + 15; }).length;
+          value += Math.max(0, w) / Math.max(0.5, present);
+        }
+        return value;
+      }
+      for (var pass = 0; pass < list.length * 2 + 2; pass++) {
+        var before = state([]);
+        if (!before.missing) break;
+        var options = [];
+        list.filter(function(a) { return mutable(a, d); }).forEach(function(a) {
+          var cur = effective(a, d.ds), wh = workHoursOf(a, d.ds, cur);
+          var oldCov = coverOfHours(wh.start, wh.end, hm);
+          grid.forEach(function(s) {
+            if (s.code === cur.code || !restFits(a, d, s.code)) return;
+            var target = workHoursOf(a, d.ds, effective(a, d.ds, s.code));
+            var cv = coverOfHours(target.start, target.end, hm);
+            if ((cv.open !== oldCov.open || cv.close !== oldCov.close) && weekFits(mp, a, d, s.code)) options.push({ a: a, code: s.code });
+          });
+        });
+        var best = null;
+        function consider(changes) {
+          var after = state(changes);
+          if (after.missing >= before.missing) return;
+          // Protect the other boundary only when the proposed move would lose it.
+          if ((before.o >= minO && after.o < minO) || (before.c >= minC && after.c < minC)) return;
+          var distance = changes.reduce(function(sum, x) {
+            var wh = workHoursOf(x.a, d.ds, effective(x.a, d.ds));
+            return sum + Math.abs(findShiftDef(x.code).startMin - wh.start);
+          }, 0);
+          var score = [changes.length, after.missing, Math.abs(dayLate - before.late + after.late - lateTarget), pressure(after), distance];
+          if (!best || less(score, best.score)) best = { changes: changes, score: score };
+        }
+        options.forEach(function(x) { consider([x]); });
+        // A half-day opener and a full-day closer may require two coordinated moves.
+        if (!best) for (var i = 0; i < options.length; i++) for (var j = i + 1; j < options.length; j++) {
+          if (options[i].a.id !== options[j].a.id) consider([options[i], options[j]]);
+        }
+        if (!best) break;
+        best.changes.forEach(function(x) { mp.shiftPlanByDay[d.ds][x.a.id] = x.code; });
+        dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
+      }
+    });
+  });
+}
+// The cells of the plan as built so far, and their final check
+function cellsOf(mp) {
+  var c = {};
+  agents.forEach(function(a) {
+    mp.agentRows[a.id].forEach(function(row) {
+      (c[row.d.ds] = c[row.d.ds] || {})[a.id] = { code: row.res.code, tone: row.res.tone, special: row.res.special, half: row.res.half, corner: row.res.corner };
+    });
+  });
+  return c;
+}
+function checkNow(mp) { return finalCheck(cellsOf(mp), { days: mp.monthDays, today: mp.todayDs, outside: outsideRes }); }
+// Tested moves: when the plan still breaks a mandatory rule, CAST tries small changes of automatic cells and keeps one
+// only when the final check says the mandatory rules are better (fewer, then smaller) and none is new or bigger.
+// Changes are tried from the smallest kind (another shift, a colleague takes the day, another day of the same person,
+// a day off); the first kind that helps wins, and inside it the one that keeps the targets best (store minimums above
+// one, corners). Manual, past, saved-frozen, leave, fixed-hours and half-day cells never move. A rule CAST cannot fix
+// this way is reported in diagnostics.moves.failed. The search is bounded (MAX_TRIES checks per calculation).
+function testedMoves(mp) {
+  var log = { tried: 0, applied: [], failed: [] }, MAX_TRIES = 300;
+  var dayIx = {}; mp.monthDays.forEach(function(d, i) { dayIx[d.ds] = i; });
+  var OFF = { code: 'OFF', special: 'off' };
+  function rowOf(a, ds) { return dayIx[ds] != null ? mp.agentRows[a.id][dayIx[ds]] : null; }
+  function movable(a, row) {
+    var d = row && row.d, res = row && row.res;
+    if (!d || d.closure || d.past || d.ds < mp.todayDs || isFixed(a) || !res || res.half) return false;
+    if ((planningOverrides[a.id] || {})[d.ds] || (cornerOverrides[a.id] || {})[d.ds] || agentOnLeave(a.id, d.ds)) return false;
+    var saved = (mp.snapPlan[d.ds] || {})[a.id];
+    if (saved && (!mp.recalcFromToday || d.ds < mp.todayDs)) return false;
+    return !res.special || res.special === 'off';
+  }
+  function works(row) { return !row.res.special; }
+  function gridOf(a) { return RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || []; }
+  function workRes(a, code, corner) {
+    var def = gridOf(a).find(function(g) { return g.code === code; });
+    var r = { code: code, tone: def ? def.tone : null };
+    if (corner) r.corner = corner;
+    return r;
+  }
+  function homeCode(a) { var c = storeCorners.find(function(q) { return q.id === a.home_corner_id; }); return c ? c.code : null; }
+  function cornerFor(b, from, res) {
+    var c = res.corner || homeCode(from);
+    return storeCorners.length > 1 && c && (mp.fairnessOn || c !== homeCode(b)) ? c : null;
+  }
+  function score(chk) {
+    var m = 0, t = 0;
+    chk.mandatory.forEach(function(k) { m += chk.issues[k]; });
+    Object.keys(chk.issues).forEach(function(k) { if (!MANDATORY.test(k) && k.indexOf('month|') !== 0) t += chk.issues[k]; });   // targets in counts, not the month reference
+    return [chk.mandatory.length, m, t];
+  }
+  function better(x, y) { for (var i = 0; i < x.length; i++) { if (x[i] < y[i] - 1e-6) return true; if (x[i] > y[i] + 1e-6) return false; } return false; }
+  function dayList(from, n) { var out = [], x = new Date(from + 'T12:00:00'); for (var i = 0; i < n; i++) { out.push(toDateStr(x)); x.setDate(x.getDate() + 1); } return out; }
+  // The automatic cells a broken rule depends on, and the changes worth trying for it
+  function candidates(key) {
+    var p = key.split('|'), list = [];
+    function set(a, ds, res) { return { a: a, ds: ds, res: res }; }
+    if (p[0] === 'openNone' || p[0] === 'closeNone') {
+      var edge = p[0] === 'openNone' ? 'open' : 'close';
+      agents.forEach(function(a) {
+        var row = rowOf(a, p[1]);
+        if (poolOf(a) === 'stock' || !movable(a, row)) return;
+        gridOf(a).forEach(function(g) {
+          if (row.res.code === g.code || !coverOf(a, p[1], { code: g.code })[edge]) return;
+          list.push({ kind: works(row) ? 0 : 2, steps: [set(a, p[1], workRes(a, g.code, works(row) ? row.res.corner : cornerFor(a, a, {})))] });
+        });
+      });
+      return list;
+    }
+    var a = mp.agentById[p[1]];
+    if (!a) return list;
+    var win = p[0] === 'week' || p[0] === 'hours' ? dayList(p[2], 7) : p[0] === 'twoWeeks' ? dayList(p[2], 14)
+      : p[0] === 'row' ? dayList(shiftDay(p[2], -mp.lim.row), mp.lim.row + 1) : p[0] === 'rest' ? [shiftDay(p[2], -1), p[2]] : [p[2]];
+    win.forEach(function(ds) {
+      var row = rowOf(a, ds);
+      if (!movable(a, row) || !works(row)) return;
+      // 1 another shift the same day (only hours and rest depend on the shift; day counts do not)
+      if (p[0] === 'hours' || p[0] === 'day' || p[0] === 'rest') gridOf(a).forEach(function(g) { if (g.code !== row.res.code) list.push({ kind: 0, steps: [set(a, ds, workRes(a, g.code, row.res.corner))] }); });
+      // 2 a colleague of the same team who is off that day takes the day
+      agents.forEach(function(b) {
+        var rb = rowOf(b, ds);
+        if (b === a || poolOf(b) !== poolOf(a) || !movable(b, rb) || works(rb)) return;
+        list.push({ kind: 1, steps: [set(a, ds, OFF), set(b, ds, workRes(b, row.res.code, cornerFor(b, a, row.res)))] });
+      });
+      // 3 the same person works another day off nearby instead (outside the rule's days)
+      for (var k = -7; k <= 7; k++) {
+        var y = shiftDay(ds, k), ry = rowOf(a, y);
+        if (!k || win.indexOf(y) !== -1 || !movable(a, ry) || works(ry)) continue;
+        list.push({ kind: 2, steps: [set(a, ds, OFF), set(a, y, workRes(a, row.res.code, row.res.corner))] });
+      }
+      // 4 last resort: the day becomes a day off
+      list.push({ kind: 3, steps: [set(a, ds, OFF)] });
+    });
+    return list.sort(function(x, y) { return x.kind - y.kind; });
+  }
+  function apply(steps) {
+    return steps.map(function(st) { var row = rowOf(st.a, st.ds), was = row.res; row.res = st.res; return { row: row, was: was }; });
+  }
+  function undo(done) { done.slice().reverse().forEach(function(u) { u.row.res = u.was; }); }
+  var cur = checkNow(mp), curScore = score(cur), stuck = {};
+  while (cur.mandatory.length && log.tried < MAX_TRIES) {
+    var key = cur.mandatory.filter(function(k) { return !stuck[k]; }).sort()[0];
+    if (!key) break;
+    var best = null, cands = candidates(key);
+    cands.forEach(function(c) {
+      if (log.tried >= MAX_TRIES || (best && c.kind > best.c.kind)) return;
+      log.tried++;
+      var done = apply(c.steps), chk = checkNow(mp); undo(done);
+      if (mandatoryAdded(chk.issues, cur.issues).length) return;   // never a new or bigger mandatory break
+      var sc = score(chk).concat([c.kind, c.steps.length]);
+      if (!better(sc.slice(0, 2), curScore.slice(0, 2))) return;
+      if (!best || better(sc, best.sc)) best = { c: c, sc: sc, chk: chk };
+    });
+    if (!best) { stuck[key] = true; log.failed.push(key); continue; }
+    apply(best.c.steps);
+    best.c.steps.forEach(function(st) {
+      // The saved planning and the day plan follow the moved cell
+      (mp.newSnap[st.ds] = mp.newSnap[st.ds] || {})[st.a.id] = st.res;
+      var plan = mp.shiftPlanByDay[st.ds] = mp.shiftPlanByDay[st.ds] || {};
+      if (st.res.special) delete plan[st.a.id]; else plan[st.a.id] = st.res.code;
+    });
+    log.applied.push({ rule: key, kind: ['shift', 'colleague', 'other day', 'day off'][best.c.kind],
+      cells: best.c.steps.map(function(st) { return st.ds + ' ' + st.a.id + ' ' + st.res.code; }) });
+    cur = best.chk; curScore = score(cur);
+  }
+  log.check = log.applied.length ? null : cur;   // unchanged plan: its check is already done
+  return log;
+}
+// Corner of each seller on each day: by traffic share with fairness rotation, else from the usual corner, each corner
+// keeping someone who opens and someone who closes. Manual corners always win.
+function balanceCorners(mp, wF, totWf) {
+  function salesPresent(d) { return agents.filter(function(a) { return poolOf(a) === 'sales' && mp.assignedMap[d.ds].indexOf(a.id) !== -1; }); }
+  function setCorner(a, ds, cid) { (mp.cornerAssign[a.id] = mp.cornerAssign[a.id] || {})[ds] = cid; }
+  function keepManualCorners(present, ds) {
+    present.forEach(function(a) { var ov = (cornerOverrides[a.id] || {})[ds]; if (ov) setCorner(a, ds, ov); });
+  }
+  if (mp.fairnessOn) {
+    // Fairness mode: everyone rotates between corners, counted on the final corner of each day
+    var fairCount = {};
+    agents.forEach(function(a){ fairCount[a.id] = {}; storeCorners.forEach(function(c){ fairCount[a.id][c.id] = 0; }); });
+    mp.monthDays.forEach(function(d) {
+      if (d.closure) return;
+      var present = salesPresent(d);
+      if (!present.length) return;
+      var n = present.length, need = {}, placedToday = {};
+      // Seats of each corner from its traffic share; rounding goes to the largest remainders
+      // A corner is never empty: 2 people (one opens, one closes) when the team allows it, else 1
+      var minSeat = n >= 2 * storeCorners.length ? 2 : n >= storeCorners.length ? 1 : 0;
+      var share = storeCorners.map(function(c) { var q = n * wF[c.id] / totWf; need[c.id] = Math.max(minSeat, Math.floor(q)); return { c: c, r: q - Math.floor(q) }; });
+      var given = storeCorners.reduce(function(sum, c) { return sum + need[c.id]; }, 0);
+      while (given > n) {
+        var big = storeCorners.filter(function(c) { return need[c.id] > minSeat; }).sort(function(x, y) { return need[y.id] - need[x.id]; })[0];
+        if (!big) break; need[big.id]--; given--;
+      }
+      share.sort(function(x, y) { return (y.r - x.r) || (wF[y.c.id] - wF[x.c.id]); })
+        .forEach(function(e) { if (given < n) { need[e.c.id]++; given++; } });
+      function put(a, cid) {
+        placedToday[a.id] = true; need[cid] = (need[cid] || 0) - 1;
+        if (fairCount[a.id][cid] != null) fairCount[a.id][cid]++;
+        setCorner(a, d.ds, cid);
+      }
+      // Manual corners first: they count in their real corner
+      present.forEach(function(a) {
+        var ov = (cornerOverrides[a.id] || {})[d.ds];
+        if (ov) put(a, ov);
+        else if ((agentPrefs[a.id] || {}).rotates === false && a.home_corner_id) put(a, a.home_corner_id);
+      });
+      // Seats left for the advisors who rotate: every corner keeps its minimum, the biggest corners give way
+      var restN = present.filter(function(a) { return !placedToday[a.id]; }).length;
+      var inCorner = {};
+      present.forEach(function(a) { if (placedToday[a.id]) { var cc = mp.cornerAssign[a.id][d.ds]; inCorner[cc] = (inCorner[cc] || 0) + 1; } });
+      storeCorners.forEach(function(c) { need[c.id] = Math.max(0, need[c.id] || 0, minSeat - (inCorner[c.id] || 0)); });
+      var asked = storeCorners.reduce(function(sum, c) { return sum + need[c.id]; }, 0);
+      while (asked > restN) {
+        var giver = storeCorners.filter(function(c) { return need[c.id] > 0 && (inCorner[c.id] || 0) + need[c.id] > minSeat; })
+          .sort(function(x, y) { return ((inCorner[y.id] || 0) + need[y.id]) - ((inCorner[x.id] || 0) + need[x.id]); })[0]
+          || storeCorners.filter(function(c) { return need[c.id] > 0; }).sort(function(x, y) { return need[y.id] - need[x.id]; })[0];
+        if (!giver) break; need[giver.id]--; asked--;
+      }
+      storeCorners.slice().sort(function(x, y) { return (wF[y.id] - wF[x.id]) || (x.id < y.id ? -1 : 1); }).forEach(function(c) {
+        var cand = present.filter(function(a) { return !placedToday[a.id]; }).sort(function(x, y) {
+          return (fairCount[x.id][c.id] - fairCount[y.id][c.id]) || (x.id < y.id ? -1 : 1);
+        });
+        cand.slice(0, Math.max(0, need[c.id])).forEach(function(a) { put(a, c.id); });
+      });
+      present.forEach(function(a) { if (!placedToday[a.id] && a.home_corner_id) put(a, a.home_corner_id); });
+    });
+  }
+  if (!mp.fairnessOn && storeCorners.length > 1) {
+    // Placement groups of the day
+    function inPlaceGroup(code, ds, key) {
+      return !!(shiftClusters(RETAIL_SHIFTS.sales, ds).covers[code] || {})[key];
+    }
+    function isOpenCode(code, ds){ return inPlaceGroup(code, ds, 'open'); }
+    function isCloseCode(code, ds){ return inPlaceGroup(code, ds, 'close'); }
+    mp.monthDays.forEach(function(d) {
+      if (d.closure) return;
+      var present = salesPresent(d);
+      if (!present.length) return;
+      if (d.past || mp._freeze) {
+        present.forEach(function(a) { if (a.home_corner_id) setCorner(a, d.ds, a.home_corner_id); });
+        keepManualCorners(present, d.ds);
+        return;
+      }
+      var byCorner = {};
+      storeCorners.forEach(function(c){ byCorner[c.id] = []; });
+      var noHome = [];
+      present.forEach(function(a) {
+        if (a.home_corner_id && byCorner[a.home_corner_id]) byCorner[a.home_corner_id].push(a);
+        else noHome.push(a);
+      });
+      var target = {};
+      storeCorners.forEach(function(c) {
+        target[c.id] = totWf > 0 ? Math.round(present.length * wF[c.id] / totWf) : 0;
+      });
+      var assign = {};
+      storeCorners.forEach(function(c){ assign[c.id] = byCorner[c.id].slice(); });
+      noHome.slice().sort(function(a,b){ return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }).forEach(function(a) {
+        var short = storeCorners.slice().sort(function(x,y){
+          var d = (target[y.id]-assign[y.id].length) - (target[x.id]-assign[x.id].length);
+          return d!==0 ? d : (x.id<y.id?-1:1);
+        })[0];
+        assign[short.id].push(a);
+      });
+      function shiftCode(a){
+        return (mp.shiftPlanByDay[d.ds] || {})[a.id] || 'O';
+      }
+      function coverGap(cid){
+        var hasO=false, hasC=false;
+        assign[cid].forEach(function(a){ var s=shiftCode(a); if(isOpenCode(s, d.ds))hasO=true; if(isCloseCode(s, d.ds))hasC=true; });
+        return { needO: !hasO, needC: !hasC };
+      }
+      function pickDonor(fromId, wantOpen){
+        var pool = assign[fromId].filter(function(a){
+          var s = shiftCode(a);
+          return wantOpen ? isOpenCode(s, d.ds) : isCloseCode(s, d.ds);
+        });
+        if (pool.length <= 1) return null;
+        var cand = pool.slice().sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
+        return cand[0];
+      }
+      storeCorners.forEach(function(c) {
+        var gap = coverGap(c.id);
+        [['O',gap.needO],['C',gap.needC]].forEach(function(g){
+          if (!g[1]) return;
+          var wantOpen = g[0]==='O';
+          var srcs = storeCorners.filter(function(s){ return s.id !== c.id && (assign[s.id].length - target[s.id]) > 0; })
+            .sort(function(x,y){ return (assign[y.id].length-target[y.id]) - (assign[x.id].length-target[x.id]); });
+          for (var i=0;i<srcs.length;i++){
+            var donor = pickDonor(srcs[i].id, wantOpen);
+            if (donor){
+              assign[srcs[i].id] = assign[srcs[i].id].filter(function(x){return x.id!==donor.id;});
+              assign[c.id].push(donor); break;
+            }
+          }
+        });
+      });
+      var guard = 0;
+      while (guard++ < 20) {
+        var over = storeCorners.filter(function(c){ return assign[c.id].length - target[c.id] >= 1; });
+        var under = storeCorners.filter(function(c){ return target[c.id] - assign[c.id].length >= 1; });
+        if (!over.length || !under.length) break;
+        var to = under.sort(function(x,y){ var d=(target[y.id]-assign[y.id].length)-(target[x.id]-assign[x.id].length); return d!==0?d:(x.id<y.id?-1:1); })[0];
+        var from = over.sort(function(x,y){ var d=(assign[y.id].length-target[y.id])-(assign[x.id].length-target[x.id]); return d!==0?d:(x.id<y.id?-1:1); })[0];
+        var donor = pickDonor(from.id, true) || pickDonor(from.id, false);
+        if (!donor) break;
+        assign[from.id] = assign[from.id].filter(function(x){return x.id!==donor.id;});
+        assign[to.id].push(donor);
+      }
+      storeCorners.forEach(function(c) { assign[c.id].forEach(function(a) { setCorner(a, d.ds, c.id); }); });
+      keepManualCorners(present, d.ds);
+    });
+  }
+}
 function computeMonthlyPlanOn(opt, ctx) {
-  var lim = dayLimits(), maxDays = lim.week;
-  var unpaidMin = unpaidMinutes();
-  var restGapMin = (regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) * 60;
+  var mp = {};
+  var lim = mp.lim = dayLimits(), maxDays = mp.maxDays = lim.week;
+  mp.unpaidMin = unpaidMinutes();
+  mp.restGapMin = (regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) * 60;
   // Saved planning, kept or recalculated
   var snapKey = snapshotMonthKey();
   var snapLoaded = !!(planSnapshot && planSnapshot.storeId === currentStoreId && planSnapshot.month === snapKey && planSnapshot.ok);
-  var snapPlan = (snapLoaded && planSnapshot.plan) || {};
-  var recalcFromToday = forceRecalc || !manualMode;
-  var todayDs = ctx.today;
-  function knownRes(a, ds) { return (snapPlan[ds] || {})[a.id] || neighbourRes(a, ds); }
-  // Shown result of one agent on one day
-  function shownRes(a, ds) {
-    var ov = (planningOverrides[a.id] || {})[ds];
-    if (ov) return { code: ov };
-    var saved = (snapPlan[ds] || {})[a.id];
-    if (saved && (!recalcFromToday || ds < todayDs)) return saved;
-    var pc = (shiftPlanByDay[ds] || {})[a.id];
-    if (pc) return { code: pc, half: volantHalfDay && (volantHalfDay[a.id] || {})[ds] };
-    return neighbourRes(a, ds);
-  }
-  function prevDayOf(ds) {
-    var pd = new Date(ds + 'T12:00:00'); pd.setDate(pd.getDate() - 1);
-    return toDateStr(pd);
-  }
-  function restAllows(a, ds, code) {
-    var prevDs = prevDayOf(ds);
-    var pres = fixedRes(a, prevDs) || shownRes(a, prevDs);
-    var ph = ruleHours(a, prevDs, pres);
-    var th = workHoursOf(a, ds, { code: code });
-    return !ph || !th || (1440 + th.start - ph.end) >= restGapMin;
-  }
-  function medianPaid(a) {
-    var grid = RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [];
-    var lens = grid.map(function(s) { return s.endMin - s.startMin; }).sort(function(x, y) { return x - y; });
-    return (lens.length ? lens[Math.floor((lens.length - 1) / 2)] : 0) - unpaidMin;
-  }
-  // Days a week the contract hours allow (whole days), and the same with the fraction (flexible part-time half days)
-  // Most days a week the contract allows: as many days as the shortest shift of the catalogue fits in the weekly
-  // hours (fitsWeek then picks shifts that keep the hours). With a 7 h 30 shift, 37 h 30 gives 5 days even when the
-  // other shifts are 8 h. Hours of a week: the ones valid on its Monday.
-  function minPaidOf(a) {
-    var grid = RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [];
-    return grid.reduce(function(m, g) { return Math.min(m, paidMinOf(g.startMin, g.endMin)); }, Infinity);
-  }
-  function weekCap(a, wk) {
-    var paid = minPaidOf(a), h = contractHours(a, wk);
-    if (!(h > 0) || !(paid > 0) || !isFinite(paid)) return maxDays;
-    return Math.min(maxDays, Math.floor(h * 60 / paid + 1e-9));
-  }
-  function contractDays(a, wk) {
-    var paid = medianPaid(a), h = contractHours(a, wk);
-    if (!(h > 0) || paid <= 0) return maxDays;
-    return Math.min(maxDays, h * 60 / paid);
-  }
+  var snapPlan = mp.snapPlan = (snapLoaded && planSnapshot.plan) || {};
+  var recalcFromToday = mp.recalcFromToday = forceRecalc || !manualMode;
+  var todayDs = mp.todayDs = ctx.today;
   var ref      = new Date(monthlyRef);
-  var year     = ref.getFullYear();
-  var monthIdx = ref.getMonth();
+  var year     = mp.year = ref.getFullYear();
+  var monthIdx = mp.monthIdx = ref.getMonth();
   var lastDay  = new Date(year, monthIdx + 1, 0);
   var nDays    = lastDay.getDate();
-  var monthDays = [];
+  var monthDays = mp.monthDays = [];
   var _todayStr = ctx.today;
   var _snapReady = !!(planSnapshot && planSnapshot.storeId === currentStoreId &&
                       planSnapshot.month === snapshotMonthKey() && planSnapshot.ok);
-  var _freeze = ((typeof manualMode !== 'undefined') ? manualMode : true) && !_snapReady;
+  var _freeze = mp._freeze = ((typeof manualMode !== 'undefined') ? manualMode : true) && !_snapReady;
   for (var dnum = 1; dnum <= nDays; dnum++) {
     var dObj = new Date(year, monthIdx, dnum);
     var ds   = toDateStr(dObj);
@@ -5912,22 +6758,15 @@ function computeMonthlyPlanOn(opt, ctx) {
     monthDays.push({ num: dnum, date: dObj, ds: ds, dow: dObj.getDay(),
                      closure: closure, vol: vol, past: ds < _todayStr });
   }
-  function weekKey(d) {
-    var dd = new Date(d);
-    var day = dd.getDay();
-    var diff = day === 0 ? -6 : 1 - day;
-    dd.setDate(dd.getDate() + diff);
-    return toDateStr(dd);
-  }
   var weeks = {};
   monthDays.forEach(function(d) {
     var wk = weekKey(d.date);
     if (!weeks[wk]) weeks[wk] = [];
     weeks[wk].push(d);
   });
-  var restMap = {};
+  var restMap = mp.restMap = {};
   // The manager's habits (from past manual changes and imported plannings, before this month)
-  var habits = opt && opt.habits === false ? NO_HABITS : buildHabits(toDateStr(new Date(year, monthIdx, 1)));
+  var habits = mp.habits = opt && opt.habits === false ? NO_HABITS : buildHabits(toDateStr(new Date(year, monthIdx, 1)));
   function likes(a, d) { return habits.work(a, d.dow); }
   agents.forEach(function(a) { restMap[a.id] = {}; });
   // Absences and leaves always win
@@ -5958,17 +6797,15 @@ function computeMonthlyPlanOn(opt, ctx) {
   }
   // Week across two months: days already worked in the other month count, unknown days keep their share
   function visibleQuota(a, wk, target) {
-    var monday = new Date(wk + 'T12:00:00');
     var inside = 0, outsideUnknown = 0, outsideWorked = 0;
     for (var i = 0; i < 7; i++) {
-      var dd = new Date(monday); dd.setDate(dd.getDate() + i);
-      var ds = toDateStr(dd);
+      var ds = shiftDay(wk, i), dd = new Date(ds + 'T12:00:00');
       var mk = dayMarker(a, ds);
       if (getDayClosureType(ds) || (mk && mk.kind !== 'shift')) continue;
       if (dd.getFullYear() === year && dd.getMonth() === monthIdx) { inside++; continue; }
       var res = (planningOverrides[a.id] || {})[ds];
       if (res) res = { code: res };
-      else res = knownRes(a, ds);
+      else res = knownRes(mp, a, ds);
       if (res) { if (workHoursOf(a, ds, res)) outsideWorked++; }
       else outsideUnknown++;
     }
@@ -5976,28 +6813,24 @@ function computeMonthlyPlanOn(opt, ctx) {
     if (outsideUnknown) left -= Math.round(left * outsideUnknown / Math.max(1, inside + outsideUnknown));
     return Math.max(0, Math.min(inside, left));
   }
-  var weekKeys = Object.keys(weeks).sort();
+  var weekKeys = mp.weekKeys = Object.keys(weeks).sort();
   var weekQuota = {};
   var volantHalf = {};
   agents.forEach(function(a) {
     // Flexible part-time: the days come from the contract hours (half days when they do not make whole days)
-    var isVolant = (retailStatusOf(a) === 'PART_TIME') && !isFixed(a) && weekKeys.some(function(wk) { return contractDays(a, wk) < maxDays; });
+    var isVolant = (retailStatusOf(a) === 'PART_TIME') && !isFixed(a) && weekKeys.some(function(wk) { return contractDays(mp, a, wk) < maxDays; });
     weekQuota[a.id] = {};
     volantHalf[a.id] = {};
     weekKeys.forEach(function(wk) {
-      var monday = new Date(wk + 'T12:00:00');
-      var openW = 0;
-      var absW = 0;
+      var openW = 0, absW = 0;
       for (var i = 0; i < 7; i++) {
-        var dd = new Date(monday);
-        dd.setDate(dd.getDate() + i);
-        var dds = toDateStr(dd);
+        var dds = shiftDay(wk, i);
         if (getDayClosureType(dds)) continue;
         openW++;
         if (reducesDays(dayMarker(a, dds))) absW++;
       }
       if (isVolant) {
-        var target = contractDays(a, wk) - absW;
+        var target = contractDays(mp, a, wk) - absW;
         target = Math.max(0, Math.min(openW, target));
         target = visibleQuota(a, wk, target);
         var fullDays = Math.floor(target);
@@ -6005,7 +6838,7 @@ function computeMonthlyPlanOn(opt, ctx) {
         weekQuota[a.id][wk] = fullDays + (hasHalf ? 1 : 0);
         volantHalf[a.id][wk] = hasHalf;
       } else {
-        var maxWork = Math.max(0, Math.min(weekCap(a, wk), openW) - absW);
+        var maxWork = Math.max(0, Math.min(weekCap(mp, a, wk), openW) - absW);
         var days = visibleQuota(a, wk, maxWork);
         weekQuota[a.id][wk] = Math.max(0, Math.min(maxWork, days));
       }
@@ -6033,9 +6866,9 @@ function computeMonthlyPlanOn(opt, ctx) {
       return s + (weekQuota[a.id][wk] || 0);
     }, 0);
   });
-  var worked = {};
+  var worked = mp.worked = {};
   agents.forEach(function(a) { worked[a.id] = 0; });
-  var workedInWeek = {};
+  var workedInWeek = mp.workedInWeek = {};
   agents.forEach(function(a) { workedInWeek[a.id] = {}; });
   // Worked day for the day limits: OUT counts, weeks across two months included
   function workedOn(a, ds) {
@@ -6044,16 +6877,15 @@ function computeMonthlyPlanOn(opt, ctx) {
     var lv = leaveRes(a, ds);
     if (lv && lv.special === 'out') return true;
     if (assignedMap[ds]) return assignedMap[ds].indexOf(a.id) !== -1;
-    var known = knownRes(a, ds);
+    var known = knownRes(mp, a, ds);
     return !!(known && workHoursOf(a, ds, known));
   }
   // Never more days in a row than "Max days in a row"
   function runOk(a, d) {
-    var n = 1, d0 = new Date(d.ds + 'T12:00:00'), k, x;
-    for (k = 1; k <= lim.row; k++) { x = new Date(d0); x.setDate(d0.getDate() - k); if (!workedOn(a, toDateStr(x))) break; n++; }
+    var n = 1, k;
+    for (k = 1; k <= lim.row; k++) { if (!workedOn(a, shiftDay(d.ds, -k))) break; n++; }
     for (k = 1; k <= lim.row; k++) {
-      x = new Date(d0); x.setDate(d0.getDate() + k);
-      var xs = toDateStr(x);
+      var xs = shiftDay(d.ds, k);
       if (!assignedMap[xs] && !(planningOverrides[a.id] || {})[xs]) break;
       if (!workedOn(a, xs)) break; n++;
     }
@@ -6061,10 +6893,9 @@ function computeMonthlyPlanOn(opt, ctx) {
   }
   // Days worked in one Monday-to-Sunday week, one day left out
   function daysInWeek(a, wk, skipDs) {
-    var monday = new Date(wk + 'T12:00:00'), n = 0;
+    var n = 0;
     for (var i = 0; i < 7; i++) {
-      var x = new Date(monday); x.setDate(monday.getDate() + i);
-      var xs = toDateStr(x);
+      var xs = shiftDay(wk, i);
       if (xs !== skipDs && workedOn(a, xs)) n++;
     }
     return n;
@@ -6073,8 +6904,7 @@ function computeMonthlyPlanOn(opt, ctx) {
   function twoWeeksOk(a, d) {
     if (lim.twoWeeks >= 2 * lim.week) return true;
     var wk = weekKey(d.date), here = daysInWeek(a, wk, d.ds) + 1;
-    function shift(n) { var m = new Date(wk + 'T12:00:00'); m.setDate(m.getDate() + n); return toDateStr(m); }
-    return here + daysInWeek(a, shift(-7)) <= lim.twoWeeks && here + daysInWeek(a, shift(7)) <= lim.twoWeeks;
+    return here + daysInWeek(a, shiftDay(wk, -7)) <= lim.twoWeeks && here + daysInWeek(a, shiftDay(wk, 7)) <= lim.twoWeeks;
   }
   function daysOk(a, d) { return runOk(a, d) && twoWeeksOk(a, d); }
   function canWork(a, d) {
@@ -6084,8 +6914,8 @@ function computeMonthlyPlanOn(opt, ctx) {
     var wk = weekKey(d.date);
     var doneThisWeek = workedInWeek[a.id][wk] || 0;
     // A flexible part-time may take one more (half) day than whole days allow, within its weekly hours
-    var isFlex = retailStatusOf(a) === 'PART_TIME' && !isFixed(a) && contractDays(a, wk) < maxDays;
-    if (doneThisWeek >= (isFlex ? Math.ceil(contractDays(a, wk) - 1e-9) : weekCap(a, wk))) return false;
+    var isFlex = retailStatusOf(a) === 'PART_TIME' && !isFixed(a) && contractDays(mp, a, wk) < maxDays;
+    if (doneThisWeek >= (isFlex ? Math.ceil(contractDays(mp, a, wk) - 1e-9) : weekCap(mp, a, wk))) return false;
     var wq = (weekQuota[a.id] && weekQuota[a.id][wk] != null)
       ? weekQuota[a.id][wk] : 5;
     if (doneThisWeek >= wq) return false;
@@ -6096,28 +6926,9 @@ function computeMonthlyPlanOn(opt, ctx) {
     worked[a.id]++;
     workedInWeek[a.id][wk] = (workedInWeek[a.id][wk] || 0) + 1;
   }
-  var assignedMap = {};
+  var assignedMap = mp.assignedMap = {};
   monthDays.forEach(function(d) { assignedMap[d.ds] = []; });
   var openList = monthDays.filter(function(d) { return !d.closure; });
-  function isLead(a)  { return poolOf(a) === 'mgmt'; }
-  function isStock(a) { return poolOf(a) === 'stock'; }
-  function isSales(a) { return poolOf(a) === 'sales'; }
-  // Fixed part-time schedules
-  function fixedSchedOf(a) {
-    var p = agentPrefs[a.id];
-    var fx = p && p.fixed_schedule;
-    return (fx && fx.enabled && fx.days && fx.days.length) ? fx : null;
-  }
-  function isFixed(a) { return !!fixedSchedOf(a); }
-  function fixedHasTime(a) {
-    var fx = fixedSchedOf(a);
-    return !!(fx && (fx.start || fx.end));
-  }
-  function isFixedTimed(a) { return isFixed(a) && fixedHasTime(a); }
-  function fixedWorksOn(a, d) {
-    var fx = fixedSchedOf(a);
-    return fx && fx.days.indexOf(d.date.getDay()) !== -1;
-  }
   function isLeadV(a)  { return isLead(a)  && !isFixedTimed(a); }
   function isStockV(a) { return isStock(a) && !isFixedTimed(a); }
   function isSalesV(a) { return isSales(a) && !isFixedTimed(a); }
@@ -6278,12 +7089,10 @@ function computeMonthlyPlanOn(opt, ctx) {
   });
   var minFloor = minCover('open') + minCover('close');
   // Floors of each open day, whatever the traffic: the store minimums, and two sellers in every corner (one opens, one closes)
-  var liveCorners = storeCorners.length > 1 ? 2 * storeCorners.length : 0;
-  var agentById = {};
+  var liveCorners = mp.liveCorners = storeCorners.length > 1 ? 2 * storeCorners.length : 0;
+  var agentById = mp.agentById = {};
   agents.forEach(function(a) { agentById[a.id] = a; });
-  function agentOf(id) { return agentById[id]; }
-  function salesOn(d) { return assignedMap[d.ds].filter(function(id) { var a = agentOf(id); return a && poolOf(a) === 'sales'; }).length; }
-  function floorShort(d) { return assignedMap[d.ds].length < minFloor ? 'any' : salesOn(d) < liveCorners ? 'sales' : null; }
+  function floorShort(d) { return assignedMap[d.ds].length < minFloor ? 'any' : salesOn(mp, d) < liveCorners ? 'sales' : null; }
   function moveDay(a, from, to) {
     assignedMap[from.ds].splice(assignedMap[from.ds].indexOf(a.id), 1);
     assignedMap[to.ds].push(a.id);
@@ -6303,7 +7112,7 @@ function computeMonthlyPlanOn(opt, ctx) {
         if (!fits(a) || isFixed(a) || isBlocked(a, d) || assignedMap[d.ds].indexOf(a.id) !== -1) return;
         openList.forEach(function(e) {
           if (e === d || e.past || weekKey(e.date) !== wk || assignedMap[e.ds].indexOf(a.id) === -1 || (planningOverrides[a.id] || {})[e.ds]) return;
-          if (assignedMap[e.ds].length - 1 < minFloor || (poolOf(a) === 'sales' && salesOn(e) - 1 < liveCorners)) return;
+          if (assignedMap[e.ds].length - 1 < minFloor || (poolOf(a) === 'sales' && salesOn(mp, e) - 1 < liveCorners)) return;
           var spare = assignedMap[e.ds].length - (dayTarget[e.ds] || 0);
           if (best && (spare < best.spare || (spare === best.spare && (e.vol || 0) >= (best.e.vol || 0)))) return;
           moveDay(a, e, d); var ok = runOk(a, d); moveDay(a, d, e);
@@ -6315,7 +7124,8 @@ function computeMonthlyPlanOn(opt, ctx) {
     }
   });
   // Two days off in a row when possible
-  (function groupDaysOff() {
+  groupDaysOff();
+  function groupDaysOff() {
     function worksOn(a, d) { return assignedMap[d.ds].indexOf(a.id) !== -1; }
     function isRest(a, d) { return d.closure || !worksOn(a, d); }
     function manual(a, d) { return !!(planningOverrides[a.id] && planningOverrides[a.id][d.ds]); }
@@ -6382,7 +7192,7 @@ function computeMonthlyPlanOn(opt, ctx) {
       });
       if (!changed) break;
     }
-  })();
+  }
   // Days closer to the manager's habits: two people of the same team swap a day in the same week
   // (same number of people every day, same days each, rules kept, no fewer pairs of days off)
   if (habits.days) (function swapToHabits() {
@@ -6427,17 +7237,15 @@ function computeMonthlyPlanOn(opt, ctx) {
     });
   });
   // Half days for flexible part-time
-  var volantHalfDay = {};
+  var volantHalfDay = mp.volantHalfDay = {};
   agents.forEach(function(a) {
     volantHalfDay[a.id] = {};
     if (!volantHalf[a.id]) return;
     weekKeys.forEach(function(wk) {
       if (!volantHalf[a.id][wk]) return;
-      var monday = new Date(wk + 'T12:00:00');
       var workedDays = [];
       for (var i = 0; i < 7; i++) {
-        var dd = new Date(monday); dd.setDate(dd.getDate() + i);
-        var dds = toDateStr(dd);
+        var dds = shiftDay(wk, i);
         if (getDayClosureType(dds)) continue;
         if (assignedMap[dds] && assignedMap[dds].indexOf(a.id) !== -1) {
           workedDays.push({ ds: dds, vol: (trafficDaily[dds] && trafficDaily[dds].traffic) || 0 });
@@ -6461,466 +7269,19 @@ function computeMonthlyPlanOn(opt, ctx) {
     });
   });
   // Traffic covered by each shift
-  var curveArr = (storeSettings && storeSettings.hourly_curve) || null;
-  var shiftPlanByDay = {};
-  var leadCloses = {};
+  mp.curveArr = (storeSettings && storeSettings.hourly_curve) || null;
+  var shiftPlanByDay = mp.shiftPlanByDay = {};
+  mp.leadCloses = {};
   // Paid minutes planned in each week: a shift that would break the weekly hours is swapped for one that fits
-  var weekPaid = {};
-  // Paid minutes of a shift; a flexible part-time half day pays its half only
-  function paidOfCode(a, ds, code) {
-    var wh = workHoursOf(a, ds, { code: code, half: (volantHalfDay[a.id] || {})[ds] });
-    return wh ? paidMinOf(wh.start, wh.end) : 0;
-  }
+  mp.weekPaid = {};
   // Days of the week outside the month: worked ones count, days of the next month not planned yet stay possible
-  var weekOut = {};
-  function seedWeek(a, wk) {
-    weekPaid[a.id] = weekPaid[a.id] || {};
-    if (weekPaid[a.id][wk] != null) return;
-    var total = 0, monday = new Date(wk + 'T12:00:00'), out = (weekOut[a.id] = weekOut[a.id] || {})[wk] = { worked: 0, open: 0 };
-    for (var i = 0; i < 7; i++) {
-      var x = new Date(monday); x.setDate(monday.getDate() + i);
-      var xs = toDateStr(x), fixed = fixedRes(a, xs);
-      // Training days of this month count their standard hours before any shift is placed
-      if (x.getFullYear() === year && x.getMonth() === monthIdx) { if (fixed && fixed.code === 'OUT') total += TRAINING_DAY.paid; continue; }
-      var res = fixed || knownRes(a, xs);
-      var wh = res && ruleHours(a, xs, res);
-      if (wh) { total += wh.paid; out.worked++; }
-      else if (!res && x > monthDays[monthDays.length - 1].date && !getDayClosureType(xs)) out.open++;
-    }
-    weekPaid[a.id][wk] = total;
-  }
-  // Weekly hours are strict for automatic shifts: the shift fits with the days still to come in the week
-  function fitsWeek(a, d, s) {
-    var wk = weekKey(d.date), hW = contractHours(a, wk);
-    if (!(hW > 0)) return true;
-    seedWeek(a, wk);
-    var used = weekPaid[a.id][wk];
-    var grid = RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || [];
-    var minPaid = grid.reduce(function(m, g) { return Math.min(m, paidMinOf(g.startMin, g.endMin)); }, Infinity);
-    if (!isFinite(minPaid)) minPaid = 0;
-    var laterDays = monthDays.filter(function(x) { return x.ds > d.ds && weekKey(x.date) === wk && (assignedMap[x.ds] || []).indexOf(a.id) !== -1; });
-    // Room kept for the later days of the week, a half day keeping only its half
-    var minCode = grid.reduce(function(m, g) { return !m || paidMinOf(g.startMin, g.endMin) < paidMinOf(m.startMin, m.endMin) ? g : m; }, null);
-    var laterPaid = laterDays.reduce(function(sum, x) { return sum + ((volantHalfDay[a.id] || {})[x.ds] && minCode ? paidOfCode(a, x.ds, minCode.code) : minPaid); }, 0);
-    // Room kept for the days of this week in the next month that this person may still work
-    var inMonth = monthDays.filter(function(x) { return weekKey(x.date) === wk && (assignedMap[x.ds] || []).indexOf(a.id) !== -1; }).length;
-    var out = weekOut[a.id][wk];
-    var maxDays = Math.min(dayLimits().week, minPaid ? Math.floor(hW * 60 / minPaid + 1e-6) : 7);
-    var room = hW * 60 - used - laterPaid - Math.min(out.open, Math.max(0, maxDays - inMonth - out.worked)) * minPaid;
-    return paidOfCode(a, d.ds, s.code) <= room + 1e-6;
-  }
-  function settleWeekHours(d, plan) {
-    var hm = dayMinutes(d.ds);
-    Object.keys(plan).forEach(function(id) {
-      var a = agents.find(function(x) { return x.id === id; });
-      if (!a || (planningOverrides[id] || {})[d.ds]) return;
-      var grid = RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || [];
-      if (plan[id] === 'D') grid = [{ code: 'D', startMin: hm.open, endMin: hm.close }];
-      var cur = grid.find(function(s) { return s.code === plan[id]; });
-      if (!cur || fitsWeek(a, d, cur)) return;
-      var cov = coverOfHours(cur.startMin, cur.endMin, hm);
-      // Who opens and who closes today, to keep the minimums when this shift must change
-      var role = { open: 0, close: 0 };
-      Object.keys(plan).forEach(function(bid) {
-        var b = agents.find(function(x) { return x.id === bid; }), sb = b && grid.find(function(q) { return q.code === plan[bid]; });
-        if (!sb || poolOf(b) === 'stock' || poolOf(b) !== poolOf(a) && poolOf(a) === 'stock') return;
-        var cb = coverOfHours(sb.startMin, sb.endMin, hm); if (cb.open) role.open++; if (cb.close) role.close++;
-      });
-      var minO2 = minCover('open'), minC2 = minCover('close');
-      // The shift is needed for the opening / closing minimum: free one later day of the week instead
-      var needed = poolOf(a) !== 'stock' && ((cov.open && role.open - 1 < minO2) || (cov.close && role.close - 1 < minC2));
-      if (needed) {
-        var wkD = weekKey(d.date);
-        var lat = monthDays.filter(function(x) { return x.ds > d.ds && weekKey(x.date) === wkD && (assignedMap[x.ds] || []).indexOf(id) !== -1 && !(planningOverrides[id] || {})[x.ds]; }).pop();
-        if (lat) {
-          assignedMap[lat.ds].splice(assignedMap[lat.ds].indexOf(id), 1); worked[id]--; workedInWeek[id][wkD]--;
-          restMap[id][lat.ds] = true;
-          if (fitsWeek(a, d, cur)) return;
-        }
-        return;   // kept for now: the weekly check below removes the least useful day of the week
-      }
-      // A shift that fits: keeping the opening / closing minimums if possible, else any shift that fits
-      var alt = grid.filter(function(s) { return fitsWeek(a, d, s) && restAllows(a, d.ds, s.code); }).sort(function(x, y) {
-        function rank(s) {
-          var cv = coverOfHours(s.startMin, s.endMin, hm);
-          var keeps = poolOf(a) === 'stock' || ((!cov.open || cv.open || role.open - 1 >= minO2) && (!cov.close || cv.close || role.close - 1 >= minC2));
-          return (keeps ? 0 : 2) + ((cv.open === cov.open && cv.close === cov.close) ? 0 : 1);
-        }
-        return (rank(x) - rank(y)) || (Math.abs(x.startMin - cur.startMin) - Math.abs(y.startMin - cur.startMin));
-      })[0];
-      if (alt) { plan[id] = alt.code; return; }
-      // Nothing fits the contract: the advisor does not work this day (never more hours than the contract)
-      delete plan[id];
-      var ix = assignedMap[d.ds].indexOf(id);
-      if (ix !== -1) { assignedMap[d.ds].splice(ix, 1); worked[id]--; workedInWeek[id][weekKey(d.date)]--; }
-      restMap[id][d.ds] = true;
-    });
-    Object.keys(plan).forEach(function(id) {
-      var a = agents.find(function(x) { return x.id === id; });
-      if (!a) return;
-      var code = (planningOverrides[id] || {})[d.ds] || plan[id], wk = weekKey(d.date);
-      seedWeek(a, wk);
-      weekPaid[id][wk] += paidOfCode(a, d.ds, code);
-    });
-  }
-  function isSpecialDay(d) {
-    var sundaySingle = !storeSettings || storeSettings.sunday_single_shift !== false;
-    return sundaySingle && (d.date.getDay() === 0 || !!calHolidays[d.ds]);
-  }
-  monthDays.forEach(function(d) {
-    if (d.closure) return;
-    var dow2 = d.date.getDay();
-    var dh = (regulations.day_hours && regulations.day_hours[
-      ['sun','mon','tue','wed','thu','fri','sat'][dow2]]) || { open: 10, close: 18 };
-    if (calHours[d.ds]) dh = calHours[d.ds];
-    var present = assignedMap[d.ds].slice();
-    var plan = {};
-    present = present.filter(function(id) {
-      var a = agents.find(function(x){ return x.id === id; });
-      if (a && isFixedTimed(a)) { plan[id] = 'PT'; return false; }
-      return true;
-    });
-    // Sundays and open holidays: single shift D
-    if (isSpecialDay(d)) {
-      present.forEach(function(id){ plan[id] = 'D'; });
-      settleWeekHours(d, plan);
-      shiftPlanByDay[d.ds] = plan;
-      return;
-    }
-    var byGrid = { sales: [], stock: [] };
-    present.forEach(function(id) {
-      var a = agents.find(function(x){ return x.id === id; });
-      if (!a) return;
-      var g = RETAIL_STATUS[retailStatusOf(a)].grid;
-      (byGrid[g] || byGrid.sales).push(a);
-    });
-    Object.keys(byGrid).forEach(function(g) {
-      var list = byGrid[g];
-      var grid = RETAIL_SHIFTS[g] || [];
-      if (!list.length || !grid.length) return;
-      var cl = shiftClusters(grid, d.ds);
-      // The manager's shift of the day first. It counts in the late target and in the coverage of the day.
-      // (Preferred shifts are gone, Roman 17-10: the manager places people by hand and CAST learns it.)
-      var fixedCodes = [];
-      list = list.filter(function(a) {
-        var mc = (planningOverrides[a.id] || {})[d.ds], ms = mc && grid.find(function(s) { return s.code === mc; });
-        if (ms) { plan[a.id] = ms.code; fixedCodes.push(ms.code); return false; }
-        return true;
-      });
-      if (!list.length) return;
-      if (g === 'stock') {
-        var earliest = grid.reduce(function(a, b){ return b.startMin < a.startMin ? b : a; });
-        var nS = list.length;
-        var sorted = list.slice();
-        var rotS = nS ? (d.num % nS) : 0;
-        sorted = sorted.slice(rotS).concat(sorted.slice(0, rotS));
-        if (nS === 1) {
-          plan[sorted[0].id] = earliest.code;
-        } else {
-          // One closer, the others open (deliveries come in the morning). The one who usually closes this day closes.
-          var nClo = 1, closeS = cl.close[cl.close.length - 1].code;
-          if (habits.knowsShifts(sorted[0])) sorted.sort(function(x, y) { return habits.shift(x, d.dow, closeS, grid.length) - habits.shift(y, d.dow, closeS, grid.length); });
-          // Stock opens first and closes last
-          sorted.forEach(function(a, i) {
-            plan[a.id] = (i < nS - nClo ? cl.open[0] : cl.close[cl.close.length - 1]).code;
-          });
-        }
-        return;
-      }
-      if (g === 'sales') {
-        // Managers open first and close last
-        var openSh  = cl.open[0];
-        var closeSh = cl.close[cl.close.length - 1];
-        // Stable order, so managers really alternate
-        var leadsHere = list.filter(function(a){ return poolOf(a) === 'mgmt'; })
-          .sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
-        // Managers: one closes, the others open. The one who closed the least this month closes.
-        if (leadsHere.length >= 2) {
-          var closer = leadsHere.slice().sort(function(x, y) {
-            var hb = Math.round(20 * (habits.shift(y, d.dow, closeSh.code, grid.length) - habits.shift(x, d.dow, closeSh.code, grid.length)));
-            return hb || ((leadCloses[x.id] || 0) - (leadCloses[y.id] || 0)) || (x.id < y.id ? -1 : 1); })
-            .find(function(a) { return restAllows(a, d.ds, closeSh.code); }) || leadsHere[0];
-          var opens = leadsHere.filter(function(a) { return a !== closer; });
-          opens.forEach(function(a, i) { plan[a.id] = spreadPick(cl.open, i, opens.length).code; });
-          plan[closer.id] = closeSh.code; leadCloses[closer.id] = (leadCloses[closer.id] || 0) + 1;
-          leadsHere.forEach(function(a) { fixedCodes.push(plan[a.id]); });   // managers count in the late target
-          list = list.filter(function(a) { return leadsHere.indexOf(a) === -1; });
-        } else if (leadsHere.length === 1) {
-          var l0 = leadsHere[0], hc = habits.shift(l0, d.dow, closeSh.code, grid.length) - habits.shift(l0, d.dow, openSh.code, grid.length);
-          plan[l0.id] = (Math.abs(hc) > 0.05 ? (hc > 0 ? closeSh : openSh) : (d.num % 2 === 0 ? openSh : closeSh)).code;
-          fixedCodes.push(plan[l0.id]);
-          list = list.filter(function(a){ return a.id !== leadsHere[0].id; });
-        }
-        if (!list.length) return;
-      }
-      var mid = (dh.open + dh.close) / 2;
-      function avgCurve(fromH, toH) {
-        if (!curveArr || !curveArr.length) return 1;
-        var sum = 0, n = 0;
-        for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
-          var ci = hourlyCurveIndex(h * 60);
-          if (ci >= 0 && ci < curveArr.length) { sum += curveArr[ci]; n++; }
-        }
-        return n ? sum / n : 1;
-      }
-      var wMorning = avgCurve(dh.open, mid);
-      var wEvening = avgCurve(mid, dh.close) * CLOSING_BIAS;
-      var wSum = (wMorning + wEvening) || 1;
-      var eveningShare = wEvening / wSum;
-      var nTotal = list.length + fixedCodes.length;
-      var frozen = d.past;
-      var lateRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
-      var minOpen  = frozen ? 1 : minCover('open');
-      var minClose = frozen ? 1 : minCover('close');
-      function restOk(a, s) { return !s || restAllows(a, d.ds, s.code); }
-      // Late shifts (last quarter of the list) and the others
-      var byStart = grid.slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
-      var isLate = lateCodes(grid);
-      var nLate = byStart.length > 1 ? Math.max(0, Math.min(nTotal, Math.round(nTotal * lateRatio))) : 0;
-      var left = { early: nTotal - nLate, late: nLate };
-      fixedCodes.forEach(function(c) { left[isLate[c] ? 'late' : 'early']--; });
-      // Hourly traffic of the day, in 15 min slots
-      var hm = dayMinutes(d.ds), slots = [];
-      for (var tm = hm.open; tm < hm.close; tm += 15) {
-        var ci = hourlyCurveIndex(tm);
-        var wv = (curveArr && curveArr.length && ci >= 0 && ci < curveArr.length) ? (+curveArr[ci] || 0) : 1;
-        slots.push({ t: tm, w: Math.max(wv, 0.0001), cov: 0 });
-      }
-      // Time on the floor of a shift, slot by slot: lunch and breaks are taken anywhere in their window,
-      // from one hour after arrival, so an early arrival can break earlier
-      var floorCache = {};
-      function floorOf(st, en) {
-        var key = st + '-' + en;
-        if (floorCache[key]) return floorCache[key];
-        // Share of each quarter hour inside the shift, so a 9:50 start counts its 10 minutes
-        function part(a, b, t) { return Math.max(0, Math.min(b, t + 15) - Math.max(a, t)) / 15; }
-        var p = slots.map(function(sl) { return part(st, en, sl.t); });
-        (regulations.breaks || []).forEach(function(b) {
-          var dur = b.duration || 0;
-          if (!(dur > 0) || !(b.window_end > b.window_start)) return;
-          var lo = Math.ceil(Math.max(b.window_start * 60, st + 60) / 15) * 15, hi = Math.min(b.window_end * 60, en) - dur;
-          if (hi < lo) return;
-          var n = Math.floor((hi - lo) / 15) + 1;
-          slots.forEach(function(sl, k) {
-            if (!p[k]) return;
-            var away = 0;
-            for (var x = lo; x <= hi; x += 15) away += part(x, x + dur, sl.t);
-            p[k] = Math.max(0, p[k] - away / n);
-          });
-        });
-        return (floorCache[key] = p);
-      }
-      function addCov(st, en, k) { var p = floorOf(st, en); slots.forEach(function(sl, i) { sl.cov += (k || 1) * p[i]; }); }
-      // People already placed (managers, fixed hours) count
-      var placed = [];
-      Object.keys(plan).forEach(function(id) {
-        var ag = agents.find(function(x) { return x.id === id; });
-        var wh = ag && workHoursOf(ag, d.ds, { code: plan[id] });
-        if (wh) { addCov(wh.start, wh.end); placed.push({ start: wh.start, end: wh.end, sales: poolOf(ag) === 'sales' }); }
-      });
-      // Need of each quarter hour: the floor time the whole team could give, spread like the hourly traffic.
-      // Same rule with 3 or 30 people and any number of shifts; time outside opening hours meets no need.
-      var Wsum = slots.reduce(function(t, sl) { return t + sl.w; }, 0);
-      var Fmax = byStart.reduce(function(m, s) { return Math.max(m, floorOf(s.startMin, s.endMin).reduce(function(t, x) { return t + x; }, 0)); }, 0);
-      slots.forEach(function(sl) { sl.need = sl.w / Wsum * (placed.length + list.length) * Fmax; });
-      // Value of a shift: how much it closes the gap between the people on the floor and the need (sum of squared gaps),
-      // so one person too many somewhere costs as much as one missing elsewhere
-      function gain(s) {
-        var p = floorOf(s.startMin, s.endMin), g = 0;
-        slots.forEach(function(sl, i) { if (p[i]) g += p[i] * (2 * (sl.need - sl.cov) - p[i]); });
-        return g;
-      }
-      // Shifts that keep the weekly hours first (a longer shift would later cost a day). Then traffic: among the shifts
-      // within 10% of the best traffic value, this person's usual shift on this weekday wins, then the best value, then the first one.
-      function best(cands, a) {
-        var fit = cands.filter(function(s) { return fitsWeek(a, d, s); });
-        if (fit.length) cands = fit;
-        var gs = cands.map(gain), top = Math.max.apply(null, gs), tol = 0.1 * Math.abs(top) + 1e-9, b = null, bh = 0, bg = 0;
-        cands.forEach(function(s, i) {
-          if (gs[i] < top - tol) return;
-          var h = habits.shift(a, d.dow, s.code, grid.length);
-          if (!b || h > bh + 1e-9 || (Math.abs(h - bh) <= 1e-9 && gs[i] > bg + 1e-9)) { b = s; bh = h; bg = gs[i]; }
-        });
-        return b;
-      }
-      var pool = list.slice();
-      var rot = pool.length ? (d.num % pool.length) : 0;
-      pool = pool.slice(rot).concat(pool.slice(0, rot));
-      var movable = pool.slice();
-      function place(a, s) {
-        plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start: s.startMin, end: s.endMin, sales: poolOf(a) === 'sales' });
-        left[isLate[s.code] ? 'late' : 'early']--;
-        pool.splice(pool.indexOf(a), 1);
-      }
-      function roomFor(s) { return left[isLate[s.code] ? 'late' : 'early'] > 0; }
-      // Hard needs first: someone for the first hour, someone for the last hour
-      // How much this person usually takes one of these shifts on this weekday
-      function leans(a, shifts) { return shifts.reduce(function(m, s) { return Math.max(m, habits.shift(a, d.dow, s.code, grid.length)); }, -1); }
-      function cover(key, need, salesOnly) {
-        var have = placed.filter(function(w) { return (!salesOnly || w.sales) && coverOfHours(w.start, w.end, hm)[key]; }).length;
-        var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
-        while (have < need && shifts.length) {
-          // Who usually opens (or closes) this day goes first, the others keep the daily rotation
-          var order = pool.slice().sort(function(x, y) { return Math.round(20 * (leans(y, shifts) - leans(x, shifts))); });
-          var done = false;
-          for (var k = 0; k < order.length && !done; k++) {
-            var ok = shifts.filter(function(s) { return restOk(order[k], s); });
-            if (!ok.length) continue;
-            var inRoom = ok.filter(roomFor);
-            place(order[k], best(inRoom.length ? inRoom : ok, order[k])); have++; done = true;
-          }
-          if (!done) break;
-        }
-      }
-      // Order of the day: mandatory coverage (one person for the first and the last hour), then what the manager
-      // usually does (learned from the manager's own changes), then the calculations (store minimums, corners,
-      // late target, traffic)
-      var learned = {};
-      pool.slice().forEach(function(a) {
-        var top = null;
-        byStart.forEach(function(s) {
-          if (!restOk(a, s) || !fitsWeek(a, d, s)) return;
-          var h = habits.own(a, d.dow, s.code, grid.length);
-          if (h >= HABIT_CLEAR && (!top || h > top.h)) top = { s: s, h: h };
-        });
-        if (top) { place(a, top.s); learned[a.id] = true; }
-      });
-      cover('close', 1);
-      cover('open', 1);
-      // Mandatory rules before the manager: if nobody else can open or close, one learned choice gives way
-      ['close', 'open'].forEach(function(key) {
-        if (placed.some(function(w) { return coverOfHours(w.start, w.end, hm)[key]; })) return;
-        var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
-        movable.some(function(a) {
-          var cur = learned[a.id] && grid.find(function(s) { return s.code === plan[a.id]; });
-          var ok = cur && shifts.filter(function(s) { return restOk(a, s); });
-          if (!ok || !ok.length) return false;
-          var s2 = best(ok, a), i = placed.findIndex(function(w) { return w.start === cur.startMin && w.end === cur.endMin; });
-          addCov(cur.startMin, cur.endMin, -1); if (i !== -1) placed.splice(i, 1);
-          left[isLate[cur.code] ? 'late' : 'early']++;
-          pool.push(a); place(a, s2); delete learned[a.id];
-          return true;
-        });
-      });
-      cover('close', minClose);
-      cover('open', minOpen);
-      // Every corner needs one seller who opens and one who closes
-      var cornerNeed = storeCorners.length > 1 ? storeCorners.length : 0;
-      cover('close', cornerNeed, true);
-      cover('open', cornerNeed, true);
-      // Everyone else: the shift that helps the traffic most, inside the late target
-      // People with the clearest habit choose first
-      pool.sort(function(x, y) { return Math.round(20 * (leans(y, byStart) - leans(x, byStart))); });
-      while (pool.length) {
-        var a = pool[0];
-        var okS = byStart.filter(function(s) { return restOk(a, s); });
-        if (!okS.length) okS = byStart;
-        var inRoom = okS.filter(roomFor);
-        place(a, best(inRoom.length ? inRoom : okS, a));
-      }
-      // Then each person takes again the best shift with everyone else in place: same group (late or not),
-      // opening and closing minimums kept, for the store and the corners. Stops when nobody moves (6 rounds at most).
-      function covers(key, skip, salesOnly) {
-        return Object.keys(plan).filter(function(id) {
-          var ag = id !== skip && agents.find(function(x) { return x.id === id; });
-          var wh = ag && poolOf(ag) !== 'stock' && (!salesOnly || poolOf(ag) === 'sales') && workHoursOf(ag, d.ds, { code: plan[id] });
-          return wh && coverOfHours(wh.start, wh.end, hm)[key];
-        }).length;
-      }
-      for (var pass = 0; pass < 6; pass++) {
-        var moved = false;
-        movable.forEach(function(a) {
-          if (learned[a.id]) return;
-          var cur = grid.find(function(s) { return s.code === plan[a.id]; });
-          if (!cur) return;
-          addCov(cur.startMin, cur.endMin, -1);
-          var cc = coverOfHours(cur.startMin, cur.endMin, hm), o = covers('open', a.id), c = covers('close', a.id);
-          var oKeep = o >= minOpen && covers('open', a.id, true) >= cornerNeed, cKeep = c >= minClose && covers('close', a.id, true) >= cornerNeed;
-          var cands = [cur].concat(byStart.filter(function(s) {
-            var cv = coverOfHours(s.startMin, s.endMin, hm);
-            return s !== cur && isLate[s.code] === isLate[cur.code] && restOk(a, s) &&
-              (!cc.open || cv.open || oKeep) && (!cc.close || cv.close || cKeep);
-          }));
-          var b = best(cands, a);
-          if (b !== cur) { plan[a.id] = b.code; moved = true; }
-          addCov(b.startMin, b.endMin);
-        });
-        if (!moved) break;
-      }
-      list.forEach(function(a) {
-        var cur = grid.find(function(s) { return s.code === plan[a.id]; });
-        if (!cur || restOk(a, cur)) return;
-        var mate = list.find(function(b) {
-          var bs = grid.find(function(s) { return s.code === plan[b.id]; });
-          return b !== a && bs && restOk(a, bs) && restOk(b, cur);
-        });
-        if (mate) { var tmp = plan[mate.id]; plan[mate.id] = plan[a.id]; plan[a.id] = tmp; return; }
-        var ok = grid.filter(function(s) { return restOk(a, s); }).sort(function(x, y) { return x.startMin - y.startMin; })[0];
-        if (ok) plan[a.id] = ok.code;
-      });
-    });
-    // Mandatory coverage on the whole day, whoever gives it (sellers or managers). If nobody covers the first or the
-    // last hour, one person whose shift the manager did not set moves to a shift that covers it: preferences,
-    // learned choices and the usual manager closing give way. The other boundary is kept when possible.
-    if (!d.past) ['open', 'close'].forEach(function(key) {
-      var hmD = dayMinutes(d.ds), other = key === 'open' ? 'close' : 'open';
-      var floor = Object.keys(plan).map(function(id) { return agents.find(function(x) { return x.id === id; }); })
-        .filter(function(a) { return a && poolOf(a) !== 'stock'; });
-      function cv(a, code) { var wh = workHoursOf(a, d.ds, { code: code || plan[a.id] }); return wh ? coverOfHours(wh.start, wh.end, hmD) : {}; }
-      if (floor.some(function(a) { return cv(a)[key]; })) return;
-      var nOther = floor.filter(function(a) { return cv(a)[other]; }).length;
-      floor.filter(function(a) { return !(planningOverrides[a.id] || {})[d.ds] && plan[a.id] !== 'PT'; })
-        .sort(function(x, y) { return (cv(x)[other] ? 1 : 0) - (cv(y)[other] ? 1 : 0); })
-        .some(function(a) {
-          var keepOther = cv(a)[other] && nOther <= 1, cur = findShiftDef(plan[a.id]) || { startMin: 0 };
-          var s2 = (RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || []).filter(function(s) {
-            var c2 = cv(a, s.code); return c2[key] && (!keepOther || c2[other]) && restAllows(a, d.ds, s.code);
-          }).sort(function(x, y) { return Math.abs(x.startMin - cur.startMin) - Math.abs(y.startMin - cur.startMin); })[0];
-          if (s2) { plan[a.id] = s2.code; return true; }
-          return false;
-        });
-    });
-    settleWeekHours(d, plan);
-    shiftPlanByDay[d.ds] = plan;
-  });
+  mp.weekOut = {};
+  monthDays.forEach(function(d) { placeShiftsOfDay(mp, d); });
   // Weekly hours, last check: a week over the contract loses its least useful day (never more hours than the contract)
-  agents.forEach(function(a) {
-    if (isFixedTimed(a)) return;
-    weekKeys.forEach(function(wk) {
-      if (!(contractHours(a, wk) > 0)) return;
-      for (var guard = 0; guard < 7; guard++) {
-        var anyDay = monthDays.find(function(x) { return weekKey(x.date) === wk; });
-        if (!anyDay) return;
-        var total = weekPaidWith(a, anyDay, (planningOverrides[a.id] || {})[anyDay.ds] || (shiftPlanByDay[anyDay.ds] || {})[a.id]);
-        if (total <= contractHours(a, wk) * 60 + 1e-6) return;
-        var cands = monthDays.filter(function(x) {
-          return weekKey(x.date) === wk && !x.past && (shiftPlanByDay[x.ds] || {})[a.id] && !(planningOverrides[a.id] || {})[x.ds];
-        });
-        if (!cands.length) return;
-        function needed(x) {
-          var hm = dayMinutes(x.ds), me = workHoursOf(a, x.ds, { code: shiftPlanByDay[x.ds][a.id] });
-          if (!me || poolOf(a) === 'stock') return 0;
-          if (poolOf(a) === 'sales' && salesOn(x) - 1 < liveCorners) return 1;
-          var mine = coverOfHours(me.start, me.end, hm), o = 0, c = 0;
-          Object.keys(shiftPlanByDay[x.ds]).forEach(function(bid) {
-            var b = agents.find(function(q) { return q.id === bid; }); if (!b || poolOf(b) === 'stock') return;
-            var wh = workHoursOf(b, x.ds, { code: shiftPlanByDay[x.ds][bid] }); if (!wh) return;
-            var cv = coverOfHours(wh.start, wh.end, hm); if (cv.open) o++; if (cv.close) c++;
-          });
-          var mo = minCover('open'), mc = minCover('close');
-          return ((mine.open && o - 1 < mo) || (mine.close && c - 1 < mc)) ? 1 : 0;
-        }
-        var drop = cands.sort(function(x, y) { return (needed(x) - needed(y)) || ((x.vol || 0) - (y.vol || 0)); })[0];
-        delete shiftPlanByDay[drop.ds][a.id];
-        var ix = assignedMap[drop.ds].indexOf(a.id);
-        if (ix !== -1) { assignedMap[drop.ds].splice(ix, 1); worked[a.id]--; workedInWeek[a.id][wk]--; }
-        restMap[a.id][drop.ds] = true;
-      }
-    });
-  });
+  agents.forEach(function(a) { weekHoursPass(mp, a); });
   // Engine 2: balance sellers between corners
-  var cornerAssign = {};
-  var fairnessOn = storeCorners.length > 1 && storeSettings && storeSettings.fairness_rotation;
+  var cornerAssign = mp.cornerAssign = {};
+  var fairnessOn = mp.fairnessOn = storeCorners.length > 1 && storeSettings && storeSettings.fairness_rotation;
   // Corner weights from the traffic of each corner. Without corner traffic, everyone stays in the usual corner.
   var refYf = monthlyRef.getFullYear(), refMf = monthlyRef.getMonth() + 1;
   var wF = {}, totWf = 0;
@@ -6928,345 +7289,19 @@ function computeMonthlyPlanOn(opt, ctx) {
     wF[c.id] = cornerTrafficValue(c.id, refYf, refMf);
     totWf += wF[c.id];
   });
-  if (!(totWf > 0)) fairnessOn = false;
-  if (fairnessOn) {
-    // Fairness mode: everyone rotates between corners, counted on the final corner of each day
-    var fairCount = {};
-    agents.forEach(function(a){ fairCount[a.id] = {}; storeCorners.forEach(function(c){ fairCount[a.id][c.id] = 0; }); });
-    monthDays.forEach(function(d) {
-      if (d.closure) return;
-      var present = agents.filter(function(a) {
-        return poolOf(a) === 'sales' && assignedMap[d.ds].indexOf(a.id) !== -1;
-      });
-      if (!present.length) return;
-      var n = present.length, need = {}, placedToday = {};
-      // Seats of each corner from its traffic share; rounding goes to the largest remainders
-      // A corner is never empty: 2 people (one opens, one closes) when the team allows it, else 1
-      var minSeat = n >= 2 * storeCorners.length ? 2 : n >= storeCorners.length ? 1 : 0;
-      var share = storeCorners.map(function(c) { var q = n * wF[c.id] / totWf; need[c.id] = Math.max(minSeat, Math.floor(q)); return { c: c, r: q - Math.floor(q) }; });
-      var given = storeCorners.reduce(function(sum, c) { return sum + need[c.id]; }, 0);
-      while (given > n) {
-        var big = storeCorners.filter(function(c) { return need[c.id] > minSeat; }).sort(function(x, y) { return need[y.id] - need[x.id]; })[0];
-        if (!big) break; need[big.id]--; given--;
-      }
-      share.sort(function(x, y) { return (y.r - x.r) || (wF[y.c.id] - wF[x.c.id]); })
-        .forEach(function(e) { if (given < n) { need[e.c.id]++; given++; } });
-      function put(a, cid) {
-        placedToday[a.id] = true; need[cid] = (need[cid] || 0) - 1;
-        if (fairCount[a.id][cid] != null) fairCount[a.id][cid]++;
-        (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = cid;
-      }
-      // Manual corners first: they count in their real corner
-      present.forEach(function(a) {
-        var ov = (cornerOverrides[a.id] || {})[d.ds];
-        if (ov) put(a, ov);
-        else if ((agentPrefs[a.id] || {}).rotates === false && a.home_corner_id) put(a, a.home_corner_id);
-      });
-      // Seats left for the advisors who rotate: every corner keeps its minimum, the biggest corners give way
-      var restN = present.filter(function(a) { return !placedToday[a.id]; }).length;
-      var inCorner = {};
-      present.forEach(function(a) { if (placedToday[a.id]) { var cc = cornerAssign[a.id][d.ds]; inCorner[cc] = (inCorner[cc] || 0) + 1; } });
-      storeCorners.forEach(function(c) { need[c.id] = Math.max(0, need[c.id] || 0, minSeat - (inCorner[c.id] || 0)); });
-      var asked = storeCorners.reduce(function(sum, c) { return sum + need[c.id]; }, 0);
-      while (asked > restN) {
-        var giver = storeCorners.filter(function(c) { return need[c.id] > 0 && (inCorner[c.id] || 0) + need[c.id] > minSeat; })
-          .sort(function(x, y) { return ((inCorner[y.id] || 0) + need[y.id]) - ((inCorner[x.id] || 0) + need[x.id]); })[0]
-          || storeCorners.filter(function(c) { return need[c.id] > 0; }).sort(function(x, y) { return need[y.id] - need[x.id]; })[0];
-        if (!giver) break; need[giver.id]--; asked--;
-      }
-      storeCorners.slice().sort(function(x, y) { return (wF[y.id] - wF[x.id]) || (x.id < y.id ? -1 : 1); }).forEach(function(c) {
-        var cand = present.filter(function(a) { return !placedToday[a.id]; }).sort(function(x, y) {
-          return (fairCount[x.id][c.id] - fairCount[y.id][c.id]) || (x.id < y.id ? -1 : 1);
-        });
-        cand.slice(0, Math.max(0, need[c.id])).forEach(function(a) { put(a, c.id); });
-      });
-      present.forEach(function(a) { if (!placedToday[a.id] && a.home_corner_id) put(a, a.home_corner_id); });
-    });
-  }
-  if (!fairnessOn && storeCorners.length > 1) {
-    var refY = monthlyRef.getFullYear(), refM = monthlyRef.getMonth() + 1;
-    var cornerWeight = {};
-    storeCorners.forEach(function(c) {
-      cornerWeight[c.id] = cornerTrafficValue(c.id, refY, refM);
-    });
-    var totW = 0; storeCorners.forEach(function(c){ totW += cornerWeight[c.id]; });
-    // Placement groups of the day
-    function inPlaceGroup(code, ds, key) {
-      return !!(shiftClusters(RETAIL_SHIFTS.sales, ds).covers[code] || {})[key];
-    }
-    function isOpenCode(code, ds){ return inPlaceGroup(code, ds, 'open'); }
-    function isCloseCode(code, ds){ return inPlaceGroup(code, ds, 'close'); }
-    monthDays.forEach(function(d) {
-      if (d.closure) return;
-      var present = agents.filter(function(a) {
-        return poolOf(a) === 'sales' && assignedMap[d.ds].indexOf(a.id) !== -1;
-      });
-      if (!present.length) return;
-      if (d.past || _freeze) {
-        present.forEach(function(a) {
-          if (a.home_corner_id) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = a.home_corner_id;
-        });
-        present.forEach(function(a) {
-          var ov = (cornerOverrides[a.id] || {})[d.ds];
-          if (ov) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = ov;
-        });
-        return;
-      }
-      var byCorner = {};
-      storeCorners.forEach(function(c){ byCorner[c.id] = []; });
-      var noHome = [];
-      present.forEach(function(a) {
-        if (a.home_corner_id && byCorner[a.home_corner_id]) byCorner[a.home_corner_id].push(a);
-        else noHome.push(a);
-      });
-      var target = {};
-      storeCorners.forEach(function(c) {
-        target[c.id] = totW > 0 ? Math.round(present.length * cornerWeight[c.id] / totW) : 0;
-      });
-      var assign = {};
-      storeCorners.forEach(function(c){ assign[c.id] = byCorner[c.id].slice(); });
-      noHome.slice().sort(function(a,b){ return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }).forEach(function(a) {
-        var short = storeCorners.slice().sort(function(x,y){
-          var d = (target[y.id]-assign[y.id].length) - (target[x.id]-assign[x.id].length);
-          return d!==0 ? d : (x.id<y.id?-1:1);
-        })[0];
-        assign[short.id].push(a);
-      });
-      function shiftCode(a){
-        return (shiftPlanByDay[d.ds] || {})[a.id] || 'O';
-      }
-      function coverGap(cid){
-        var hasO=false, hasC=false;
-        assign[cid].forEach(function(a){ var s=shiftCode(a); if(isOpenCode(s, d.ds))hasO=true; if(isCloseCode(s, d.ds))hasC=true; });
-        return { needO: !hasO, needC: !hasC };
-      }
-      function pickDonor(fromId, wantOpen){
-        var pool = assign[fromId].filter(function(a){
-          var s = shiftCode(a);
-          return wantOpen ? isOpenCode(s, d.ds) : isCloseCode(s, d.ds);
-        });
-        if (pool.length <= 1) return null;
-        var cand = pool.slice().sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
-        return cand[0];
-      }
-      storeCorners.forEach(function(c) {
-        var gap = coverGap(c.id);
-        [['O',gap.needO],['C',gap.needC]].forEach(function(g){
-          if (!g[1]) return;
-          var wantOpen = g[0]==='O';
-          var srcs = storeCorners.filter(function(s){ return s.id !== c.id && (assign[s.id].length - target[s.id]) > 0; })
-            .sort(function(x,y){ return (assign[y.id].length-target[y.id]) - (assign[x.id].length-target[x.id]); });
-          for (var i=0;i<srcs.length;i++){
-            var donor = pickDonor(srcs[i].id, wantOpen);
-            if (donor){
-              assign[srcs[i].id] = assign[srcs[i].id].filter(function(x){return x.id!==donor.id;});
-              assign[c.id].push(donor); break;
-            }
-          }
-        });
-      });
-      var guard = 0;
-      while (guard++ < 20) {
-        var over = storeCorners.filter(function(c){ return assign[c.id].length - target[c.id] >= 1; });
-        var under = storeCorners.filter(function(c){ return target[c.id] - assign[c.id].length >= 1; });
-        if (!over.length || !under.length) break;
-        var to = under.sort(function(x,y){ var d=(target[y.id]-assign[y.id].length)-(target[x.id]-assign[x.id].length); return d!==0?d:(x.id<y.id?-1:1); })[0];
-        var from = over.sort(function(x,y){ var d=(assign[y.id].length-target[y.id])-(assign[x.id].length-target[x.id]); return d!==0?d:(x.id<y.id?-1:1); })[0];
-        var donor = pickDonor(from.id, true) || pickDonor(from.id, false);
-        if (!donor) break;
-        assign[from.id] = assign[from.id].filter(function(x){return x.id!==donor.id;});
-        assign[to.id].push(donor);
-      }
-      storeCorners.forEach(function(c) {
-        assign[c.id].forEach(function(a) {
-          (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = c.id;
-        });
-      });
-      present.forEach(function(a) {
-        var ov = (cornerOverrides[a.id] || {})[d.ds];
-        if (ov) (cornerAssign[a.id] = cornerAssign[a.id] || {})[d.ds] = ov;
-      });
-    });
-  }
-  // Paid minutes of a whole week on the final planning, with one shift replaced
-  function weekPaidWith(a, d, code) {
-    var monday = new Date(weekKey(d.date) + 'T12:00:00'), total = 0;
-    for (var i = 0; i < 7; i++) {
-      var dd = new Date(monday); dd.setDate(dd.getDate() + i);
-      var ds = toDateStr(dd), res;
-      var half = (volantHalfDay[a.id] || {})[ds];
-      if (ds === d.ds) res = { code: code, half: half };
-      else if (fixedRes(a, ds)) res = fixedRes(a, ds);
-      else if (shiftPlanByDay[ds]) res = shiftPlanByDay[ds][a.id] ? { code: shiftPlanByDay[ds][a.id], half: half } : null;
-      else res = shownRes(a, ds);
-      var wh = res && ruleHours(a, ds, res);
-      if (wh) total += wh.paid;
-    }
-    return total;
-  }
-  // A change of shift stays within the weekly hours, or adds nothing to a week already over them by manual changes
-  function weekFits(a, d, code) {
-    var hD = contractHours(a, weekKey(d.date));
-    if (!(hD > 0)) return true;
-    var after = weekPaidWith(a, d, code);
-    return after <= hD * 60 + 1e-6 || after <= weekPaidWith(a, d, (shiftPlanByDay[d.ds] || {})[a.id]) + 1e-6;
-  }
+  if (!(totWf > 0)) fairnessOn = mp.fairnessOn = false;
+  balanceCorners(mp, wF, totWf);
   // Final rest check (all pools)
-  monthDays.forEach(function(d) {
-    if (d.closure || d.past) return;
-    var plan = shiftPlanByDay[d.ds]; if (!plan) return;
-    Object.keys(plan).forEach(function(aid) {
-      var a = agents.find(function(x) { return x.id === aid; });
-      if (!a || (planningOverrides[aid] || {})[d.ds]) return;
-      var code = plan[aid];
-      if (restAllows(a, d.ds, code)) return;
-      var corner = (cornerAssign[aid] || {})[d.ds];
-      var mateId = Object.keys(plan).find(function(bid) {
-        var b = agents.find(function(x) { return x.id === bid; });
-        return bid !== aid && b && poolOf(b) === poolOf(a) && !(planningOverrides[bid] || {})[d.ds] &&
-          (cornerAssign[bid] || {})[d.ds] === corner && restAllows(a, d.ds, plan[bid]) && restAllows(b, d.ds, code) &&
-          weekFits(a, d, plan[bid]) && weekFits(b, d, code);
-      });
-      if (mateId) { plan[aid] = plan[mateId]; plan[mateId] = code; return; }
-      if (!isSpecialDay(d)) {
-        var cur = findShiftDef(code) || { startMin: -1 };
-        var alt = (RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [])
-          .filter(function(s) { return s.startMin > cur.startMin && restAllows(a, d.ds, s.code) && weekFits(a, d, s.code); })
-          .sort(function(x, y) { return x.startMin - y.startMin; })[0];
-        if (alt) { plan[aid] = alt.code; return; }
-      }
-    });
-  });
+  monthDays.forEach(function(d) { restPass(mp, d); });
   // Repair real displayed coverage after the rest pass. Manual choices stay locked.
-  (function repairDisplayedCoverage() {
-    var grid = RETAIL_SHIFTS.sales || [];
-    if (!grid.length) return;
-    var late = lateCodes(grid), lateRatio = storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
-    var minO = minCover('open'), minC = minCover('close');
-    function effective(a, ds, replacement) {
-      var ov = (planningOverrides[a.id] || {})[ds];
-      if (ov) return { code: ov };
-      var day = monthDays.find(function(d) { return d.ds === ds; });
-      if (!day) return shownRes(a, ds);
-      var lv = leaveRes(a, ds);
-      if (lv) return lv;
-      if (isFixedTimed(a)) return fixedWorksOn(a, day) ? { code: 'PT' } : { code: 'OFF', special: 'off' };
-      var saved = (snapPlan[ds] || {})[a.id];
-      if (saved && (!recalcFromToday || ds < todayDs)) return saved;
-      if ((restMap[a.id] || {})[ds]) return { code: 'OFF', special: 'off' };
-      var code = replacement != null ? replacement : (shiftPlanByDay[ds] || {})[a.id];
-      return { code: code, half: (volantHalfDay[a.id] || {})[ds] };
-    }
-    function mutable(a, d) {
-      return poolOf(a) === 'sales' && !isFixedTimed(a) && !(planningOverrides[a.id] || {})[d.ds] &&
-        !(snapPlan[d.ds] && snapPlan[d.ds][a.id] && !recalcFromToday) &&
-        assignedMap[d.ds].indexOf(a.id) !== -1 && !!workHoursOf(a, d.ds, effective(a, d.ds));
-    }
-    function cornerOf(a, ds) {
-      return (cornerOverrides[a.id] || {})[ds] || (cornerAssign[a.id] || {})[ds] || a.home_corner_id;
-    }
-    function restFits(a, d, code) {
-      var now = workHoursOf(a, d.ds, effective(a, d.ds, code));
-      if (!now) return false;
-      var prevDs = prevDayOf(d.ds);
-      var nextDate = new Date(d.ds + 'T12:00:00'); nextDate.setDate(nextDate.getDate() + 1);
-      var nextDs = toDateStr(nextDate);
-      var prev = workHoursOf(a, prevDs, effective(a, prevDs));
-      var next = workHoursOf(a, nextDs, effective(a, nextDs));
-      return (!prev || 1440 + now.start - prev.end >= restGapMin) &&
-             (!next || 1440 + next.start - now.end >= restGapMin);
-    }
-    function less(x, y) {
-      for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i];
-      return false;
-    }
-    monthDays.forEach(function(d) {
-      if (d.closure || d.past || _freeze || isSpecialDay(d)) return;
-      var hm = dayMinutes(d.ds), groups = {};
-      // Late target of the day, on the sellers and managers working this day (never stock, they are not on the floor)
-      var sellers = agents.filter(function(a) { return poolOf(a) !== 'stock' && workHoursOf(a, d.ds, effective(a, d.ds)); });
-      var lateTarget = Math.round(sellers.length * lateRatio);
-      var dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
-      agents.forEach(function(a) {
-        if (storeCorners.length > 1 ? poolOf(a) !== 'sales' : poolOf(a) === 'stock') return;
-        if (!workHoursOf(a, d.ds, effective(a, d.ds))) return;
-        var cid = storeCorners.length > 1 ? cornerOf(a, d.ds) : '_store';
-        if (!cid) return;
-        (groups[cid] = groups[cid] || []).push(a);
-      });
-      Object.keys(groups).forEach(function(cid) {
-        var list = groups[cid];
-        function state(changes) {
-          var o = 0, c = 0, nLate = 0, hours = [];
-          list.forEach(function(a) {
-            var move = changes.find(function(x) { return x.a.id === a.id; });
-            var res = effective(a, d.ds, move ? move.code : null);
-            var wh = workHoursOf(a, d.ds, res);
-            if (!wh) return;
-            var cv = coverOfHours(wh.start, wh.end, hm);
-            if (cv.open) o++; if (cv.close) c++;
-            if (late[res.code]) nLate++;
-            hours.push(wh);
-          });
-          return { o: o, c: c, late: nLate, hours: hours,
-            missing: Math.max(0, minO - o) + Math.max(0, minC - c) };
-        }
-        function pressure(st) {
-          var value = 0;
-          for (var t = hm.open; t + 15 <= hm.close; t += 15) {
-            var ci = hourlyCurveIndex(t);
-            var w = curveArr && ci >= 0 && ci < curveArr.length ? (+curveArr[ci] || 0) : 1;
-            var present = st.hours.filter(function(h) { return h.start <= t && h.end >= t + 15; }).length;
-            value += Math.max(0, w) / Math.max(0.5, present);
-          }
-          return value;
-        }
-        for (var pass = 0; pass < list.length * 2 + 2; pass++) {
-          var before = state([]);
-          if (!before.missing) break;
-          var options = [];
-          list.filter(function(a) { return mutable(a, d); }).forEach(function(a) {
-            var cur = effective(a, d.ds), wh = workHoursOf(a, d.ds, cur);
-            var oldCov = coverOfHours(wh.start, wh.end, hm);
-            grid.forEach(function(s) {
-              if (s.code === cur.code || !restFits(a, d, s.code)) return;
-              var target = workHoursOf(a, d.ds, effective(a, d.ds, s.code));
-              var cv = coverOfHours(target.start, target.end, hm);
-              if ((cv.open !== oldCov.open || cv.close !== oldCov.close) && weekFits(a, d, s.code)) options.push({ a: a, code: s.code });
-            });
-          });
-          var best = null;
-          function consider(changes) {
-            var after = state(changes);
-            if (after.missing >= before.missing) return;
-            // Protect the other boundary only when the proposed move would lose it.
-            if ((before.o >= minO && after.o < minO) || (before.c >= minC && after.c < minC)) return;
-            var distance = changes.reduce(function(sum, x) {
-              var wh = workHoursOf(x.a, d.ds, effective(x.a, d.ds));
-              return sum + Math.abs(findShiftDef(x.code).startMin - wh.start);
-            }, 0);
-            var score = [changes.length, after.missing, Math.abs(dayLate - before.late + after.late - lateTarget), pressure(after), distance];
-            if (!best || less(score, best.score)) best = { changes: changes, score: score };
-          }
-          options.forEach(function(x) { consider([x]); });
-          // A half-day opener and a full-day closer may require two coordinated moves.
-          if (!best) for (var i = 0; i < options.length; i++) for (var j = i + 1; j < options.length; j++) {
-            if (options[i].a.id !== options[j].a.id) consider([options[i], options[j]]);
-          }
-          if (!best) break;
-          best.changes.forEach(function(x) { shiftPlanByDay[d.ds][x.a.id] = x.code; });
-          dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
-        }
-      });
-    });
-  })();
+  repairDisplayedCoverage(mp);
   function cornerCodeOf(cid) {
     for (var i = 0; i < storeCorners.length; i++) if (storeCorners[i].id === cid) return storeCorners[i].code;
     return null;
   }
   // Shift of one agent on one day
   // Saved planning (frozen mode)
-  var newSnap = {};
+  var newSnap = mp.newSnap = {};
   function autoLayer(agent, day) {
     var saved = (snapPlan[day.ds] || {})[agent.id];
     var res = (saved && (!recalcFromToday || day.ds < todayDs)) ? Object.assign({}, saved) : autoFor(agent, day);
@@ -7323,27 +7358,13 @@ function computeMonthlyPlanOn(opt, ctx) {
     }
     return { code: baseCode, tone: baseTone };
   }
-  function cell(res) {
-    if (res.special === 'closed') return '<span class="sh-none">-</span>';
-    if (res.half) {
-      var cls = shiftCls(res.code);
-      var isClose = /^C/.test(res.code);
-      var pos = isClose ? 'sh-half-pm' : 'sh-half-am';
-      return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + esc(res.code) + '</span></span>';
-    }
-    if (res.corner) {
-      return '<span class="sh-cnr"><span class="sh-cnr-tag" data-no-i18n title="' + esc(res.corner) + '">' + esc(res.corner) + '</span>' +
-             '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span></span>';
-    }
-    return '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span>';
-  }
   // Shifts and HR counters per agent
-  var agentRows = {};
+  var agentRows = mp.agentRows = {};
   var rh = {};
   agents.forEach(function(a) {
     agentRows[a.id] = monthDays.map(function(d) { return { d: d, res: shiftFor(a, d) }; });
   });
-  var moves = testedMoves();
+  var moves = testedMoves(mp);
   agents.forEach(function(a) {
     rh[a.id] = { O: 0, C: 0, off: 0, dim: 0, cp: 0 };
     agentRows[a.id].forEach(function(row) {
@@ -7360,133 +7381,7 @@ function computeMonthlyPlanOn(opt, ctx) {
       if (worked && d.dow === 0)   rh[a.id].dim++;
     });
   });
-  function cellsOf() {
-    var c = {};
-    agents.forEach(function(a) {
-      agentRows[a.id].forEach(function(row) {
-        (c[row.d.ds] = c[row.d.ds] || {})[a.id] = { code: row.res.code, tone: row.res.tone, special: row.res.special, half: row.res.half, corner: row.res.corner };
-      });
-    });
-    return c;
-  }
-  function checkNow() { return finalCheck(cellsOf(), { days: monthDays, today: todayDs, outside: outsideRes }); }
-  // Tested moves: when the plan still breaks a mandatory rule, CAST tries small changes of automatic cells and keeps one
-  // only when the final check says the mandatory rules are better (fewer, then smaller) and none is new or bigger.
-  // Changes are tried from the smallest kind (another shift, a colleague takes the day, another day of the same person,
-  // a day off); the first kind that helps wins, and inside it the one that keeps the targets best (store minimums above
-  // one, corners). Manual, past, saved-frozen, leave, fixed-hours and half-day cells never move. A rule CAST cannot fix
-  // this way is reported in diagnostics.moves.failed. The search is bounded (MAX_TRIES checks per calculation).
-  function testedMoves() {
-    var log = { tried: 0, applied: [], failed: [] }, MAX_TRIES = 300;
-    var dayIx = {}; monthDays.forEach(function(d, i) { dayIx[d.ds] = i; });
-    var OFF = { code: 'OFF', special: 'off' };
-    function rowOf(a, ds) { return dayIx[ds] != null ? agentRows[a.id][dayIx[ds]] : null; }
-    function movable(a, row) {
-      var d = row && row.d, res = row && row.res;
-      if (!d || d.closure || d.past || d.ds < todayDs || isFixed(a) || !res || res.half) return false;
-      if ((planningOverrides[a.id] || {})[d.ds] || (cornerOverrides[a.id] || {})[d.ds] || agentOnLeave(a.id, d.ds)) return false;
-      var saved = (snapPlan[d.ds] || {})[a.id];
-      if (saved && (!recalcFromToday || d.ds < todayDs)) return false;
-      return !res.special || res.special === 'off';
-    }
-    function works(row) { return !row.res.special; }
-    function gridOf(a) { return RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || []; }
-    function workRes(a, code, corner) {
-      var def = gridOf(a).find(function(g) { return g.code === code; });
-      var r = { code: code, tone: def ? def.tone : null };
-      if (corner) r.corner = corner;
-      return r;
-    }
-    function homeCode(a) { var c = storeCorners.find(function(q) { return q.id === a.home_corner_id; }); return c ? c.code : null; }
-    function cornerFor(b, from, res) {
-      var c = res.corner || homeCode(from);
-      return storeCorners.length > 1 && c && (fairnessOn || c !== homeCode(b)) ? c : null;
-    }
-    function score(chk) {
-      var m = 0, t = 0;
-      chk.mandatory.forEach(function(k) { m += chk.issues[k]; });
-      Object.keys(chk.issues).forEach(function(k) { if (!MANDATORY.test(k) && k.indexOf('month|') !== 0) t += chk.issues[k]; });   // targets in counts, not the month reference
-      return [chk.mandatory.length, m, t];
-    }
-    function better(x, y) { for (var i = 0; i < x.length; i++) { if (x[i] < y[i] - 1e-6) return true; if (x[i] > y[i] + 1e-6) return false; } return false; }
-    function dayList(from, n) { var out = [], x = new Date(from + 'T12:00:00'); for (var i = 0; i < n; i++) { out.push(toDateStr(x)); x.setDate(x.getDate() + 1); } return out; }
-    // The automatic cells a broken rule depends on, and the changes worth trying for it
-    function candidates(key) {
-      var p = key.split('|'), list = [];
-      function set(a, ds, res) { return { a: a, ds: ds, res: res }; }
-      if (p[0] === 'openNone' || p[0] === 'closeNone') {
-        var edge = p[0] === 'openNone' ? 'open' : 'close';
-        agents.forEach(function(a) {
-          var row = rowOf(a, p[1]);
-          if (poolOf(a) === 'stock' || !movable(a, row)) return;
-          gridOf(a).forEach(function(g) {
-            if (row.res.code === g.code || !coverOf(a, p[1], { code: g.code })[edge]) return;
-            list.push({ kind: works(row) ? 0 : 2, steps: [set(a, p[1], workRes(a, g.code, works(row) ? row.res.corner : cornerFor(a, a, {})))] });
-          });
-        });
-        return list;
-      }
-      var a = agentById[p[1]];
-      if (!a) return list;
-      var win = p[0] === 'week' || p[0] === 'hours' ? dayList(p[2], 7) : p[0] === 'twoWeeks' ? dayList(p[2], 14)
-        : p[0] === 'row' ? dayList(shiftDay(p[2], -lim.row), lim.row + 1) : p[0] === 'rest' ? [shiftDay(p[2], -1), p[2]] : [p[2]];
-      win.forEach(function(ds) {
-        var row = rowOf(a, ds);
-        if (!movable(a, row) || !works(row)) return;
-        // 1 another shift the same day (only hours and rest depend on the shift; day counts do not)
-        if (p[0] === 'hours' || p[0] === 'day' || p[0] === 'rest') gridOf(a).forEach(function(g) { if (g.code !== row.res.code) list.push({ kind: 0, steps: [set(a, ds, workRes(a, g.code, row.res.corner))] }); });
-        // 2 a colleague of the same team who is off that day takes the day
-        agents.forEach(function(b) {
-          var rb = rowOf(b, ds);
-          if (b === a || poolOf(b) !== poolOf(a) || !movable(b, rb) || works(rb)) return;
-          list.push({ kind: 1, steps: [set(a, ds, OFF), set(b, ds, workRes(b, row.res.code, cornerFor(b, a, row.res)))] });
-        });
-        // 3 the same person works another day off nearby instead (outside the rule's days)
-        for (var k = -7; k <= 7; k++) {
-          var y = shiftDay(ds, k), ry = rowOf(a, y);
-          if (!k || win.indexOf(y) !== -1 || !movable(a, ry) || works(ry)) continue;
-          list.push({ kind: 2, steps: [set(a, ds, OFF), set(a, y, workRes(a, row.res.code, row.res.corner))] });
-        }
-        // 4 last resort: the day becomes a day off
-        list.push({ kind: 3, steps: [set(a, ds, OFF)] });
-      });
-      return list.sort(function(x, y) { return x.kind - y.kind; });
-    }
-    function apply(steps) {
-      return steps.map(function(st) { var row = rowOf(st.a, st.ds), was = row.res; row.res = st.res; return { row: row, was: was }; });
-    }
-    function undo(done) { done.slice().reverse().forEach(function(u) { u.row.res = u.was; }); }
-    var cur = checkNow(), curScore = score(cur), stuck = {};
-    while (cur.mandatory.length && log.tried < MAX_TRIES) {
-      var key = cur.mandatory.filter(function(k) { return !stuck[k]; }).sort()[0];
-      if (!key) break;
-      var best = null, cands = candidates(key);
-      cands.forEach(function(c) {
-        if (log.tried >= MAX_TRIES || (best && c.kind > best.c.kind)) return;
-        log.tried++;
-        var done = apply(c.steps), chk = checkNow(); undo(done);
-        if (mandatoryAdded(chk.issues, cur.issues).length) return;   // never a new or bigger mandatory break
-        var sc = score(chk).concat([c.kind, c.steps.length]);
-        if (!better(sc.slice(0, 2), curScore.slice(0, 2))) return;
-        if (!best || better(sc, best.sc)) best = { c: c, sc: sc, chk: chk };
-      });
-      if (!best) { stuck[key] = true; log.failed.push(key); continue; }
-      apply(best.c.steps);
-      best.c.steps.forEach(function(st) {
-        // The saved planning and the day plan follow the moved cell
-        (newSnap[st.ds] = newSnap[st.ds] || {})[st.a.id] = st.res;
-        var plan = shiftPlanByDay[st.ds] = shiftPlanByDay[st.ds] || {};
-        if (st.res.special) delete plan[st.a.id]; else plan[st.a.id] = st.res.code;
-      });
-      log.applied.push({ rule: key, kind: ['shift', 'colleague', 'other day', 'day off'][best.c.kind],
-        cells: best.c.steps.map(function(st) { return st.ds + ' ' + st.a.id + ' ' + st.res.code; }) });
-      cur = best.chk; curScore = score(cur);
-    }
-    log.check = log.applied.length ? null : cur;   // unchanged plan: its check is already done
-    return log;
-  }
-  function shiftDay(ds, n) { var x = new Date(ds + 'T12:00:00'); x.setDate(x.getDate() + n); return toDateStr(x); }
-  var cells = cellsOf();
+  var cells = cellsOf(mp);
   freezeMonthlyValue(cells);
   var check = moves.check || finalCheck(cells, { days: monthDays, today: todayDs, outside: outsideRes });
   // Hours of the month, computed once with the same days around the month as the check: screen, sheet and Excel use it
@@ -7498,9 +7393,27 @@ function computeMonthlyPlanOn(opt, ctx) {
     moves: { tried: moves.tried, applied: moves.applied, failed: moves.failed } });
   return Object.freeze({ issues: issues, habitsDays: habits.days, hours: hours,
     fixedIssues: freezeMonthlyValue(JSON.parse(JSON.stringify(fixedIssues))),
-    cells: cells, diagnostics: diagnostics, paint: paint });
-  // Show and save this plan (the only place that changes the screen or writes the saved planning)
-  function paint() {
+    cells: cells, diagnostics: diagnostics,
+    paint: function() { return paintMonthlyPlan({ ctx: ctx, cells: cells, hours: hours, agentRows: agentRows, rh: rh, fixedIssues: fixedIssues, monthDays: monthDays, year: year, monthIdx: monthIdx, newSnap: newSnap, snapKey: snapKey, snapLoaded: snapLoaded }); } });
+}
+// Show and save a computed Monthly plan (the only place that changes the screen or writes the saved planning).
+// v: what the calculation made (the plan, its hours and counters) and the month it is for.
+function paintMonthlyPlan(v) {
+  var ctx = v.ctx, cells = v.cells, hours = v.hours, agentRows = v.agentRows, rh = v.rh, fixedIssues = v.fixedIssues, monthDays = v.monthDays, year = v.year, monthIdx = v.monthIdx, newSnap = v.newSnap, snapKey = v.snapKey, snapLoaded = v.snapLoaded;
+  function cell(res) {
+    if (res.special === 'closed') return '<span class="sh-none">-</span>';
+    if (res.half) {
+      var cls = shiftCls(res.code);
+      var isClose = /^C/.test(res.code);
+      var pos = isClose ? 'sh-half-pm' : 'sh-half-am';
+      return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + esc(res.code) + '</span></span>';
+    }
+    if (res.corner) {
+      return '<span class="sh-cnr"><span class="sh-cnr-tag" data-no-i18n title="' + esc(res.corner) + '">' + esc(res.corner) + '</span>' +
+             '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span></span>';
+    }
+    return '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span>';
+  }
   // A computed plan belongs to its context: never apply it to a new store, month or edit.
   if (ctx.fingerprint !== monthlyFingerprint(monthlyInputs(), toDateStr(new Date()))) return false;
   var container = document.getElementById('planning-monthly-body');
@@ -7735,7 +7648,6 @@ function computeMonthlyPlanOn(opt, ctx) {
   bindPlanningScroll();
   attachCrossHighlight();
   return true;
-  }
 }
 // Monthly context: every input of the calculation, read at once, copied and frozen. The calculation runs on this copy
 // only, so a change made during or after it (a load, a manager edit, another store) never mixes with it. A change to
@@ -8394,9 +8306,7 @@ async function openSendMenu(ev, view) {
     '<div class="xm-note">' + t('Preparing PDF...') + '</div>';
   m.addEventListener('click', function(e) { e.stopPropagation(); });
   document.body.appendChild(m);
-  var r = ev.currentTarget.getBoundingClientRect(), vw = document.documentElement.clientWidth;
-  m.style.top = (r.bottom + 6) + 'px';
-  m.style.left = Math.max(8, Math.min(r.left, vw - m.offsetWidth - 8)) + 'px';
+  placeMenuUnder(m, ev.currentTarget);
   document.addEventListener('keydown', onExportMenuKey);
   setTimeout(function() { document.addEventListener('click', closeExportMenu); }, 0);
   var built;
@@ -8471,13 +8381,17 @@ function openExportMenu(ev, view) {
       '<span>' + it[2] + '</span></button>';
   }).join('');
   document.body.appendChild(m);
-  var r = ev.currentTarget.getBoundingClientRect(), vw = document.documentElement.clientWidth;
-  m.style.top = (r.bottom + 6) + 'px';
-  m.style.left = Math.max(8, Math.min(r.left, vw - m.offsetWidth - 8)) + 'px';
+  placeMenuUnder(m, ev.currentTarget);
   var first = m.querySelector('button');
   if (first) first.focus({ preventScroll:true });
   document.addEventListener('keydown', onExportMenuKey);
   setTimeout(function() { document.addEventListener('click', closeExportMenu); }, 0);
+}
+// A menu opened under its button, kept inside the screen
+function placeMenuUnder(m, btn) {
+  var r = btn.getBoundingClientRect(), vw = document.documentElement.clientWidth;
+  m.style.top = (r.bottom + 6) + 'px';
+  m.style.left = Math.max(8, Math.min(r.left, vw - m.offsetWidth - 8)) + 'px';
 }
 function closeExportMenu() {
   var m = document.getElementById('export-menu');
@@ -8589,19 +8503,9 @@ function exportMonthly() {
     return c;
   }
   var HEAD={bg:'FAFAFB',tx:'6B7280'}, BLK={bg:'F4F5F7',tx:'52525B'}, RH={bg:'FAFAFB',tx:'17283E'};
-  var rows = [];
   var totalCols = 2 + nDays + RH_COLUMNS.length;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
-  // Logo line and tagline, like the app
-  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'183C74' }],
-   ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
-   ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) {
-    var br = [ cell(b[0], b[1]) ]; for (var i=1;i<totalCols;i++) br.push(cell('')); rows.push(br);
-  });
-  var metaRow = [ cell(currentStoreName + '   ' + monthName, { align:'left', bold:true, sz:11, tx:'6B7280', underline:'rule' }) ];
-  for (var i=1;i<totalCols;i++) metaRow.push(cell('', { underline:'rule' }));
-  rows.push(metaRow);
-  rows.push(blankRow());
+  var rows = xlBrandRows(cell, totalCols, cell(currentStoreName + '   ' + monthName, { align:'left', bold:true, sz:11, tx:'6B7280', underline:'rule' }), { underline:'rule' });
   // Same style for every row label
   var LBL = { tx:'52525B', bold:true, sz:9, align:'left' };
   function lbl(txt, bg, isCode) { return cell(String(isCode ? txt : t(txt)).toUpperCase(), Object.assign({ bg:bg }, LBL)); }
@@ -8749,34 +8653,12 @@ function exportMonthly() {
   rows.push(sumRow('Management', (cv.pools && cv.pools.mgmt) || perDay.mgmt));
   rows.push(sumRow('Sales', (cv.pools && cv.pools.sales) || perDay.sales));
   rows.push(sumRow('Stock', (cv.pools && cv.pools.stock) || perDay.stock));
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:Math.min(12,totalCols-1)} },
-    { s:{r:1,c:0}, e:{r:1,c:Math.min(12,totalCols-1)} },
-    { s:{r:2,c:0}, e:{r:2,c:Math.min(12,totalCols-1)} },
-    { s:{r:3,c:0}, e:{r:3,c:Math.min(12,totalCols-1)} }
-  ].concat(evtMerges.map(function(m) { return { s:{r:m.rowIdx,c:m.c0}, e:{r:m.rowIdx,c:m.c1} }; }));
   var cols = [{wch:20},{wch:11}];
   for (var c=0;c<nDays;c++) cols.push({wch:4.2});
   cols.push({wch:5}); cols.push({wch:5}); cols.push({wch:6}); cols.push({wch:6}); cols.push({wch:6}); cols.push({wch:7});
-  ws['!cols'] = cols;
-  var rowHeights = rows.map(function(r, i) {
-    if (i === 0) return { hpx: 66 };
-    if (i === 1 || i === 2) return { hpx: 14 };
-    if (i === 3) return { hpx: 22 };
-    if (i === 4) return { hpx: 6 };
-    return { hpx: 32 };
-  });
-  ws['!rows'] = rowHeights;
-  ws['!freeze'] = { xSplit:2, ySplit:6, topLeftCell:'C7', activePane:'bottomRight', state:'frozen' };
-  ws['!panes']  = [{ xSplit:2, ySplit:6, topLeftCell:'C7', activePane:'bottomRight', state:'frozen' }];
-  ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:0 };
-  ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Monthly');
-  var tag = year + '-' + String(monthIdx+1).padStart(2,'0');
-  downloadPlanningWorkbook(wb, 'CAST_Retail_Monthly_' + tag + '.xlsx');
-  showToast('Exported \u2713');
+  xlFinish(rows, { mergeTo: Math.min(12, totalCols - 1), merges: evtMerges.map(function(m) { return { s:{r:m.rowIdx,c:m.c0}, e:{r:m.rowIdx,c:m.c1} }; }),
+    cols: cols, rowH: function() { return 32; }, xSplit: 2, fitToHeight: 0, sheet: 'Monthly',
+    file: 'CAST_Retail_Monthly_' + year + '-' + String(monthIdx+1).padStart(2,'0') + '.xlsx' });
 }
 function exportIntraday() {
   if (typeof XLSX === 'undefined') { showToast('Excel library not loaded', 'error'); return; }
@@ -8829,19 +8711,10 @@ function exportIntraday() {
     c.s = s;
     return c;
   }
-  var rows = [];
   var merges = [];
   var totalCols = 3 + nQ;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
-  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'183C74' }],
-   ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
-   ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) {
-    var br = [ cell(b[0], b[1]) ]; for (var i=1;i<totalCols;i++) br.push(cell('')); rows.push(br);
-  });
-  var metaRow = [ cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280',rule:true}) ];
-  for (var i=1;i<totalCols;i++) metaRow.push(cell('',{rule:true}));
-  rows.push(metaRow);
-  rows.push(blankRow());
+  var rows = xlBrandRows(cell, totalCols, cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280',rule:true}), {rule:true});
   var hRow = [ cell(t('Agent'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell(t('Role'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell(t('Shift'),{bg:'FAFAFB',tx:'6B7280',bold:true}) ];
@@ -8918,34 +8791,39 @@ function exportIntraday() {
     for (var i=2;i<totalCols;i++) lr.push(cell(''));
     rows.push(lr);
   });
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!merges'] = [
-    { s:{r:0,c:0}, e:{r:0,c:Math.min(14,totalCols-1)} },
-    { s:{r:1,c:0}, e:{r:1,c:Math.min(14,totalCols-1)} },
-    { s:{r:2,c:0}, e:{r:2,c:Math.min(14,totalCols-1)} },
-    { s:{r:3,c:0}, e:{r:3,c:Math.min(14,totalCols-1)} }
-  ].concat(merges);
   var cols = [{wch:18},{wch:11},{wch:7}];
   for (var q=0;q<nQ;q++) cols.push({wch:2.4});
-  ws['!cols'] = cols;
   var spacerSet = {};
   spacerIdx.forEach(function(i){ spacerSet[i] = true; });
-  ws['!rows'] = rows.map(function(r, i) {
-    if (i === 0) return { hpx: 66 };
-    if (i === 1 || i === 2) return { hpx: 14 };
-    if (i === 3) return { hpx: 22 };
-    if (i === 4) return { hpx: 6 };
-    if (i === 5) return { hpx: 22 };
-    if (spacerSet[i]) return { hpx: 7 };
-    return { hpx: 43 };
-  });
-  ws['!freeze'] = { xSplit:3, ySplit:6, topLeftCell:'D7', activePane:'bottomRight', state:'frozen' };
-  ws['!panes']  = [{ xSplit:3, ySplit:6, topLeftCell:'D7', activePane:'bottomRight', state:'frozen' }];
-  ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:1 };
+  xlFinish(rows, { mergeTo: Math.min(14, totalCols - 1), merges: merges, cols: cols,
+    rowH: function(i) { return i === 5 ? 22 : spacerSet[i] ? 7 : 43; }, xSplit: 3, fitToHeight: 1, sheet: 'Intraday',
+    file: 'CAST_Retail_Intraday_' + intradayExport.ds + '.xlsx' });
+}
+// Excel: the CAST logo, the tagline, the store line and a blank row on top of a sheet
+function xlBrandRows(cell, totalCols, metaCell, metaFill) {
+  var rows = [];
+  function fill(first, style) { var r = [first]; for (var i = 1; i < totalCols; i++) r.push(cell('', style)); return r; }
+  [['CAST', { align:'left', font:'Britannic Bold', sz:48, italic:true, tx:'183C74' }],
+   ['CELINE AUTOMATED', { align:'left', sz:9, tx:'52647B' }],
+   ['SCHEDULING TOOL', { align:'left', sz:9, tx:'52647B' }]].forEach(function(b) { rows.push(fill(cell(b[0], b[1]))); });
+  rows.push(fill(metaCell, metaFill));
+  rows.push(fill(cell('')));
+  return rows;
+}
+// Excel: one sheet with the brand rows merged and frozen headers, printed landscape, then downloaded
+function xlFinish(rows, o) {
+  var ws = XLSX.utils.aoa_to_sheet(rows), top = [66, 14, 14, 22, 6];
+  ws['!merges'] = [0, 1, 2, 3].map(function(r) { return { s:{r:r,c:0}, e:{r:r,c:o.mergeTo} }; }).concat(o.merges);
+  ws['!cols'] = o.cols;
+  ws['!rows'] = rows.map(function(r, i) { return { hpx: i < 5 ? top[i] : o.rowH(i) }; });
+  var cellRef = String.fromCharCode(65 + o.xSplit) + '7';
+  ws['!freeze'] = { xSplit:o.xSplit, ySplit:6, topLeftCell:cellRef, activePane:'bottomRight', state:'frozen' };
+  ws['!panes']  = [{ xSplit:o.xSplit, ySplit:6, topLeftCell:cellRef, activePane:'bottomRight', state:'frozen' }];
+  ws['!pageSetup'] = { orientation:'landscape', paperSize:8, fitToWidth:1, fitToHeight:o.fitToHeight };
   ws['!margins'] = { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.15, footer:0.15 };
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Intraday');
-  downloadPlanningWorkbook(wb, 'CAST_Retail_Intraday_' + intradayExport.ds + '.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, o.sheet);
+  downloadPlanningWorkbook(wb, o.file);
   showToast('Exported \u2713');
 }
 // Calendar
@@ -9274,6 +9152,7 @@ async function clearDayHours() {
   showToast('Hours reset \u2713');
   renderMonthlyPlanning();
 }
+var wkpDate = null;   // month shown in the week picker
 function toggleWeekPicker(event) {
   event.stopPropagation();
   var popup = document.getElementById('week-picker-popup');
