@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.5.0.0</title>
+  <title>CAST v9.5.0.2</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -200,7 +200,7 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .hl-field { display:flex; flex-direction:column; gap:4px; }
 .hl-field-grow { min-width:0; }
 .hl-field label { font-size:11px; font-weight:700; color:var(--tx-2); }
-.hl-add input[type=text] { width:100%; font-family:var(--font); font-size:13px; padding:9px 11px; border:1px solid var(--line-2); border-radius:var(--r-md); color:var(--tx-1); background:var(--bg-base); height:36px; box-sizing:border-box; }
+.hl-add input[type=text] { font-family:var(--font); font-size:13px; padding:9px 11px; border:1px solid var(--line-2); border-radius:var(--r-md); color:var(--tx-1); background:var(--bg-base); box-sizing:border-box; }
 .hl-add input:focus { outline:none; border-color:var(--nav-active-bg); }
 .hl-add .hl-submit { background:var(--nav-active-bg); color:#fff; border:none; border-radius:var(--r-md); padding:0 18px; height:36px; font-size:13px; font-weight:700; cursor:pointer; }
 .hl-add .hl-submit:hover { opacity:.92; }
@@ -334,7 +334,7 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh-cnr { position:relative; display:inline-flex; align-items:center; justify-content:center; }
 .sh-cnr-tag { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:1px; font-size:8px; font-weight:700; color:var(--accent-strong); letter-spacing:normal; line-height:1; white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 .mth-group td { height:28px; background:var(--row-group); border-bottom:1px solid var(--line); padding:0; }
-.mth-group td.mth-group-lbl { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; padding:6px 12px; }
+.mth-group td.mth-group-lbl { padding:6px 12px; }
 .mth thead th.c-agent, .mth tr.evt-row th.evt-row-label, .mth-group td.mth-group-lbl, .mth tr.blk td.c-agent { font-size:11px; font-weight:700; color:var(--tx-2); text-transform:uppercase; padding-left:12px; }
 .lbl-s { display:none; }
 .ag-txt { display:flex; flex-direction:column; line-height:1.3; min-width:0; }
@@ -504,10 +504,16 @@ input[type=date][data-dp] { display:none; }
 body.gate-open #sidebar, body.gate-open #main { filter:blur(3px); pointer-events:none; user-select:none; }
 .sb-store-btn { display:none; }
 /* Sign in and account (9.5.0.0) */
-#login-gate { display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center; padding:16px; background:var(--bg-app); }
+/* Same photo and veil as the CAST home page; the card scrolls when the phone keyboard is open */
+#login-gate { display:none; position:fixed; inset:0; z-index:10000; overflow-y:auto; padding:24px 16px; background:#0C1A33 url('image%20homepage/hero.jpg') center / cover no-repeat; }
+#login-gate::before, #login-gate::after { content:""; position:fixed; inset:0; pointer-events:none; }
+#login-gate::before { background:rgba(12,26,51,.45); }
+#login-gate::after { background:#183C74; mix-blend-mode:color; opacity:.4; }
 #login-gate.show { display:flex; }
+#login-gate .gate-card { position:relative; z-index:1; margin:auto; max-height:none; overflow:visible; }
 .login-form { display:flex; flex-direction:column; gap:var(--s4); text-align:left; }
-.login-err { font-size:12px; color:var(--dang); min-height:16px; }
+.login-err { font-size:12px; line-height:1.4; color:var(--dang); }
+.login-err:empty { display:none; }
 .login-note { font-size:12px; color:var(--tx-3); text-align:center; line-height:1.5; }
 .sb-fixed-val { font-size:13px; font-weight:700; color:var(--tx-1); padding:2px 0 4px; }
 body.one-store .sb-store-btn { display:none !important; }
@@ -632,7 +638,6 @@ textarea { resize:vertical; line-height:1.5; }
 .mth .person-role { display:block; font-size:11px; color:var(--tx-2); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .person-initials { display:none; }
 .mth .person-cell { display:block; line-height:1.4; min-width:0; }
-.sh-pink, .sh-cp { background:var(--dang-soft); color:var(--dang-tx); }
 .sh-out { background:var(--bg-base); color:var(--pl-slate-tx); border:1px dashed var(--pl-slate-tx); }
 .coverage-card { padding:0; overflow:hidden; }
 .coverage-card > summary { display:flex; align-items:center; gap:12px; cursor:pointer; padding:18px 22px; list-style:none; font-size:16px; font-weight:700; }
@@ -812,7 +817,7 @@ textarea { resize:vertical; line-height:1.5; }
   .mth thead th { height:46px; }
   .mth thead th .dow { font-size:8px; }
   .mth-group td, .mth .mth-group td.c-day { height:30px; }
-  .mth-group td.mth-group-lbl { font-size:9px; padding:4px; }
+  .mth-group td.mth-group-lbl { padding:4px; }
   .mth thead th.c-agent, .mth tr.evt-row th.evt-row-label, .mth-group td.mth-group-lbl, .mth tr.blk td.c-agent { padding-left:4px; font-size:9px; }
   .mth tr.evt-row th { height:29px; }
   .mth tr.evt-row th.c-agent { padding-left:4px; }
@@ -877,6 +882,16 @@ textarea { resize:vertical; line-height:1.5; }
   #status-bar { padding:12px 10px; }
   #store-gate { padding:16px; }
   .gate-card { padding:24px; }
+  #login-gate { padding:16px; }
+  #login-gate .gate-card, #store-gate .gate-card { width:100%; }
+  .gate-wordmark { height:36px; }
+  .gate-sub { margin-bottom:var(--s5); }
+}
+/* Phones and tablets: 16px fields so iOS does not zoom in, and 44px touch targets */
+@media (max-width:600px), (pointer:coarse) {
+  #login-gate input, #store-gate select, #pw-editor input { font-size:16px; min-height:44px; }
+  #login-btn, #pw-editor .modal-foot .btn { min-height:44px; font-size:14px; }
+  #acct-menu .mission-menu-item { min-height:44px; font-size:14px; }
 }
 @media print {
   body { --name-col:184px; background:#fff; font-size:11px; }
@@ -943,7 +958,7 @@ function trimLogo(img) {
   <div class="gate-card">
     <div class="gate-logo"><img src="logo/CAST_LOGO_TEXTE.png" alt="CAST" class="gate-wordmark" onload="trimLogo(this)" onerror="this.outerHTML='CAST'"></div>
     <div class="gate-title">Select your store</div>
-    <div class="gate-sub">To navigate your workspace, please choose a region, a country and a store.</div>
+    <div class="gate-sub" id="gate-sub">To navigate your workspace, please choose a region, a country and a store.</div>
     <div id="scope-modal-slot"></div>
   </div>
 </div>
@@ -955,7 +970,7 @@ function trimLogo(img) {
     <div class="gate-title">Sign in</div>
     <div class="gate-sub">Use the email and password given by your administrator.</div>
     <div class="login-form">
-      <div class="fld"><label for="login-email">Email</label><input type="email" id="login-email" autocomplete="username" required></div>
+      <div class="fld"><label for="login-email">Email</label><input type="email" id="login-email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" required></div>
       <div class="fld"><label for="login-pw">Password</label><input type="password" id="login-pw" autocomplete="current-password" required></div>
       <div class="login-err" id="login-err" role="alert"></div>
       <button type="submit" class="btn btn-primary" id="login-btn">Sign in</button>
@@ -1018,10 +1033,6 @@ function trimLogo(img) {
     </div>
   </div>
   <div id="scope-fields">
-  <div class="sb-field" id="fixed-region" hidden>
-    <label>Region</label>
-    <div class="sb-fixed-val" id="fixed-region-val" data-no-i18n></div>
-  </div>
   <div class="sb-field" id="region-field">
     <label for="region-select">Region</label>
     <select id="region-select"><option value="">- Select region -</option></select>
@@ -1514,7 +1525,6 @@ let agentLeaves       = [];
 let calMonth          = new Date();
 let currentCalView    = 'annual';
 let agents            = [];
-let availability      = {};
 let regulations = {
   saturday_rest:   true,
   sunday_rest:     true,
@@ -1752,8 +1762,9 @@ async function startWorkspace() {
   if (error) { showToast('Failed to load regions', 'error'); return; }
   const sel = document.getElementById('region-select');
   sel.innerHTML = '<option value="">- Select region -</option>';
-  var allowed = (data || []).filter(regionAllowed);
-  if (me.role === 'director' && allowed[0]) setText('fixed-region-val', allowed[0].name);
+  var allowed = data || [];
+  if (!allowed.length && me.role !== 'admin') { workspaceStarted = false; refuseAccount('No store is linked to your account. Contact your administrator.'); return; }
+  fitScope('region', allowed);
   allowed.forEach(function(r) {
     const opt = document.createElement('option');
     opt.value        = r.id;
@@ -1778,13 +1789,6 @@ async function startWorkspace() {
 var me = null;
 function setText(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
 function scopeKey() { return 'cora_scope' + (me ? '_' + me.id : ''); }
-function regionAllowed(r) {
-  if (!me || me.role === 'admin') return true;
-  if (me.role === 'director') return r.id === me.regionId;
-  return me.regionIds.indexOf(r.id) !== -1;
-}
-function countryAllowed(c) { return !me || me.role !== 'manager' || me.countryIds.indexOf(c.id) !== -1; }
-function storeAllowed(s) { return !me || me.role !== 'manager' || me.storeIds.indexOf(s.id) !== -1; }
 function showLogin(msg) {
   setText('login-err', msg ? t(msg) : '');
   document.getElementById('login-gate').classList.add('show');
@@ -1810,41 +1814,26 @@ async function refuseAccount(msg) {
   showLogin(msg);
   return false;
 }
-// Reads the profile of the signed-in account: role, region (director) and stores (manager)
+// Reads the profile of the signed-in account. Its regions, countries and stores come from the base, which only
+// sends the account's own places.
 async function loadMe(user) {
   var p = await sb.from('retail_profiles').select('*').eq('user_id', user.id).maybeSingle();
   if (p.error) return refuseAccount('Could not load your account. Try again.');
   if (!p.data || p.data.active === false) return refuseAccount('Your account is not active. Contact your administrator.');
   me = { id: user.id, email: p.data.email || user.email || '', name: p.data.full_name || '', role: p.data.role,
-    regionId: p.data.region_id, storeIds: [], countryIds: [], regionIds: [],
     pwChanged: !!(user.user_metadata && user.user_metadata.pw_changed) };
-  if (me.role === 'manager') {
-    var ps = await sb.from('retail_profile_stores').select('store_id').eq('user_id', user.id);
-    me.storeIds = ((ps && ps.data) || []).map(function(r) { return r.store_id; });
-    if (!me.storeIds.length) return refuseAccount('No store is linked to your account. Contact your administrator.');
-    var st = await sb.from('retail_stores').select('id, country_id').in('id', me.storeIds);
-    (st.data || []).forEach(function(r) { if (me.countryIds.indexOf(r.country_id) === -1) me.countryIds.push(r.country_id); });
-    var ct = me.countryIds.length ? await sb.from('retail_countries').select('id, region_id').in('id', me.countryIds) : { data: [] };
-    (ct.data || []).forEach(function(r) { if (me.regionIds.indexOf(r.region_id) === -1) me.regionIds.push(r.region_id); });
-  }
   renderAccount();
-  applyScopeRules();
+  if (me.role !== 'admin') setText('gate-sub', t('Choose your store.'));
   return true;
 }
-// Menus by role: manager = his store(s) only; director = his region (fixed), country and store; admin = everything
-function applyScopeRules() {
-  var r = me.role, oneStore = r === 'manager' && me.storeIds.length === 1;
-  // A manager with stores in several countries still gets the menus needed to reach them
-  document.getElementById('region-field').hidden = r === 'director' || (r === 'manager' && me.regionIds.length <= 1);
-  document.getElementById('fixed-region').hidden = r !== 'director';
-  document.getElementById('country-field').hidden = r === 'manager' && me.countryIds.length <= 1;
-  document.getElementById('store-field').hidden = oneStore;
-  document.getElementById('fixed-store').hidden = !oneStore;
-  document.body.classList.toggle('one-store', oneStore);
-  var sub = document.querySelector('#store-gate .gate-sub');
-  if (sub) sub.textContent = t(r === 'manager' ? 'Choose one of your stores.'
-    : r === 'director' ? 'Choose a country and a store in your region.'
-    : 'To navigate your workspace, please choose a region, a country and a store.');
+// Admin: the three menus, as before. Manager and director: a menu with a single choice disappears (one region, one
+// country), and a single store is shown by its name.
+function fitScope(name, items) {
+  var single = !!me && me.role !== 'admin' && items.length === 1;
+  document.getElementById(name + '-field').hidden = single;
+  if (name !== 'store') return;
+  document.getElementById('fixed-store').hidden = !single;
+  document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
 function renderAccount() {
@@ -1972,7 +1961,8 @@ async function loadCountries() {
   var res = await sb.from('retail_countries').select('*')
     .eq('region_id', currentRegionId).order('sort_order');
   if (res.error) { showToast('Could not load countries', 'error'); return; }
-  countries = (res.data || []).filter(countryAllowed);
+  countries = res.data || [];
+  fitScope('country', countries);
   countries.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
   sel.innerHTML = '<option value="">- All countries -</option>';
   countries.forEach(function(c) {
@@ -1990,10 +1980,10 @@ async function loadCountries() {
   }
   if (countries.length > 1) {
     var ids = countries.map(function(c) { return c.id; });
-    var st = await sb.from('retail_stores').select('id, country_id').in('country_id', ids);
+    var st = await sb.from('retail_stores').select('country_id').in('country_id', ids);
     if (!st.error && st.data && st.data.length) {
       var withStores = [];
-      st.data.filter(storeAllowed).forEach(function(r) {
+      st.data.forEach(function(r) {
         if (withStores.indexOf(r.country_id) === -1) withStores.push(r.country_id);
       });
       if (withStores.length === 1) {
@@ -2023,7 +2013,8 @@ async function loadStores() {
   var res = await sb.from('retail_stores').select('*')
     .eq('country_id', currentCountryId).order('sort_order');
   if (res.error) { showToast('Could not load stores', 'error'); return; }
-  stores = (res.data || []).filter(function(s) { return s.is_active !== false && storeAllowed(s); });
+  stores = (res.data || []).filter(function(s) { return s.is_active !== false; });
+  fitScope('store', stores);
   stores.sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); });
   sel.innerHTML = stores.length
     ? '<option value="">- All stores -</option>'
@@ -3126,7 +3117,6 @@ async function loadWeekData() {
       cornerTrafficMonthly[r.corner_id + '|' + r.year + '|' + r.month] = r;
     });
   }
-  availLoaded = null;
   hideLoader();
   await loadPlanningOverrides();
   if (sid !== currentStoreId) return;
@@ -3228,32 +3218,11 @@ document.addEventListener('change', function(e) {
   if (end && (!/^\d{4}-\d{2}-\d{2}$/.test(end.value) || end.value < el.value)) { end.value = el.value; end.dispatchEvent(new Event('change', { bubbles: true })); }
 });
 // Data for the displayed month
-var availLoaded = null;
 var trafficYearLoaded = null;
 function mondayOfDate(d) {
   var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   x.setDate(x.getDate() - (x.getDay() + 6) % 7);
   return x;
-}
-var availLoadSeq = 0;
-async function loadAvailability(from, to) {
-  var storeId = currentStoreId, seq = ++availLoadSeq;
-  if (!agents.length) { availability = {}; availLoaded = { storeId: storeId, from: from, to: to }; return true; }
-  var res = await sb.from('retail_agent_availability').select('*')
-    .in('agent_id', agents.map(function(a) { return a.id; }))
-    .gte('week_date', from).lte('week_date', to);
-  if (seq !== availLoadSeq || storeId !== currentStoreId) return false;
-  if (res.error) { showToast('Error loading availability', 'error'); return false; }
-  var av = {};
-  (res.data || []).forEach(function(a) {
-    if (!av[a.agent_id]) av[a.agent_id] = {};
-    var status = a.day_status;
-    if (!status) status = (a.is_present === false) ? 'absent' : 'working';
-    av[a.agent_id][a.week_date] = status;
-  });
-  availability = av;
-  availLoaded = { storeId: storeId, from: from, to: to };
-  return true;
 }
 function snapshotMonthKey() {
   return monthlyRef.getFullYear() + '-' + String(monthlyRef.getMonth() + 1).padStart(2, '0') + '-01';
@@ -3305,9 +3274,6 @@ async function ensurePeriodData() {
   var to   = toDateStr(sunday);
   if (toDateStr(wk[0]) < from) from = toDateStr(wk[0]);
   if (toDateStr(wk[6]) > to)   to   = toDateStr(wk[6]);
-  if (!availLoaded || availLoaded.storeId !== currentStoreId || availLoaded.from > from || availLoaded.to < to) {
-    await loadAvailability(from, to);
-  }
   if (trafficYearLoaded !== y) await loadTraffic(y);
   await loadHolidays(parseInt(from.slice(0, 4), 10));
   await loadHolidays(parseInt(to.slice(0, 4), 10));
@@ -3332,6 +3298,23 @@ function agentOnLeave(agentId, dayStr) {
     if (lv.agent_id === agentId && dayStr >= lv.start_date && dayStr <= lv.end_date) return lv.type;
   }
   return null;
+}
+// Saved result of a neighbour month (the planning before or after the displayed month)
+function neighbourRes(a, ds) {
+  return (planSnapshot && ((planSnapshot.prevPlan && (planSnapshot.prevPlan[ds] || {})[a.id]) ||
+    (planSnapshot.nextPlan && (planSnapshot.nextPlan[ds] || {})[a.id]))) || null;
+}
+// A Calendar leave as a cell: training (OUT), day off asked (OFF) or absence (A)
+function leaveRes(a, ds) {
+  var lt = agentOnLeave(a.id, ds);
+  if (!lt) return null;
+  return lt === 'out' ? { code: 'OUT', special: 'out' } : lt === 'off_request' ? { code: 'OFF', special: 'off' } : { code: 'A', special: 'leave' };
+}
+// Days outside the month: a manual change, a leave or a saved planning is known; anything else is unknown (never a day off)
+function outsideRes(a, ds) {
+  var ov = (planningOverrides[a.id] || {})[ds];
+  if (ov) return { code: ov };
+  return leaveRes(a, ds) || neighbourRes(a, ds) || undefined;
 }
 // Planning engine
 // Monthly planning constants
@@ -3605,7 +3588,7 @@ function contractHours(a, ds) {
   contractHistory(a).forEach(function(h) { if (h.from <= ds) v = +h.hours; });
   if (v != null) return v;
   if (a && a.weekly_hours > 0) return +a.weekly_hours;
-  return regulations.weekly_hours > 0 ? regulations.weekly_hours * ((a && a.work_pct) || 100) / 100 : 0;
+  return regulations.weekly_hours > 0 ? +regulations.weekly_hours : 0;
 }
 // Month hours counter (Roman 17-10): the weekly hours are respected each week; the month shows a counter against
 // weekly hours x days of the month / 7 (the average month of the contract), not a limit.
@@ -5764,6 +5747,7 @@ function computeMonthlyPlanOn(opt, ctx) {
   var snapPlan = (snapLoaded && planSnapshot.plan) || {};
   var recalcFromToday = forceRecalc || !manualMode;
   var todayDs = ctx.today;
+  function knownRes(a, ds) { return (snapPlan[ds] || {})[a.id] || neighbourRes(a, ds); }
   // Shown result of one agent on one day
   function shownRes(a, ds) {
     var ov = (planningOverrides[a.id] || {})[ds];
@@ -5772,8 +5756,7 @@ function computeMonthlyPlanOn(opt, ctx) {
     if (saved && (!recalcFromToday || ds < todayDs)) return saved;
     var pc = (shiftPlanByDay[ds] || {})[a.id];
     if (pc) return { code: pc, half: volantHalfDay && (volantHalfDay[a.id] || {})[ds] };
-    var pr = planSnapshot && ((planSnapshot.prevPlan && (planSnapshot.prevPlan[ds] || {})[a.id]) || (planSnapshot.nextPlan && (planSnapshot.nextPlan[ds] || {})[a.id]));
-    return pr || null;
+    return neighbourRes(a, ds);
   }
   function prevDayOf(ds) {
     var pd = new Date(ds + 'T12:00:00'); pd.setDate(pd.getDate() - 1);
@@ -5858,7 +5841,6 @@ function computeMonthlyPlanOn(opt, ctx) {
     if (_freeze) return null;
     var lt = agentOnLeave(a.id, ds);
     if (lt) return { kind: lt === 'out' ? 'training' : lt === 'off_request' ? 'off' : 'absence' };
-    if ((availability[a.id] || {})[ds] === 'absent') return { kind: 'absence' };
     return null;
   }
   function reducesDays(m) { return !!m && (m.kind === 'absence' || m.kind === 'training'); }
@@ -5888,7 +5870,7 @@ function computeMonthlyPlanOn(opt, ctx) {
       if (dd.getFullYear() === year && dd.getMonth() === monthIdx) { inside++; continue; }
       var res = (planningOverrides[a.id] || {})[ds];
       if (res) res = { code: res };
-      else res = (snapPlan[ds] || {})[a.id] || (planSnapshot && planSnapshot.prevPlan && (planSnapshot.prevPlan[ds] || {})[a.id]) || (planSnapshot && planSnapshot.nextPlan && (planSnapshot.nextPlan[ds] || {})[a.id]);
+      else res = knownRes(a, ds);
       if (res) { if (workHoursOf(a, ds, res)) outsideWorked++; }
       else outsideUnknown++;
     }
@@ -5963,7 +5945,7 @@ function computeMonthlyPlanOn(opt, ctx) {
     if (ov) return ov === 'OUT' || !!workHoursOf(a, ds, { code: ov });
     if (agentOnLeave(a.id, ds) === 'out') return true;
     if (assignedMap[ds]) return assignedMap[ds].indexOf(a.id) !== -1;
-    var known = (snapPlan[ds] || {})[a.id] || (planSnapshot && planSnapshot.prevPlan && (planSnapshot.prevPlan[ds] || {})[a.id]) || (planSnapshot && planSnapshot.nextPlan && (planSnapshot.nextPlan[ds] || {})[a.id]);
+    var known = knownRes(a, ds);
     return !!(known && workHoursOf(a, ds, known));
   }
   // Never more days in a row than "Max days in a row"
@@ -6401,8 +6383,7 @@ function computeMonthlyPlanOn(opt, ctx) {
       var xs = toDateStr(x), ov = (planningOverrides[a.id] || {})[xs];
       // Training days of this month count their standard hours before any shift is placed
       if (x.getFullYear() === year && x.getMonth() === monthIdx) { if (ov ? ov === 'OUT' : agentOnLeave(a.id, xs) === 'out') total += TRAINING_DAY.paid; continue; }
-      var res = ov ? { code: ov } : agentOnLeave(a.id, xs) === 'out' ? { code: 'OUT' } : ((snapPlan[xs] || {})[a.id] || (planSnapshot && planSnapshot.prevPlan && (planSnapshot.prevPlan[xs] || {})[a.id]) ||
-        (planSnapshot && planSnapshot.nextPlan && (planSnapshot.nextPlan[xs] || {})[a.id]));
+      var res = ov ? { code: ov } : agentOnLeave(a.id, xs) === 'out' ? { code: 'OUT' } : knownRes(a, xs);
       var wh = res && ruleHours(a, xs, res);
       if (wh) { total += wh.paid; out.worked++; }
       else if (!res && x > monthDays[monthDays.length - 1].date && !getDayClosureType(xs)) out.open++;
@@ -7069,14 +7050,9 @@ function computeMonthlyPlanOn(opt, ctx) {
       if (ov) return { code: ov };
       var day = monthDays.find(function(d) { return d.ds === ds; });
       if (!day) return shownRes(a, ds);
-      var ltE = agentOnLeave(a.id, ds);
-      if (ltE === 'out') return { code: 'OUT', special: 'out' };
-      if (ltE === 'off_request') return { code: 'OFF', special: 'off' };
-      if (ltE) return { code: 'A', special: 'leave' };
-      var status = (availability[a.id] || {})[ds];
-      if (status === 'absent') return { code: 'A', special: 'leave' };
+      var lv = leaveRes(a, ds);
+      if (lv) return lv;
       if (isFixedTimed(a)) return fixedWorksOn(a, day) ? { code: 'PT' } : { code: 'OFF', special: 'off' };
-      if (status === 'rest_override' || status === 'rest_parttime') return { code: 'OFF', special: 'off' };
       var saved = (snapPlan[ds] || {})[a.id];
       if (saved && (!recalcFromToday || ds < todayDs)) return saved;
       if ((restMap[a.id] || {})[ds]) return { code: 'OFF', special: 'off' };
@@ -7211,35 +7187,29 @@ function computeMonthlyPlanOn(opt, ctx) {
   function shiftFor(agent, day) {
     if (day.closure) {
       var kept = day.closure === 'weekend' && (snapPlan[day.ds] || {})[agent.id];
-      if (!kept || (recalcFromToday && day.ds >= todayDs)) return { code: '', cls: 'sh-closed', special: 'closed' };
+      if (!kept || (recalcFromToday && day.ds >= todayDs)) return { code: '', special: 'closed' };
     }
     var automatic = withCorner(agent, day, autoLayer(agent, day));
     var ov = (planningOverrides[agent.id] || {})[day.ds];
     if (ov) {
       if (ov === 'OFF') return { code: 'OFF', special: 'off' };
       if (ov === 'A')   return { code: 'A',   special: 'leave' };
-      if (ov === 'OUT') return { code: 'OUT', cls: 'sh-out', special: 'out' };
+      if (ov === 'OUT') return { code: 'OUT', special: 'out' };
       return automatic.corner ? { code: ov, corner: automatic.corner } : { code: ov };
     }
-    var lt = agentOnLeave(agent.id, day.ds);
-    if (lt === 'out') return { code: 'OUT', cls: 'sh-out', special: 'out' };
-    if (lt === 'off_request') return { code: 'OFF', cls: 'sh-off', special: 'off' };
-    if (lt) return { code: 'A', cls: 'sh-cp', special: 'leave' };
-    var st = (availability[agent.id] && availability[agent.id][day.ds]) || null;
-    if (st === 'absent') return { code: 'A', cls: 'sh-cp', special: 'leave' };
+    var lv = leaveRes(agent, day.ds);
+    if (lv) return lv;
     if (isFixedTimed(agent)) {
       // Fixed hours keep the corner given by the corner balance, like everyone else
       return fixedWorksOn(agent, day)
         ? (automatic.corner ? { code: 'PT', corner: automatic.corner } : { code: 'PT' })
-        : { code: 'OFF', cls: 'sh-off', special: 'off' };
+        : { code: 'OFF', special: 'off' };
     }
-    if (st === 'rest_override' || st === 'rest_parttime')
-      return { code: 'OFF', cls: 'sh-off', special: 'off' };
     return automatic;
   }
   function autoFor(agent, day) {
     if (restMap[agent.id] && restMap[agent.id][day.ds])
-      return { code: 'OFF', cls: 'sh-off', special: 'off' };
+      return { code: 'OFF', special: 'off' };
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(agent)].grid];
     var planned = (shiftPlanByDay[day.ds] || {})[agent.id];
     var baseCode = planned || (grid[0] || { code: 'O' }).code;
@@ -7292,17 +7262,6 @@ function computeMonthlyPlanOn(opt, ctx) {
       if (worked && d.dow === 0)   rh[a.id].dim++;
     });
   });
-  // Days outside the month: a manual change, a leave or a saved planning is known; anything else is unknown (never a day off)
-  function outsideRes(a, ds) {
-    var ov = (planningOverrides[a.id] || {})[ds];
-    if (ov) return { code: ov };
-    var lt = agentOnLeave(a.id, ds);
-    if (lt === 'out') return { code: 'OUT', special: 'out' };
-    if (lt) return { code: lt === 'off_request' ? 'OFF' : 'A', special: lt === 'off_request' ? 'off' : 'leave' };
-    var src = planSnapshot && (ds < monthDays[0].ds ? planSnapshot.prevPlan : planSnapshot.nextPlan);
-    var r = src && (src[ds] || {})[a.id];
-    return r || undefined;
-  }
   function cellsOf() {
     var c = {};
     agents.forEach(function(a) {
@@ -7322,14 +7281,12 @@ function computeMonthlyPlanOn(opt, ctx) {
   function testedMoves() {
     var log = { tried: 0, applied: [], failed: [] }, MAX_TRIES = 300;
     var dayIx = {}; monthDays.forEach(function(d, i) { dayIx[d.ds] = i; });
-    var OFF = { code: 'OFF', cls: 'sh-off', special: 'off' };
+    var OFF = { code: 'OFF', special: 'off' };
     function rowOf(a, ds) { return dayIx[ds] != null ? agentRows[a.id][dayIx[ds]] : null; }
     function movable(a, row) {
       var d = row && row.d, res = row && row.res;
       if (!d || d.closure || d.past || d.ds < todayDs || isFixed(a) || !res || res.half) return false;
       if ((planningOverrides[a.id] || {})[d.ds] || (cornerOverrides[a.id] || {})[d.ds] || agentOnLeave(a.id, d.ds)) return false;
-      var st = (availability[a.id] || {})[d.ds];
-      if (st === 'absent' || st === 'rest_override' || st === 'rest_parttime') return false;
       var saved = (snapPlan[d.ds] || {})[a.id];
       if (saved && (!recalcFromToday || d.ds < todayDs)) return false;
       return !res.special || res.special === 'off';
@@ -7690,7 +7647,7 @@ function monthlyInputs() {
     currentStoreId: currentStoreId, currentStoreName: currentStoreName, monthlyRef: monthlyRef,
     currentCornerView: currentCornerView, CURRENT_LANG: CURRENT_LANG, manualMode: manualMode, forceRecalc: forceRecalc,
     agents: agents, agentPrefs: agentPrefs, agentLeaves: agentLeaves, planningOverrides: planningOverrides,
-    cornerOverrides: cornerOverrides, availability: availability, regulations: regulations,
+    cornerOverrides: cornerOverrides, regulations: regulations,
     storeSettings: storeSettings, RETAIL_SHIFTS: RETAIL_SHIFTS, storeCorners: storeCorners, trafficDaily: trafficDaily,
     trafficMonthly: trafficMonthly, cornerTrafficMonthly: cornerTrafficMonthly, calHolidays: calHolidays,
     calOverrides: calOverrides, calHours: calHours, planSnapshot: planSnapshot, planningEvents: planningEvents
@@ -7700,7 +7657,7 @@ function useMonthlyInputs(v) {
   currentStoreId = v.currentStoreId; currentStoreName = v.currentStoreName; monthlyRef = v.monthlyRef;
   currentCornerView = v.currentCornerView; CURRENT_LANG = v.CURRENT_LANG; manualMode = v.manualMode;
   forceRecalc = v.forceRecalc; agents = v.agents; agentPrefs = v.agentPrefs; agentLeaves = v.agentLeaves;
-  planningOverrides = v.planningOverrides; cornerOverrides = v.cornerOverrides; availability = v.availability;
+  planningOverrides = v.planningOverrides; cornerOverrides = v.cornerOverrides;
   regulations = v.regulations; storeSettings = v.storeSettings; RETAIL_SHIFTS = v.RETAIL_SHIFTS;
   storeCorners = v.storeCorners; trafficDaily = v.trafficDaily; trafficMonthly = v.trafficMonthly;
   cornerTrafficMonthly = v.cornerTrafficMonthly; calHolidays = v.calHolidays; calOverrides = v.calOverrides;
@@ -7718,6 +7675,17 @@ function buildMonthlyContext(change) {
   var inputs = copyMonthlyValue(monthlyInputs()), today = toDateStr(new Date());
   if (change) change(inputs);
   return Object.freeze({ inputs: freezeMonthlyValue(inputs), today: today, fingerprint: monthlyFingerprint(inputs, today) });
+}
+// Final check of any plan (computed, saved or sent) with the inputs it was made with, away from the screen:
+// the base of the planning validation (a sent copy is checked with the data it was sent with).
+function validatePlan(cells, ctx) {
+  var live = monthlyInputs();
+  useMonthlyInputs(ctx.inputs);
+  try {
+    var ym = toDateStr(monthlyRef).slice(0, 7);
+    var days = monthDsList(ym).map(function(ds) { return { ds: ds, closure: getDayClosureType(ds), past: ds < ctx.today }; });
+    return finalCheck(cells, { days: days, today: ctx.today, outside: outsideRes });
+  } finally { useMonthlyInputs(live); }
 }
 // The calculation reads its context only: the live data is put back afterwards, even after an error
 function computeMonthlyPlan(opt, ctx) {
@@ -8110,7 +8078,7 @@ async function saveAgentEditor() {
     var fxIssue = fixedScheduleIssue(fixedSchedule, status, hoursIn);
     if (fxIssue) { showToast(t('Fixed schedule') + ': ' + fxIssue, 'error'); return false; }
   }
-  var upd = { first_name: first, last_name: last, status: status, work_pct: 100, weekly_hours: weeklyHours };
+  var upd = { first_name: first, last_name: last, status: status, weekly_hours: weeklyHours };
   if (history) upd.weekly_hours_history = history;
   var changeMsg = history ? tf('Saved \u2713 New weekly hours from {date}', { date: formatDateDisplay(fromIso) }) : '';
   if (storeCorners.length > 1) {
@@ -8154,7 +8122,6 @@ async function addAgent() {
   var first  = document.getElementById('new-first-name').value.trim();
   var last   = document.getElementById('new-last-name').value.trim();
   var status = document.getElementById('new-status').value || 'SA';
-  var pct    = 100;
   if (!first || !last) { showToast('Enter first and last name', 'error'); return; }
   var homeCorner = null;
   if (storeCorners.length > 1) {
@@ -8164,7 +8131,7 @@ async function addAgent() {
   showLoader();
   var res = await sb.from('retail_agents').insert({
     store_id: currentStoreId, first_name: first, last_name: last,
-    status: status, work_pct: pct, is_active: true, home_corner_id: homeCorner
+    status: status, is_active: true, home_corner_id: homeCorner
   });
   hideLoader();
   if (res.error) { showToast('Failed to add agent', 'error'); return; }
