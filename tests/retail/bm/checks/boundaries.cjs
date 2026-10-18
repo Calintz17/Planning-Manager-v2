@@ -1,6 +1,6 @@
 const assert=require('assert'),vm=require('vm'),fs=require('fs');
 const {context}=require('./runner.cjs');
-const file=process.argv[2]||'CAST_v9_3_62_RETAIL_TEST.html';
+const file=process.argv[2]||'CAST_RETAIL_TEST.html';
 function probe(kind){
  const c=context(file);c.kind=kind;
  return JSON.parse(vm.runInContext(`JSON.stringify((()=>{

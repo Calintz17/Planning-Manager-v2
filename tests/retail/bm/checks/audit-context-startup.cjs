@@ -7,8 +7,11 @@ const fs=require('fs'),vm=require('vm'),{context}=require('./runner.cjs');
    const ctx=buildMonthlyContext(),p=pickMonthlyPlan(ctx);let jsonRoundTrip;
    try{validatePlan(p.cells,JSON.parse(JSON.stringify(ctx)));jsonRoundTrip={ok:true};}
    catch(e){jsonRoundTrip={ok:false,error:e.message};}
-   const y=ctx.inputs.monthlyRef.getFullYear();ctx.inputs.monthlyRef.setFullYear(y+1);
-   return {jsonRoundTrip,dateMutation:ctx.inputs.monthlyRef.getFullYear()!==y};
+   // 9.5.0.4: the month is kept as text (YYYY-MM-DD), so it cannot be changed inside the frozen context
+   const m=ctx.inputs.monthlyRef;let dateMutation;
+   if(typeof m==='string'){try{ctx.inputs.monthlyRef='2099-01-01';}catch(e){}dateMutation=ctx.inputs.monthlyRef!==m;}
+   else{const y=m.getFullYear();m.setFullYear(y+1);dateMutation=m.getFullYear()!==y;}
+   return {jsonRoundTrip,dateMutation,monthType:typeof m};
  })())`,c,{timeout:180000}));
  vm.runInContext(`workspaceStarted=false;showLoader=()=>{};hideLoader=()=>{};
  sb.from=()=>({select(){return this},order(){return Promise.reject(Error('synthetic network rejection'))}});`,c);

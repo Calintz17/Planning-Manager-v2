@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const {context}=require('./runner.cjs');
-const file=process.argv[2]||'CAST_v9_3_61_RETAIL.html';
+const file=process.argv[2]||'CAST_RETAIL_TEST.html';
 const c=context(file);
 const out={};
 out.movedViolation=vm.runInContext(`(()=>{
