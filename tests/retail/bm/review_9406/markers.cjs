@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),{context}=require('../review_9362/runner.cjs');let out=[];
 for(const month of [9,10,11])for(const type of ['A','OUT','conflict']){let runs=[];
- for(const channel of ['manual','calendar']){const c=context('CAST_v9_4_0_6_RETAIL_TEST.html');const ds=`2026-${String(month).padStart(2,'0')}-01`,ds2=`2026-${String(month).padStart(2,'0')}-${month===9?'07':month===10?'05':'02'}`;
+ for(const channel of ['manual','calendar']){const c=context((process.argv[2]||'CAST_v9_5_0_2_RETAIL_TEST.html'));const ds=`2026-${String(month).padStart(2,'0')}-01`,ds2=`2026-${String(month).padStart(2,'0')}-${month===9?'07':month===10?'05':'02'}`;
  vm.runInContext(`Date=class extends Date{constructor(...a){super(...(a.length?a:['2026-08-01T12:00:00']));}};monthlyRef=new Date(2026,${month-1},1);agentLeaves=agentLeaves.filter(x=>x.agent_id!=='a12');planningOverrides.a12={};`,c);
  for(const day of [ds,ds2]){
  const code=type==='conflict'?'O':type;

@@ -6,8 +6,23 @@
   function getSess() { try { return JSON.parse(sessionStorage.getItem('__sess') || 'null'); } catch (e) { return null; } }
   function setSess(u) { try { sessionStorage.setItem('__sess', JSON.stringify(u)); } catch (e) {} }
   if (sessionStorage.getItem('__sess') === null) setSess(A.sessionUser || null);
+  // Like the base (row level security): a manager sees his stores, a director his region, an admin everything
+  function scope(t, rows) {
+    var u = getSess(); if (!u || ['retail_regions', 'retail_countries', 'retail_stores'].indexOf(t) === -1) return rows;
+    var p = (DB.retail_profiles || []).find(function (x) { return x.user_id === u.id && x.active !== false; });
+    if (!p) return [];
+    if (p.role === 'admin') return rows;
+    var country = function (id) { return (DB.retail_countries || []).find(function (c) { return c.id === id; }) || {}; };
+    var stores = (DB.retail_stores || []).filter(function (s) {
+      return p.role === 'director' ? country(s.country_id).region_id === p.region_id
+        : (DB.retail_profile_stores || []).some(function (x) { return x.user_id === u.id && x.store_id === s.id; });
+    });
+    if (t === 'retail_stores') return rows.filter(function (r) { return stores.some(function (s) { return s.id === r.id; }); });
+    if (t === 'retail_countries') return rows.filter(function (r) { return stores.some(function (s) { return s.country_id === r.id; }); });
+    return rows.filter(function (r) { return (p.role === 'director' && r.id === p.region_id) || stores.some(function (s) { return country(s.country_id).region_id === r.id; }); });
+  }
   function Q(t) {
-    var rows = (DB[t] || []).slice(), single = false, write = false;
+    var rows = scope(t, (DB[t] || []).slice()), single = false, write = false;
     var q = {
       select: function () { return p; },
       eq: function (k, v) { rows = rows.filter(function (r) { return r[k] === v; }); return p; },

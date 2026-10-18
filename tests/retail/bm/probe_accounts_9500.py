@@ -1,10 +1,10 @@
-# Sign-in and menus by role, 9.5.0.0 (fictional accounts and stores, Supabase replaced by stub_supabase_auth.js).
+# Sign-in and menus by role, 9.5.0.0 (9.5.0.2: the stub filters regions, countries and stores like the base) (fictional accounts and stores, Supabase replaced by stub_supabase_auth.js).
 # Usage: python3 probe_accounts_9500.py [build.html]. Writes review_9500/accounts-9500-results.json and screenshots. Exit 1 on failure.
 import sys, os, json, shutil, tempfile, http.server, threading, functools
 from playwright.sync_api import sync_playwright
 B = os.path.dirname(os.path.abspath(__file__)); R = os.path.abspath(B + '/../../..')
 build = sys.argv[1] if len(sys.argv) > 1 else R + '/tests/builds/CAST_v9_5_0_0_RETAIL_TEST.html'
-OUT = B + '/review_' + ('9501' if '9_5_0_1' in build else '9500'); os.makedirs(OUT, exist_ok=True)
+OUT = B + '/review_' + ('9502' if '9_5_0_2' in build else '9501' if '9_5_0_1' in build else '9500'); os.makedirs(OUT, exist_ok=True)
 U = tempfile.mkdtemp(); shutil.copy(build, U + '/index.html'); shutil.copytree(R + '/logo', U + '/logo')
 class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -43,7 +43,7 @@ STATE = """(() => { const vis = id => { const e = document.getElementById(id); r
   const opts = id => [...document.getElementById(id).options].map(o => o.textContent).filter(t => t.indexOf('-') !== 0);
   return { login: document.getElementById('login-gate').classList.contains('show'), gate: document.getElementById('store-gate').classList.contains('show'),
     err: document.getElementById('login-err').textContent, store: typeof currentStoreName === 'string' ? currentStoreName : null,
-    region: vis('region-field'), fixedRegion: vis('fixed-region') ? document.getElementById('fixed-region-val').textContent : null,
+    region: vis('region-field'),
     country: vis('country-field'), storeField: vis('store-field'), fixedStore: vis('fixed-store') ? document.getElementById('fixed-store-val').textContent : null,
     regions: opts('region-select'), countries: opts('country-select'), stores: opts('store-select'),
     initials: document.getElementById('acct-initials').textContent, dot: document.getElementById('acct-btn').classList.contains('needs-pw'),
@@ -96,7 +96,7 @@ with sync_playwright() as p:
     # 2. Manager with 2 stores in one country: only the Store menu, limited to his stores
     ctx, pg, errs = page('manager.two@test.fr'); s = st(pg)
     check('manager 2 stores: gate with Store only', s['gate'] and not s['region'] and not s['country'] and s['storeField'] and s['stores'] == ['Store One', 'Store Two'] and not s['dot'], s)
-    check('manager 2 stores: gate text', s['gateSub'] == 'Choose one of your stores.', s['gateSub'])
+    check('manager 2 stores: gate text', s['gateSub'] == 'Choose your store.', s['gateSub'])
     pg.screenshot(path=OUT + '/manager-two-gate-light-1440.png')
     pg.select_option('#store-select', label='Store Two'); pg.wait_for_timeout(600); s = st(pg)
     check('manager 2 stores: picks Store Two', not s['gate'] and s['store'] == 'Store Two' and s['storeField'])
@@ -107,14 +107,14 @@ with sync_playwright() as p:
     check('manager 2 countries: country menu, no region menu', s['gate'] and not s['region'] and s['country'] and s['countries'] == ['France', 'United Kingdom'], s); ctx.close()
     # 4. Director: region fixed, country and store limited to his region
     ctx, pg, errs = page('director.emea@test.fr'); s = st(pg)
-    check('director: region fixed EMEA, countries of EMEA only', s['gate'] and not s['region'] and s['fixedRegion'] == 'EMEA' and s['country'] and s['countries'] == ['France', 'United Kingdom'], s)
-    check('director: gate text', s['gateSub'] == 'Choose a country and a store in your region.', s['gateSub'])
+    check('director: no region menu (single region), countries of EMEA only', s['gate'] and not s['region'] and s['country'] and s['countries'] == ['France', 'United Kingdom'], s)
+    check('director: gate text', s['gateSub'] == 'Choose your store.', s['gateSub'])
     pg.screenshot(path=OUT + '/director-gate-light-1440.png')
     pg.select_option('#country-select', label='United Kingdom'); pg.wait_for_timeout(600); s = st(pg)
     check('director: UK has one store, opens it', not s['gate'] and s['store'] == 'Store Three', s['store']); ctx.close()
     # 5. Admin: as today, all regions
     ctx, pg, errs = page('admin.cast@test.fr'); s = st(pg)
-    check('admin: three menus, all regions', s['gate'] and s['region'] and s['regions'] == ['EMEA', 'JAPAN'] and s['fixedRegion'] is None, s); ctx.close()
+    check('admin: three menus, all regions', s['gate'] and s['region'] and s['regions'] == ['EMEA', 'JAPAN'], s); ctx.close()
     # 6. Refused accounts
     for e, msg in [('inactive@test.fr', 'Your account is not active. Contact your administrator.'),
                    ('noprofile@test.fr', 'Your account is not active. Contact your administrator.'),

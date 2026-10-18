@@ -1,0 +1,50 @@
+[
+  {
+    "case": "bm",
+    "sameIssues": true,
+    "sameStatus": true,
+    "status": "incomplete",
+    "frozenSame": true,
+    "liveDiffers": true
+  },
+  {
+    "case": "jpA",
+    "sameIssues": true,
+    "sameStatus": true,
+    "status": "incomplete",
+    "frozenSame": true,
+    "liveDiffers": true
+  },
+  {
+    "case": "jpB",
+    "sameIssues": true,
+    "sameStatus": true,
+    "status": "incomplete",
+    "frozenSame": true,
+    "liveDiffers": true
+  },
+  {
+    "case": "hours30",
+    "sameIssues": true,
+    "sameStatus": true,
+    "status": "incomplete",
+    "frozenSame": true,
+    "liveDiffers": true
+  },
+  {
+    "case": "learned",
+    "sameIssues": true,
+    "sameStatus": true,
+    "status": "incomplete",
+    "frozenSame": true,
+    "liveDiffers": true
+  },
+  {
+    "case": "sixManual",
+    "sameIssues": true,
+    "sameStatus": true,
+    "status": "violation",
+    "frozenSame": true,
+    "liveDiffers": true
+  }
+]

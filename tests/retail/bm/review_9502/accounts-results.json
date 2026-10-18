@@ -1,0 +1,372 @@
+[
+ {
+  "test": "no session shows sign in",
+  "pass": true,
+  "got": {
+   "login": true,
+   "gate": false,
+   "err": "",
+   "store": "",
+   "region": true,
+   "country": true,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [],
+   "countries": [],
+   "stores": [],
+   "initials": "",
+   "dot": false,
+   "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+   "log": []
+  }
+ },
+ {
+  "test": "wrong password: message, stays on sign in",
+  "pass": true,
+  "got": "Wrong email or password."
+ },
+ {
+  "test": "manager 1 store: straight to Store One, no menus",
+  "pass": true,
+  "got": {
+   "login": false,
+   "gate": false,
+   "err": "",
+   "store": "Store One",
+   "region": false,
+   "country": false,
+   "storeField": false,
+   "fixedStore": "Store One",
+   "regions": [
+    "EMEA"
+   ],
+   "countries": [
+    "France"
+   ],
+   "stores": [
+    "Store One"
+   ],
+   "initials": "MO",
+   "dot": true,
+   "gateSub": "Choose your store.",
+   "log": [
+    [
+     "signIn",
+     "manager.one@test.fr"
+    ],
+    [
+     "signIn",
+     "manager.one@test.fr"
+    ]
+   ]
+  }
+ },
+ {
+  "test": "manager 1 store: initials and default password dot",
+  "pass": true,
+  "got": "MO"
+ },
+ {
+  "test": "account menu shows email, role, warning",
+  "pass": true,
+  "got": ""
+ },
+ {
+  "test": "password: too short refused",
+  "pass": true,
+  "got": "At least 6 characters."
+ },
+ {
+  "test": "password: mismatch refused",
+  "pass": true,
+  "got": ""
+ },
+ {
+  "test": "password: wrong current refused",
+  "pass": true,
+  "got": ""
+ },
+ {
+  "test": "password: saved with pw_changed, dot gone, editor closed",
+  "pass": true,
+  "got": [
+   [
+    "updateUser",
+    {
+     "password": "newpass1",
+     "data": {
+      "pw_changed": true
+     }
+    }
+   ]
+  ]
+ },
+ {
+  "test": "sign out: back to sign in",
+  "pass": true,
+  "got": true
+ },
+ {
+  "test": "no JavaScript error (flow 1)",
+  "pass": true,
+  "got": []
+ },
+ {
+  "test": "manager 2 stores: gate with Store only",
+  "pass": true,
+  "got": {
+   "login": false,
+   "gate": true,
+   "err": "",
+   "store": "",
+   "region": false,
+   "country": false,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [
+    "EMEA"
+   ],
+   "countries": [
+    "France"
+   ],
+   "stores": [
+    "Store One",
+    "Store Two"
+   ],
+   "initials": "MT",
+   "dot": false,
+   "gateSub": "Choose your store.",
+   "log": []
+  }
+ },
+ {
+  "test": "manager 2 stores: gate text",
+  "pass": true,
+  "got": "Choose your store."
+ },
+ {
+  "test": "manager 2 stores: picks Store Two",
+  "pass": true,
+  "got": ""
+ },
+ {
+  "test": "manager 2 stores: remembers Store Two after reload",
+  "pass": true,
+  "got": "Store Two"
+ },
+ {
+  "test": "manager 2 countries: country menu, no region menu",
+  "pass": true,
+  "got": {
+   "login": false,
+   "gate": true,
+   "err": "",
+   "store": "",
+   "region": false,
+   "country": true,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [
+    "EMEA"
+   ],
+   "countries": [
+    "France",
+    "United Kingdom"
+   ],
+   "stores": [],
+   "initials": "MW",
+   "dot": true,
+   "gateSub": "Choose your store.",
+   "log": []
+  }
+ },
+ {
+  "test": "director: no region menu (single region), countries of EMEA only",
+  "pass": true,
+  "got": {
+   "login": false,
+   "gate": true,
+   "err": "",
+   "store": "",
+   "region": false,
+   "country": true,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [
+    "EMEA"
+   ],
+   "countries": [
+    "France",
+    "United Kingdom"
+   ],
+   "stores": [],
+   "initials": "DE",
+   "dot": true,
+   "gateSub": "Choose your store.",
+   "log": []
+  }
+ },
+ {
+  "test": "director: gate text",
+  "pass": true,
+  "got": "Choose your store."
+ },
+ {
+  "test": "director: UK has one store, opens it",
+  "pass": true,
+  "got": "Store Three"
+ },
+ {
+  "test": "admin: three menus, all regions",
+  "pass": true,
+  "got": {
+   "login": false,
+   "gate": true,
+   "err": "",
+   "store": "",
+   "region": true,
+   "country": true,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [
+    "EMEA",
+    "JAPAN"
+   ],
+   "countries": [],
+   "stores": [],
+   "initials": "AC",
+   "dot": false,
+   "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+   "log": []
+  }
+ },
+ {
+  "test": "refused: inactive@test.fr",
+  "pass": true,
+  "got": {
+   "login": true,
+   "gate": false,
+   "err": "Your account is not active. Contact your administrator.",
+   "store": "",
+   "region": true,
+   "country": true,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [],
+   "countries": [],
+   "stores": [],
+   "initials": "",
+   "dot": false,
+   "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+   "log": [
+    [
+     "signOut"
+    ]
+   ]
+  }
+ },
+ {
+  "test": "refused: noprofile@test.fr",
+  "pass": true,
+  "got": {
+   "login": true,
+   "gate": false,
+   "err": "Your account is not active. Contact your administrator.",
+   "store": "",
+   "region": true,
+   "country": true,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [],
+   "countries": [],
+   "stores": [],
+   "initials": "",
+   "dot": false,
+   "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+   "log": [
+    [
+     "signOut"
+    ]
+   ]
+  }
+ },
+ {
+  "test": "refused: nostore@test.fr",
+  "pass": true,
+  "got": {
+   "login": true,
+   "gate": false,
+   "err": "No store is linked to your account. Contact your administrator.",
+   "store": "",
+   "region": true,
+   "country": true,
+   "storeField": true,
+   "fixedStore": null,
+   "regions": [],
+   "countries": [],
+   "stores": [],
+   "initials": "N",
+   "dot": true,
+   "gateSub": "Choose your store.",
+   "log": [
+    [
+     "signOut"
+    ]
+   ]
+  }
+ },
+ {
+  "test": "sign in screen fits light-390",
+  "pass": true,
+  "got": ""
+ },
+ {
+  "test": "account menu inside the screen light-390",
+  "pass": true,
+  "got": [
+   138,
+   380
+  ]
+ },
+ {
+  "test": "no JavaScript error light-390",
+  "pass": true,
+  "got": []
+ },
+ {
+  "test": "sign in screen fits dark-390",
+  "pass": true,
+  "got": ""
+ },
+ {
+  "test": "account menu inside the screen dark-390",
+  "pass": true,
+  "got": [
+   138,
+   380
+  ]
+ },
+ {
+  "test": "no JavaScript error dark-390",
+  "pass": true,
+  "got": []
+ },
+ {
+  "test": "sign in screen fits dark-1440",
+  "pass": true,
+  "got": ""
+ },
+ {
+  "test": "account menu inside the screen dark-1440",
+  "pass": true,
+  "got": [
+   1166,
+   1408
+  ]
+ },
+ {
+  "test": "no JavaScript error dark-1440",
+  "pass": true,
+  "got": []
+ }
+]

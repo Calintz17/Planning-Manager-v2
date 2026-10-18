@@ -1,8 +1,8 @@
 # Sign in and store gate across sizes (9.5.0.1). Fictional accounts. Usage: python3 probe_mobile_login_9501.py
 import sys, os, json, shutil, tempfile, http.server, threading, functools
 from playwright.sync_api import sync_playwright
-R='/home/claude/planning-manager-v2'; B=R+'/tests/retail/bm'; build=R+'/tests/builds/CAST_v9_5_0_1_RETAIL_TEST.html'
-OUT=B+'/review_9501'; os.makedirs(OUT, exist_ok=True)
+R='/home/claude/planning-manager-v2'; B=R+'/tests/retail/bm'; build=sys.argv[1] if len(sys.argv)>1 else R+'/tests/builds/CAST_v9_5_0_2_RETAIL_TEST.html'
+OUT=B+'/review_'+('9502' if '9_5_0_2' in build else '9501'); os.makedirs(OUT, exist_ok=True)
 U=tempfile.mkdtemp(); shutil.copy(build,U+'/index.html'); shutil.copytree(R+'/logo',U+'/logo'); shutil.copytree(R+'/image homepage',U+'/image homepage')
 class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*a): pass
