@@ -13,7 +13,7 @@
   --veil:rgba(12,26,51,.66);
   --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s16:64px;
   --r-sm:6px; --r-lg:12px; --top-h:72px; --max:1200px;
-  --card:212px;                                   /* side of a square */
+  --card:244px; --card-h:150px;                   /* a card: wide and low */
   --step:150px;                                   /* distance between two milestones; they alternate above and below */
   --stem:26px;                                    /* from the line to a square */
   --gutter:max(var(--s8), calc((100vw - var(--max)) / 2 + var(--s8)));
@@ -45,26 +45,22 @@ a { color:inherit; text-decoration:none; }
 .rm-media img { width:100%; height:100%; object-fit:cover; }
 .rm-veil { background:var(--veil); }
 .rm-veil::after { content:""; position:absolute; inset:0; background:var(--brand); mix-blend-mode:color; opacity:.4; }
-.rm-head { position:relative; z-index:2; width:100%; margin-top:clamp(28px, 6vh, 72px); display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s6); flex-wrap:wrap; }
-.rm h1 { font-size:clamp(32px, 3.6vw, 52px); line-height:1.05; letter-spacing:-.025em; }
-.rm-intro { color:var(--mist); font-size:16px; }
 
 /* The line */
 .line { position:relative; z-index:2; flex:1 0 auto; display:flex; align-items:center; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x; overscroll-behavior-x:contain; outline:none; }
 .line::-webkit-scrollbar { display:none; }
 .line.is-drag { cursor:grabbing; }
 .line:focus-visible { box-shadow:inset 0 0 0 2px var(--mist); }
-.rail { position:relative; display:flex; min-width:max-content; height:calc(2 * (var(--card) + var(--stem)) + 24px); padding:0 calc(var(--gutter) + var(--card) / 2); }
+.rail { position:relative; display:flex; min-width:max-content; height:calc(2 * (var(--card-h) + var(--stem)) + 24px); padding:0 calc(var(--gutter) + var(--card) / 2); }
 .track { position:absolute; left:0; right:0; top:50%; height:24px; margin-top:-12px; overflow:hidden; pointer-events:none; }
-.track::before { content:""; position:absolute; left:0; right:0; top:12px; height:1px; background:linear-gradient(90deg, rgba(255,255,255,.4) var(--done, 70%), transparent var(--done, 70%)); }
-.track .plan { position:absolute; top:12px; left:var(--done, 70%); width:calc(var(--end, 100%) - var(--done, 70%)); border-top:1px dashed rgba(255,255,255,.4); }
+.track::before { content:""; position:absolute; left:0; right:0; top:12px; height:1px; background:rgba(255,255,255,.4); }
 /* Light running along the line, right to left: the colours of Forecast with AI */
-.streak { position:absolute; top:11px; left:0; width:280px; height:3px; border-radius:3px; pointer-events:none;
-  background:linear-gradient(90deg, transparent 0%, #FFFFFF 14%, #A78BFA 34%, #6366F1 58%, #60A5FA 80%, transparent 100%);
-  animation:run 7s linear infinite; will-change:transform; }
-.streak::after { content:""; position:absolute; inset:-5px 0; border-radius:8px; filter:blur(8px); opacity:.85;
-  background:linear-gradient(90deg, transparent 0%, rgba(167,139,250,.55) 25%, rgba(99,102,241,.5) 55%, rgba(96,165,250,.45) 80%, transparent 100%); }
-@keyframes run { from { transform:translateX(var(--run-from, 2400px)); } to { transform:translateX(-300px); } }
+.streak { position:absolute; top:11.5px; left:0; width:840px; height:1.5px; border-radius:2px; pointer-events:none;
+  background:linear-gradient(90deg, transparent 0%, #60A5FA 22%, #6366F1 46%, #A78BFA 68%, #FFFFFF 88%, transparent 100%);
+  animation:run 8s linear infinite; will-change:transform; }
+.streak::after { content:""; position:absolute; inset:-4px 0; border-radius:6px; filter:blur(6px); opacity:.7;
+  background:linear-gradient(90deg, transparent 0%, rgba(96,165,250,.45) 25%, rgba(99,102,241,.5) 50%, rgba(167,139,250,.55) 75%, transparent 100%); }
+@keyframes run { from { transform:translateX(-860px); } to { transform:translateX(var(--run-to, 2400px)); } }
 
 /* Milestones: a dot on the line, a stem, a square above or below */
 .ms { position:relative; width:var(--step); flex:none; height:100%; }
@@ -72,21 +68,19 @@ a { color:inherit; text-decoration:none; }
 .ms::after { content:""; position:absolute; left:0; width:1px; height:var(--stem); background:rgba(255,255,255,.45); }
 .ms.up::after { bottom:50%; margin-bottom:6px; }
 .ms.dn::after { top:50%; margin-top:6px; }
-.sq { position:absolute; left:0; transform:translateX(-50%); width:var(--card); height:var(--card); padding:var(--s5); border-radius:var(--r-lg); background:var(--white); color:var(--tx-1); display:flex; flex-direction:column; box-shadow:0 18px 40px rgba(0,0,0,.28); }
+.sq { position:absolute; left:0; transform:translateX(-50%); width:var(--card); height:var(--card-h); padding:var(--s4) var(--s5); border-radius:var(--r-lg); background:rgba(255,255,255,.88); color:var(--tx-1); display:flex; flex-direction:column; box-shadow:0 18px 40px rgba(0,0,0,.25); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
 .ms.up .sq { bottom:calc(50% + var(--stem) + 6px); }
 .ms.dn .sq { top:calc(50% + var(--stem) + 6px); }
-.ic { width:40px; height:40px; border-radius:var(--r-sm); background:var(--tint); color:var(--brand); display:flex; align-items:center; justify-content:center; flex:none; }
+.ic { color:var(--brand); display:flex; flex:none; }
 .ic svg { width:22px; height:22px; }
 .sq-txt { margin-top:auto; }
 .date { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--tx-2); }
 .sq h2 { margin-top:6px; font-size:18px; line-height:1.2; letter-spacing:-.01em; }
 .sq p { margin-top:6px; font-size:14px; line-height:1.4; color:var(--tx-2); }
-/* Planned: grey squares on the dashed part */
-.ms.next .dot { background:var(--night); border:1px dashed var(--mist); box-shadow:none; }
-.ms.next::after { background:none; border-left:1px dashed rgba(255,255,255,.4); }
-.ms.next .sq { background:rgba(233,237,242,.14); color:var(--white); border:1px dashed rgba(255,255,255,.45); box-shadow:none; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
-.ms.next .ic { background:rgba(255,255,255,.12); color:var(--mist); }
-.ms.next .date, .ms.next p { color:var(--mist); }
+/* Planned: grey cards */
+.ms.next .dot { background:var(--mist-2); box-shadow:0 0 0 5px rgba(255,255,255,.08); }
+.ms.next .sq { background:rgba(201,213,230,.8); color:var(--tx-1); box-shadow:none; }
+.ms.next .ic, .ms.next .date, .ms.next p { color:var(--tx-1); }
 
 /* Bottom */
 .rm-foot { position:relative; z-index:2; width:100%; margin-bottom:clamp(20px, 4vh, 48px); display:flex; justify-content:space-between; align-items:center; gap:var(--s6); }
@@ -98,20 +92,20 @@ a { color:inherit; text-decoration:none; }
 .arw:disabled { opacity:.35; cursor:default; background:transparent; border-color:rgba(255,255,255,.5); }
 .arw svg { width:18px; height:18px; }
 
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 footer { background:var(--night); color:var(--mist-2); font-size:13px; padding:var(--s8) 0; border-top:1px solid var(--line-dark); }
 footer .wrap { display:flex; justify-content:space-between; align-items:center; gap:var(--s4); flex-wrap:wrap; }
 .sign { color:var(--mist); }
 
 @media (max-width: 640px) {
-  :root { --top-h:64px; --card:176px; --step:120px; --stem:20px; --gutter:var(--s5); }
+  :root { --top-h:64px; --card:204px; --card-h:146px; --step:124px; --stem:20px; --gutter:var(--s5); }
   body { font-size:16px; }
   .wrap { padding:0 var(--s5); }
   .brand-sub, .top-nav a.lnk { display:none; }
   .sq { padding:var(--s4); }
   .sq h2 { font-size:16px; }
   .sq p { font-size:13px; }
-  .ic { width:34px; height:34px; }
-  .ic svg { width:19px; height:19px; }
+  .ic svg { width:20px; height:20px; }
   .hint span { display:none; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -162,34 +156,31 @@ function trimLogo(img) {
   <div class="rm-media"><img src="image%20homepage/hero.jpg" alt=""></div>
   <div class="rm-veil"></div>
 
-  <div class="wrap rm-head">
-    <h1>Roadmap</h1>
-    <p class="rm-intro">7 releases since March 2026. 2 more planned by November.</p>
-  </div>
+  <h1 class="sr-only">Roadmap</h1>
 
   <div class="line" id="line" tabindex="0" role="region" aria-label="Roadmap. Use the arrow keys or drag to move along it.">
     <div class="rail" id="rail" role="list">
-      <div class="track" aria-hidden="true"><span class="plan"></span><span class="streak"></span></div>
+      <div class="track" aria-hidden="true"><span class="streak"></span></div>
 
       <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/><path d="M19 20a3 3 0 0 1-3 2h-3"/></svg></span>
         <div class="sq-txt"><div class="date">March 2026</div><h2>Client Service</h2><p>Weekly planning for calls, chats and emails.</p></div></div></div>
 
       <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/><path d="M10 21v-5h4v5"/></svg></span>
-        <div class="sq-txt"><div class="date">June 2026</div><h2>Retail</h2><p>Store planning built from store traffic.</p></div></div></div>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2"/></svg></span>
+        <div class="sq-txt"><div class="date">June 2026</div><h2>Monthly planning</h2><p>Shifts, days off and corners for the whole month.</p></div></div></div>
 
       <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
-        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2"/></svg></span>
-        <div class="sq-txt"><div class="date">August 2026</div><h2>Monthly planning</h2><p>Shifts, days off and corners for the whole month.</p></div></div></div>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/><path d="M10 21v-5h4v5"/></svg></span>
+        <div class="sq-txt"><div class="date">July 2026</div><h2>Retail</h2><p>Store planning built from store traffic.</p></div></div></div>
 
       <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-        <div class="sq-txt"><div class="date">September 2026</div><h2>Intraday</h2><p>Breaks and lunches placed hour by hour.</p></div></div></div>
+        <div class="sq-txt"><div class="date">August 2026</div><h2>Intraday</h2><p>Breaks and lunches placed hour by hour.</p></div></div></div>
 
       <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg></span>
-        <div class="sq-txt"><div class="date">October 2026</div><h2>Learning engine</h2><p>Repeats the manager's usual changes in the next draft.</p></div></div></div>
+        <div class="sq-txt"><div class="date">September 2026</div><h2>Learning engine</h2><p>Repeats the manager's usual changes in the next draft.</p></div></div></div>
 
       <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><rect x="15" y="11" width="7" height="6" rx="1.5"/><path d="M16.5 11V9.5a2 2 0 0 1 4 0V11"/></svg></span>
@@ -205,7 +196,7 @@ function trimLogo(img) {
 
       <div class="ms up next" role="listitem"><span class="dot"></span><div class="sq">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
-        <div class="sq-txt"><div class="date">November 2026</div><h2>Insights</h2><p>Planning figures for all stores on one page.</p></div></div></div>
+        <div class="sq-txt"><div class="date">November 2026</div><h2>Automated insights</h2><p>Gives managers insight on their traffic and planning.</p></div></div></div>
     </div>
   </div>
 
@@ -233,12 +224,9 @@ function trimLogo(img) {
   var line = document.getElementById('line'), rail = document.getElementById('rail'), lastDone = document.getElementById('last-done');
   var prev = document.getElementById('prev'), next = document.getElementById('next');
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // Solid line up to the last release, dashed after; the light starts from the right end of the line
+  // The light runs from the left end of the line to the right end
   function size() {
-    rail.style.setProperty('--done', (lastDone.offsetLeft + lastDone.offsetWidth / 2) + 'px');
-    var last = rail.querySelector('.ms:last-of-type');
-    rail.style.setProperty('--end', (last.offsetLeft + 64) + 'px');
-    rail.style.setProperty('--run-from', rail.offsetWidth + 'px');
+    rail.style.setProperty('--run-to', rail.offsetWidth + 'px');
     arrows();
   }
   function step() { return lastDone.offsetWidth * 2 || 300; }
