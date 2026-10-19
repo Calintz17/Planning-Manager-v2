@@ -60,6 +60,7 @@ a { color:inherit; text-decoration:none; }
   animation:run 9s linear infinite; will-change:transform; }
 .streak::after { content:""; position:absolute; inset:-4px 0; border-radius:6px; filter:blur(6px); opacity:.7;
   background:linear-gradient(90deg, transparent 0%, rgba(96,165,250,.45) 25%, rgba(99,102,241,.5) 50%, rgba(167,139,250,.55) 75%, transparent 100%); }
+.streak.two { animation-delay:-4.5s; }   /* the second light starts on the left when the first is halfway */
 @keyframes run { from { transform:translateX(-1280px); } to { transform:translateX(var(--run-to, 2400px)); } }
 
 /* Milestones: a dot on the line, a stem, a square above or below */
@@ -68,24 +69,25 @@ a { color:inherit; text-decoration:none; }
 .ms::after { content:""; position:absolute; left:0; width:1px; height:var(--stem); background:rgba(255,255,255,.45); }
 .ms.up::after { bottom:50%; margin-bottom:6px; }
 .ms.dn::after { top:50%; margin-top:6px; }
-.sq { position:absolute; left:0; transform:translateX(-50%); width:var(--card); height:var(--card-h); padding:var(--s5); border-radius:var(--r-lg); background:rgba(255,255,255,.88); color:var(--tx-1); display:flex; align-items:center; gap:var(--s4); box-shadow:0 18px 40px rgba(0,0,0,.25); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+.sq { position:absolute; left:0; transform:translateX(-50%); width:var(--card); height:var(--card-h); padding:var(--s5); border-radius:var(--r-lg); background:rgba(255,255,255,.4); border:1px solid rgba(255,255,255,.4); color:var(--white); display:flex; align-items:center; gap:var(--s4); box-shadow:0 12px 32px rgba(0,0,0,.18); -webkit-backdrop-filter:blur(14px) saturate(1.2); backdrop-filter:blur(14px) saturate(1.2); }
 .ms.up .sq { bottom:calc(50% + var(--stem) + 6px); }
 .ms.dn .sq { top:calc(50% + var(--stem) + 6px); }
-.ic { color:var(--brand); display:flex; flex:none; align-self:flex-start; margin-top:2px; }
+.ic { color:var(--white); display:flex; flex:none; align-self:center; }
 .ic svg { width:26px; height:26px; }
 /* State, top right: green Live, orange Pending */
-.state { position:absolute; top:var(--s3); right:var(--s4); display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--tx-2); }
+.state { position:absolute; top:var(--s3); right:var(--s4); display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--white); }
 .state::before { content:""; width:8px; height:8px; border-radius:50%; }
-.state.live::before { background:#2F9E6E; box-shadow:0 0 0 3px rgba(47,158,110,.18); }
+.state.live::before { background:#3FC28A; animation:live 2.4s ease-in-out infinite; }
+@keyframes live { 0%, 100% { box-shadow:0 0 0 0 rgba(63,194,138,.6); } 60% { box-shadow:0 0 0 6px rgba(63,194,138,0); } }
 .state.pending::before { background:#E08A1E; box-shadow:0 0 0 3px rgba(224,138,30,.2); }
 .sq-txt { min-width:0; padding-right:var(--s8); }
-.date { font-size:12px; font-weight:700; color:var(--tx-2); }
+.date { font-size:12px; font-weight:700; color:var(--white); }
 .sq h2 { margin-top:4px; font-size:17px; line-height:1.3; }
-.sq p { margin-top:4px; font-size:13px; line-height:1.5; color:var(--tx-2); }
+.sq p { margin-top:4px; font-size:13px; line-height:1.5; font-style:italic; color:var(--white); }
 /* Planned: grey cards */
 .ms.next .dot { background:var(--mist-2); box-shadow:0 0 0 5px rgba(255,255,255,.08); }
-.ms.next .sq { background:rgba(201,213,230,.8); color:var(--tx-1); box-shadow:none; }
-.ms.next .ic, .ms.next .date, .ms.next p { color:var(--tx-1); }
+.ms.next .sq { background:rgba(70,82,100,.4); border-color:rgba(255,255,255,.2); color:var(--white); box-shadow:none; }
+.ms.next .ic, .ms.next .date, .ms.next p, .ms.next .state { color:var(--white); }
 
 /* Bottom */
 .rm-foot { position:relative; z-index:2; width:100%; margin-bottom:clamp(20px, 4vh, 48px); display:flex; justify-content:space-between; align-items:center; gap:var(--s6); }
@@ -113,6 +115,7 @@ footer .wrap { display:flex; justify-content:space-between; align-items:center; 
 }
 @media (prefers-reduced-motion: reduce) {
   .streak { animation:none; display:none; }
+  .state.live::before { animation:none; }
 }
 </style>
 <script>
@@ -163,7 +166,7 @@ function trimLogo(img) {
 
   <div class="line" id="line" tabindex="0" role="region" aria-label="Roadmap. Use the arrow keys or drag to move along it.">
     <div class="rail" id="rail" role="list">
-      <div class="track" aria-hidden="true"><span class="streak"></span></div>
+      <div class="track" aria-hidden="true"><span class="streak"></span><span class="streak two"></span></div>
 
       <div class="ms up" role="listitem"><span class="dot"></span><div class="sq"><span class="state live">Live</span>
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/><path d="M19 20a3 3 0 0 1-3 2h-3"/></svg></span>
