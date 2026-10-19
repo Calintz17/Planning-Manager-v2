@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v9.5.0.4 TEST</title>
+  <title>CAST v10.0.0.0 TEST</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -14,9 +14,9 @@
   --warn-tx:#61470B; --dang-soft:#F6DDE7; --dang-tx:#82334E; --info-soft:#DBEAFE; --info-tx:#1E407A; --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
   --s6:24px; --sb-w:216px; --content-max:1664px; --day-w:32px; --name-col:184px; --sq-w:26px; --sq-h:25px; --time-w:136px; --num-w:110px; --r-sm:6px;
   --r-md:8px; --r-lg:8px; --r-pill:999px; --sh-1:none; --sh-2:0 8px 30px #192D491C; --nav-active-bg:#183C74; --brand-tx:#183C74; --toast-ok:#215C4B; --toast-err:#AC304B; --accent-strong:#183C74; --ok:#215C4B;
-  --dang:#AC304B; --info:#507BAD; --absence-bg:#82334E; --absence-fg:#FFFFFF;
+  --dang:#AC304B; --info:#507BAD; --absence-bg:#82334E; --absence-fg:#FFFFFF; --line-ctl:#BDC9D9;
   --pl-yellow:#F5EBCB; --pl-yellow-tx:#6B5622; --pl-green:#DCEBDF; --pl-green-tx:#2D5841; --pl-violet:#E4DDF0; --pl-violet-tx:#5C467A; --pl-slate:#E8E9EB; --pl-slate-tx:#4C586A; --pl-work:#EAD8CC; --pl-work-tx:#624638; --bd-pop:#D4DEEB; --bd-modal:#CFDAE8; --bd-tip:#C5D3E4; --bd-tick:#D4DEEA; --bd-row:#E8EDF3; --accent-line:#88A6CE; --wk-line:#536D8E; --bd-manual:#91ACD2; --bd-chip:#FCA5A5; --hover:#F0F4FA; --nav-on:#EAF0FA; --nav-sub-on:#EEF3FB; --row-group:#F2F5F9; --col-hl:#F2F5FA; --col-hl-head:#E3EAF5; --today:#E7EFFC; --tint:#F1F5FB; --seg-bg:#EAF0F6; --manual-bg:#EDF3FC; --closed-bg:#F7F9FC; --shift-bg:#EEF1F5; --grid-q:#EEF2F7; --bar:#DBE6F5; --avatar-bg:#EAF0F8; --avatar-tx:#304D74; --hatch-1:#E9EAEE; --hatch-2:#F3F4F6; --dang-hover:#FECACA; --veil:rgba(255,255,255,.7); }
-@media screen { html[data-theme="dark"] { color-scheme:dark; --bg-app:#14181E; --bg-base:#1B2027; --bg-base-2:#222831; --bg-base-3:#2A313A; --brand:#3D5E80; --brand-hover:#486C8E; --brand-tx:#A7B9CD; --toast-ok:#215C4B; --toast-err:#82334E; --tx-1:#E8E6E1; --tx-2:#B6BCC4; --tx-3:#B6BCC4; --line:#343C46; --line-2:#46515D; --ok-soft:#28382F; --ok-tx:#B5C9BB; --warn-soft:#373128; --warn-tx:#D0C3B1; --dang-soft:#3B2B30; --dang-tx:#D6B6BE; --info-soft:#26323F; --info-tx:#B4C4D6; --sh-2:0 8px 30px #00000059; --nav-active-bg:#3D5E80; --accent-strong:#A7B9CD; --ok:#8FBFA6; --dang:#D69AA8; --info:#93ABC4; --veil:rgba(20,24,30,.7); --pl-yellow:#373128; --pl-yellow-tx:#D0C3B1; --pl-green:#28382F; --pl-green-tx:#B5C9BB; --pl-violet:#342D35; --pl-violet-tx:#C9BAC9; --pl-slate:#2A3038; --pl-slate-tx:#B6BCC4; --pl-work:#3B302A; --pl-work-tx:#D8BFAE; --bd-pop:#343C46; --bd-modal:#343C46; --bd-tip:#46515D; --bd-tick:#2A313A; --bd-row:#262C34; --accent-line:#5A7290; --wk-line:#5A6B7E; --bd-manual:#5A7290; --bd-chip:#6E4652; --hover:#252B33; --nav-on:#293541; --nav-sub-on:#262F3A; --row-group:#20252C; --col-hl:#232A33; --col-hl-head:#2A3440; --today:#293541; --tint:#232A33; --seg-bg:#222831; --manual-bg:#293541; --closed-bg:#171B21; --shift-bg:#262C35; --grid-q:#20262D; --bar:#34414F; --avatar-bg:#2A313A; --avatar-tx:#D2D6DB; --hatch-1:#2A3038; --hatch-2:#22272E; --dang-hover:#4A3038; }
+@media screen { html[data-theme="dark"] { color-scheme:dark; --bg-app:#14181E; --bg-base:#1B2027; --bg-base-2:#222831; --bg-base-3:#2A313A; --brand:#3D5E80; --brand-hover:#486C8E; --brand-tx:#A7B9CD; --toast-ok:#215C4B; --toast-err:#82334E; --tx-1:#E8E6E1; --tx-2:#B6BCC4; --tx-3:#B6BCC4; --line:#343C46; --line-2:#46515D; --ok-soft:#28382F; --ok-tx:#B5C9BB; --warn-soft:#373128; --warn-tx:#D0C3B1; --dang-soft:#3B2B30; --dang-tx:#D6B6BE; --info-soft:#26323F; --info-tx:#B4C4D6; --sh-2:0 8px 30px #00000059; --nav-active-bg:#3D5E80; --accent-strong:#A7B9CD; --ok:#8FBFA6; --dang:#D69AA8; --info:#93ABC4; --veil:rgba(20,24,30,.7); --pl-yellow:#373128; --pl-yellow-tx:#D0C3B1; --pl-green:#28382F; --pl-green-tx:#B5C9BB; --pl-violet:#342D35; --pl-violet-tx:#C9BAC9; --pl-slate:#2A3038; --pl-slate-tx:#B6BCC4; --pl-work:#3B302A; --pl-work-tx:#D8BFAE; --bd-pop:#343C46; --bd-modal:#343C46; --bd-tip:#46515D; --bd-tick:#2A313A; --bd-row:#262C34; --accent-line:#5A7290; --wk-line:#5A6B7E; --bd-manual:#5A7290; --bd-chip:#6E4652; --hover:#252B33; --nav-on:#293541; --nav-sub-on:#262F3A; --row-group:#20252C; --col-hl:#232A33; --col-hl-head:#2A3440; --today:#293541; --tint:#232A33; --seg-bg:#222831; --manual-bg:#293541; --closed-bg:#171B21; --shift-bg:#262C35; --grid-q:#20262D; --bar:#34414F; --avatar-bg:#2A313A; --avatar-tx:#D2D6DB; --hatch-1:#2A3038; --hatch-2:#22272E; --dang-hover:#4A3038; --line-ctl:#5A6B7E; }
   html[data-theme="dark"] .sb-wordmark, html[data-theme="dark"] .gate-wordmark { filter:brightness(0) invert(.92); } }
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { min-height:100%; width:100%; }
@@ -246,8 +246,8 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .help-warn { margin-top:var(--s3); padding:var(--s3) var(--s4); border-radius:var(--r-md); background:var(--dang-soft); color:var(--dang-tx); font-size:13px; font-weight:700; line-height:1.5; }
 .help-hint { margin-top:var(--s5); padding-top:var(--s3); border-top:1px solid var(--line); font-size:13px; color:var(--tx-3); text-align:center; }
 .sec-title { font-size:11px; font-weight:700; letter-spacing:normal; text-transform:uppercase; color:var(--tx-2); margin-bottom:var(--s3); }
-select, input[type=text], input[type=number] { font-family:var(--font); font-size:13px; color:var(--tx-1); height:36px; padding:0 10px; border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--bg-base); transition:border-color .15s, box-shadow .15s; }
-select:focus, input:focus { outline:none; border-color:var(--brand); box-shadow:0 0 0 3px rgba(31,31,31,.07); }
+select, input[type=text], input[type=number] { font-family:var(--font); font-size:13px; color:var(--tx-1); height:36px; padding:0 10px; border:1px solid var(--line-ctl); border-radius:var(--r-sm); background:var(--bg-base); transition:border-color .15s, box-shadow .15s; }
+select:focus, input:focus, textarea:focus { outline:none; border-color:var(--brand-tx); box-shadow:0 0 0 1px var(--brand-tx); }
 .time-sel { width:var(--time-w); }
 .hm-pair { display:inline-flex; align-items:center; gap:var(--s1); width:var(--time-w); }
 .hm-pair select { width:auto; flex:1; min-width:0; padding:0 6px; text-align:center; }
@@ -633,7 +633,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .breadcrumb .ic { width:12px; height:12px; }
 .breadcrumb b { font-size:12px; color:var(--tx-1); font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .plan-head .set-title { font-size:26px; line-height:32px; }
-input, select, textarea { border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--bg-base); color:var(--tx-1); font-size:13px; min-height:36px; padding:7px 9px; max-width:100%; }
+input, select, textarea { border:1px solid var(--line-ctl); border-radius:var(--r-sm); background:var(--bg-base); color:var(--tx-1); font-size:13px; min-height:36px; padding:7px 9px; max-width:100%; }
 input[type=checkbox] { min-height:0; padding:0; }
 textarea { resize:vertical; line-height:1.5; }
 #tab-planning > .view-switch { display:none; }
@@ -906,8 +906,44 @@ textarea { resize:vertical; line-height:1.5; }
   .gate-wordmark { height:36px; }
   .gate-sub { margin-bottom:var(--s5); }
 }
-/* Very narrow phones: the page name stays in the page title, the top bar keeps its buttons */
-@media (max-width:360px) { .breadcrumb { display:none; } }
+/* Validation (10.0.0.0): one banner on top of the Monthly, its colour and its words say the state */
+.rv-banner { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px 20px; margin:-22px -22px 18px; padding:14px 22px 14px 18px; border-left:4px solid var(--line-2); border-bottom:1px solid var(--line); border-radius:var(--r-md) var(--r-md) 0 0; }
+.rv-pending { background:var(--col-hl-head); color:var(--info-tx); border-left-color:var(--info); }
+.rv-returned { background:var(--pl-work); color:var(--pl-work-tx); border-left-color:var(--pl-work-tx); }
+.rv-validated { background:var(--ok-soft); color:var(--ok-tx); border-left-color:var(--ok); }
+.rv-withdrawn { background:var(--bg-base-3); color:var(--tx-2); }
+.rv-text { display:flex; flex-direction:column; gap:4px; flex:1 1 320px; min-width:0; }
+.rv-title { display:flex; align-items:center; gap:10px; font-size:14px; line-height:20px; }
+.rv-sub { font-size:12px; line-height:18px; }
+.rv-comment { margin-top:8px; padding:8px 12px; border-radius:var(--r-sm); background:var(--bg-base); color:var(--tx-1); font-size:13px; line-height:20px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.rv-decide { order:3; flex:1 1 100%; display:flex; flex-direction:column; gap:4px; }
+.rv-decide label { font-size:11px; font-weight:700; text-transform:uppercase; }
+.rv-decide textarea { width:100%; font-family:var(--font); }
+.rv-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.rv-legend { display:flex; align-items:center; gap:8px; margin-top:4px; font-size:12px; line-height:18px; }
+.rv-swatch { width:18px; height:14px; border-radius:4px; background:var(--bg-base); outline:2px dashed var(--wk-line); outline-offset:-2px; }
+.mth td.rv-chg { outline:2px dashed var(--wk-line); outline-offset:-3px; }
+.rv-pill { font-weight:700; }
+.rv-pill-pending { background:var(--col-hl-head); color:var(--info-tx); }
+.rv-pill-returned { background:var(--pl-work); color:var(--pl-work-tx); }
+.rv-pill-validated { background:var(--ok-soft); color:var(--ok-tx); }
+.rv-pill-withdrawn { background:var(--bg-base-3); color:var(--tx-2); }
+.rv-table td { white-space:nowrap; }
+.rv-open { text-align:right; }
+#tab-reviews .page-head { align-items:center; }
+.nav-count[hidden], .bell-count[hidden] { display:none; }
+.nav-count { margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:var(--r-pill); background:var(--brand); color:var(--brand-on); font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+.bell-wrap { position:relative; display:inline-flex; }
+.bell-btn { position:relative; width:36px; height:36px; border-color:var(--line); }
+.bell-count { position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 5px; border-radius:var(--r-pill); background:var(--toast-err); color:#FFFFFF; border:2px solid var(--bg-base); font-size:10px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+#bell-menu { width:300px; max-height:min(480px, calc(100dvh - 90px)); overflow:auto; }
+.bell-head { padding:10px 10px 4px; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--tx-2); }
+.bell-item { line-height:18px; }
+.bell-item small { font-size:12px; color:var(--tx-2); }
+@media (max-width:600px) {
+  .rv-banner { margin:-16px -12px 14px; padding:12px 12px 12px 10px; }
+  .rv-actions .btn { flex:1 1 auto; }
+}
 /* Phones and tablets: 16px fields so iOS does not zoom in, and 44px touch targets */
 @media (max-width:600px), (pointer:coarse) {
   #login-gate input, #store-gate select, #pw-editor input { font-size:16px; min-height:44px; }
@@ -929,6 +965,13 @@ textarea { resize:vertical; line-height:1.5; }
   .help-q::after { content:""; position:absolute; inset:-8px; }
   .fld-ro { min-height:44px; font-size:16px; line-height:26px; }
   .modal-overlay input:not([type=checkbox]):not([type=radio]), .modal-overlay select, .modal-overlay textarea { font-size:16px; }
+}
+/* Very narrow phones: the page name stays in the page title, the top bar keeps its buttons */
+/* Phones: the bell takes the room of the page name, which stays in the page title below */
+@media (max-width:430px) { .breadcrumb { display:none; } }
+@media (max-width:360px) {
+  .tb-right { gap:4px; }
+  .lang-picker, .top-help, .acct-btn, .bell-btn { min-width:40px; width:40px; height:40px; padding:0; }
 }
 @media print {
   body { --name-col:184px; background:#fff; font-size:11px; }
@@ -1034,6 +1077,7 @@ function trimLogo(img) {
   
   <div class="sb-nav">
     <button class="nav-item active" onclick="switchTab('dashboard', this)" title="Dashboard"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>Dashboard</span></button>
+    <button class="nav-item" id="nav-reviews" onclick="switchTab('reviews', this)" title="Validation" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="m9 13 2 2 4-4"/></svg><span>Validation</span><span class="nav-count" id="nav-review-count" data-no-i18n hidden></span></button>
     <button class="nav-item" data-view="monthly" onclick="switchPlanningView('monthly',this)" title="Monthly"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4M8 10v11M16 10v11"/></svg><span>Monthly</span></button>
     <button class="nav-item" data-view="intraday" onclick="switchPlanningView('intraday',this)" title="Intraday"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M3 12h18M3 19h18"/><rect x="6" y="3" width="7" height="4" rx="1"/><rect x="12" y="10" width="6" height="4" rx="1"/><rect x="5" y="17" width="9" height="4" rx="1"/></svg><span>Intraday</span></button>
     <button class="nav-item" onclick="switchTab('agents', this)" title="Client Advisors"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg><span>Client Advisors</span></button>
@@ -1119,6 +1163,10 @@ function trimLogo(img) {
       </div>
       <button class="btn btn-ghost top-help" onclick="openPageHelp()" title="Help"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .3c0 1.5-2.5 1.7-2.5 3.7M12 16.5h.01"/></svg><span>Help</span></button>
       <button type="button" id="theme-switch" class="theme-sw" role="switch" aria-checked="false" title="Dark mode" aria-label="Dark mode" onclick="toggleTheme()"><span class="tsw-track"><span class="tsw-night"></span><svg class="tsw-stars" viewBox="0 0 66 34" aria-hidden="true"><g fill="#FFFFFF"><circle cx="9" cy="9" r="1.2"/><circle cx="17" cy="20" r="0.9"/><circle cx="24" cy="8" r="0.8"/><circle cx="12" cy="25" r="0.7"/><path d="M19 11.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/></g></svg><svg class="tsw-clouds" viewBox="0 0 66 34" aria-hidden="true"><g fill="#FFFFFF"><path opacity=".75" d="M33 25a4 4 0 0 1 3.6-4 5.5 5.5 0 0 1 10.4-1.6A4.3 4.3 0 0 1 52 23.5V25z"/><path d="M40 30a4.5 4.5 0 0 1 4-4.4 6 6 0 0 1 11.4-1.8 4.8 4.8 0 0 1 6.6 4.4V30z"/></g></svg><span class="tsw-knob"><i></i><i></i><i></i></span></span></button>
+      <div class="bell-wrap">
+        <button type="button" class="icon-btn bell-btn" id="bell-btn" onclick="toggleBell(event)" aria-haspopup="menu" aria-expanded="false" aria-label="Notifications" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="bell-count" id="bell-count" data-no-i18n hidden></span></button>
+        <div class="more-menu" id="bell-menu" role="menu" onclick="event.stopPropagation()"></div>
+      </div>
       <div class="acct-wrap">
         <button type="button" class="acct-btn" id="acct-btn" onclick="toggleAcctMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-label="Account"><span id="acct-initials" data-no-i18n></span><span class="acct-dot"></span></button>
         <div class="more-menu" id="acct-menu" role="menu" onclick="event.stopPropagation()">
@@ -1151,6 +1199,7 @@ function trimLogo(img) {
 
     <div id="planning-monthly">
     <div class="card help-host plan-card" id="monthly-card">
+      <div id="review-banner" class="rv-banner" role="status" hidden></div>
       <div class="page-head plan-head">
         <div class="plan-head-l">
           <div class="set-title-row"><h2 class="set-title">Monthly planning</h2>
@@ -1164,6 +1213,7 @@ function trimLogo(img) {
             <div class="month-lbl" id="monthly-label" onclick="monthlyToday()" title="Back to current month">-</div>
             <button class="btn btn-ghost" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
           </div>
+          <button type="button" class="btn btn-primary" id="btn-submit-review" onclick="submitReview()" hidden>Send for validation</button>
           <button class="btn btn-ghost" onclick="openSendMenu(event,'monthly')" title="Send"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Send</span></button>
           <button class="btn btn-ghost" onclick="openExportMenu(event,'monthly')" title="Download"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download</span></button>
           <div class="more-wrap">
@@ -1203,6 +1253,16 @@ function trimLogo(img) {
     </div>
     </div>
 
+  </div>
+</div>
+
+<!-- VALIDATION TAB -->
+<div id="tab-reviews" class="tab-content">
+  <div class="wrap">
+    <div class="card">
+      <div class="page-head"><h2 class="page-title">Validation</h2><div id="review-tabs" class="corner-tabs" role="tablist"></div></div>
+      <div id="review-list"></div>
+    </div>
   </div>
 </div>
 
@@ -1611,6 +1671,7 @@ function hideLoader() { document.getElementById('loader').classList.remove('acti
 var toastTimer = null;
 function showToast(msg, type) {
   var el = document.getElementById('toast');
+  if (type === 'error' && /row-level security/i.test(String(msg)) && typeof monthLocked === 'function' && monthLocked()) msg = LOCKED_MSG;
   el.textContent   = t(msg);
   el.className     = type || 'success';
   el.style.display = 'block';
@@ -1622,12 +1683,13 @@ function switchTab(name, btn) {
   document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('tab-' + name).classList.add('active');
   if (btn) btn.classList.add('active');
-  updateBreadcrumb({dashboard:'Dashboard',agents:'Client Advisors',traffic:'Traffic',regulations:'Settings',calendar:'Calendar'}[name] || name);
+  updateBreadcrumb({dashboard:'Dashboard',agents:'Client Advisors',traffic:'Traffic',regulations:'Settings',calendar:'Calendar',reviews:'Validation'}[name] || name);
   closeRailMenus();
   if (name === 'dashboard' && currentStoreId) renderDashboard();
   if (name === 'regulations' && currentStoreId) renderRegulations();
   if (name === 'calendar' && currentStoreId) renderCalendar();
   if (name === 'traffic') renderTraffic();
+  if (name === 'reviews') { renderReviewList(); refreshReviewCounts(); }
   if (CURRENT_LANG !== 'en') retranslate();
 }
 var I18N_REV = null;
@@ -1730,6 +1792,7 @@ function initTapTips() {
   window.addEventListener('scroll', function() { if (owner) hide(); }, true);
 }
 async function init() {
+  initDialogs();
   initTapTips();
   initPlanHelp();
   enhanceDateInputs();
@@ -1758,6 +1821,8 @@ async function startWorkspace() {
   if (error) { workspaceStarted = false; await refuseAccount('Could not load your account. Try again.'); return; }
   myRegions = data || [];
   if (!myRegions.length && me.role !== 'admin') { workspaceStarted = false; await refuseAccount('No store is linked to your account. Contact your administrator.'); return; }
+  refreshReviewCounts();
+  if (!reviewTimer) reviewTimer = setInterval(function() { if (me && document.visibilityState !== 'hidden') refreshReviewCounts(); }, 120000);
   document.getElementById('region-select').onchange = onRegionChange;
   document.getElementById('country-select').onchange = onCountryChange;
   document.getElementById('store-select').onchange = onStoreChange;
@@ -1868,6 +1933,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
+var CAST_VERSION = '10.0.0.0';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -1877,6 +1943,7 @@ function renderAccount() {
   setText('acct-role', t(ROLE_LABEL[me.role] || me.role));
   document.getElementById('acct-btn').classList.toggle('needs-pw', !me.pwChanged);
   document.getElementById('acct-warn').hidden = me.pwChanged;
+  showReviewNav();
 }
 function toggleAcctMenu(e) {
   e.stopPropagation();
@@ -1890,7 +1957,45 @@ function closeAcctMenu() {
   var b = document.getElementById('acct-btn'); if (b) b.setAttribute('aria-expanded', 'false');
 }
 document.addEventListener('click', closeAcctMenu);
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeAcctMenu(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeAcctMenu(); closeBell(); } });
+// Windows: named for screen readers, focus in the first field, Escape closes the top one with its own close function
+// (so the advisor sheet still saves), and the focus goes back to the button that opened it. A date open in a window
+// closes first.
+var lastFocusOutside = null;
+function initDialogs() {
+  // The windows are written after this script: they are set up once the page is read
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupDialogBoxes); else setupDialogBoxes();
+  // The last place focused outside the windows: where focus goes back when one closes
+  document.addEventListener('focusin', function(e) { if (!e.target.closest || !e.target.closest('.modal-overlay')) lastFocusOutside = e.target; });
+  document.addEventListener('keydown', closeTopDialog, true); // capture: runs before the date popup closes itself, so one Escape closes one thing
+}
+function setupDialogBoxes() {
+  document.querySelectorAll('.modal-overlay').forEach(function(ov, i) {
+    var box = ov.querySelector('.modal'), title = box && box.querySelector('.modal-title');
+    if (!box) return;
+    box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+    if (title) { if (!title.id) title.id = 'dlg-title-' + i; box.setAttribute('aria-labelledby', title.id); }
+    new MutationObserver(function() {
+      var open = ov.classList.contains('open');
+      if (open && !ov.__opener) {
+        ov.__opener = lastFocusOutside;
+        setTimeout(function() {
+          if (box.contains(document.activeElement)) return;
+          var f = box.querySelector('.modal-body input:not([type=hidden]):not([disabled]), .modal-body select, .modal-body textarea, .modal-body button, button');
+          if (f) f.focus({ preventScroll: true });
+        }, 0);
+      }
+      if (!open && ov.__opener) { var o = ov.__opener; ov.__opener = null; if (o && document.contains(o) && o.focus) o.focus({ preventScroll: true }); }
+    }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  });
+}
+function closeTopDialog(e) {
+  var pop = document.getElementById('date-pop');
+  if (e.key !== 'Escape' || (pop && pop.classList.contains('open'))) return;
+  var open = Array.prototype.filter.call(document.querySelectorAll('.modal-overlay.open'), function(o) { return getComputedStyle(o).display !== 'none'; });
+  var top = open[open.length - 1];
+  if (top && top.onclick) { e.preventDefault(); top.onclick({ target: top }); }
+}
 async function signOut() {
   closeAcctMenu();
   await sb.auth.signOut();
@@ -1923,6 +2028,293 @@ async function savePassword() {
   closePwEditor();
   showToast('Password changed \u2713', 'success');
 }
+// Validation of the plannings (10.0.0.0). A manager (or an admin) sends the month; a director of the region (or an
+// admin, his own sendings included) validates it or returns it with one comment. The base checks every right and every
+// step (retail_submit_review, retail_withdraw_review, retail_decide_review); the page only shows what the account may do.
+// Validate is never blocked by the rules (Roman, 18 Oct): CAST shows, the people decide.
+var REVIEW_COLS = 'id,store_id,month,revision,status,submitted_plan,reviewed_plan,comment,submitted_by,submitted_by_name,submitted_at,decided_by,decided_by_name,decided_at';
+var REVIEW_LIST_COLS = 'id,store_id,month,revision,status,comment,submitted_by,submitted_by_name,submitted_at,decided_by_name,decided_at';
+var REVIEW_STATUS = { pending: 'Pending', withdrawn: 'Withdrawn', returned: 'Returned', validated: 'Validated' };
+var monthReview = null, reviewFilter = null, reviewBusy = false, bellItems = [], reviewStoreNames = {};
+function canSubmitReview() { return !!me && (me.role === 'admin' || me.role === 'manager'); }
+function canDecideReview() { return !!me && (me.role === 'admin' || me.role === 'director'); }
+function shownMonthKey() { return snapshotMonthKey().slice(0, 7); }
+function reviewOfShownMonth() {
+  return monthReview && monthReview.store_id === currentStoreId && monthReview.month === shownMonthKey() ? monthReview : null;
+}
+// A manager does not change a month that waits for validation: he withdraws it first. The base refuses it too.
+function monthLocked(ds) {
+  var r = reviewOfShownMonth();
+  return !!me && me.role === 'manager' && !!r && r.status === 'pending' && (!ds || String(ds).slice(0, 7) === r.month);
+}
+var LOCKED_MSG = 'This month waits for validation. Withdraw it to make a change.';
+function lockedStop(ds) { if (!monthLocked(ds)) return false; showToast(LOCKED_MSG, 'error'); return true; }
+function reviewDate(ts) {
+  if (!ts) return '';
+  var d = new Date(ts);
+  return d.toLocaleDateString(dLoc(), { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' +
+    String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+function reviewMonthLabel(ym) { return new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1, 1).toLocaleDateString(dLoc(), { month: 'long', year: 'numeric' }); }
+// Squares that differ between two plans: { 'date|agent': true }. A square is its code, corner, half day and marker.
+function cellSig(c) { return c ? [c.code || '', c.corner || '', c.half || '', c.special || ''].join('|') : ''; }
+function planDiff(a, b) {
+  a = a || {}; b = b || {};
+  var out = {};
+  [a, b].forEach(function(p) {
+    Object.keys(p).forEach(function(ds) {
+      Object.keys(p[ds] || {}).forEach(function(id) { if (cellSig((a[ds] || {})[id]) !== cellSig((b[ds] || {})[id])) out[ds + '|' + id] = true; });
+    });
+  });
+  return out;
+}
+async function loadMonthReview() {
+  var sid = currentStoreId, ym = sid ? shownMonthKey() : null;
+  if (!sid || !me) { monthReview = null; return; }
+  var r = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_COLS).eq('store_id', sid).eq('month', ym)
+    .order('revision', { ascending: false }).limit(1));
+  if (sid !== currentStoreId || ym !== shownMonthKey()) return;
+  monthReview = (!r.error && r.data && r.data[0]) || null;
+}
+// The banner on top of the Monthly: the state of the month, the comment, and the actions this account may take
+function renderReviewBanner() {
+  var box = document.getElementById('review-banner'), send = document.getElementById('btn-submit-review');
+  if (!box || !send) return;
+  var r = reviewOfShownMonth(), cur = monthlyResult || {}, marks = {}, html = '';
+  send.hidden = !currentStoreId || !agents.length || !canSubmitReview() || !!(r && r.status === 'pending');
+  if (!r || !currentStoreId) { box.hidden = true; box.innerHTML = ''; markReviewCells({}); return; }
+  var by = esc(r.submitted_by_name || ''), dec = esc(r.decided_by_name || '');
+  var comment = r.comment ? '<div class="rv-comment" data-no-i18n>' + esc(r.comment) + '</div>' : '';
+  var line = function(title, sub) {
+    return '<div class="rv-text"><div class="rv-title"><b>' + esc(title) + '</b></div>' + (sub ? '<div class="rv-sub">' + sub + '</div>' : '') + '</div>';
+  };
+  var count = function(n, none, one, many) { return n === 0 ? t(none) : n === 1 ? t(one) : tf(many, { n: n }); };
+  if (r.status === 'pending') {
+    marks = planDiff(r.submitted_plan, cur);
+    var n = Object.keys(marks).length;
+    var sub = esc(tf('Revision {rev}, sent by {name} on {date}', { rev: r.revision, name: '\u0000', date: reviewDate(r.submitted_at) })).replace('\u0000', by);
+    html = line(t('Waiting for validation'), sub + (canDecideReview() ? '' : '<br>' + esc(t('Editing is paused while your director reviews. Withdraw to make a change.'))));
+    if (canDecideReview()) {
+      html += '<div class="rv-decide"><label for="rv-comment">' + esc(t('Comment')) + '</label>' +
+        '<textarea id="rv-comment" rows="2" maxlength="2000" placeholder="' + esc(t('One comment for the store (optional)')) + '">' + esc(r.comment || '') + '</textarea>' +
+        '<div class="rv-legend"><span class="rv-swatch" aria-hidden="true"></span>' + esc(count(n, 'No square changed by you', '1 square changed by you', '{n} squares changed by you')) + '</div></div>';
+    }
+    html += '<div class="rv-actions">' +
+      (canDecideReview() ? '<button type="button" class="btn btn-primary" onclick="decideReview(\'validated\')">' + esc(t('Validate')) + '</button>' +
+                           '<button type="button" class="btn btn-ghost" onclick="decideReview(\'returned\')">' + esc(t('Return')) + '</button>' : '') +
+      (canSubmitReview() ? '<button type="button" class="btn btn-ghost" onclick="withdrawReview()">' + esc(t('Withdraw')) + '</button>' : '') + '</div>';
+  } else if (r.status === 'returned') {
+    marks = planDiff(r.submitted_plan, r.reviewed_plan);
+    html = line(t('Returned for changes'), esc(tf('By {name} on {date}', { name: '\u0000', date: reviewDate(r.decided_at) })).replace('\u0000', dec) + comment +
+      (Object.keys(marks).length ? '<div class="rv-legend"><span class="rv-swatch" aria-hidden="true"></span>' + esc(count(Object.keys(marks).length, '', '1 square changed by your director', '{n} squares changed by your director')) + '</div>' : ''));
+  } else if (r.status === 'validated') {
+    var since = Object.keys(planDiff(r.reviewed_plan, cur)).length;
+    html = line(t('Planning validated'), esc(tf('By {name} on {date}', { name: '\u0000', date: reviewDate(r.decided_at) })).replace('\u0000', dec) + comment +
+      '<div class="rv-legend">' + esc(count(since, 'No change since validation', '1 change since validation', '{n} changes since validation')) + '</div>');
+  } else {
+    html = line(t('Sending withdrawn'), esc(tf('On {date}', { date: reviewDate(r.decided_at) })));
+  }
+  box.className = 'rv-banner rv-' + r.status;
+  box.innerHTML = html;
+  box.hidden = false;
+  markReviewCells(marks);
+  if (CURRENT_LANG !== 'en') retranslate();
+}
+function markReviewCells(marks) {
+  document.querySelectorAll('#planning-monthly-body td.rv-chg').forEach(function(td) { td.classList.remove('rv-chg'); });
+  Object.keys(marks).forEach(function(k) {
+    var p = k.split('|'), td = document.querySelector('#planning-monthly-body td[data-agent="' + p[1] + '"][data-ds="' + p[0] + '"]');
+    if (td) td.classList.add('rv-chg');
+  });
+}
+function reviewError(err) {
+  var m = (err && err.message) || String(err || '');
+  if (/changed meanwhile|already pending/.test(m)) return 'This planning changed meanwhile. The page is up to date now, try again.';
+  if (/not allowed/.test(m)) return 'Your account cannot do this for this store.';
+  return 'Not saved: ' + m;
+}
+async function reviewStep(name, args, okMsg) {
+  if (reviewBusy) return false;
+  reviewBusy = true;
+  var res;
+  try { res = await safeRead(sb.rpc(name, args)); } finally { reviewBusy = false; }
+  var sid = currentStoreId;
+  await loadMonthReview();
+  if (sid === currentStoreId) { renderReviewBanner(); refreshReviewCounts(); }
+  if (res.error) { showToast(reviewError(res.error), 'error'); return false; }
+  showToast(okMsg);
+  return true;
+}
+// Send: the plan shown and the inputs it was made with (the copy is checked later with its own data)
+async function submitReview() {
+  if (!currentStoreId || !canSubmitReview()) return;
+  if (!confirm(t('Send this month for validation? While it waits, the month cannot be changed unless you withdraw it.'))) return;
+  if (lastSnapSave) await lastSnapSave;
+  var ctx = buildMonthlyContext(), run = pickMonthlyPlan(ctx);
+  var diag = { status: run.diagnostics.status, mandatory: run.diagnostics.mandatoryIssues.length, engine: CAST_VERSION };
+  await reviewStep('retail_submit_review', { p_store: currentStoreId, p_month: shownMonthKey(), p_plan: run.cells,
+    p_context: { inputs: ctx.inputs, today: ctx.today, engine: CAST_VERSION }, p_diagnostics: diag }, 'Sent for validation ✓');
+}
+async function withdrawReview() {
+  var r = reviewOfShownMonth();
+  if (!r || r.status !== 'pending') return;
+  if (!confirm(t('Withdraw this sending? You can change the month and send it again.'))) return;
+  await reviewStep('retail_withdraw_review', { p_id: r.id, p_revision: r.revision }, 'Withdrawn ✓');
+}
+async function decideReview(decision) {
+  var r = reviewOfShownMonth();
+  if (!r || r.status !== 'pending' || !canDecideReview()) return;
+  var c = document.getElementById('rv-comment'), comment = c ? c.value.trim() : '';
+  if (lastSnapSave) await lastSnapSave;
+  var plan = pickMonthlyPlan().cells;
+  await reviewStep('retail_decide_review', { p_id: r.id, p_revision: r.revision, p_decision: decision, p_plan: plan, p_comment: comment },
+    decision === 'validated' ? 'Validated ✓' : 'Returned ✓');
+}
+// Open a store and a month from the list or the bell (the store menus follow, as if chosen by hand)
+async function openStoreMonth(storeId, ym) {
+  if (currentStoreId !== storeId) {
+    if (me.role === 'manager') {
+      document.getElementById('store-select').value = storeId;
+      await onStoreChange();
+    } else {
+      var st = await safeRead(sb.from('retail_stores').select('id,country_id').eq('id', storeId).maybeSingle());
+      var co = st.data ? await safeRead(sb.from('retail_countries').select('id,region_id').eq('id', st.data.country_id).maybeSingle()) : {};
+      if (!st.data || !co.data) { showToast('This store could not be opened', 'error'); return; }
+      var rSel = document.getElementById('region-select'), cSel = document.getElementById('country-select'), sSel = document.getElementById('store-select');
+      if (rSel.value !== co.data.region_id) { rSel.value = co.data.region_id; await onRegionChange(); }
+      if (cSel.value !== co.data.id) { cSel.value = co.data.id; await onCountryChange(); }
+      if (currentStoreId !== storeId) { sSel.value = storeId; await onStoreChange(); }
+    }
+    if (currentStoreId !== storeId) { showToast('This store could not be opened', 'error'); return; }
+  }
+  monthlyRef = new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1, 1);
+  updateMonthlyLabel();
+  await ensurePeriodData();
+  switchPlanningView('monthly');
+  renderMonthlyPlanning();
+}
+// The Validation page: what waits for this account, what it sent, everything it can see
+function reviewFilters() {
+  var f = [];
+  if (canDecideReview()) f.push(['review', 'To review']);
+  if (canSubmitReview()) f.push(['mine', 'My sendings']);
+  f.push(['all', 'All']);
+  return f;
+}
+async function renderReviewList() {
+  var box = document.getElementById('review-list'), tabs = document.getElementById('review-tabs');
+  if (!box || !me) return;
+  var filters = reviewFilters();
+  if (!reviewFilter || !filters.some(function(f) { return f[0] === reviewFilter; })) reviewFilter = filters[0][0];
+  tabs.innerHTML = filters.map(function(f) {
+    return '<button type="button" class="corner-tab' + (f[0] === reviewFilter ? ' active' : '') + '" onclick="reviewFilter=\'' + f[0] + '\';renderReviewList()">' + esc(t(f[1])) + '</button>';
+  }).join('');
+  box.innerHTML = '<p class="plan-empty">' + esc(t('Loading...')) + '</p>';
+  var q = sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).order('submitted_at', { ascending: false }).range(0, 99);
+  if (reviewFilter === 'review') q = q.eq('status', 'pending');
+  if (reviewFilter === 'mine') q = q.eq('submitted_by', me.id);
+  var want = reviewFilter, res = await safeRead(q);
+  if (want !== reviewFilter) return;
+  if (res.error) { box.innerHTML = '<p class="plan-empty">' + esc(t('The list could not be loaded. Try again.')) + '</p>'; return; }
+  var rows = res.data || [];
+  await loadReviewStoreNames(rows);
+  if (!rows.length) {
+    box.innerHTML = '<p class="plan-empty">' + esc(t(reviewFilter === 'review' ? 'Nothing to review.' : 'No sending yet.')) + '</p>';
+    if (CURRENT_LANG !== 'en') retranslate();
+    return;
+  }
+  box.innerHTML = '<div class="table-scroll"><table class="tbl tbl-framed rv-table"><thead><tr><th>Store</th><th>Month</th><th>Rev.</th>' +
+    '<th>Sent by</th><th>Sent</th><th>Status</th><th>Decided</th><th></th></tr></thead><tbody>' +
+    rows.map(function(r) {
+      return '<tr><td data-no-i18n><b>' + esc(reviewStoreNames[r.store_id] || '-') + '</b></td>' +
+        '<td data-no-i18n>' + esc(reviewMonthLabel(r.month)) + '</td><td data-no-i18n>' + r.revision + '</td>' +
+        '<td data-no-i18n>' + esc(r.submitted_by_name || '-') + '</td><td data-no-i18n>' + esc(reviewDate(r.submitted_at)) + '</td>' +
+        '<td><span class="pill rv-pill rv-pill-' + r.status + '">' + esc(t(REVIEW_STATUS[r.status])) + '</span></td>' +
+        '<td data-no-i18n>' + (r.decided_at ? esc((r.decided_by_name || '') + ', ' + reviewDate(r.decided_at)) : '-') + '</td>' +
+        '<td class="rv-open"><button type="button" class="btn btn-ghost btn-sm" onclick="openStoreMonth(\'' + r.store_id + '\',\'' + r.month + '\')">' + esc(t('Open')) + '</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+  if (CURRENT_LANG !== 'en') retranslate();
+}
+async function loadReviewStoreNames(rows) {
+  var ids = rows.map(function(r) { return r.store_id; }).filter(function(id, i, a) { return id && a.indexOf(id) === i && !reviewStoreNames[id]; });
+  if (!ids.length) return;
+  var res = await safeRead(sb.from('retail_stores').select('id,name').in('id', ids));
+  (res.data || []).forEach(function(s) { reviewStoreNames[s.id] = s.name; });
+}
+// Bell and menu count. To review: the queue of a director or an admin (it empties when decided, not when read).
+// For the sender: the decisions on his sendings he has not opened yet (read per person).
+async function refreshReviewCounts() {
+  if (!me) return;
+  var items = [], pending = 0;
+  if (canDecideReview()) {
+    var p = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).eq('status', 'pending').order('submitted_at', { ascending: true }).range(0, 49));
+    (p.data || []).forEach(function(r) { items.push({ kind: 'review', r: r }); });
+    pending = (p.data || []).length;
+  }
+  if (canSubmitReview()) {
+    var since = new Date(Date.now() - 45 * 864e5).toISOString();
+    var d = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).eq('submitted_by', me.id).in('status', ['returned', 'validated'])
+      .gte('decided_at', since).order('decided_at', { ascending: false }).range(0, 49));
+    var ids = (d.data || []).map(function(r) { return r.id; });
+    var seen = ids.length ? await safeRead(sb.from('retail_review_seen').select('review_id').in('review_id', ids)) : { data: [] };
+    var seenIds = (seen.data || []).map(function(x) { return x.review_id; });
+    (d.data || []).forEach(function(r) { if (seenIds.indexOf(r.id) === -1) items.push({ kind: 'decision', r: r }); });
+  }
+  await loadReviewStoreNames(items.map(function(x) { return x.r; }));
+  bellItems = items;
+  var nav = document.getElementById('nav-review-count'), bell = document.getElementById('bell-count');
+  if (nav) { nav.textContent = pending; nav.hidden = !pending; }
+  if (bell) { bell.textContent = items.length > 99 ? '99+' : items.length; bell.hidden = !items.length; }
+  var bb = document.getElementById('bell-btn');
+  if (bb) bb.setAttribute('aria-label', tf('Notifications: {n}', { n: items.length }));
+}
+function toggleBell(e) {
+  e.stopPropagation();
+  var m = document.getElementById('bell-menu'), open = !m.classList.contains('open');
+  closeAcctMenu();
+  if (open) renderBell();
+  m.classList.toggle('open', open);
+  document.getElementById('bell-btn').setAttribute('aria-expanded', String(open));
+}
+function closeBell() {
+  var m = document.getElementById('bell-menu'); if (m) m.classList.remove('open');
+  var b = document.getElementById('bell-btn'); if (b) b.setAttribute('aria-expanded', 'false');
+}
+function renderBell() {
+  var m = document.getElementById('bell-menu');
+  var groups = [['review', 'To review'], ['decision', 'New for you']];
+  var html = '';
+  groups.forEach(function(g) {
+    var list = bellItems.filter(function(x) { return x.kind === g[0]; });
+    if (!list.length) return;
+    html += '<div class="bell-head">' + esc(t(g[1])) + ' (' + list.length + ')</div>';
+    list.forEach(function(x) {
+      var r = x.r, i = bellItems.indexOf(x);
+      var sub = x.kind === 'review' ? tf('Sent by {name}, {date}', { name: r.submitted_by_name || '', date: reviewDate(r.submitted_at) })
+        : tf('{status} by {name}, {date}', { status: t(REVIEW_STATUS[r.status]), name: r.decided_by_name || '', date: reviewDate(r.decided_at) });
+      html += '<button type="button" class="mission-menu-item bell-item" role="menuitem" onclick="openBellItem(' + i + ')"><span data-no-i18n>' +
+        '<b>' + esc(reviewStoreNames[r.store_id] || '-') + '</b>, ' + esc(reviewMonthLabel(r.month)) + '<br><small>' + esc(sub) + '</small></span></button>';
+    });
+  });
+  m.innerHTML = html || '<div class="xm-note">' + esc(t('Nothing new.')) + '</div>';
+}
+async function openBellItem(i) {
+  var x = bellItems[i];
+  if (!x) return;
+  closeBell();
+  if (x.kind === 'decision') await safeRead(sb.from('retail_review_seen').insert({ review_id: x.r.id }));
+  await openStoreMonth(x.r.store_id, x.r.month);
+  refreshReviewCounts();
+}
+function showReviewNav() {
+  var nav = document.getElementById('nav-reviews'), bell = document.getElementById('bell-btn');
+  if (nav) nav.hidden = !me;
+  if (bell) bell.hidden = !me;
+}
+document.addEventListener('click', closeBell);
+// Refreshed every 2 minutes once the workspace is open (started in startWorkspace)
+var reviewTimer = null;
+
 function saveScope() {
   try {
     localStorage.setItem(scopeKey(), JSON.stringify({
@@ -3312,6 +3704,7 @@ async function ensurePeriodData() {
   if (trafficYearLoaded !== y) await loadTraffic(y);
   await loadHolidays(parseInt(from.slice(0, 4), 10));
   await loadHolidays(parseInt(to.slice(0, 4), 10));
+  await loadMonthReview();
 }
 // Open or closed day
 function getDayClosureType(dayStr) {
@@ -3772,6 +4165,7 @@ var eventSaving = false;
 function openEventEditor(id, cat, ds) {
   var ev = id ? planningEvents.find(function(e){ return e.id === id; }) : null;
   if (id && !ev) return;
+  if (lockedStop(ds || (ev && ev.start_date))) return;
   var c = ev ? ev.category : cat;
   eventEditorState = { id: ev ? ev.id : null, cat: c, storeId: currentStoreId };
   document.getElementById('evt-modal-title').textContent = tf('{category} event', { category: t(c.charAt(0).toUpperCase() + c.slice(1)) });
@@ -4998,6 +5392,7 @@ function initIntradayDrag(root, T0, span, ds) {
     blk.style.cursor = 'grab';
     blk.addEventListener('pointerdown', function(e) {
       e.preventDefault();
+      if (lockedStop(ds)) return;
       var track = blk.parentElement;
       var trackRect = track.getBoundingClientRect();
       var dur   = parseFloat(blk.dataset.dur);
@@ -5043,6 +5438,7 @@ function initIntradayDrag(root, T0, span, ds) {
 function openMissionMenu(ev, agentId) {
   if (ev.target.closest('.it-blk')) return;
   if (!ev.target.classList.contains('it-shift')) return;
+  if (lockedStop(currentIntradayDate)) return;
   ev.stopPropagation();
   closeMissionMenu();
   var track = ev.currentTarget;
@@ -5285,6 +5681,7 @@ async function loadPlanningOverrides() {
 var cellEditorState = { agentId: null, ds: null };
 function openCellEditor(agentId, ds, evt) {
   if (evt) evt.stopPropagation();
+  if (lockedStop(ds)) return;
   if (evt && (evt.ctrlKey || evt.metaKey)) {
     var td = evt.target.closest('td');
     toggleCellSelect(agentId, ds, td);
@@ -5366,7 +5763,7 @@ function toggleCellAdjustMode(cb) {
   cellAdjustMode = cb.checked;
 }
 async function recalcFromToday() {
-  if (!currentStoreId) return;
+  if (!currentStoreId || lockedStop()) return;
   if (!confirm(t('Recalculate the planning from today? Past days and your manual changes are kept.'))) return;
   if (planSnapshot) planSnapshot.writeBlocked = false;
   lastSnapSave = null;
@@ -5488,7 +5885,7 @@ async function applyCornerOverride(cornerId) {
   renderWithAdjustMode();
 }
 async function clearMonthOverrides() {
-  if (!agents.length) return;
+  if (!agents.length || lockedStop()) return;
   var ref   = new Date(monthlyRef);
   var year  = ref.getFullYear(), mIdx = ref.getMonth();
   var first = toDateStr(new Date(year, mIdx, 1));
@@ -7425,7 +7822,7 @@ function paintMonthlyPlan(v) {
   var container = document.getElementById('planning-monthly-body');
   if (!container) return false;
   // The plan shown is saved, so it never changes by itself later. Its check status stays in result.diagnostics.
-  if (snapLoaded && !planSnapshot.writeBlocked && JSON.stringify(newSnap) !== JSON.stringify(planSnapshot.plan || {})) {
+  if (snapLoaded && !planSnapshot.writeBlocked && !monthLocked() && JSON.stringify(newSnap) !== JSON.stringify(planSnapshot.plan || {})) {
     planSnapshot.plan = newSnap;
     lastSnapSave = savePlanSnapshot(currentStoreId, snapKey, newSnap);
   }
@@ -7876,12 +8273,14 @@ function renderMonthlyPlanning() {
   if (!currentStoreId || !agents.length) {
     container.innerHTML = '<p class="plan-empty">' + t(!currentStoreId ? 'Select a store to view the monthly planning.' : 'No client advisors for this store. Add them in the Client Advisors tab.') + '</p>';
     setPlanMeta('monthly-meta', ''); setPlanCoverage('');
+    renderReviewBanner();
     return;
   }
   var run = pickMonthlyPlan();
   // Bench and audit probes read the final check of the chosen plan without painting it
   if (habitsGate.dry) { habitsGate.issues = run.issues; return run; }
   run.paint();
+  renderReviewBanner();
   return run;
 }
 // Corner allocation: who worked in which corner and when, read from the final planning of the month
@@ -9048,6 +9447,8 @@ async function saveLeave() {
   var end   = document.getElementById('leave-end').value;
   if (!start || !end) { showToast('Pick both dates', 'error'); return; }
   if (end < start) { showToast('End date is before start date', 'error'); return; }
+  var lockR = reviewOfShownMonth();
+  if (monthLocked() && start.slice(0, 7) <= lockR.month && end.slice(0, 7) >= lockR.month) { showToast(LOCKED_MSG, 'error'); return; }
   var row = { store_id: currentStoreId, agent_id: leavePickerAgent, start_date: start, end_date: end, type: document.getElementById('leave-type').value || 'absence' };
   var { data, error } = await sb.from('retail_agent_leave').insert([row]).select();
   if (error) { showToast('Failed to save: '+error.message, 'error'); return; }
@@ -9128,6 +9529,7 @@ function closeDayOpenPopup(){
   document.removeEventListener('click', closeDayOpenOnOutside);
 }
 async function applyDayOpen(ds, isOpen) {
+  if (lockedStop(ds)) return;
   var row = { store_id: currentStoreId, date: ds, is_open: isOpen };
   if (calHours[ds]) { row.open_time = calHours[ds].open; row.close_time = calHours[ds].close; }
   var { error } = await sb.from('retail_calendar_overrides').upsert([row], { onConflict: 'store_id,date' });
@@ -9139,7 +9541,7 @@ async function applyDayOpen(ds, isOpen) {
 }
 async function saveDayHours() {
   var ds = dayOpenPickerDate;
-  if (!ds) return;
+  if (!ds || lockedStop(ds)) return;
   var o = parseFloat(document.getElementById('dayopen-open-time').value);
   var c = parseFloat(document.getElementById('dayopen-close-time').value);
   if (c <= o) { showToast('Closing must be after opening', 'error'); return; }
@@ -9152,7 +9554,7 @@ async function saveDayHours() {
 }
 async function clearDayHours() {
   var ds = dayOpenPickerDate;
-  if (!ds) return;
+  if (!ds || lockedStop(ds)) return;
   var row = { store_id: currentStoreId, date: ds, is_open: (calOverrides[ds] === true), open_time: null, close_time: null };
   var { error } = await sb.from('retail_calendar_overrides').upsert([row], { onConflict: 'store_id,date' });
   if (error) { showToast('Failed: '+error.message, 'error'); return; }

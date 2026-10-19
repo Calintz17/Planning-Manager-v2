@@ -1,0 +1,227 @@
+[
+ {
+  "test": "anon cannot read reviews",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "anon cannot send",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "nobody inserts a review directly",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director cannot send",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager cannot send for a store not his",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "inactive account cannot send",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager edits his month before sending",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager sends his store",
+  "pass": true,
+  "detail": "('ok', [({'id': '2aa777ba-500d-45a9-b8d6-87b48a4e2aa5', 'status': 'pending', 'revision': 1},)])"
+ },
+ {
+  "test": "author and name come from the server",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a second sending while one is pending is refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager cannot change status directly",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: manager cannot change a square of that month",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: nor a leave crossing that month",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: nor an intraday mission",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: nor the saved planning of the month",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: nor a planning event",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: nor delete a square of that month",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: the manager still changes another month",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: the manager still reads the month",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: the director can correct a square",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: the admin can correct a square",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager cannot validate",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director of another region cannot validate",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "wrong revision: changed meanwhile, nothing written",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director returns with a comment",
+  "pass": true,
+  "detail": "('ok', [({'id': '2aa777ba-500d-45a9-b8d6-87b48a4e2aa5', 'status': 'returned', 'revision': 1},)])"
+ },
+ {
+  "test": "a second decision on the same sending: conflict",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "returned: the manager edits again",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "second sending: revision 2, revision 1 and its comment kept",
+  "pass": true,
+  "detail": "('ok', [({'id': 'c564ace0-a377-4b9d-976b-33f4752810a4', 'status': 'pending', 'revision': 2},)])"
+ },
+ {
+  "test": "another manager of the same store may withdraw too",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a manager of another store cannot withdraw",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "withdraw with the wrong revision: refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager withdraws, the month is free again",
+  "pass": true,
+  "detail": "('ok', [({'id': 'c564ace0-a377-4b9d-976b-33f4752810a4', 'status': 'withdrawn', 'revision': 2},)])"
+ },
+ {
+  "test": "a withdrawn sending cannot be validated",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "admin sends for any store",
+  "pass": true,
+  "detail": "('ok', [({'id': 'cedf89b4-58c2-401a-97c1-539efffe3e5d', 'status': 'pending', 'revision': 1},)])"
+ },
+ {
+  "test": "admin sees his own sending in the pending list",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "admin validates his own sending, with his own name",
+  "pass": true,
+  "detail": "('ok', [({'id': 'cedf89b4-58c2-401a-97c1-539efffe3e5d', 'status': 'validated', 'revision': 1},)])"
+ },
+ {
+  "test": "director of EMEA does not see the Japan sending",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager sees only his stores",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager marks a decision as seen",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "seen is per person (the other manager still has it new)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "nobody marks for someone else",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "nobody marks a review he cannot see",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "validate is accepted, the sent copy becomes the reviewed one when none is given",
+  "pass": true,
+  "detail": "('ok', [({'id': 'ded3bbca-e2c6-4283-a7b4-62c29c5cd16d', 'status': 'validated', 'revision': 3},)])"
+ },
+ {
+  "test": "after validation the manager keeps the hand",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "two decisions at once: the second waits, then gets a conflict, the first stays",
+  "pass": true,
+  "detail": "{'b': 'err changed meanwhile'}"
+ }
+]

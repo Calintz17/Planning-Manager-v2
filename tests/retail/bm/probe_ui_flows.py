@@ -8,12 +8,14 @@ B = os.path.dirname(os.path.abspath(__file__)); R = os.path.abspath(B + '/../../
 stub = open(B + '/stub_supabase_rec.js').read(); setup = open(B + '/setup.js').read()
 SEEN = "try{localStorage.setItem('cora_help_seen',JSON.stringify({monthly:true,intraday:true,dashboard:true,labor:true,hours:true,breaks:true,corners:true,shifts:true,sunday:true,fairness:true,reinf:true,agents:true,traffic:true,calendar:true}))}catch(e){}"
 STATE = """(() => { const h = s => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) | 0; return x; };
-  const main = document.getElementById('main'), open = [...document.querySelectorAll('.modal-overlay.open, #cell-editor, #leave-popup, #week-picker-popup, .more-menu.open, .mission-menu, #lang-menu.open')]
+  // 10.0.0.0 adds the validation controls (button, banner, bell): they are left out, the rest must stay the same
+  const main = document.getElementById('main').cloneNode(true); main.querySelectorAll('#btn-submit-review, #review-banner, .bell-wrap, #tab-reviews').forEach(e => e.remove());
+  const open = [...document.querySelectorAll('.modal-overlay.open, #cell-editor, #leave-popup, #week-picker-popup, .more-menu.open, .mission-menu, #lang-menu.open')]
     .filter(e => e.offsetParent !== null || getComputedStyle(e).display !== 'none').map(e => e.id || e.className).sort();
   // Each write: table, method, the rows sent (hashed; Labor rules without the two call-centre rules no longer saved), filters
   const drop = r => r && r.rule_key !== 'aht_tasks' && r.rule_key !== 'trend_pct';
   const w = window.__writes.splice(0).map(x => [x[0], x[1], x[2] && h(JSON.stringify(x[0] === 'retail_regulations' ? [].concat(x[2]).filter(drop) : x[2])), x[3]]);
-  return { page: h(main.innerText) + '/' + main.querySelectorAll('*').length, open, writes: w,
+  return { page: h(main.textContent.replace(/\s+/g, ' ')) + '/' + main.querySelectorAll('*').length, open, writes: w,
     toast: window.__toasts.splice(0).join(' | '), theme: document.documentElement.dataset.theme || '', lang: CURRENT_LANG }; })()"""
 # Reads return nothing in this stub, so a reload after a save empties the store: the fixture is put back
 SETUP_AGAIN = setup + ";agentLeaves.forEach((l,i)=>l.id=l.id||('lv'+i));calMonth=new Date(2026,10,1);"
