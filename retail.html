@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v10.0.0.2</title>
+  <title>CAST v10.0.0.4</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -670,13 +670,13 @@ textarea { resize:vertical; line-height:1.5; }
 .ca-table { border-collapse:collapse; width:auto; font-size:12px; }
 .ca-table th { font-size:11px; font-weight:700; color:var(--tx-2); text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); background:var(--bg-base-2); }
 .ca-table td { padding:4px 12px; height:36px; border-bottom:1px solid var(--line); }
-.ca-table .ca-name { white-space:nowrap; font-weight:700; }
-.ca-table .ca-name { width:var(--name-col); min-width:var(--name-col); max-width:var(--name-col); box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; }
+.ca-table .ca-name { width:var(--name-col); min-width:var(--name-col); max-width:var(--name-col); box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+.ca-ini { display:none; }
 .ca-table .ca-n { text-align:left; min-width:56px; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .ca-table tbody tr:hover td { background:var(--hover); }
 /* The counts start under the first day of the Monthly: same side space as the planning card, same name column */
 .ca-card .ca-wrap { padding:0 22px 0 23px; }
-@media (max-width:600px) { .ca-card .ca-wrap { padding:0 12px 0 13px; } .ca-table .ca-name { width:120px; min-width:120px; max-width:120px; } }
+@media (max-width:600px) { .ca-card .ca-wrap { padding:0 12px 0 13px; } .ca-table .ca-name { padding:4px; text-align:center; } .ca-full { display:none; } .ca-ini { display:block; font-size:10px; } }
 .ca-table.xh td.col-hl { background:var(--col-hl); }
 .ca-table.xh th.col-hl { background:var(--col-hl-head); }
 .ca-table .ca-tot { font-weight:700; }
@@ -1796,7 +1796,7 @@ function toggleAddAgentForm() {
 }
 // Start-up
 // Touch screens: a tap shows the hover text
-var TAP_TIP_SEL = '.person-cell[title], .it-info[title], .lbl-s[title]';
+var TAP_TIP_SEL = '.person-cell[title], .it-info[title], .lbl-s[title], .ca-ini[title]';
 function initTapTips() {
   if (!window.matchMedia || !window.matchMedia('(hover: none)').matches) return;
   var owner = null;
@@ -1956,7 +1956,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
-var CAST_VERSION = '10.0.0.2';
+var CAST_VERSION = '10.0.0.4';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -2099,7 +2099,14 @@ async function loadMonthReview() {
   var r = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_COLS).eq('store_id', sid).eq('month', ym)
     .order('revision', { ascending: false }).limit(1));
   if (sid !== currentStoreId || ym !== shownMonthKey()) return;
-  monthReview = (!r.error && r.data && r.data[0]) || null;
+  var rv = (!r.error && r.data && r.data[0]) || null;
+  // A waiting sending comes with the inputs it was sent with: its changes and its check are read against them
+  if (rv && rv.status === 'pending' && canDecideReview()) {
+    var cx = await safeRead(sb.from('retail_plan_reviews').select('context').eq('id', rv.id).maybeSingle());
+    if (sid !== currentStoreId || ym !== shownMonthKey()) return;
+    rv.context = (cx.data && cx.data.context) || null;
+  }
+  monthReview = rv;
   if (monthReview && monthReview.status === 'pending' && canDecideReview() && !reviewSeen[monthReview.id]) {
     reviewSeen[monthReview.id] = true;
     safeRead(sb.from('retail_review_seen').insert({ review_id: monthReview.id })).then(function() { refreshReviewCounts(); });
@@ -2125,12 +2132,19 @@ function reviewLine(r) {
 // The reviewed copy: the sent copy, with only the squares changed by hand during the review (a shift, a corner, an
 // absence). A new advisor, a new shift list or another recalculation since the sending never slips in (Astra 10.0.0.1).
 function explicitCell(id, ds) { return !!((planningOverrides[id] || {})[ds] || (cornerOverrides[id] || {})[ds] || agentOnLeave(id, ds)); }
+// Changed by hand during the review: a shift, a corner or an absence that is not what it was when the month was sent
+function changedSinceSent(id, ds, sentIn) {
+  if (!sentIn) return explicitCell(id, ds);
+  var then = function(map) { return ((map || {})[id] || {})[ds] || null; };
+  var leaveThen = (sentIn.agentLeaves || []).some(function(l) { return l.agent_id === id && ds >= l.start_date && ds <= l.end_date; });
+  return then(planningOverrides) !== then(sentIn.planningOverrides) || then(cornerOverrides) !== then(sentIn.cornerOverrides) || !!agentOnLeave(id, ds) !== leaveThen;
+}
 function reviewedCopy(r) {
   var sent = r.submitted_plan || {}, cur = monthlyResult || {}, out = JSON.parse(JSON.stringify(sent)), edits = {};
   Object.keys(sent).forEach(function(ds) {
     Object.keys(sent[ds] || {}).forEach(function(id) {
       var now = (cur[ds] || {})[id];
-      if (now && cellSig(now) !== cellSig(sent[ds][id]) && explicitCell(id, ds)) { out[ds][id] = now; edits[ds + '|' + id] = true; }
+      if (now && cellSig(now) !== cellSig(sent[ds][id]) && changedSinceSent(id, ds, r.context && r.context.inputs)) { out[ds][id] = now; edits[ds + '|' + id] = true; }
     });
   });
   return { cells: out, edits: edits };
@@ -2269,6 +2283,7 @@ async function reviewStep(name, args, okMsg) {
   var page = document.getElementById('tab-reviews');
   if (page && page.classList.contains('active')) renderReviewList();
   if (res.error) { showToast(reviewError(res.error), 'error'); return false; }
+  eveningLearned = null;   // a validation or a cancel changes what the next months learn
   showToast(okMsg);
   return true;
 }
@@ -2286,9 +2301,12 @@ async function decideReview(decision, comment) {
   var r = reviewOfShownMonth();
   if (!r || r.status !== 'pending' || !canDecideReview()) return false;
   if (lastSnapSave) await lastSnapSave;
-  var copy = reviewedCopy(r), chk = validatePlan(copy.cells, buildMonthlyContext());
+  // The check of the reviewed copy is made with the inputs it was sent with; the one with today's data is kept apart
+  var copy = reviewedCopy(r), sentIn = r.context && r.context.inputs, sentCtx = sentIn ? { inputs: sentIn, today: r.context.today } : null;
+  var chk = validatePlan(copy.cells, sentCtx || buildMonthlyContext()), now = sentCtx ? validatePlan(copy.cells, buildMonthlyContext()) : chk;
   return reviewStep('retail_decide_review', { p_id: r.id, p_revision: r.revision, p_decision: decision, p_plan: copy.cells, p_comment: comment || '',
-    p_diagnostics: { status: chk.status, mandatory: chk.mandatory.length, edits: Object.keys(copy.edits).length, engine: CAST_VERSION } },
+    p_diagnostics: { status: chk.status, mandatory: chk.mandatory.length, mandatoryToday: now.mandatory.length, context: sentCtx ? 'sent' : 'today',
+      edits: Object.keys(copy.edits).length, evening: decision === 'validated' ? eveningCount(copy.cells, sentIn) : null, engine: CAST_VERSION } },
     decision === 'validated' ? 'Validated ✓' : 'Returned ✓');
 }
 // Open a store and a month from the list or the bell (the store menus follow, as if chosen by hand)
@@ -2376,11 +2394,13 @@ async function refreshReviewCounts() {
   var items = [], pending = 0;
   if (canDecideReview()) {
     var n = await safeRead(sb.from('retail_plan_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'));
-    var p = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).eq('status', 'pending').order('submitted_at', { ascending: true }).range(0, 49));
+    // Not opened yet by this person, read on the whole queue (500 at most), then 50 shown
+    var p = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).eq('status', 'pending').order('submitted_at', { ascending: true }).range(0, 499));
     var pIds = (p.data || []).map(function(r) { return r.id; });
     var pSeen = pIds.length ? await safeRead(sb.from('retail_review_seen').select('review_id').in('review_id', pIds)) : { data: [] };
     var pSeenIds = (pSeen.data || []).map(function(x) { return x.review_id; });
-    (p.data || []).forEach(function(r) { if (pSeenIds.indexOf(r.id) === -1 && !reviewSeen[r.id]) items.push({ kind: 'review', r: r }); });
+    (p.data || []).filter(function(r) { return pSeenIds.indexOf(r.id) === -1 && !reviewSeen[r.id]; }).slice(0, 50)
+      .forEach(function(r) { items.push({ kind: 'review', r: r }); });
     pending = typeof n.count === 'number' ? n.count : (p.data || []).length;
   }
   if (canSubmitReview()) {
@@ -2841,7 +2861,6 @@ function snapshotStoreSettings(storeId) {
     hourly_curve: ss.hourly_curve ? ss.hourly_curve.slice() : null,
     min_opening: ss.min_opening != null ? ss.min_opening : 1,
     min_closing: ss.min_closing != null ? ss.min_closing : 1,
-    closing_ratio: ss.closing_ratio != null ? ss.closing_ratio : 0.50,
     fairness_rotation: !!ss.fairness_rotation,
     intraday_reinforcement: !!ss.intraday_reinforcement,
     sunday_single_shift: ss.sunday_single_shift !== false
@@ -3072,7 +3091,6 @@ function applyRegulationsForm() {
   var wh    = num('reg-weekly-hours', parseFloat);
   var mo    = num('thr-open',  function(v){ return parseInt(v, 10); });
   var mc    = num('thr-close', function(v){ return parseInt(v, 10); });
-  var rr    = num('thr-ratio', function(v){ return parseInt(v, 10); });
   var dayHours = {}, hoursOk = true;
   DAY_KEYS.forEach(function(k) {
     var openEl = document.getElementById('reg-open-' + k), closeEl = document.getElementById('reg-close-' + k);
@@ -3114,7 +3132,6 @@ function applyRegulationsForm() {
   if (!storeSettings) storeSettings = {};
   if (document.getElementById('thr-open'))  storeSettings.min_opening   = (isNaN(mo) || mo < 1) ? 1 : mo;
   if (document.getElementById('thr-close')) storeSettings.min_closing   = (isNaN(mc) || mc < 1) ? 1 : mc;
-  if (document.getElementById('thr-ratio')) storeSettings.closing_ratio = (isNaN(rr) || rr < 0 || rr > 100) ? 0.50 : rr / 100;
   Object.keys(dayHours).forEach(function(k) { regulations.day_hours[k] = dayHours[k]; });
   regulations.breaks = newBreaks;
   return true;
@@ -3129,10 +3146,9 @@ var SETTINGS_HELP = {
       'Max working days / week: how many days one person can work from Monday to Sunday, as set by the contract or your local policy. CAST plans 6 days at most.',
       'Max days in a row: the longest run of working days without a day off, even across two weeks or two months. Training and other OUT days count as worked.',
       'Max days over 2 weeks: the most days over two Monday-to-Sunday weeks in a row, when your local policy has such a cycle. Example: 11 means a 6-day week is always followed by a week of 5 days or less. Twice the weekly maximum means no limit.',
-      'Max hours / day: the longest day allowed by the contract. Default weekly hours: used for advisors without their own weekly hours; each month CAST plans at most weekly hours x days of the month / 7. Leave, sick leave and closed public holidays count as one contract day (weekly hours / 5), training as 7 h 30. The lunch break is not counted.',
+      'Max hours / day: the longest day allowed by the contract. Default weekly hours: used for advisors without their own weekly hours; each week CAST stays within the weekly hours; the month shows weekly hours x days of the month / 7 as a reference, not a limit. Leave, sick leave and closed public holidays count as one contract day (weekly hours / 5), training as 7 h 30. The lunch break is not counted.',
       'Minimum rest between shifts: how many hours a person must rest between the end of one day and the start of the next.',
       'Opening minimum and Closing minimum: how many people must be there, at least, during the first hour and the last hour of the day (store or each corner).',
-      'Late shifts target: the share of your advisors on your latest shifts, the last quarter of your shift list (for example the last 2 of 7 shifts). Example: 70% means about 7 out of 10 work a late shift. CAST then picks the exact shifts that best follow your hourly traffic.',
       'Switches at the bottom: turn a rule on or off. Click ? next to a switch to understand it.'],
     important: 'Changes are saved automatically. The laws differ by country and by agreement: ask HR for the right numbers. CAST applies them but does not check them against the law.' },
   hours: { n: 2, title: 'Operating hours',
@@ -3595,7 +3611,7 @@ function renderRegulations() {
           '<input type="number" id="reg-max-2w" class="set-rule-input" value="' + dayLimits().twoWeeks + '" min="1" max="12" step="1">', 'd') +
         rrow('Max hours / day', 'Contractually, how long one advisor can work per day',
           '<input type="number" id="reg-max-daily" class="set-rule-input" value="' + (regulations.max_daily_hours||8.5) + '" min="1" max="24" step="0.5">', 'h') +
-        rrow('Default weekly hours', 'Paid hours per week for advisors without their own weekly hours (set in each advisor sheet). CAST never plans more than weekly hours x days of the month / 7',
+        rrow('Default weekly hours', 'Paid hours per week for advisors without their own weekly hours (set in each advisor sheet). Each week stays within these hours; the month total is a reference',
           '<input type="number" id="reg-weekly-hours" class="set-rule-input" value="' + (regulations.weekly_hours||40) + '" min="1" max="80" step="0.5">', 'h') +
         rrow('Minimum rest between shifts', 'How many hours an advisor must rest between the end of one shift and the start of the next',
           '<input type="number" id="reg-rest-gap" class="set-rule-input" value="' + (regulations.rest_gap_hours != null ? regulations.rest_gap_hours : 11) + '" min="0" max="24" step="0.5">', 'h') +
@@ -3607,8 +3623,6 @@ function renderRegulations() {
           '<input type="number" id="thr-open" class="set-rule-input" value="' + minCover('open') + '" min="1" max="20" step="1">', 'CA') +
         rrow('Closing minimum', 'How many advisors are needed at minimum to close a store or a corner',
           '<input type="number" id="thr-close" class="set-rule-input" value="' + minCover('close') + '" min="1" max="20" step="1">', 'CA') +
-        rrow('Late shifts target', 'Share of advisors on your latest shifts (the last quarter of your shift list)',
-          '<input type="number" id="thr-ratio" class="set-rule-input" value="' + Math.round(((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : 0.50) * 100) + '" min="0" max="100" step="5">', '%') +
         rrowToggle('Sunday single shift', 'One shift D on Sundays (uncheck for wide-amplitude stores that need O/C on Sunday)',
           'sunday-single-toggle', 'toggleSundaySingle', !(storeSettings && storeSettings.sunday_single_shift === false), 'sunday') +
         (storeCorners.length > 1 ?
@@ -3839,6 +3853,7 @@ async function ensurePeriodData() {
   await loadHolidays(parseInt(from.slice(0, 4), 10));
   await loadHolidays(parseInt(to.slice(0, 4), 10));
   await loadMonthReview();
+  await loadEveningShare();
 }
 // Open or closed day
 function getDayClosureType(dayStr) {
@@ -3971,7 +3986,6 @@ async function loadStoreSettings() {
   storeSettings = res.data[0];
   storeSettings.min_opening  = storeSettings.min_opening  != null ? storeSettings.min_opening  : 1;
   storeSettings.min_closing  = storeSettings.min_closing  != null ? storeSettings.min_closing  : 1;
-  storeSettings.closing_ratio = storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.50;
   storeSettings.fairness_rotation = !!storeSettings.fairness_rotation;
   storeSettings.intraday_reinforcement = !!storeSettings.intraday_reinforcement;
   storeSettings.sunday_single_shift = storeSettings.sunday_single_shift !== false;
@@ -4116,14 +4130,14 @@ function shiftClusters(grid, ds) {
   var mid = list.filter(function(s) { return openG.indexOf(s) === -1 && closeG.indexOf(s) === -1; });
   return { open: openG, mid: mid, close: closeG, covers: covers };
 }
-// Late target of each day from today, read on the final plan (Roman 19-10): target = sellers working x late target,
-// rounded; actual = sellers on a late shift (the last quarter of the shifts). "Closing" counts the sellers whose
+// Evening share of each day from today, read on the final plan (Roman 19-10): target = sellers working x the store's
+// evening share, rounded; actual = sellers on an evening shift (groups by the medians, see shiftGroups). "Closing" counts the sellers whose
 // shift covers the last hour, a different thing. A day short of its target says why when it can: a seller's shift set
 // by hand that day ('manual'), too few sellers left for one opener per corner ('corners'), else the store limits
 // (opening minimum, rest, weekly hours). Days closed by managers
 // alone are listed: they do not meet the target's purpose.
 function lateReport(cells, days, todayDs) {
-  var grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), ratio = storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
+  var grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), ratio = storeEveningShare();
   var out = { ratio: ratio, target: 0, actual: 0, closing: 0, short: [], leadOnlyClose: [] };
   days.forEach(function(d) {
     if (d.closure || d.ds < todayDs || isSpecialDay(d)) return;
@@ -4153,12 +4167,85 @@ function minCover(key) {
   var v = storeSettings && storeSettings[key === 'open' ? 'min_opening' : 'min_closing'];
   return Math.max(1, v != null ? +v || 0 : 1);
 }
-// Late shifts: the last quarter of the shift list (sorted by start, then end), rounded up
+// Groups of the shift list (Roman 19-10): a shift that starts before the median start is a morning shift, one that
+// ends after the median end is an evening shift, the others are middle shifts. With O / M / C: O, M, C.
+function median(xs) { var v = xs.slice().sort(function(a, b) { return a - b; }), k = v.length >> 1; return v.length % 2 ? v[k] : (v[k - 1] + v[k]) / 2; }
+// Ties (Roman 19-10): when no shift ends after the median end (the shifts end together), the evening is the shifts
+// that end last and start after the median start; when no shift starts before the median start, the morning is the
+// shifts that start first and end before the median end. One shift only: no groups, the share does not apply.
+function shiftGroups(grid) {
+  var g = {}, list = grid || [];
+  if (list.length < 2) { list.forEach(function(s) { g[s.code] = 'mid'; }); return g; }
+  var ms = median(list.map(function(s) { return s.startMin; })), me = median(list.map(function(s) { return s.endMin; }));
+  var lastEnd = Math.max.apply(null, list.map(function(s) { return s.endMin; })), firstStart = Math.min.apply(null, list.map(function(s) { return s.startMin; }));
+  var pm = list.some(function(s) { return s.endMin > me; }) ? function(s) { return s.endMin > me; } : function(s) { return s.endMin === lastEnd && s.startMin > ms; };
+  var am = list.some(function(s) { return s.startMin < ms; }) ? function(s) { return s.startMin < ms; } : function(s) { return s.startMin === firstStart && s.endMin < me; };
+  list.forEach(function(s) { g[s.code] = pm(s) ? 'pm' : am(s) ? 'am' : 'mid'; });
+  return g;
+}
+// Late (evening) shifts: the evening group
 function lateCodes(grid) {
-  var list = (grid || []).slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
-  var first = list.length - Math.ceil(list.length / 4), late = {};
-  list.forEach(function(s, k) { late[s.code] = list.length > 1 && k >= first; });
+  var g = shiftGroups(grid), late = {};
+  Object.keys(g).forEach(function(c) { late[c] = g[c] === 'pm'; });
   return late;
+}
+// Share of sellers on an evening shift. 50% to start: the share found on 1,004 days of four stores' official plannings
+// (Bon Marche 48%, Galeries Lafayette 56%, Shibuya 60%, Duphot 55%). Each store then learns its own share from its
+// validated plannings, slowly (worth about 300 seller-days at the start), so one unusual month does not swing it.
+// Validating a whole planning counts, even without a change (Roman 19-10). The manager sets nothing.
+var EVENING_START = 0.5, EVENING_WEIGHT = 300, EVENING_GROUPING = 'median-1';
+var eveningLearned = null;   // { key: 'store|month', evening, sellers, months } from the months before the one planned
+function storeEveningShare() {
+  var l = eveningLearned && eveningLearned.key === currentStoreId + '|' + shownMonthKey() ? eveningLearned : { evening: 0, sellers: 0 };
+  return (EVENING_START * EVENING_WEIGHT + l.evening) / (EVENING_WEIGHT + l.sellers);
+}
+// The history of a month: the six last months before it whose last sending is validated, each with the count made
+// when it was validated (with its own team and shifts). Older validations without that count are left out.
+function eveningHistory(rows, key) {
+  var last = {}, out = { key: key, evening: 0, sellers: 0, months: [] };
+  rows.forEach(function(x) { if (!last[x.month] || x.revision > last[x.month].revision) last[x.month] = x; });
+  Object.keys(last).sort().reverse().forEach(function(m) {
+    var x = last[m], e = x.status === 'validated' && x.decision_diagnostics && x.decision_diagnostics.evening;
+    if (!e || e.grouping !== EVENING_GROUPING || out.months.length >= 6) return;
+    out.months.push(m); out.evening += e.evening; out.sellers += e.sellers;
+  });
+  return out;
+}
+async function loadEveningShare() {
+  var sid = currentStoreId, ym = sid ? shownMonthKey() : null, key = sid + '|' + ym;
+  if (!sid || (eveningLearned && eveningLearned.key === key)) return;
+  var r = await safeRead(sb.from('retail_plan_reviews').select('month,revision,status,decision_diagnostics').eq('store_id', sid).lt('month', ym)
+    .order('month', { ascending: false }).order('revision', { ascending: false }).range(0, 199));
+  if (sid !== currentStoreId || ym !== shownMonthKey()) return;
+  eveningLearned = eveningHistory((!r.error && r.data) || [], key);
+}
+// Sellers on an evening shift in a plan, read with the inputs it was made with (its team, its shifts)
+function eveningCount(cells, inputs) {
+  var live = monthlyInputs();
+  if (inputs) useMonthlyInputs(inputs);
+  try {
+    var grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), out = { evening: 0, sellers: 0, grouping: EVENING_GROUPING };
+    Object.keys(cells || {}).forEach(function(ds) {
+      var d = { ds: ds, date: new Date(ds + 'T12:00:00') };
+      if (getDayClosureType(ds) || isSpecialDay(d)) return;
+      Object.keys(cells[ds] || {}).forEach(function(id) {
+        var a = agents.find(function(x) { return x.id === id; }), c = cells[ds][id];
+        if (!a || poolOf(a) !== 'sales' || !c || c.special || !grid.some(function(sh) { return sh.code === c.code; })) return;
+        out.sellers++; if (late[c.code]) out.evening++;
+      });
+    });
+    return out;
+  } finally { useMonthlyInputs(live); }
+}
+// Evening places of each corner: the store total is rounded once, then shared by the largest remainders, so small
+// corners do not all round up (4 corners of 3 sellers at 50%: 6 evening places, not 8)
+function eveningSplit(sizes, ratio, on) {
+  var keys = Object.keys(sizes), out = {}, total = 0, n = 0;
+  keys.forEach(function(c) { n += sizes[c]; out[c] = on ? Math.floor(sizes[c] * ratio) : 0; total += out[c]; });
+  var want = on ? Math.round(n * ratio) : 0;
+  keys.slice().sort(function(x, y) { return ((sizes[y] * ratio) % 1) - ((sizes[x] * ratio) % 1) || (x < y ? -1 : 1); })
+    .forEach(function(c) { if (total < want && out[c] < sizes[c]) { out[c]++; total++; } });
+  return out;
 }
 // Present for the first hour (opening) and for the last hour (closing)
 function coverOfHours(start, end, h) {
@@ -4312,7 +4399,6 @@ function crossHighlight(tbl) {
   tbl.addEventListener('mouseleave', clear);
 }
 var DOW_WEIGHT = { 1: 0.982, 2: 0.959, 3: 0.915, 4: 0.959, 5: 1.080, 6: 1.221, 0: 0.885 };
-var CLOSING_BIAS = 2.3;
 function monthKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
 var trafficLoadSeq = 0;
 async function loadTraffic(year) {
@@ -6544,7 +6630,7 @@ function placeShiftsOfDay(mp, d) {
     var fixedCodes = [];
     list = list.filter(function(a) {
       var mc = (planningOverrides[a.id] || {})[d.ds], ms = mc && grid.find(function(s) { return s.code === mc; });
-      if (ms) { plan[a.id] = ms.code; if (poolOf(a) !== 'mgmt') fixedCodes.push(ms.code); return false; }
+      if (ms) { plan[a.id] = ms.code; if (poolOf(a) !== 'mgmt') fixedCodes.push({ code: ms.code, a: a }); return false; }
       return true;
     });
     if (!list.length) return;
@@ -6573,32 +6659,20 @@ function placeShiftsOfDay(mp, d) {
       .sort(function(x, y) { return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; }) : [];
     list = list.filter(function(a) { return leadsHere.indexOf(a) === -1; });
     var nLeads = leadsHere.length;
-    var mid = (dh.open + dh.close) / 2;
-    function avgCurve(fromH, toH) {
-      if (!mp.curveArr || !mp.curveArr.length) return 1;
-      var sum = 0, n = 0;
-      for (var h = Math.floor(fromH); h < Math.ceil(toH); h++) {
-        var ci = hourlyCurveIndex(h * 60);
-        if (ci >= 0 && ci < mp.curveArr.length) { sum += mp.curveArr[ci]; n++; }
-      }
-      return n ? sum / n : 1;
-    }
-    var wMorning = avgCurve(dh.open, mid);
-    var wEvening = avgCurve(mid, dh.close) * CLOSING_BIAS;
-    var wSum = (wMorning + wEvening) || 1;
-    var eveningShare = wEvening / wSum;
-    var nTotal = list.length + fixedCodes.length;
     var frozen = d.past;
-    var lateRatio = frozen ? 0.70 : ((storeSettings && storeSettings.closing_ratio != null) ? storeSettings.closing_ratio : eveningShare);
+    var lateRatio = storeEveningShare();
     var minOpen  = frozen ? 1 : minCover('open');
     var minClose = frozen ? 1 : minCover('close');
     function restOk(a, s) { return !s || restAllows(mp, a, d.ds, s.code); }
-    // Late shifts (last quarter of the list) and the others
+    // Evening shifts and the others. The evening share is counted in each corner, on its sellers (Roman 19-10).
     var byStart = grid.slice().sort(function(x, y) { return (x.startMin - y.startMin) || (x.endMin - y.endMin); });
     var isLate = lateCodes(grid);
-    var nLate = byStart.length > 1 ? Math.max(0, Math.min(nTotal, Math.round(nTotal * lateRatio))) : 0;
-    var left = { early: nTotal - nLate, late: nLate };
-    fixedCodes.forEach(function(c) { left[isLate[c] ? 'late' : 'early']--; });
+    function cidOf(a) { return storeCorners.length > 1 && a.home_corner_id ? a.home_corner_id : '_'; }
+    var left = {}, sizes = {};
+    list.concat(fixedCodes.map(function(f) { return f.a; })).forEach(function(a) { sizes[cidOf(a)] = (sizes[cidOf(a)] || 0) + 1; });
+    var lateBy = eveningSplit(sizes, lateRatio, byStart.length > 1);
+    Object.keys(sizes).forEach(function(c) { left[c] = { early: sizes[c] - lateBy[c], late: lateBy[c] }; });
+    fixedCodes.forEach(function(f) { left[cidOf(f.a)][isLate[f.code] ? 'late' : 'early']--; });
     // Hourly traffic of the day, in 15 min slots
     var hm = dayMinutes(d.ds), slots = [];
     for (var tm = hm.open; tm < hm.close; tm += 15) {
@@ -6669,10 +6743,10 @@ function placeShiftsOfDay(mp, d) {
     var movable = pool.slice();
     function place(a, s) {
       plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start: s.startMin, end: s.endMin, sales: poolOf(a) === 'sales' });
-      left[isLate[s.code] ? 'late' : 'early']--;
+      left[cidOf(a)][isLate[s.code] ? 'late' : 'early']--;
       pool.splice(pool.indexOf(a), 1);
     }
-    function roomFor(s) { return left[isLate[s.code] ? 'late' : 'early'] > 0; }
+    function roomFor(s, a) { return left[cidOf(a)][isLate[s.code] ? 'late' : 'early'] > 0; }
     // Hard needs first: someone for the first hour, someone for the last hour
     // How much this person usually takes one of these shifts on this weekday
     function leans(a, shifts) { return shifts.reduce(function(m, s) { return Math.max(m, mp.habits.shift(a, d.dow, s.code, grid.length)); }, -1); }
@@ -6686,7 +6760,7 @@ function placeShiftsOfDay(mp, d) {
         for (var k = 0; k < order.length && !done; k++) {
           var ok = shifts.filter(function(s) { return restOk(order[k], s); });
           if (!ok.length) continue;
-          var inRoom = ok.filter(roomFor);
+          var inRoom = ok.filter(function(s) { return roomFor(s, order[k]); });
           place(order[k], best(inRoom.length ? inRoom : ok, order[k])); have++; done = true;
         }
         if (!done) break;
@@ -6705,6 +6779,7 @@ function placeShiftsOfDay(mp, d) {
       });
       if (top) { place(a, top.s); learned[a.id] = true; }
     });
+    mp.learnedDay = mp.learnedDay || {}; mp.learnedDay[d.ds] = learned;
     cover('close', 1, true);
     cover('open', nLeads ? 0 : 1);
     // Mandatory rules before the habits: if no seller closes (or nobody can open, without a manager to do it),
@@ -6719,7 +6794,7 @@ function placeShiftsOfDay(mp, d) {
         if (!ok || !ok.length) return false;
         var s2 = best(ok, a), i = placed.findIndex(function(w) { return w.start === cur.startMin && w.end === cur.endMin; });
         addCov(cur.startMin, cur.endMin, -1); if (i !== -1) placed.splice(i, 1);
-        left[isLate[cur.code] ? 'late' : 'early']++;
+        left[cidOf(a)][isLate[cur.code] ? 'late' : 'early']++;
         pool.push(a); place(a, s2); delete learned[a.id];
         return true;
       });
@@ -6737,7 +6812,7 @@ function placeShiftsOfDay(mp, d) {
       var a = pool[0];
       var okS = byStart.filter(function(s) { return restOk(a, s); });
       if (!okS.length) okS = byStart;
-      var inRoom = okS.filter(roomFor);
+      var inRoom = okS.filter(function(s) { return roomFor(s, a); });
       place(a, best(inRoom.length ? inRoom : okS, a));
     }
     // Then each person takes again the best shift with everyone else in place: same group (late or not),
@@ -6940,7 +7015,7 @@ function restPass(mp, d) {
 function repairDisplayedCoverage(mp) {
   var grid = RETAIL_SHIFTS.sales || [];
   if (!grid.length) return;
-  var late = lateCodes(grid), lateRatio = storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
+  var late = lateCodes(grid), lateRatio = storeEveningShare();
   var minO = minCover('open'), minC = minCover('close');
   function effective(a, ds, replacement) {
     var ov = (planningOverrides[a.id] || {})[ds];
@@ -7058,29 +7133,34 @@ function repairDisplayedCoverage(mp) {
         dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
       }
     });
-    // Late target, last (Roman 19-10): after the repairs, a seller moves between a late and a non-late shift while the
-    // day is off its target, if no opening or closing minimum is lost (store, corner) and rest and weekly hours fit.
-    // A target that cannot be met stays short; the diagnostics say it.
+    // Evening share, last (Roman 19-10): after the repairs, in each corner (the store when it has one), a seller moves
+    // between an evening and another shift while the corner is off its share, if no opening or closing minimum is lost
+    // (store, corner), rest and weekly hours fit, and the move is not a choice learned from the manager.
     var floor = agents.filter(function(a) { return poolOf(a) !== 'stock' && workHoursOf(a, d.ds, effective(a, d.ds)); });
-    for (var turn = 0; turn < sellers.length && dayLate !== lateTarget; turn++) {
-      var up = dayLate < lateTarget, pick = null;
-      sellers.forEach(function(a) {
-        if (!mutable(a, d) || !!late[effective(a, d.ds).code] === up) return;
-        var gl = groups[storeCorners.length > 1 ? cornerOf(a, d.ds) : '_store'] || [a];
-        var gb = stateOf(gl, []), sb = stateOf(floor, []);
-        grid.forEach(function(sh) {
-          if (!!late[sh.code] !== up || !restFits(a, d, sh.code) || !weekFits(mp, a, d, sh.code)) return;
-          var ch = [{ a: a, code: sh.code }], ga = stateOf(gl, ch), sa = stateOf(floor, ch);
-          if (ga.missing > gb.missing || (gb.o >= minO && ga.o < minO) || (gb.c >= minC && ga.c < minC)) return;
-          if ((sb.o >= minO && sa.o < minO) || (sb.c >= minC && sa.c < minC)) return;
-          var sc = [pressure(sa), Math.abs(sh.startMin - workHoursOf(a, d.ds, effective(a, d.ds)).start)];
-          if (!pick || less(sc, pick.sc)) pick = { a: a, code: sh.code, sc: sc };
+    var learnedHere = (mp.learnedDay || {})[d.ds] || {};
+    var gsize = {}; Object.keys(groups).forEach(function(cid) { gsize[cid] = groups[cid].filter(function(a) { return poolOf(a) === 'sales'; }).length; });
+    var gtarget = eveningSplit(gsize, lateRatio, true);
+    Object.keys(groups).forEach(function(cid) {
+      var gl = groups[cid], gs = gl.filter(function(a) { return poolOf(a) === 'sales'; });
+      var target = gtarget[cid], have = gs.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
+      for (var turn = 0; turn < gs.length && have !== target; turn++) {
+        var up = have < target, pick = null, gb = stateOf(gl, []), sb = stateOf(floor, []);
+        gs.forEach(function(a) {
+          if (!mutable(a, d) || learnedHere[a.id] || !!late[effective(a, d.ds).code] === up) return;
+          grid.forEach(function(sh) {
+            if (!!late[sh.code] !== up || !restFits(a, d, sh.code) || !weekFits(mp, a, d, sh.code)) return;
+            var ch = [{ a: a, code: sh.code }], ga = stateOf(gl, ch), sa = stateOf(floor, ch);
+            if (ga.missing > gb.missing || (gb.o >= minO && ga.o < minO) || (gb.c >= minC && ga.c < minC)) return;
+            if ((sb.o >= minO && sa.o < minO) || (sb.c >= minC && sa.c < minC)) return;
+            var sc = [pressure(sa), Math.abs(sh.startMin - workHoursOf(a, d.ds, effective(a, d.ds)).start)];
+            if (!pick || less(sc, pick.sc)) pick = { a: a, code: sh.code, sc: sc };
+          });
         });
-      });
-      if (!pick) break;
-      mp.shiftPlanByDay[d.ds][pick.a.id] = pick.code;
-      dayLate += up ? 1 : -1;
-    }
+        if (!pick) break;
+        mp.shiftPlanByDay[d.ds][pick.a.id] = pick.code;
+        have += up ? 1 : -1;
+      }
+    });
   });
 }
 // The cells of the plan as built so far, and their final check
@@ -8272,7 +8352,8 @@ function monthlyInputs() {
     cornerOverrides: cornerOverrides, regulations: regulations,
     storeSettings: storeSettings, RETAIL_SHIFTS: RETAIL_SHIFTS, storeCorners: storeCorners, trafficDaily: trafficDaily,
     trafficMonthly: trafficMonthly, cornerTrafficMonthly: cornerTrafficMonthly, calHolidays: calHolidays,
-    calOverrides: calOverrides, calHours: calHours, planSnapshot: planSnapshot, planningEvents: planningEvents
+    calOverrides: calOverrides, calHours: calHours, planSnapshot: planSnapshot, planningEvents: planningEvents,
+    eveningLearned: eveningLearned
   };
 }
 function useMonthlyInputs(v) {
@@ -8286,6 +8367,7 @@ function useMonthlyInputs(v) {
   storeCorners = v.storeCorners; trafficDaily = v.trafficDaily; trafficMonthly = v.trafficMonthly;
   cornerTrafficMonthly = v.cornerTrafficMonthly; calHolidays = v.calHolidays; calOverrides = v.calOverrides;
   calHours = v.calHours; planSnapshot = v.planSnapshot; planningEvents = v.planningEvents;
+  eveningLearned = v.eveningLearned || null;
 }
 function copyMonthlyValue(v) {
   if (v instanceof Date) return new Date(v.getTime());
@@ -8519,7 +8601,7 @@ function caCountHtml(people, agentRows, rh, hours, open) {
     var c = rh[a.id] || { O: 0, C: 0, off: 0, dim: 0, cp: 0 }, hr = hours[a.id] || { used: 0, reference: 0 };
     var mUsed = Math.round(hr.used / 6) / 10, mCap = Math.round(hr.reference / 6) / 10;
     var col = 0, td = function(cls, html, extra) { return '<td class="ca-n' + cls + '" data-col="' + (col++) + '"' + (extra || '') + '>' + html + '</td>'; };
-    body += '<tr><td class="ca-name">' + esc(name) + '</td>' + corners.map(function(cn) {
+    body += '<tr><td class="ca-name"><span class="ca-full">' + esc(name) + '</span><span class="ca-ini" title="' + esc(name) + '">' + esc(retailInitials(a.first_name, a.last_name)) + '</span></td>' + corners.map(function(cn) {
       if (!sales) return td('', '<span class="sh-none">-</span>');
       var n = (per[cn.code] || []).length;
       return td('', n ? '<button type="button" class="ca-btn" onclick="showCornerAlloc(\'' + a.id + '\',\'' + esc(cn.code) + '\')">' + n + '</button>' : '<span class="sh-none">0</span>');
@@ -8528,7 +8610,7 @@ function caCountHtml(people, agentRows, rh, hours, open) {
       td(' ca-rh', mCap > 0 ? mUsed : '', ' data-no-i18n title="' + esc(tf('{h} h this month, reference {max} h', { h: mUsed, max: mCap })) + '"') + '</tr>';
   });
   return '<details class="card coverage-card ca-card"' + (open ? ' open' : '') + '><summary><span class="coverage-expander" aria-hidden="true"></span><span>' + t('Client Advisor count') + '</span></summary>' +
-    '<div class="ca-wrap"><table class="ca-table xh"><thead><tr><th class="ca-name">' + t('Client advisor') + '</th>' +
+    '<div class="ca-wrap"><table class="ca-table xh"><thead><tr><th class="ca-name"><span class="ca-full">' + t('Client advisor') + '</span><span class="ca-ini" title="' + esc(t('Client advisor')) + '">CA</span></th>' +
     corners.map(function(cn, i) { return '<th class="ca-n" data-col="' + i + '" data-no-i18n>' + esc(cn.code) + '</th>'; }).join('') + (multi ? '<th class="ca-n" data-col="' + corners.length + '">' + t('Total') + '</th>' : '') +
     RH_COLUMNS.map(function(k, i) { return '<th class="ca-n ca-rh" data-col="' + (corners.length + (multi ? 1 : 0) + i) + '">' + esc(t(RH_FULL[k])) + '</th>'; }).join('') +
     '</tr></thead><tbody>' + body + '</tbody></table></div><div class="ca-detail" id="ca-detail"></div></details>';
