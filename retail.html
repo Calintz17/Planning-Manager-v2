@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v10.0.0.4</title>
+  <title>CAST v10.0.0.7</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -318,8 +318,6 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .mth td.is-weekend { background:var(--bg-base-2); }
 .mth td.is-closed { background:var(--bg-base-3); }
 .mth .wk-start { border-left:2px solid var(--wk-line); }
-.mth th.c-rh, .mth td.c-rh { width:38px; min-width:38px; text-align:center; font-weight:700; background:var(--bg-base-2); border-left:1px solid var(--line); color:var(--tx-2); font-size:12px; }
-.mth th.c-rh:first-of-type, .mth td.c-rh:first-of-type { border-left:2px solid var(--line-2); }
 .mth tr.st-row td.c-agent { font-weight:400; color:var(--tx-1); }
 .mth tr.st-row td { color:var(--tx-2); }
 .mth tr.tot td { background:var(--bg-base-2); font-weight:700; color:var(--tx-2); font-size:12px; }
@@ -854,7 +852,6 @@ textarea { resize:vertical; line-height:1.5; }
   .coverage-card { padding:0; }
   .coverage-card > summary { font-size:14px; padding:14px 12px; gap:9px; }
   .coverage-card .c-agent { font-size:9px; }
-  .coverage-card .c-rh { display:none; }
   .it-axis { min-width:calc(56px + var(--axis-width,920px)); }
   .it-axis .pad { width:56px; flex-basis:56px; font-size:9px; padding:12px 3px; text-align:center; }
   .it-rows { min-width:calc(56px + var(--axis-width,920px)); }
@@ -961,9 +958,14 @@ textarea { resize:vertical; line-height:1.5; }
 .bell-count { position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 5px; border-radius:var(--r-pill); background:var(--toast-err); color:#FFFFFF; border:2px solid var(--bg-base); font-size:10px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
 #bell-menu { width:300px; max-height:min(480px, calc(100dvh - 90px)); overflow:auto; }
 .bell-head { padding:10px 10px 4px; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--tx-2); }
-.bell-item { line-height:18px; }
+.bell-row { display:flex; align-items:center; gap:2px; }
+.bell-item { line-height:18px; flex:1; min-width:0; }
+.bell-x { flex:none; width:44px; height:44px; margin:0; padding:0; border:0; border-radius:var(--r-sm); background:transparent; color:var(--dang); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.bell-x .ic { width:14px; height:14px; }
+.bell-x:hover, .bell-x:focus-visible { background:var(--hover); }
 .bell-item small { font-size:12px; color:var(--tx-2); }
 @media (max-width:600px) {
+  #bell-menu { position:fixed; top:64px; left:calc(var(--sb-w) + 8px); right:8px; width:auto; max-height:calc(100dvh - 76px); }
   .rvd-foot { width:100%; }
   .rvd-foot .btn { flex:1 1 auto; }
 }
@@ -972,6 +974,7 @@ textarea { resize:vertical; line-height:1.5; }
   #login-gate input, #store-gate select, #pw-editor input { font-size:16px; min-height:44px; }
   #login-btn, #pw-editor .modal-foot .btn { min-height:44px; font-size:14px; }
   #acct-menu .mission-menu-item { min-height:44px; font-size:14px; }
+  #bell-menu .bell-item { min-height:44px; font-size:14px; }
   .btn, .settings-tabs button, .view-switch button, .nav-subitem { min-height:44px; }
   .lang-picker, .top-help { height:44px; min-width:44px; justify-content:center; }
   .day-chip, .dp-btn { min-height:44px; }
@@ -1956,7 +1959,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
-var CAST_VERSION = '10.0.0.4';
+var CAST_VERSION = '10.0.0.7';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -2107,10 +2110,25 @@ async function loadMonthReview() {
     rv.context = (cx.data && cx.data.context) || null;
   }
   monthReview = rv;
-  if (monthReview && monthReview.status === 'pending' && canDecideReview() && !reviewSeen[monthReview.id]) {
-    reviewSeen[monthReview.id] = true;
-    safeRead(sb.from('retail_review_seen').insert({ review_id: monthReview.id })).then(function() { refreshReviewCounts(); });
-  }
+}
+// Read (Roman 19-10): a notification goes once its planning has been shown, whatever the way it was opened (the bell,
+// the Validation page, the menus). It is read for this account only: the sending and its status do not change.
+async function markReviewsSeen(ids) {
+  ids = ids.filter(function(id, k) { return id && !reviewSeen[id] && ids.indexOf(id) === k; });
+  if (!ids.length) return;
+  ids.forEach(function(id) { reviewSeen[id] = true; });
+  bellItems = bellItems.filter(function(x) { return !reviewSeen[x.r.id]; });
+  showBellCount();
+  var bm = document.getElementById('bell-menu');
+  if (bm && bm.classList.contains('open')) renderBell();
+  await Promise.all(ids.map(function(id) { return safeRead(sb.from('retail_review_seen').insert({ review_id: id })); }));
+}
+var monthShownKey = null;   // store|month of the last Monthly drawn: its notifications are read, even if they arrive after
+function markShownMonthRead() {
+  var sid = currentStoreId, ym = shownMonthKey(), ids = bellItems.filter(function(x) { return x.r.store_id === sid && x.r.month === ym; })
+    .map(function(x) { return x.r.id; });
+  if (monthReview && monthReview.store_id === sid && monthReview.month === ym && monthReview.status === 'pending' && canDecideReview()) ids.push(monthReview.id);
+  return markReviewsSeen(ids);
 }
 // The status of a sending, in one line: "Planning validated by Roman ATTAL on 19 Oct"
 var RV_ICONS = {
@@ -2131,20 +2149,35 @@ function reviewLine(r) {
 }
 // The reviewed copy: the sent copy, with only the squares changed by hand during the review (a shift, a corner, an
 // absence). A new advisor, a new shift list or another recalculation since the sending never slips in (Astra 10.0.0.1).
-function explicitCell(id, ds) { return !!((planningOverrides[id] || {})[ds] || (cornerOverrides[id] || {})[ds] || agentOnLeave(id, ds)); }
-// Changed by hand during the review: a shift, a corner or an absence that is not what it was when the month was sent
+// Changed by hand during the review: which of the shift, the corner or the absence is not what it was at the sending
+// (an absence counts by its kind: Absence then OUT is a change). Without the sent data, what is set by hand counts.
 function changedSinceSent(id, ds, sentIn) {
-  if (!sentIn) return explicitCell(id, ds);
   var then = function(map) { return ((map || {})[id] || {})[ds] || null; };
-  var leaveThen = (sentIn.agentLeaves || []).some(function(l) { return l.agent_id === id && ds >= l.start_date && ds <= l.end_date; });
-  return then(planningOverrides) !== then(sentIn.planningOverrides) || then(cornerOverrides) !== then(sentIn.cornerOverrides) || !!agentOnLeave(id, ds) !== leaveThen;
+  if (!sentIn) return { shift: !!then(planningOverrides), corner: !!then(cornerOverrides), leave: !!agentOnLeave(id, ds) };
+  var leaveThen = null;
+  (sentIn.agentLeaves || []).forEach(function(l) { if (!leaveThen && l.agent_id === id && ds >= l.start_date && ds <= l.end_date) leaveThen = l.type; });
+  var ch = { shift: then(planningOverrides) !== then(sentIn.planningOverrides), corner: then(cornerOverrides) !== then(sentIn.cornerOverrides),
+    leave: agentOnLeave(id, ds) !== leaveThen };
+  return ch.shift || ch.corner || ch.leave ? ch : null;
+}
+// Only the part changed by hand comes from today's screen: a corner edit keeps the sent shift, a shift edit keeps the
+// sent corner (unless the day had none), an absence takes the whole square
+function reviewedCell(sentCell, now, ch) {
+  if (ch.leave) return now;
+  var out = JSON.parse(JSON.stringify(sentCell || {}));
+  if (ch.shift) { ['code', 'half', 'special'].forEach(function(k) { if (now[k] == null) delete out[k]; else out[k] = now[k]; });
+    if (!out.corner || !now.corner) { if (now.corner == null) delete out.corner; else out.corner = now.corner; } }
+  if (ch.corner) { if (now.corner == null) delete out.corner; else out.corner = now.corner; }
+  return out;
 }
 function reviewedCopy(r) {
   var sent = r.submitted_plan || {}, cur = monthlyResult || {}, out = JSON.parse(JSON.stringify(sent)), edits = {};
   Object.keys(sent).forEach(function(ds) {
     Object.keys(sent[ds] || {}).forEach(function(id) {
-      var now = (cur[ds] || {})[id];
-      if (now && cellSig(now) !== cellSig(sent[ds][id]) && changedSinceSent(id, ds, r.context && r.context.inputs)) { out[ds][id] = now; edits[ds + '|' + id] = true; }
+      var now = (cur[ds] || {})[id], ch = now && cellSig(now) !== cellSig(sent[ds][id]) && changedSinceSent(id, ds, r.context && r.context.inputs);
+      if (!ch) return;
+      var cell = reviewedCell(sent[ds][id], now, ch);
+      if (cellSig(cell) !== cellSig(sent[ds][id])) { out[ds][id] = cell; edits[ds + '|' + id] = true; }
     });
   });
   return { cells: out, edits: edits };
@@ -2301,12 +2334,13 @@ async function decideReview(decision, comment) {
   var r = reviewOfShownMonth();
   if (!r || r.status !== 'pending' || !canDecideReview()) return false;
   if (lastSnapSave) await lastSnapSave;
-  // The check of the reviewed copy is made with the inputs it was sent with; the one with today's data is kept apart
+  // The check of the reviewed copy is made with the inputs it was sent with; the one with today's data is kept apart.
+  // Without the sent inputs the validation is made all the same, but it does not teach the evening share.
   var copy = reviewedCopy(r), sentIn = r.context && r.context.inputs, sentCtx = sentIn ? { inputs: sentIn, today: r.context.today } : null;
   var chk = validatePlan(copy.cells, sentCtx || buildMonthlyContext()), now = sentCtx ? validatePlan(copy.cells, buildMonthlyContext()) : chk;
   return reviewStep('retail_decide_review', { p_id: r.id, p_revision: r.revision, p_decision: decision, p_plan: copy.cells, p_comment: comment || '',
     p_diagnostics: { status: chk.status, mandatory: chk.mandatory.length, mandatoryToday: now.mandatory.length, context: sentCtx ? 'sent' : 'today',
-      edits: Object.keys(copy.edits).length, evening: decision === 'validated' ? eveningCount(copy.cells, sentIn) : null, engine: CAST_VERSION } },
+      edits: Object.keys(copy.edits).length, evening: decision === 'validated' && sentIn ? eveningCount(copy.cells, sentIn) : null, engine: CAST_VERSION } },
     decision === 'validated' ? 'Validated ✓' : 'Returned ✓');
 }
 // Open a store and a month from the list or the bell (the store menus follow, as if chosen by hand)
@@ -2394,14 +2428,20 @@ async function refreshReviewCounts() {
   var items = [], pending = 0;
   if (canDecideReview()) {
     var n = await safeRead(sb.from('retail_plan_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'));
-    // Not opened yet by this person, read on the whole queue (500 at most), then 50 shown
-    var p = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).eq('status', 'pending').order('submitted_at', { ascending: true }).range(0, 499));
-    var pIds = (p.data || []).map(function(r) { return r.id; });
-    var pSeen = pIds.length ? await safeRead(sb.from('retail_review_seen').select('review_id').in('review_id', pIds)) : { data: [] };
-    var pSeenIds = (pSeen.data || []).map(function(x) { return x.review_id; });
-    (p.data || []).filter(function(r) { return pSeenIds.indexOf(r.id) === -1 && !reviewSeen[r.id]; }).slice(0, 50)
-      .forEach(function(r) { items.push({ kind: 'review', r: r }); });
-    pending = typeof n.count === 'number' ? n.count : (p.data || []).length;
+    // Not read yet by this person: the queue is read by pages of 200 until 50 are found, or the queue ends
+    var unread = [], total = 0;
+    for (var page = 0; page < 25 && unread.length < 50; page++) {
+      var p = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).eq('status', 'pending').order('submitted_at', { ascending: true })
+        .range(page * 200, page * 200 + 199));
+      var rows = (!p.error && p.data) || [], pIds = rows.map(function(r) { return r.id; });
+      var pSeen = pIds.length ? await safeRead(sb.from('retail_review_seen').select('review_id').in('review_id', pIds)) : { data: [] };
+      var pSeenIds = (pSeen.data || []).map(function(x) { return x.review_id; });
+      rows.forEach(function(r) { if (pSeenIds.indexOf(r.id) === -1 && !reviewSeen[r.id]) unread.push(r); });
+      total += rows.length;
+      if (rows.length < 200) break;
+    }
+    unread.slice(0, 50).forEach(function(r) { items.push({ kind: 'review', r: r }); });
+    pending = typeof n.count === 'number' ? n.count : total;
   }
   if (canSubmitReview()) {
     var since = new Date(Date.now() - 45 * 864e5).toISOString();
@@ -2410,15 +2450,23 @@ async function refreshReviewCounts() {
     var ids = (d.data || []).map(function(r) { return r.id; });
     var seen = ids.length ? await safeRead(sb.from('retail_review_seen').select('review_id').in('review_id', ids)) : { data: [] };
     var seenIds = (seen.data || []).map(function(x) { return x.review_id; });
-    (d.data || []).forEach(function(r) { if (seenIds.indexOf(r.id) === -1) items.push({ kind: 'decision', r: r }); });
+    (d.data || []).forEach(function(r) { if (seenIds.indexOf(r.id) === -1 && !reviewSeen[r.id]) items.push({ kind: 'decision', r: r }); });
   }
   await loadReviewStoreNames(items.map(function(x) { return x.r; }));
-  bellItems = items;
-  var nav = document.getElementById('nav-review-count'), bell = document.getElementById('bell-count');
+  // Read meanwhile (a planning shown, a cross) stays read; the planning on screen reads what has just arrived for it
+  bellItems = items.filter(function(x) { return !reviewSeen[x.r.id]; });
+  if (monthShownKey === currentStoreId + '|' + shownMonthKey()) markShownMonthRead();
+  var nav = document.getElementById('nav-review-count');
   if (nav) { nav.textContent = pending > 99 ? '99+' : pending; nav.hidden = !pending; }
-  if (bell) { bell.textContent = items.length > 99 ? '99+' : items.length; bell.hidden = !items.length; }
-  var bb = document.getElementById('bell-btn');
-  if (bb) bb.setAttribute('aria-label', tf('Notifications: {n}', { n: items.length }));
+  showBellCount();
+  var bm = document.getElementById('bell-menu');
+  if (bm && bm.classList.contains('open')) renderBell();
+}
+// The red count of the bell: unread notifications only, none shown at zero (the Validation count is the queue)
+function showBellCount() {
+  var bell = document.getElementById('bell-count'), bb = document.getElementById('bell-btn'), n = bellItems.length;
+  if (bell) { bell.textContent = n > 99 ? '99+' : n; bell.hidden = !n; }
+  if (bb) bb.setAttribute('aria-label', tf('Notifications: {n}', { n: n }));
 }
 function toggleBell(e) {
   e.stopPropagation();
@@ -2444,8 +2492,11 @@ function renderBell() {
       var r = x.r, i = bellItems.indexOf(x);
       var sub = x.kind === 'review' ? tf('Sent by {name}, {date}', { name: r.submitted_by_name || '', date: reviewDate(r.submitted_at) })
         : tf('{status} by {name}, {date}', { status: t(REVIEW_STATUS[r.status]), name: r.decided_by_name || '', date: reviewDate(r.decided_at) });
-      html += '<button type="button" class="mission-menu-item bell-item" role="menuitem" onclick="openBellItem(' + i + ')"><span data-no-i18n>' +
-        '<b>' + esc(reviewStoreNames[r.store_id] || '-') + '</b>, ' + esc(reviewMonthLabel(r.month)) + '<br><small>' + esc(sub) + '</small></span></button>';
+      var what = (reviewStoreNames[r.store_id] || '-') + ', ' + reviewMonthLabel(r.month);
+      html += '<div class="bell-row"><button type="button" class="mission-menu-item bell-item" role="menuitem" onclick="openBellItem(' + i + ')"><span data-no-i18n>' +
+        '<b>' + esc(reviewStoreNames[r.store_id] || '-') + '</b>, ' + esc(reviewMonthLabel(r.month)) + '<br><small>' + esc(sub) + '</small></span></button>' +
+        '<button type="button" class="bell-x" onclick="dismissBellItem(event, ' + i + ')" title="' + esc(t('Dismiss')) + '" aria-label="' + esc(tf('Dismiss: {what}', { what: what })) + '">' +
+        '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button></div>';
     });
   });
   m.innerHTML = html || '<div class="xm-note">' + esc(t('Nothing new.')) + '</div>';
@@ -2454,9 +2505,18 @@ async function openBellItem(i) {
   var x = bellItems[i];
   if (!x) return;
   closeBell();
-  if (!reviewSeen[x.r.id]) { reviewSeen[x.r.id] = true; await safeRead(sb.from('retail_review_seen').insert({ review_id: x.r.id })); }
+  // Read once its planning is shown (markShownMonthRead), not on the click
   await openStoreMonth(x.r.store_id, x.r.month);
-  refreshReviewCounts();
+}
+// The cross: read without opening, for this account only; the sending itself does not change
+function dismissBellItem(e, i) {
+  e.stopPropagation();
+  var x = bellItems[i];
+  if (!x) return;
+  markReviewsSeen([x.r.id]);
+  var focus = document.querySelectorAll('#bell-menu .bell-x')[Math.min(i, bellItems.length - 1)];
+  var bb = document.getElementById('bell-btn');
+  if (focus) focus.focus(); else if (bb && bb.focus) bb.focus();
 }
 function showReviewNav() {
   var nav = document.getElementById('nav-reviews'), bell = document.getElementById('bell-btn');
@@ -4137,15 +4197,15 @@ function shiftClusters(grid, ds) {
 // (opening minimum, rest, weekly hours). Days closed by managers
 // alone are listed: they do not meet the target's purpose.
 function lateReport(cells, days, todayDs) {
-  var grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), ratio = storeEveningShare();
-  var out = { ratio: ratio, target: 0, actual: 0, closing: 0, short: [], leadOnlyClose: [] };
+  var grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), on = eveningApplies(grid), ratio = storeEveningShare();
+  var out = { ratio: ratio, applies: on, target: 0, actual: 0, closing: 0, short: [], leadOnlyClose: [] };
   days.forEach(function(d) {
     if (d.closure || d.ds < todayDs || isSpecialDay(d)) return;
     var hm = dayMinutes(d.ds), row = cells[d.ds] || {};
     function shift(a) { var c = row[a.id]; return c && !c.special && grid.some(function(s) { return s.code === c.code; }) ? c : null; }
     function closes(a) { var wh = workHoursOf(a, d.ds, shift(a)); return !!wh && coverOfHours(wh.start, wh.end, hm).close; }
     var sellers = agents.filter(function(a) { return poolOf(a) === 'sales' && shift(a); });
-    var target = Math.round(sellers.length * ratio), actual = sellers.filter(function(a) { return late[shift(a).code]; }).length;
+    var target = on ? Math.round(sellers.length * ratio) : 0, actual = sellers.filter(function(a) { return late[shift(a).code]; }).length;
     var closing = sellers.filter(closes).length;
     out.target += target; out.actual += actual; out.closing += closing;
     if (actual < target) out.short.push({ ds: d.ds, target: target, actual: actual,
@@ -4189,6 +4249,8 @@ function lateCodes(grid) {
   Object.keys(g).forEach(function(c) { late[c] = g[c] === 'pm'; });
   return late;
 }
+// The evening share applies when the shift list has an evening group (one rule for the plan, its report and learning)
+function eveningApplies(grid) { var l = lateCodes(grid); return Object.keys(l).some(function(c) { return l[c]; }); }
 // Share of sellers on an evening shift. 50% to start: the share found on 1,004 days of four stores' official plannings
 // (Bon Marche 48%, Galeries Lafayette 56%, Shibuya 60%, Duphot 55%). Each store then learns its own share from its
 // validated plannings, slowly (worth about 300 seller-days at the start), so one unusual month does not swing it.
@@ -4214,10 +4276,17 @@ function eveningHistory(rows, key) {
 async function loadEveningShare() {
   var sid = currentStoreId, ym = sid ? shownMonthKey() : null, key = sid + '|' + ym;
   if (!sid || (eveningLearned && eveningLearned.key === key)) return;
-  var r = await safeRead(sb.from('retail_plan_reviews').select('month,revision,status,decision_diagnostics').eq('store_id', sid).lt('month', ym)
-    .order('month', { ascending: false }).order('revision', { ascending: false }).range(0, 199));
+  // Read by pages of 200 until six months are found: many sendings of one month never hide the months before it
+  var rows = [], hist = eveningHistory(rows, key);
+  for (var page = 0; page < 20 && hist.months.length < 6; page++) {
+    var r = await safeRead(sb.from('retail_plan_reviews').select('month,revision,status,decision_diagnostics').eq('store_id', sid).lt('month', ym)
+      .order('month', { ascending: false }).order('revision', { ascending: false }).range(page * 200, page * 200 + 199));
+    var got = (!r.error && r.data) || [];
+    rows = rows.concat(got); hist = eveningHistory(rows, key);
+    if (got.length < 200) break;
+  }
   if (sid !== currentStoreId || ym !== shownMonthKey()) return;
-  eveningLearned = eveningHistory((!r.error && r.data) || [], key);
+  eveningLearned = hist;
 }
 // Sellers on an evening shift in a plan, read with the inputs it was made with (its team, its shifts)
 function eveningCount(cells, inputs) {
@@ -4225,6 +4294,7 @@ function eveningCount(cells, inputs) {
   if (inputs) useMonthlyInputs(inputs);
   try {
     var grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), out = { evening: 0, sellers: 0, grouping: EVENING_GROUPING };
+    if (!eveningApplies(grid)) return null;   // no evening group: nothing to learn
     Object.keys(cells || {}).forEach(function(ds) {
       var d = { ds: ds, date: new Date(ds + 'T12:00:00') };
       if (getDayClosureType(ds) || isSpecialDay(d)) return;
@@ -4252,14 +4322,8 @@ function coverOfHours(start, end, h) {
   return { open: start <= h.open && end >= Math.min(h.close, h.open + 60),
            close: start <= Math.max(h.open, h.close - 60) && end >= h.close };
 }
-// Spread k people evenly over the shifts of a group, turning each day
-function spreadPick(group, j, k, rot) {
-  var m = group.length;
-  var i = Math.min(m - 1, Math.floor((j + 0.5) * m / Math.max(1, k)));
-  return group[(i + (rot || 0)) % m];
-}
 // Contract hours of one advisor (Roman, 17-10): the weekly hours entered in the advisor's sheet. Without them, the
-// store default (Labor rules) times the old work percentage, so nothing changes until the manager fills the field.
+// store default weekly hours (Labor rules).
 // The past never changes (Roman 17-10): a change of hours is dated; a day before it keeps the hours it had.
 // weekly_hours_history = [{ from: 'YYYY-MM-DD', hours }], oldest first; weekly_hours is the current value.
 // Every calculation reads the hours of a date (contractHours(a, ds)); only the advisor sheet reads the current value
@@ -4271,13 +4335,23 @@ function contractHistory(a) {
     .slice().sort(function(x, y) { return x.from < y.from ? -1 : x.from > y.from ? 1 : 0; });
 }
 function currentContractHours(a) { return contractHours(a, '9999-12-31'); }
-function contractHours(a, ds) {
-  if (!ds) { console.error('contractHours needs a date'); ds = '9999-12-31'; }   // never breaks the page; tests check it
+// Weekly hours of an advisor on a day: the contract of that date, else the advisor's hours, else the store default
+function contractHoursFor(a, ds, defaultWeekly) {
   var v = null;
   contractHistory(a).forEach(function(h) { if (h.from <= ds) v = +h.hours; });
   if (v != null) return v;
   if (a && a.weekly_hours > 0) return +a.weekly_hours;
-  return regulations.weekly_hours > 0 ? +regulations.weekly_hours : 0;
+  return defaultWeekly > 0 ? +defaultWeekly : 0;
+}
+function contractHours(a, ds) {
+  if (!ds) { console.error('contractHours needs a date'); ds = '9999-12-31'; }   // never breaks the page; tests check it
+  return contractHoursFor(a, ds, regulations.weekly_hours);
+}
+// Corner where an advisor works on a day: the corner of the day's plan, else the usual corner
+function effectiveCornerId(a, dayPlan, corners) {
+  var r = (dayPlan || {})[a.id];
+  if (r && r.corner) { var c = corners.find(function(x) { return x.code === r.corner; }); if (c) return c.id; }
+  return a.home_corner_id || null;
 }
 // Month hours counter (Roman 17-10): the weekly hours are respected each week; the month shows a counter against
 // weekly hours x days of the month / 7 (the average month of the contract), not a limit.
@@ -4989,44 +5063,27 @@ async function loadAndRenderIntraday(ds) {
   addedMissions = am;
   renderIntraday(ds);
 }
+// Intraday: the month's plan is made first when the day has none yet (here, not inside the screen), then the day is shown
 function renderIntraday(ds) {
-  intradayExport = null;
-  var body = document.getElementById('planning-intraday-body');
-  if (!body) return;
-  renderCornerTabs();
-  setPlanMeta('intraday-meta', ds ? formatDateDisplay(ds) : '');
-  if (!currentStoreId) { body.innerHTML = '<p class="plan-empty">Select a store to view the intraday planning.</p>'; return; }
-  if (!ds) ds = toDateStr(new Date());
-  currentIntradayDate = ds;
-  renderReviewStatus();
-  var inp = document.getElementById('intraday-date');
-  if (inp && inp.value !== ds) inp.value = ds;
-  var closure = getDayClosureType(ds);
-  if (closure) {
-    var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
-    body.innerHTML = '<p class="plan-empty">' + tf('{date} - store closed ({reason}).', { date: formatDateDisplay(ds), reason: t(why) }) + '</p>';
-    return;
-  }
+  var day = ds || toDateStr(new Date());
+  if (currentStoreId && agents.length && !getDayClosureType(day) && !monthlyResult[day]) renderMonthlyPlanning();
+  paintIntraday(ds);
+}
+// The Intraday of a day, calculated once (Astra lot 2): shifts, breaks, briefs, Welcome, reinforcements, groups and
+// rows. It shows nothing and saves nothing; the screen and the Excel export are made from it.
+function buildIntradayModel(ds) {
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
   var dh = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
   if (calHours[ds]) dh = calHours[ds];
   var openH = dh.open, closeH = dh.close;
-  if (!monthlyResult[ds]) renderMonthlyPlanning();
   var dayPlan = monthlyResult[ds];
-  if (!dayPlan) {
-    body.innerHTML = '<p class="plan-empty">' +
-      tf('Open {date} in the Monthly view first to compute its planning.', { date: formatDateDisplay(ds) }) + '</p>';
-    return;
-  }
+  if (!dayPlan) return { empty: 'noplan' };
   var working = agents.filter(function(a) {
     if (a.is_active === false) return false;
     var mr = dayPlan[a.id];
     return mr && !mr.special;
   });
-  if (!working.length) {
-    body.innerHTML = '<p class="plan-empty">' + tf('No client advisors scheduled on {date}.', { date: formatDateDisplay(ds) }) + '</p>';
-    return;
-  }
+  if (!working.length) return { empty: 'nobody' };
   // Same hours as the monthly planning
   var shiftInfo = {};
   working.forEach(function(a) {
@@ -5049,20 +5106,13 @@ function renderIntraday(ds) {
   T0 = Math.floor(Math.min(T0, openH));
   T1 = Math.ceil(Math.max(T1, closeH));
   var span = T1 - T0;
-  intradayAxis = { T0: T0, T1: T1 };
-  function pct(h) { return ((h - T0) / span) * 100; }
-  function wpct(h) { return (h / span) * 100; }
   var curve = (storeSettings && storeSettings.hourly_curve) || null;
   // Intraday help between corners
   var reinforceMissions = {};
   if (storeSettings && storeSettings.intraday_reinforcement && storeCorners.length > 1 && curve && curve.length) {
     var refYr = monthlyRef.getFullYear(), refMr = monthlyRef.getMonth() + 1;
     var cwR = function(cid){ return cornerTrafficValue(cid, refYr, refMr); };
-    var effCornerId = function(a){
-      var r = (monthlyResult[ds] || {})[a.id];
-      if (r && r.corner) { for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id; }
-      return a.home_corner_id || null;
-    };
+    var effCornerId = function(a) { return effectiveCornerId(a, dayPlan, storeCorners); };
     var byC = {}; storeCorners.forEach(function(c){ byC[c.id]=[]; });
     working.forEach(function(a){ if (poolOf(a)==='sales'){ var cid=effCornerId(a); if (cid&&byC[cid]) byC[cid].push(a); } });
     var minOpen = minCover('open');
@@ -5476,24 +5526,11 @@ function renderIntraday(ds) {
       welcomePlan[chosen.id].push(ph);
     }
   }
-  function fmtH(m) {
-    var h = Math.floor(m / 60), mn = m % 60;
-    return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
-  }
-  var axis = '<div class="it-axis"><div class="pad">' + t('Agent') + '</div><div class="ticks">';
-  for (var h = Math.floor(T0); h < Math.ceil(T1); h++) axis += '<span>' + h + 'h</span>';
-  axis += '</div></div>';
   var groups = [];
   if (storeCorners.length > 1) {
     var refYi = monthlyRef.getFullYear(), refMi = monthlyRef.getMonth() + 1;
     function cWi(cid){ return cornerTrafficValue(cid, refYi, refMi); }
-    function effCorner(a){
-      var r = (monthlyResult[ds] || {})[a.id];
-      if (r && r.corner) {
-        for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id;
-      }
-      return a.home_corner_id || null;
-    }
+    function effCorner(a) { return effectiveCornerId(a, dayPlan, storeCorners); }
     var mgmt = working.filter(function(a){ return poolOf(a)==='mgmt'; });
     if (mgmt.length) groups.push({ title:'MANAGEMENT', list:mgmt });
     storeCorners.slice().sort(function(x,y){ return cWi(y.id)-cWi(x.id); }).forEach(function(c){
@@ -5522,15 +5559,10 @@ function renderIntraday(ds) {
       if (list.length) groups.push({ title: blockDef.title.toUpperCase(), list: list });
     });
   }
-  var rowsHtml = '';
-  var intradayExportRows = [];
+  // Each person's shift and blocks: the automatic ones (at the manager's position when moved), the missions added by
+  // hand and the reinforcements. The screen and the Excel export both read these rows.
   groups.forEach(function(grp) {
-    var list = grp.list;
-    rowsHtml += '<div class="it-group"><div class="it-role"' + (grp.cornerCode ? ' data-no-i18n' : '') + '>' + esc(grp.title) + '</div>';
-    list.forEach(function(a) {
-      var sh = shiftInfo[a.id];
-      var sH = sh.startMin / 60, eH = sh.endMin / 60;
-      var toneCls = 'sh-' + (sh.tone || 'close');
+    grp.rows = grp.list.map(function(a) {
       var blocks = [];
       function withOverride(agentId, type, calcStart, durH) {
         // The manager's position wins, inside or outside the shift
@@ -5555,26 +5587,95 @@ function renderIntraday(ds) {
           blocks.push([withOverride(a.id, 'wel' + wi, wh, 1), 1, 'wel' + wi, 'Welcome']);
         });
       }
-      var exportBlocks = blocks.map(function(b){
+      // The model keeps its own copies: a later change of settings or store never changes what it shows or exports
+      var reinf = (reinforceMissions[a.id] || []).map(function(m) { return { start: m.start, dur: m.dur, toCode: m.toCode }; });
+      return { a: { id: a.id, first_name: a.first_name, last_name: a.last_name, status: a.status }, sh: Object.assign({}, shiftInfo[a.id]),
+        blocks: blocks, added: (addedMissions[a.id] || []).map(resolvedAddedMission), reinf: reinf };
+    });
+  });
+  return { ds: ds, storeId: currentStoreId, openH: openH, closeH: closeH, T0: T0, T1: T1, span: span, groups: groups, count: working.length };
+}
+// A mission added by hand, resolved once for the screen and the export: its start and its duration (hours, its own
+// else its definition's, as before), its labels (translated by the screen), its look
+function resolvedAddedMission(m) {
+  var md = missionDef(m.type);
+  return { id: m.id, type: m.type, start: m.start, dur: missionDurH(m), label: md.label, short: md.short, cls: md.cls, color: md.color || null };
+}
+// Excel rows of the day, read from the model (the same rows as the screen)
+function toIntradayExport(model) {
+  var out = [];
+  model.groups.forEach(function(grp) {
+    grp.rows.forEach(function(row) {
+      var a = row.a, sh = row.sh;
+      var exportBlocks = row.blocks.map(function(b){
         return { start:b[0], dur:b[1], type:b[2], label:b[3],
                  color: (b[4] && b[4].indexOf('bc-') === 0) ? b[4].slice(3) : null };
       });
-      (addedMissions[a.id] || []).forEach(function(m) {
-        var md = missionDef(m.type);
-        exportBlocks.push({ start: m.start, dur: missionDurH(m), type: m.type.indexOf('brk:') === 0 ? 'brk' : m.type,
-                            label: md.label, color: md.color || null });
+      row.added.forEach(function(m) {
+        exportBlocks.push({ start: m.start, dur: m.dur, type: m.type.indexOf('brk:') === 0 ? 'brk' : m.type, label: m.label, color: m.color });
       });
-      (reinforceMissions[a.id] || []).forEach(function(m) {
+      row.reinf.forEach(function(m) {
         exportBlocks.push({ start: m.start, dur: m.dur, type: 'reinf', label: '\u2192' + m.toCode, color: null });
       });
-      intradayExportRows.push({
+      out.push({
         agentId: a.id,
         name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
         role: (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '',
         group: grp.title, groupIsCorner: !!grp.cornerCode,
-        code: sh.code, tone: sh.tone || 'close', startH: sH, endH: eH,
+        code: sh.code, tone: sh.tone || 'close', startH: sh.startMin / 60, endH: sh.endMin / 60,
         blocks: exportBlocks
       });
+    });
+  });
+  return { ds: model.ds, storeId: model.storeId, openH: model.T0, closeH: model.T1, rows: out };
+}
+// The Intraday screen: draws the model of the day, then binds the drag and the editors
+function paintIntraday(ds) {
+  intradayExport = null;
+  var body = document.getElementById('planning-intraday-body');
+  if (!body) return;
+  renderCornerTabs();
+  setPlanMeta('intraday-meta', ds ? formatDateDisplay(ds) : '');
+  if (!currentStoreId) { body.innerHTML = '<p class="plan-empty">Select a store to view the intraday planning.</p>'; return; }
+  if (!ds) ds = toDateStr(new Date());
+  currentIntradayDate = ds;
+  renderReviewStatus();
+  var inp = document.getElementById('intraday-date');
+  if (inp && inp.value !== ds) inp.value = ds;
+  var closure = getDayClosureType(ds);
+  if (closure) {
+    var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
+    body.innerHTML = '<p class="plan-empty">' + tf('{date} - store closed ({reason}).', { date: formatDateDisplay(ds), reason: t(why) }) + '</p>';
+    return;
+  }
+  var model = buildIntradayModel(ds);
+  if (model.empty === 'noplan') {
+    body.innerHTML = '<p class="plan-empty">' +
+      tf('Open {date} in the Monthly view first to compute its planning.', { date: formatDateDisplay(ds) }) + '</p>';
+    return;
+  }
+  if (model.empty === 'nobody') {
+    body.innerHTML = '<p class="plan-empty">' + tf('No client advisors scheduled on {date}.', { date: formatDateDisplay(ds) }) + '</p>';
+    return;
+  }
+  var T0 = model.T0, T1 = model.T1, span = model.span, openH = model.openH, closeH = model.closeH, groups = model.groups;
+  intradayAxis = { T0: T0, T1: T1 };
+  function pct(h) { return ((h - T0) / span) * 100; }
+  function wpct(h) { return (h / span) * 100; }
+  function fmtH(m) {
+    var h = Math.floor(m / 60), mn = m % 60;
+    return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
+  }
+  var axis = '<div class="it-axis"><div class="pad">' + t('Agent') + '</div><div class="ticks">';
+  for (var h = Math.floor(T0); h < Math.ceil(T1); h++) axis += '<span>' + h + 'h</span>';
+  axis += '</div></div>';
+  var rowsHtml = '';
+  groups.forEach(function(grp) {
+    rowsHtml += '<div class="it-group"><div class="it-role"' + (grp.cornerCode ? ' data-no-i18n' : '') + '>' + esc(grp.title) + '</div>';
+    grp.rows.forEach(function(row) {
+      var a = row.a, sh = row.sh, blocks = row.blocks;
+      var sH = sh.startMin / 60, eH = sh.endMin / 60;
+      var toneCls = 'sh-' + (sh.tone || 'close');
       var grid = '<div class="it-grid">';
       for (var k = Math.floor(T0); k < Math.ceil(T1); k++) grid += '<i></i>';
       grid += '</div>';
@@ -5600,19 +5701,16 @@ function renderIntraday(ds) {
           ' title="' + esc(bl[3]) + '" data-full="' + esc(bl[3]) + '" style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' +
           (bl[1] < 0.5 ? '' : esc(bl[3])) + '</div>';
       });
-      (addedMissions[a.id] || []).forEach(function(m) {
-        var md = missionDef(m.type);
-        var visualCls = md.cls;
-        var label = esc(t(md.short));
-        var durH = missionDurH(m);
-        track += '<div class="it-blk ' + visualCls + ' it-blk-added" draggable="false"' +
+      row.added.forEach(function(m) {
+        var label = esc(t(m.short)), durH = m.dur;
+        track += '<div class="it-blk ' + m.cls + ' it-blk-added" draggable="false"' +
           ' data-agent="' + a.id + '" data-type="' + esc(m.type) + '" data-mid="' + m.id + '"' +
           ' data-dur="' + durH + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
-          ' title="' + esc(t(md.label)) + '" data-full="' + label + '" style="left:' + pct(m.start) + '%;width:' + wpct(durH) + '%">' +
+          ' title="' + esc(t(m.label)) + '" data-full="' + label + '" style="left:' + pct(m.start) + '%;width:' + wpct(durH) + '%">' +
           (durH < 0.5 ? '' : label) +
           '</div>';
       });
-      (reinforceMissions[a.id] || []).forEach(function(m, mi) {
+      row.reinf.forEach(function(m, mi) {
         track += '<div class="it-blk it-blk-reinf" draggable="false"' +
           ' data-agent="' + a.id + '" data-type="reinf" data-ridx="' + mi + '"' +
           ' data-dur="' + m.dur + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
@@ -5636,8 +5734,8 @@ function renderIntraday(ds) {
       axis +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
-  setPlanMeta('intraday-meta', tf('{date} - {count} present', { date: formatDateDisplay(ds), count: working.length }));
-  intradayExport = { ds: ds, storeId: currentStoreId, openH: T0, closeH: T1, rows: intradayExportRows };
+  setPlanMeta('intraday-meta', tf('{date} - {count} present', { date: formatDateDisplay(ds), count: model.count }));
+  intradayExport = toIntradayExport(model);
   intradayShownKey = currentStoreId + '|' + ds;
   initIntradayDrag(body, T0, span, ds);
   bindMissionEditors(body);
@@ -6670,7 +6768,7 @@ function placeShiftsOfDay(mp, d) {
     function cidOf(a) { return storeCorners.length > 1 && a.home_corner_id ? a.home_corner_id : '_'; }
     var left = {}, sizes = {};
     list.concat(fixedCodes.map(function(f) { return f.a; })).forEach(function(a) { sizes[cidOf(a)] = (sizes[cidOf(a)] || 0) + 1; });
-    var lateBy = eveningSplit(sizes, lateRatio, byStart.length > 1);
+    var lateBy = eveningSplit(sizes, lateRatio, eveningApplies(grid));
     Object.keys(sizes).forEach(function(c) { left[c] = { early: sizes[c] - lateBy[c], late: lateBy[c] }; });
     fixedCodes.forEach(function(f) { left[cidOf(f.a)][isLate[f.code] ? 'late' : 'early']--; });
     // Hourly traffic of the day, in 15 min slots
@@ -7139,7 +7237,7 @@ function repairDisplayedCoverage(mp) {
     var floor = agents.filter(function(a) { return poolOf(a) !== 'stock' && workHoursOf(a, d.ds, effective(a, d.ds)); });
     var learnedHere = (mp.learnedDay || {})[d.ds] || {};
     var gsize = {}; Object.keys(groups).forEach(function(cid) { gsize[cid] = groups[cid].filter(function(a) { return poolOf(a) === 'sales'; }).length; });
-    var gtarget = eveningSplit(gsize, lateRatio, true);
+    var gtarget = eveningSplit(gsize, lateRatio, eveningApplies(grid));
     Object.keys(groups).forEach(function(cid) {
       var gl = groups[cid], gs = gl.filter(function(a) { return poolOf(a) === 'sales'; });
       var target = gtarget[cid], have = gs.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
@@ -8100,15 +8198,26 @@ function computeMonthlyPlanOn(opt, ctx) {
   var issues = check.issues, mandatoryIssues = check.mandatory;
   var diagnostics = freezeMonthlyValue({ status: check.status, mandatoryIssues: mandatoryIssues, unknown: check.unknown,
     moves: { tried: moves.tried, applied: moves.applied, failed: moves.failed }, late: lateReport(cells, monthDays, todayDs) });
-  return Object.freeze({ issues: issues, habitsDays: habits.days, hours: hours,
+  var paintFingerprint = ctx.fingerprint;
+  return Object.freeze({ issues: freezeMonthlyValue(issues), habitsDays: habits.days, hours: hours,
     fixedIssues: freezeMonthlyValue(JSON.parse(JSON.stringify(fixedIssues))),
     cells: cells, diagnostics: diagnostics,
-    paint: function() { return paintMonthlyPlan({ ctx: ctx, cells: cells, hours: hours, agentRows: agentRows, rh: rh, fixedIssues: fixedIssues, monthDays: monthDays, year: year, monthIdx: monthIdx, newSnap: newSnap, snapKey: snapKey, snapLoaded: snapLoaded }); } });
+    // Show the plan, then keep it: the painter only paints, the plan shown is saved next (once; a repaint writes nothing)
+    paint: function() {
+      var shown = paintMonthlyPlan({ ctx: ctx, expectedFingerprint: paintFingerprint, cells: cells, hours: hours, agentRows: agentRows, rh: rh, fixedIssues: fixedIssues, monthDays: monthDays, year: year, monthIdx: monthIdx, snapKey: snapKey });
+      // Saving the plan shown changes the saved planning, not the plan: in the frozen mode of the app the same result
+      // stays valid for the new fingerprint (checked on the bench: a new calculation gives the same cells and checks)
+      if (shown && keepShownPlan(snapKey, newSnap, snapLoaded) && manualMode) {
+        paintFingerprint = monthlyFingerprint(monthlyInputs(), toDateStr(new Date()));
+        if (lastMonthlyRun && lastMonthlyRun.run === this)
+          lastMonthlyRun = { key: paintFingerprint, run: this };
+      }
+      return shown; } });
 }
-// Show and save a computed Monthly plan (the only place that changes the screen or writes the saved planning).
+// Show a computed Monthly plan (the only place that changes the Monthly screen; the save is keepShownPlan, after it).
 // v: what the calculation made (the plan, its hours and counters) and the month it is for.
 function paintMonthlyPlan(v) {
-  var ctx = v.ctx, cells = v.cells, hours = v.hours, agentRows = v.agentRows, rh = v.rh, fixedIssues = v.fixedIssues, monthDays = v.monthDays, year = v.year, monthIdx = v.monthIdx, newSnap = v.newSnap, snapKey = v.snapKey, snapLoaded = v.snapLoaded;
+  var ctx = v.ctx, cells = v.cells, hours = v.hours, agentRows = v.agentRows, rh = v.rh, fixedIssues = v.fixedIssues, monthDays = v.monthDays, year = v.year, monthIdx = v.monthIdx, snapKey = v.snapKey;
   function cell(res) {
     if (res.special === 'closed') return '<span class="sh-none">-</span>';
     if (res.half) {
@@ -8124,14 +8233,9 @@ function paintMonthlyPlan(v) {
     return '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span>';
   }
   // A computed plan belongs to its context: never apply it to a new store, month or edit.
-  if (ctx.fingerprint !== monthlyFingerprint(monthlyInputs(), toDateStr(new Date()))) return false;
+  if ((v.expectedFingerprint || ctx.fingerprint) !== monthlyFingerprint(monthlyInputs(), toDateStr(new Date()))) return false;
   var container = document.getElementById('planning-monthly-body');
   if (!container) return false;
-  // The plan shown is saved, so it never changes by itself later. Its check status stays in result.diagnostics.
-  if (snapLoaded && !planSnapshot.writeBlocked && !monthLocked() && JSON.stringify(newSnap) !== JSON.stringify(planSnapshot.plan || {})) {
-    planSnapshot.plan = newSnap;
-    lastSnapSave = savePlanSnapshot(currentStoreId, snapKey, newSnap);
-  }
   monthlyResult = cells;
   monthlyHours = { storeId: currentStoreId, month: snapKey, byAgent: hours };
   var fxNew = fixedIssues.filter(function(x) { var k = x.a.id + x.issue; return !fixedWarned[k] && (fixedWarned[k] = true); });
@@ -8140,7 +8244,7 @@ function paintMonthlyPlan(v) {
   monthDays.forEach(function(d) {
     totPres[d.ds] = 0; totO[d.ds] = 0; totC[d.ds] = 0; totOff[d.ds] = 0;
     agents.forEach(function(a) {
-      var res = agentRows[a.id].find(function(r){return r.d.ds===d.ds;}).res;
+      var res = cells[d.ds][a.id];
       if (!res.special) totPres[d.ds]++;
       else if (res.code === 'OFF' || res.code === 'A' || res.special === 'off') totOff[d.ds]++;
       if (poolOf(a) !== 'stock') {
@@ -8341,6 +8445,13 @@ function paintMonthlyPlan(v) {
   attachCrossHighlight();
   return true;
 }
+// The plan shown is saved, so it never changes by itself later. Its check status stays in result.diagnostics.
+function keepShownPlan(key, plan, loaded) {
+  if (!loaded || !planSnapshot || planSnapshot.writeBlocked || monthLocked() || JSON.stringify(plan) === JSON.stringify(planSnapshot.plan || {})) return;
+  planSnapshot.plan = plan;
+  lastSnapSave = savePlanSnapshot(currentStoreId, key, plan);
+  return true;
+}
 // Monthly context: every input of the calculation, read at once, copied and frozen. The calculation runs on this copy
 // only, so a change made during or after it (a load, a manager edit, another store) never mixes with it. A change to
 // try (manual check) is made on the copy, never on the live data.
@@ -8377,8 +8488,16 @@ function copyMonthlyValue(v) {
   return o;
 }
 // Same text for the same inputs, whether the month is a Date (live) or its text (context)
+// Fingerprint of what the plan is made of: the inputs, the day (yesterday becomes past at midnight) and the engine
+// version. The language and the corner shown are display only: they never change a cell, so they are left out, as the
+// copy of the saved planning kept to undo a failed save.
+var DISPLAY_ONLY = { CURRENT_LANG: true, currentCornerView: true };
 function monthlyFingerprint(inputs, today) {
-  return JSON.stringify([today, inputs], function(k, v) { return k === 'monthlyRef' && this[k] instanceof Date ? toDateStr(this[k]) : v; });
+  return JSON.stringify([today, CAST_VERSION, inputs], function(k, v) {
+    if (this === inputs && DISPLAY_ONLY[k]) return undefined;
+    if (k === 'confirmed' && this === inputs.planSnapshot) return undefined;   // last saved copy, kept only to undo a failed save
+    return k === 'monthlyRef' && this[k] instanceof Date ? toDateStr(this[k]) : v;
+  });
 }
 function buildMonthlyContext(change) {
   var inputs = copyMonthlyValue(monthlyInputs()), today = toDateStr(new Date());
@@ -8547,14 +8666,21 @@ function mandatoryAdded(after, before) {
   return Object.keys(after).filter(function(k) { return MANDATORY.test(k) && after[k] > ((before || {})[k] || 0) + 1e-6; });
 }
 // The plan with the manager's learned choices, unless they break a mandatory rule that the plan without them keeps
+// One result is kept: while the month's inputs are the same, showing it again (language, corner, theme, a repaint)
+// computes nothing. Any change of data gives a new fingerprint, and "Recalculate from today" always computes.
+// The result is frozen, so the screen and the exports cannot change it.
+var lastMonthlyRun = null;
 function pickMonthlyPlan(ctx) {
+  var live = !ctx;
   ctx = ctx || buildMonthlyContext();
+  if (live && !forceRecalc && lastMonthlyRun && lastMonthlyRun.key === ctx.fingerprint) return lastMonthlyRun.run;
   var run = computeMonthlyPlan({ habits: true }, ctx);
   if (run.habitsDays) {
     var plain = computeMonthlyPlan({ habits: false }, ctx), worse = mandatoryAdded(run.issues, plain.issues);
     habitsGate.last = { habits: !worse.length, worse: worse, brokenWithout: Object.keys(plain.issues).length };
     if (worse.length) run = plain;
   }
+  if (live) lastMonthlyRun = { key: ctx.fingerprint, run: run };
   return run;
 }
 function renderMonthlyPlanning() {
@@ -8570,7 +8696,7 @@ function renderMonthlyPlanning() {
   var run = pickMonthlyPlan();
   // Bench and audit probes read the final check of the chosen plan without painting it
   if (habitsGate.dry) { habitsGate.issues = run.issues; return run; }
-  run.paint();
+  if (run.paint()) { monthShownKey = currentStoreId + '|' + shownMonthKey(); markShownMonthRead(); }
   renderReviewStatus();
   return run;
 }
