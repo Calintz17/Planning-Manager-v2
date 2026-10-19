@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v10.0.0.1</title>
+  <title>CAST v10.0.0.2</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
-/* CAST Retail design system V2. Visual changes only; stored model unchanged. */
+/* CAST Retail design system V2: colours, type and spacing tokens, light and dark */
 :root {
   --font:Arial, Helvetica, sans-serif; --bg-app:#F5F7FA; --bg-base:#FFFFFF; --bg-base-2:#FAFBFD; --bg-base-3:#EDF2F8; --brand:#183C74; --brand-hover:#102F5E;
   --brand-on:#FFFFFF; --tx-1:#17283E; --tx-2:#52647B; --tx-3:#52647B; --line:#DCE3EC; --line-2:#BDC9D9; --ok-soft:#DCECE7; --ok-tx:#215C4B; --warn-soft:#F9E8B5;
@@ -667,14 +667,21 @@ textarea { resize:vertical; line-height:1.5; }
 .coverage-card .mth-wrap { border:0; border-top:1px solid var(--line); border-radius:0; max-height:none; }
 .ca-card { margin-top:12px; }
 .ca-wrap { overflow-x:auto; border-top:1px solid var(--line); overscroll-behavior-x:contain; }
-.ca-table { border-collapse:collapse; width:100%; font-size:12px; }
+.ca-table { border-collapse:collapse; width:auto; font-size:12px; }
 .ca-table th { font-size:11px; font-weight:700; color:var(--tx-2); text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); background:var(--bg-base-2); }
 .ca-table td { padding:4px 12px; height:36px; border-bottom:1px solid var(--line); }
 .ca-table .ca-name { white-space:nowrap; font-weight:700; }
-.ca-table .ca-n { text-align:center; width:64px; font-variant-numeric:tabular-nums; }
+.ca-table .ca-name { width:var(--name-col); min-width:var(--name-col); max-width:var(--name-col); box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; }
+.ca-table .ca-n { text-align:left; min-width:56px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.ca-table tbody tr:hover td { background:var(--hover); }
+/* The counts start under the first day of the Monthly: same side space as the planning card, same name column */
+.ca-card .ca-wrap { padding:0 22px 0 23px; }
+@media (max-width:600px) { .ca-card .ca-wrap { padding:0 12px 0 13px; } .ca-table .ca-name { width:120px; min-width:120px; max-width:120px; } }
+.ca-table.xh td.col-hl { background:var(--col-hl); }
+.ca-table.xh th.col-hl { background:var(--col-hl-head); }
 .ca-table .ca-tot { font-weight:700; }
-.ca-table .ca-rh { width:52px; font-weight:700; color:var(--tx-2); }
-.ca-table .ca-rh1 { border-left:2px solid var(--line-2); }
+.ca-table .ca-rh { font-weight:700; color:var(--tx-2); }
+.ca-table .ca-btn { min-width:0; padding:0 8px; margin-left:-8px; text-align:left; }
 .ca-btn { border:0; background:transparent; font:inherit; color:var(--brand-tx); font-weight:700; cursor:pointer; min-width:32px; min-height:28px; border-radius:4px; }
 .ca-btn:hover { background:var(--bg-base-3); }
 .ca-detail { padding:10px 22px 14px; font-size:12px; color:var(--tx-2); display:flex; flex-wrap:wrap; gap:6px; }
@@ -908,9 +915,7 @@ textarea { resize:vertical; line-height:1.5; }
   .gate-wordmark { height:36px; }
   .gate-sub { margin-bottom:var(--s5); }
 }
-/* Validation (10.0.0.0): one banner on top of the Monthly, its colour and its words say the state */
-/* Validation status: a chip left of the corners, its menu, and the window of each step */
-.plan-tabs { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+/* Validation status: in the place of the send button, its menu, and the window of each step */
 .plan-head .head-actions { align-self:flex-end; margin-left:auto; justify-content:flex-end; gap:6px; }
 .page-head.plan-head { column-gap:12px; }
 .plan-head .month-lbl { min-width:104px; padding:5px 8px; }
@@ -923,6 +928,10 @@ textarea { resize:vertical; line-height:1.5; }
 .rv-chip:focus-visible { outline:2px solid var(--brand-tx); outline-offset:2px; }
 .rv-ic { width:16px; height:16px; flex-shrink:0; }
 .rv-caret { width:14px; height:14px; flex-shrink:0; opacity:.7; }
+.rv-dot { width:8px; height:8px; border-radius:50%; background:var(--warn-tx); flex-shrink:0; }
+.rv-tip { position:fixed; z-index:10000; max-width:320px; padding:var(--s2) var(--s3); background:var(--bg-base); color:var(--tx-1); border:1px solid var(--bd-tip, var(--line)); border-radius:var(--r-sm); box-shadow:var(--sh-2); font-size:12px; line-height:18px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; overflow-wrap:anywhere; pointer-events:none; }
+.rv-tip[hidden] { display:none; }
+.rv-more { display:flex; justify-content:center; padding-top:var(--s3); }
 .rv-st-pending { background:var(--warn-soft); color:var(--warn-tx); }
 .rv-st-returned { background:var(--pl-work); color:var(--pl-work-tx); }
 .rv-st-validated { background:var(--ok-soft); color:var(--ok-tx); }
@@ -1217,7 +1226,7 @@ function trimLogo(img) {
         <div class="plan-head-l">
           <div class="set-title-row"><h2 class="set-title">Monthly planning</h2>
             <button type="button" class="help-q" onclick="openHelp('monthly')" aria-label="Help">?</button></div>
-          <div class="plan-tabs"><div class="rv-chip-wrap" id="rv-chip-monthly" hidden></div><div id="corner-tabs-monthly" class="corner-tabs"></div></div>
+          <div id="corner-tabs-monthly" class="corner-tabs"></div>
         </div>
         <div class="head-actions">
           <div class="month-nav">
@@ -1226,8 +1235,7 @@ function trimLogo(img) {
             <button class="btn btn-ghost" onclick="monthlyShift(1)" aria-label="Next month">&rsaquo;</button>
           </div>
           <button type="button" class="btn btn-primary" id="btn-submit-review" onclick="openReviewDialog('submit')" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="m9 13 2 2 4-4"/></svg><span>Send for validation</span></button>
-          <button type="button" class="btn btn-primary" id="btn-decide-review" onclick="openReviewDialog('decide')" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="m9 13 2 2 4-4"/></svg><span>Review</span></button>
-          <button type="button" class="btn btn-ghost" id="btn-withdraw-review" onclick="openReviewDialog('withdraw')" hidden><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 4 4 9 9 9"/><path d="M5 15a8 8 0 1 0 1.5-8.5L4 9"/></svg><span>Withdraw</span></button>
+          <div class="rv-chip-wrap" id="rv-status" hidden></div>
           <button class="btn btn-ghost" onclick="openSendMenu(event,'monthly')" title="Send"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Send</span></button>
           <button class="btn btn-ghost" onclick="openExportMenu(event,'monthly')" title="Download"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Download</span></button>
           <div class="more-wrap">
@@ -1251,7 +1259,7 @@ function trimLogo(img) {
         <div class="plan-head-l">
           <div class="set-title-row"><h2 class="set-title">Intraday planning</h2>
             <button type="button" class="help-q" onclick="openHelp('intraday')" aria-label="Help">?</button></div>
-          <div class="plan-tabs"><div class="rv-chip-wrap" id="rv-chip-intraday" hidden></div><div id="corner-tabs-intraday" class="corner-tabs"></div></div>
+          <div id="corner-tabs-intraday" class="corner-tabs"></div>
         </div>
         <div class="head-actions">
           <div class="month-nav">
@@ -1948,7 +1956,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
-var CAST_VERSION = '10.0.0.1';
+var CAST_VERSION = '10.0.0.2';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -2048,10 +2056,10 @@ async function savePassword() {
 // or a validation given too fast (10.0.0.1, like "Reopen" in a ticketing tool). The base checks every right and every
 // step (retail_submit_review, retail_withdraw_review, retail_decide_review, retail_cancel_review); the page only shows
 // what the account may do. Validate is never blocked by the rules (Roman, 18 Oct): CAST shows, the people decide.
-var REVIEW_COLS = 'id,store_id,month,revision,status,submitted_plan,reviewed_plan,comment,submitted_by,submitted_by_name,submitted_at,decided_by,decided_by_name,decided_at,history';
+var REVIEW_COLS = 'id,store_id,month,revision,status,submitted_plan,reviewed_plan,diagnostics,comment,submitted_by,submitted_by_name,submitted_at,decided_by,decided_by_name,decided_at,history';
 var REVIEW_LIST_COLS = 'id,store_id,month,revision,status,comment,submitted_by,submitted_by_name,submitted_at,decided_by_name,decided_at';
 var REVIEW_STATUS = { pending: 'Pending', withdrawn: 'Withdrawn', returned: 'Returned', validated: 'Validated', cancelled: 'Cancelled' };
-var monthReview = null, reviewFilter = null, reviewBusy = false, bellItems = [], reviewStoreNames = {}, reviewRows = [], reviewDialog = null;
+var monthReview = null, reviewFilter = null, reviewBusy = false, bellItems = [], reviewStoreNames = {}, reviewRows = [], reviewDialog = null, reviewPage = 1, reviewSeen = {};
 function canSubmitReview() { return !!me && (me.role === 'admin' || me.role === 'manager'); }
 function canDecideReview() { return !!me && (me.role === 'admin' || me.role === 'director'); }
 function shownMonthKey() { return snapshotMonthKey().slice(0, 7); }
@@ -2092,6 +2100,10 @@ async function loadMonthReview() {
     .order('revision', { ascending: false }).limit(1));
   if (sid !== currentStoreId || ym !== shownMonthKey()) return;
   monthReview = (!r.error && r.data && r.data[0]) || null;
+  if (monthReview && monthReview.status === 'pending' && canDecideReview() && !reviewSeen[monthReview.id]) {
+    reviewSeen[monthReview.id] = true;
+    safeRead(sb.from('retail_review_seen').insert({ review_id: monthReview.id })).then(function() { refreshReviewCounts(); });
+  }
 }
 // The status of a sending, in one line: "Planning validated by Roman ATTAL on 19 Oct"
 var RV_ICONS = {
@@ -2110,42 +2122,46 @@ function reviewLine(r) {
     cancelled: wasValidated(r) ? 'Validation cancelled by {name}, {date}' : 'Sending cancelled by {name}, {date}' }[r.status];
   return tf(key, { name: name || '-', date: reviewDay(at) });
 }
+// The reviewed copy: the sent copy, with only the squares changed by hand during the review (a shift, a corner, an
+// absence). A new advisor, a new shift list or another recalculation since the sending never slips in (Astra 10.0.0.1).
+function explicitCell(id, ds) { return !!((planningOverrides[id] || {})[ds] || (cornerOverrides[id] || {})[ds] || agentOnLeave(id, ds)); }
+function reviewedCopy(r) {
+  var sent = r.submitted_plan || {}, cur = monthlyResult || {}, out = JSON.parse(JSON.stringify(sent)), edits = {};
+  Object.keys(sent).forEach(function(ds) {
+    Object.keys(sent[ds] || {}).forEach(function(id) {
+      var now = (cur[ds] || {})[id];
+      if (now && cellSig(now) !== cellSig(sent[ds][id]) && explicitCell(id, ds)) { out[ds][id] = now; edits[ds + '|' + id] = true; }
+    });
+  });
+  return { cells: out, edits: edits };
+}
 // Squares to outline on the Monthly, and the count shown with them
 function reviewMarks(r) {
-  var cur = monthlyResult || {};
-  if (r.status === 'pending') return planDiff(r.submitted_plan, cur);
+  if (r.status === 'pending') return reviewedCopy(r).edits;
   if (r.status === 'returned') return planDiff(r.submitted_plan, r.reviewed_plan);
   return {};
 }
+function changedSinceValidation(r) { return r && r.status === 'validated' ? Object.keys(planDiff(r.reviewed_plan, monthlyResult || {})).length : 0; }
 function reviewCountText(r) {
   var count = function(n, none, one, many) { return n === 0 ? t(none) : n === 1 ? t(one) : tf(many, { n: n }); };
   if (r.status === 'pending') return canDecideReview() ? count(Object.keys(reviewMarks(r)).length, 'No square changed by you', '1 square changed by you', '{n} squares changed by you') : '';
   if (r.status === 'returned') { var n = Object.keys(reviewMarks(r)).length; return n ? count(n, '', '1 square changed by your director', '{n} squares changed by your director') : ''; }
-  if (r.status === 'validated') return count(Object.keys(planDiff(r.reviewed_plan, monthlyResult || {})).length, 'No change since validation', '1 change since validation', '{n} changes since validation');
+  if (r.status === 'validated') return count(changedSinceValidation(r), 'No change since validation', '1 change since validation', '{n} changes since validation');
   return '';
 }
-// The status chip left of the corners (Monthly, and Intraday on a day of that month), and the buttons of the head
+// The head of the Monthly: "Send for validation" before any sending, then the status in its place (Roman 19-10): one
+// word, its colour and icon, and an arrow. Its menu holds the details and the steps this account may take.
 function renderReviewStatus() {
-  var send = document.getElementById('btn-submit-review'), decide = document.getElementById('btn-decide-review'), back = document.getElementById('btn-withdraw-review');
-  if (!send) return;
-  var r = currentStoreId ? reviewOfShownMonth() : null, pending = !!(r && r.status === 'pending');
-  // Sending again a validated month only makes sense once it changed
-  var unchanged = !!(r && r.status === 'validated' && !Object.keys(planDiff(r.reviewed_plan, monthlyResult || {})).length);
-  send.hidden = !currentStoreId || !agents.length || !canSubmitReview() || pending || unchanged;
-  decide.hidden = !pending || !canDecideReview();
-  back.hidden = !pending || !canSubmitReview() || canDecideReview();
-  var chip = '';
-  if (r) {
-    chip = '<button type="button" class="rv-chip rv-st-' + r.status + '" aria-haspopup="menu" aria-expanded="false" data-no-i18n' +
-      ' onclick="toggleReviewMenu(event, this)" onmouseenter="showReviewTip(this)" onmouseleave="hideEvtTip()">' + rvIcon(r.status) +
-      '<span>' + esc(reviewLine(r)) + '</span><svg class="ic rv-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>' +
-      '<div class="more-menu rv-menu" role="menu" onclick="event.stopPropagation()"></div>';
-  }
-  var day = typeof currentIntradayDate === 'string' ? currentIntradayDate.slice(0, 7) : '';
-  [['rv-chip-monthly', true], ['rv-chip-intraday', !!r && day === r.month]].forEach(function(x) {
-    var el = document.getElementById(x[0]);
-    if (el) { el.innerHTML = x[1] ? chip : ''; el.hidden = !(x[1] && chip); }
-  });
+  var send = document.getElementById('btn-submit-review'), box = document.getElementById('rv-status');
+  if (!send || !box) return;
+  var r = currentStoreId && agents.length ? reviewOfShownMonth() : null;
+  send.hidden = !currentStoreId || !agents.length || !canSubmitReview() || !!r;
+  box.hidden = !r;
+  box.innerHTML = r ? '<button type="button" class="rv-chip rv-st-' + r.status + '" aria-haspopup="menu" aria-expanded="false"' + (r.comment ? ' aria-describedby="rv-tip"' : '') +
+    ' onclick="toggleReviewMenu(event, this)" onmouseenter="showReviewTip(this)" onmouseleave="hideReviewTip()" onfocus="showReviewTip(this)" onblur="hideReviewTip()">' +
+    rvIcon(r.status) + '<span>' + esc(t(REVIEW_STATUS[r.status] || r.status)) + '</span>' +
+    (changedSinceValidation(r) ? '<span class="rv-dot" title="' + esc(reviewCountText(r)) + '"></span>' : '') + '<svg class="ic rv-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>' + '</button>' +
+    '<div class="more-menu rv-menu" role="menu" onclick="event.stopPropagation()"></div>' : '';
   markReviewCells(r ? reviewMarks(r) : {});
 }
 function markReviewCells(marks) {
@@ -2155,17 +2171,18 @@ function markReviewCells(marks) {
     if (td) td.classList.add('rv-chg');
   });
 }
-// Hover: the comment of the decision (or the line itself). On a phone the menu shows it.
+// Hover or keyboard focus: a short preview of the comment (3 lines), kept inside the screen. The menu shows it all.
 function showReviewTip(el) {
-  var r = reviewOfShownMonth(), tip = document.getElementById('evt-tip');
-  if (!r || !tip || (window.matchMedia && window.matchMedia('(hover: none)').matches)) return;
-  if (el.getAttribute('aria-expanded') === 'true') return;
-  tip.innerHTML = '<div class="evt-tip-text">' + esc(r.comment || reviewLine(r)) + '</div>';
-  tip.classList.add('open');
-  var b = el.getBoundingClientRect();
-  tip.style.left = Math.max(8, Math.min(b.left, window.innerWidth - tip.offsetWidth - 8)) + 'px';
-  tip.style.top = (b.bottom + 8) + 'px';
+  var r = reviewOfShownMonth(), tip = document.getElementById('rv-tip');
+  if (!r || !r.comment || !tip || el.getAttribute('aria-expanded') === 'true') return;
+  if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+  tip.textContent = r.comment;
+  tip.hidden = false;
+  var b = el.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  tip.style.left = Math.max(8, Math.min(b.left, vw - tip.offsetWidth - 8)) + 'px';
+  tip.style.top = (b.bottom + 8 + tip.offsetHeight <= vh - 8 ? b.bottom + 8 : Math.max(8, b.top - 8 - tip.offsetHeight)) + 'px';
 }
+function hideReviewTip() { var tip = document.getElementById('rv-tip'); if (tip) tip.hidden = true; }
 function closeReviewMenus() {
   document.querySelectorAll('.rv-menu.open').forEach(function(m) { m.classList.remove('open'); });
   document.querySelectorAll('.rv-chip[aria-expanded="true"]').forEach(function(b) { b.setAttribute('aria-expanded', 'false'); });
@@ -2173,7 +2190,7 @@ function closeReviewMenus() {
 // The menu of the chip: details, comment, and the steps this account may take (like a status menu in a ticket)
 function toggleReviewMenu(e, btn) {
   e.stopPropagation();
-  hideEvtTip();
+  hideReviewTip();
   var m = btn.nextElementSibling, r = reviewOfShownMonth(), open = !m.classList.contains('open');
   closeReviewMenus(); closeBell(); closeAcctMenu();
   if (!open || !r) return;
@@ -2185,6 +2202,7 @@ function toggleReviewMenu(e, btn) {
   var acts = [];
   if (r.status === 'pending' && canDecideReview()) acts.push(['decide', 'Validate or return...']);
   if (r.status === 'pending' && canSubmitReview()) acts.push(['withdraw', 'Withdraw...']);
+  if (r.status !== 'pending' && canSubmitReview() && (r.status !== 'validated' || changedSinceValidation(r))) acts.push(['submit', 'Send again...']);
   if ((r.status === 'pending' || r.status === 'validated') && canDecideReview()) acts.push(['cancel', r.status === 'validated' ? 'Cancel validation...' : 'Cancel sending...']);
   html += acts.map(function(a) {
     return '<button type="button" class="mission-menu-item" role="menuitem" onclick="closeReviewMenus();openReviewDialog(\'' + a[0] + '\')">' + esc(t(a[1])) + '</button>';
@@ -2198,12 +2216,13 @@ function toggleReviewMenu(e, btn) {
 function openReviewDialog(mode, row) {
   var r = row || reviewOfShownMonth();
   if (mode !== 'submit' && !r) return;
+  if (mode === 'submit') r = null;
   if (mode === 'submit' && !currentStoreId) return;
   reviewDialog = { mode: mode, r: r };
   var where = esc((mode === 'submit' || !row ? currentStoreName : reviewStoreNames[r.store_id] || '') + ', ' + reviewMonthLabel(mode === 'submit' ? shownMonthKey() : r.month));
   var cancelValid = mode === 'cancel' && r.status === 'validated';
   var cfg = {
-    submit: ['Send for validation', 'While it waits, the month cannot be changed unless you withdraw it.', '', 'Send for validation', 'btn-primary'],
+    submit: [row || reviewOfShownMonth() ? 'Send again' : 'Send for validation', 'While it waits, the month cannot be changed unless you withdraw it.', '', 'Send for validation', 'btn-primary'],
     withdraw: ['Withdraw this sending', 'You can change the month and send it again.', '', 'Withdraw', 'btn-primary'],
     decide: ['Review this planning', 'Validate it as it is now, or return it to the store with a comment.', 'Comment for the store (optional)', 'Validate', 'btn-primary'],
     cancel: [cancelValid ? 'Cancel this validation' : 'Cancel this sending', 'The store gets the month back, marked as cancelled. It can change it and send it again.', 'Reason (optional)', cancelValid ? 'Cancel validation' : 'Cancel sending', 'btn-danger']
@@ -2253,21 +2272,23 @@ async function reviewStep(name, args, okMsg) {
   showToast(okMsg);
   return true;
 }
-// Send: the plan shown and the inputs it was made with (the copy is checked later with its own data)
+// Send: the plan on screen, as shown (no second calculation), with the inputs of the month and its check
 async function submitReview() {
-  if (!currentStoreId || !canSubmitReview()) return false;
+  if (!currentStoreId || !canSubmitReview() || !monthlyResult || !Object.keys(monthlyResult).length) return false;
   if (lastSnapSave) await lastSnapSave;
-  var ctx = buildMonthlyContext(), run = pickMonthlyPlan(ctx);
-  var diag = { status: run.diagnostics.status, mandatory: run.diagnostics.mandatoryIssues.length, engine: CAST_VERSION };
-  return reviewStep('retail_submit_review', { p_store: currentStoreId, p_month: shownMonthKey(), p_plan: run.cells,
+  var ctx = buildMonthlyContext(), cells = JSON.parse(JSON.stringify(monthlyResult)), chk = validatePlan(cells, ctx);
+  var diag = { status: chk.status, mandatory: chk.mandatory.length, engine: CAST_VERSION };
+  return reviewStep('retail_submit_review', { p_store: currentStoreId, p_month: shownMonthKey(), p_plan: cells,
     p_context: { inputs: ctx.inputs, today: ctx.today, engine: CAST_VERSION }, p_diagnostics: diag }, 'Sent for validation ✓');
 }
+// Decide on the sent copy plus the director's own changes; its check is recorded and never blocks the decision
 async function decideReview(decision, comment) {
   var r = reviewOfShownMonth();
   if (!r || r.status !== 'pending' || !canDecideReview()) return false;
   if (lastSnapSave) await lastSnapSave;
-  var plan = pickMonthlyPlan().cells;
-  return reviewStep('retail_decide_review', { p_id: r.id, p_revision: r.revision, p_decision: decision, p_plan: plan, p_comment: comment || '' },
+  var copy = reviewedCopy(r), chk = validatePlan(copy.cells, buildMonthlyContext());
+  return reviewStep('retail_decide_review', { p_id: r.id, p_revision: r.revision, p_decision: decision, p_plan: copy.cells, p_comment: comment || '',
+    p_diagnostics: { status: chk.status, mandatory: chk.mandatory.length, edits: Object.keys(copy.edits).length, engine: CAST_VERSION } },
     decision === 'validated' ? 'Validated ✓' : 'Returned ✓');
 }
 // Open a store and a month from the list or the bell (the store menus follow, as if chosen by hand)
@@ -2312,16 +2333,16 @@ async function renderReviewList() {
   var filters = reviewFilters();
   if (!reviewFilter || !filters.some(function(f) { return f[0] === reviewFilter; })) reviewFilter = filters[0][0];
   tabs.innerHTML = filters.map(function(f) {
-    return '<button type="button" class="corner-tab' + (f[0] === reviewFilter ? ' active' : '') + '" onclick="reviewFilter=\'' + f[0] + '\';renderReviewList()">' + esc(t(f[1])) + '</button>';
+    return '<button type="button" class="corner-tab' + (f[0] === reviewFilter ? ' active' : '') + '" onclick="reviewFilter=\'' + f[0] + '\';reviewPage=1;renderReviewList()">' + esc(t(f[1])) + '</button>';
   }).join('');
   if (!box.querySelector('table')) box.innerHTML = '<p class="plan-empty">' + esc(t('Loading...')) + '</p>';
-  var q = sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).order('submitted_at', { ascending: false }).range(0, 99);
+  var q = sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).order('submitted_at', { ascending: false }).range(0, reviewPage * 100);
   if (reviewFilter === 'review') q = q.eq('status', 'pending');
   if (reviewFilter === 'mine') q = q.eq('submitted_by', me.id);
   var want = reviewFilter, res = await safeRead(q);
   if (want !== reviewFilter) return;
   if (res.error) { box.innerHTML = '<p class="plan-empty">' + esc(t('The list could not be loaded. Try again.')) + '</p>'; return; }
-  var rows = reviewRows = res.data || [];
+  var more = (res.data || []).length > reviewPage * 100, rows = reviewRows = (res.data || []).slice(0, reviewPage * 100);
   await loadReviewStoreNames(rows);
   if (!rows.length) {
     box.innerHTML = '<p class="plan-empty">' + esc(t(reviewFilter === 'review' ? 'Nothing to review.' : 'No sending yet.')) + '</p>';
@@ -2338,7 +2359,8 @@ async function renderReviewList() {
         '<td data-no-i18n' + (r.comment ? ' title="' + esc(r.comment) + '"' : '') + '>' + (r.decided_at ? esc((r.decided_by_name || '') + ', ' + reviewDate(r.decided_at)) : '-') + '</td>' +
         '<td class="rv-open"><button type="button" class="btn btn-ghost btn-sm" onclick="openStoreMonth(\'' + r.store_id + '\',\'' + r.month + '\')">' + esc(t('Open')) + '</button>' +
         (canCancelRow(r) ? '<button type="button" class="btn btn-ghost btn-sm" onclick="openReviewDialog(\'cancel\', reviewRows[' + i + '])">' + esc(t('Cancel')) + '</button>' : '') + '</td></tr>';
-    }).join('') + '</tbody></table></div>';
+    }).join('') + '</tbody></table></div>' +
+    (more ? '<div class="rv-more"><button type="button" class="btn btn-ghost" onclick="reviewPage++;renderReviewList()">' + esc(t('Show more')) + '</button></div>' : '');
   if (CURRENT_LANG !== 'en') retranslate();
 }
 async function loadReviewStoreNames(rows) {
@@ -2353,9 +2375,13 @@ async function refreshReviewCounts() {
   if (!me) return;
   var items = [], pending = 0;
   if (canDecideReview()) {
+    var n = await safeRead(sb.from('retail_plan_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'));
     var p = await safeRead(sb.from('retail_plan_reviews').select(REVIEW_LIST_COLS).eq('status', 'pending').order('submitted_at', { ascending: true }).range(0, 49));
-    (p.data || []).forEach(function(r) { items.push({ kind: 'review', r: r }); });
-    pending = (p.data || []).length;
+    var pIds = (p.data || []).map(function(r) { return r.id; });
+    var pSeen = pIds.length ? await safeRead(sb.from('retail_review_seen').select('review_id').in('review_id', pIds)) : { data: [] };
+    var pSeenIds = (pSeen.data || []).map(function(x) { return x.review_id; });
+    (p.data || []).forEach(function(r) { if (pSeenIds.indexOf(r.id) === -1 && !reviewSeen[r.id]) items.push({ kind: 'review', r: r }); });
+    pending = typeof n.count === 'number' ? n.count : (p.data || []).length;
   }
   if (canSubmitReview()) {
     var since = new Date(Date.now() - 45 * 864e5).toISOString();
@@ -2369,7 +2395,7 @@ async function refreshReviewCounts() {
   await loadReviewStoreNames(items.map(function(x) { return x.r; }));
   bellItems = items;
   var nav = document.getElementById('nav-review-count'), bell = document.getElementById('bell-count');
-  if (nav) { nav.textContent = pending; nav.hidden = !pending; }
+  if (nav) { nav.textContent = pending > 99 ? '99+' : pending; nav.hidden = !pending; }
   if (bell) { bell.textContent = items.length > 99 ? '99+' : items.length; bell.hidden = !items.length; }
   var bb = document.getElementById('bell-btn');
   if (bb) bb.setAttribute('aria-label', tf('Notifications: {n}', { n: items.length }));
@@ -2408,7 +2434,7 @@ async function openBellItem(i) {
   var x = bellItems[i];
   if (!x) return;
   closeBell();
-  if (x.kind === 'decision') await safeRead(sb.from('retail_review_seen').insert({ review_id: x.r.id }));
+  if (!reviewSeen[x.r.id]) { reviewSeen[x.r.id] = true; await safeRead(sb.from('retail_review_seen').insert({ review_id: x.r.id })); }
   await openStoreMonth(x.r.store_id, x.r.month);
   refreshReviewCounts();
 }
@@ -2418,6 +2444,7 @@ function showReviewNav() {
   if (bell) bell.hidden = !me;
 }
 document.addEventListener('click', function() { closeBell(); closeReviewMenus(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') hideReviewTip(); });
 window.addEventListener('scroll', function(e) { if (!(e.target.closest && e.target.closest('.rv-menu'))) closeReviewMenus(); }, { passive: true, capture: true });
 // Refreshed every 2 minutes once the workspace is open (started in startWorkspace)
 var reviewTimer = null;
@@ -4089,6 +4116,38 @@ function shiftClusters(grid, ds) {
   var mid = list.filter(function(s) { return openG.indexOf(s) === -1 && closeG.indexOf(s) === -1; });
   return { open: openG, mid: mid, close: closeG, covers: covers };
 }
+// Late target of each day from today, read on the final plan (Roman 19-10): target = sellers working x late target,
+// rounded; actual = sellers on a late shift (the last quarter of the shifts). "Closing" counts the sellers whose
+// shift covers the last hour, a different thing. A day short of its target says why when it can: a seller's shift set
+// by hand that day ('manual'), too few sellers left for one opener per corner ('corners'), else the store limits
+// (opening minimum, rest, weekly hours). Days closed by managers
+// alone are listed: they do not meet the target's purpose.
+function lateReport(cells, days, todayDs) {
+  var grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), ratio = storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
+  var out = { ratio: ratio, target: 0, actual: 0, closing: 0, short: [], leadOnlyClose: [] };
+  days.forEach(function(d) {
+    if (d.closure || d.ds < todayDs || isSpecialDay(d)) return;
+    var hm = dayMinutes(d.ds), row = cells[d.ds] || {};
+    function shift(a) { var c = row[a.id]; return c && !c.special && grid.some(function(s) { return s.code === c.code; }) ? c : null; }
+    function closes(a) { var wh = workHoursOf(a, d.ds, shift(a)); return !!wh && coverOfHours(wh.start, wh.end, hm).close; }
+    var sellers = agents.filter(function(a) { return poolOf(a) === 'sales' && shift(a); });
+    var target = Math.round(sellers.length * ratio), actual = sellers.filter(function(a) { return late[shift(a).code]; }).length;
+    var closing = sellers.filter(closes).length;
+    out.target += target; out.actual += actual; out.closing += closing;
+    if (actual < target) out.short.push({ ds: d.ds, target: target, actual: actual,
+      cause: sellers.some(function(a) { return (planningOverrides[a.id] || {})[d.ds]; }) ? 'manual'
+        : storeCorners.length > 1 && sellers.length - target < storeCorners.length ? 'corners' : 'limits' });
+    if (sellers.length && !closing && agents.some(function(a) { return poolOf(a) === 'mgmt' && shift(a) && closes(a); })) out.leadOnlyClose.push(d.ds);
+  });
+  return out;
+}
+// Managers work an opening or a closing shift, never a middle one (Roman 19-10). Their own choice of the day (a
+// manual change) always stays: it never comes here.
+function leadAllows(a, ds, code) {
+  if (!a || poolOf(a) !== 'mgmt' || !code) return true;
+  var grid = RETAIL_SHIFTS.sales || [], s = grid.find(function(x) { return x.code === code; });
+  return !s || shiftClusters(grid, ds).mid.indexOf(s) === -1;
+}
 // Opening or closing minimum of an open day: always at least one person, more when the store asks for it
 function minCover(key) {
   var v = storeSettings && storeSettings[key === 'open' ? 'min_opening' : 'min_closing'];
@@ -4233,7 +4292,11 @@ function findShiftDef(code) {
   return found;
 }
 function attachCrossHighlight() {
-  var tbl = document.getElementById('mth-table');
+  ['mth-table', 'mth-summary'].forEach(function(id) { crossHighlight(document.getElementById(id)); });
+  crossHighlight(document.querySelector('#planning-coverage-body .ca-table'));
+}
+// Row and column under the pointer, in one table
+function crossHighlight(tbl) {
   if (!tbl) return;
   tbl.classList.add('xh');
   function clear() {
@@ -6416,7 +6479,7 @@ function settleWeekHours(mp, d, plan) {
       return;   // kept for now: the weekly check below removes the least useful day of the week
     }
     // A shift that fits: keeping the opening / closing minimums if possible, else any shift that fits
-    var alt = grid.filter(function(s) { return fitsWeek(mp, a, d, s) && restAllows(mp, a, d.ds, s.code); }).sort(function(x, y) {
+    var alt = grid.filter(function(s) { return fitsWeek(mp, a, d, s) && restAllows(mp, a, d.ds, s.code) && leadAllows(a, d.ds, s.code); }).sort(function(x, y) {
       function rank(s) {
         var cv = coverOfHours(s.startMin, s.endMin, hm);
         var keeps = poolOf(a) === 'stock' || ((!cov.open || cv.open || role.open - 1 >= minO2) && (!cov.close || cv.close || role.close - 1 >= minC2));
@@ -6476,12 +6539,12 @@ function placeShiftsOfDay(mp, d) {
     var grid = RETAIL_SHIFTS[g] || [];
     if (!list.length || !grid.length) return;
     var cl = shiftClusters(grid, d.ds);
-    // The manager's shift of the day first. It counts in the late target and in the coverage of the day.
+    // Shifts set by hand first. They count in the coverage of the day; a seller's one also counts in the late target.
     // (Preferred shifts are gone, Roman 17-10: the manager places people by hand and CAST learns it.)
     var fixedCodes = [];
     list = list.filter(function(a) {
       var mc = (planningOverrides[a.id] || {})[d.ds], ms = mc && grid.find(function(s) { return s.code === mc; });
-      if (ms) { plan[a.id] = ms.code; fixedCodes.push(ms.code); return false; }
+      if (ms) { plan[a.id] = ms.code; if (poolOf(a) !== 'mgmt') fixedCodes.push(ms.code); return false; }
       return true;
     });
     if (!list.length) return;
@@ -6504,32 +6567,12 @@ function placeShiftsOfDay(mp, d) {
       }
       return;
     }
-    if (g === 'sales') {
-      // Managers open first and close last
-      var openSh  = cl.open[0];
-      var closeSh = cl.close[cl.close.length - 1];
-      // Stable order, so managers really alternate
-      var leadsHere = list.filter(function(a){ return poolOf(a) === 'mgmt'; })
-        .sort(function(x, y){ return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; });
-      // Managers: one closes, the others open. The one who closed the least this month closes.
-      if (leadsHere.length >= 2) {
-        var closer = leadsHere.slice().sort(function(x, y) {
-          var hb = Math.round(20 * (mp.habits.shift(y, d.dow, closeSh.code, grid.length) - mp.habits.shift(x, d.dow, closeSh.code, grid.length)));
-          return hb || ((mp.leadCloses[x.id] || 0) - (mp.leadCloses[y.id] || 0)) || (x.id < y.id ? -1 : 1); })
-          .find(function(a) { return restAllows(mp, a, d.ds, closeSh.code); }) || leadsHere[0];
-        var opens = leadsHere.filter(function(a) { return a !== closer; });
-        opens.forEach(function(a, i) { plan[a.id] = spreadPick(cl.open, i, opens.length).code; });
-        plan[closer.id] = closeSh.code; mp.leadCloses[closer.id] = (mp.leadCloses[closer.id] || 0) + 1;
-        leadsHere.forEach(function(a) { fixedCodes.push(plan[a.id]); });   // managers count in the late target
-        list = list.filter(function(a) { return leadsHere.indexOf(a) === -1; });
-      } else if (leadsHere.length === 1) {
-        var l0 = leadsHere[0], hc = mp.habits.shift(l0, d.dow, closeSh.code, grid.length) - mp.habits.shift(l0, d.dow, openSh.code, grid.length);
-        plan[l0.id] = (Math.abs(hc) > 0.05 ? (hc > 0 ? closeSh : openSh) : (d.num % 2 === 0 ? openSh : closeSh)).code;
-        fixedCodes.push(plan[l0.id]);
-        list = list.filter(function(a){ return a.id !== leadsHere[0].id; });
-      }
-      if (!list.length) return;
-    }
+    // Managers come after the sellers (Roman 19-10): the late target is counted on the sellers only, so a manager
+    // never stands in for the sellers who close. Managers then complete the opening, the closing and the coverage.
+    var leadsHere = g === 'sales' ? list.filter(function(a) { return poolOf(a) === 'mgmt'; })
+      .sort(function(x, y) { return x.id < y.id ? -1 : x.id > y.id ? 1 : 0; }) : [];
+    list = list.filter(function(a) { return leadsHere.indexOf(a) === -1; });
+    var nLeads = leadsHere.length;
     var mid = (dh.open + dh.close) / 2;
     function avgCurve(fromH, toH) {
       if (!mp.curveArr || !mp.curveArr.length) return 1;
@@ -6662,11 +6705,13 @@ function placeShiftsOfDay(mp, d) {
       });
       if (top) { place(a, top.s); learned[a.id] = true; }
     });
-    cover('close', 1);
-    cover('open', 1);
-    // Mandatory rules before the manager: if nobody else can open or close, one learned choice gives way
+    cover('close', 1, true);
+    cover('open', nLeads ? 0 : 1);
+    // Mandatory rules before the habits: if no seller closes (or nobody can open, without a manager to do it),
+    // one learned choice gives way
     ['close', 'open'].forEach(function(key) {
-      if (placed.some(function(w) { return coverOfHours(w.start, w.end, hm)[key]; })) return;
+      if (key === 'open' && nLeads) return;
+      if (placed.some(function(w) { return (key === 'open' || w.sales) && coverOfHours(w.start, w.end, hm)[key]; })) return;
       var shifts = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm)[key]; });
       movable.some(function(a) {
         var cur = learned[a.id] && grid.find(function(s) { return s.code === plan[a.id]; });
@@ -6679,8 +6724,8 @@ function placeShiftsOfDay(mp, d) {
         return true;
       });
     });
-    cover('close', minClose);
-    cover('open', minOpen);
+    cover('close', minClose, true);
+    cover('open', Math.max(0, minOpen - nLeads));
     // Every corner needs one seller who opens and one who closes
     var cornerNeed = storeCorners.length > 1 ? storeCorners.length : 0;
     cover('close', cornerNeed, true);
@@ -6712,7 +6757,7 @@ function placeShiftsOfDay(mp, d) {
         if (!cur) return;
         addCov(cur.startMin, cur.endMin, -1);
         var cc = coverOfHours(cur.startMin, cur.endMin, hm), o = covers('open', a.id), c = covers('close', a.id);
-        var oKeep = o >= minOpen && covers('open', a.id, true) >= cornerNeed, cKeep = c >= minClose && covers('close', a.id, true) >= cornerNeed;
+        var oKeep = o >= minOpen - nLeads && covers('open', a.id, true) >= cornerNeed, cKeep = covers('close', a.id, true) >= Math.max(minClose, cornerNeed);
         var cands = [cur].concat(byStart.filter(function(s) {
           var cv = coverOfHours(s.startMin, s.endMin, hm);
           return s !== cur && isLate[s.code] === isLate[cur.code] && restOk(a, s) &&
@@ -6735,6 +6780,53 @@ function placeShiftsOfDay(mp, d) {
       var ok = grid.filter(function(s) { return restOk(a, s); }).sort(function(x, y) { return x.startMin - y.startMin; })[0];
       if (ok) plan[a.id] = ok.code;
     });
+    if (!nLeads) return;
+    // Managers, on an opening or a closing shift only, after the sellers. First what the day must have (someone
+    // who opens, someone who closes, then the store minimums), then the coverage of the traffic. What a manager
+    // usually does (learned from the manager's own changes) wins when the day does not need otherwise.
+    var leadOpen = cl.open.slice(), leadClose = cl.close.filter(function(s) { return cl.open.indexOf(s) === -1; });
+    var leadAll = leadOpen.concat(leadClose), todo = leadsHere.slice();
+    function setLead(a, s) {
+      plan[a.id] = s.code; addCov(s.startMin, s.endMin); placed.push({ start: s.startMin, end: s.endMin, sales: false });
+      todo.splice(todo.indexOf(a), 1);
+    }
+    function leadTo(shifts) {
+      var order = todo.slice().sort(function(x, y) { return Math.round(20 * (leans(y, shifts) - leans(x, shifts))); });
+      for (var k = 0; k < order.length; k++) {
+        var ok = shifts.filter(function(s) { return restOk(order[k], s); });
+        if (ok.length) { setLead(order[k], best(ok, order[k])); return true; }
+      }
+      return false;
+    }
+    while (todo.length && covers('close') < 1 && leadTo(leadClose.length ? leadClose : cl.close)) {}
+    while (todo.length && covers('open') < minOpen && leadTo(leadOpen)) {}
+    while (todo.length && covers('close') < minClose && leadTo(leadClose.length ? leadClose : cl.close)) {}
+    todo.slice().forEach(function(a) {
+      var ok = leadAll.filter(function(s) { return restOk(a, s); });
+      if (!ok.length) ok = grid.filter(function(s) { return restOk(a, s); });   // the rest rule comes before the role
+      if (!ok.length) ok = leadAll;
+      var top = null;
+      ok.forEach(function(s) {
+        var h = mp.habits.own(a, d.dow, s.code, grid.length);
+        if (h >= HABIT_CLEAR && fitsWeek(mp, a, d, s) && (!top || h > top.h)) top = { s: s, h: h };
+      });
+      setLead(a, top ? top.s : best(ok, a));
+    });
+    // Opening still short (managers resting or absent): a seller moves to an opening shift, a non-late one first
+    var openCands = byStart.filter(function(s) { return coverOfHours(s.startMin, s.endMin, hm).open; });
+    while (covers('open') < minOpen) {
+      var mover = null;
+      list.forEach(function(a) {
+        var cur = grid.find(function(s) { return s.code === plan[a.id]; });
+        if (!cur || learned[a.id] || coverOfHours(cur.startMin, cur.endMin, hm).open) return;
+        if (coverOfHours(cur.startMin, cur.endMin, hm).close && covers('close', a.id, true) < Math.max(minClose, cornerNeed)) return;
+        var to = openCands.filter(function(s) { return restOk(a, s) && (!isLate[cur.code] || !isLate[s.code]); });
+        var rank = isLate[cur.code] ? 1 : 0;
+        if (to.length && (!mover || rank < mover.rank)) mover = { a: a, s: best(to, a), rank: rank };
+      });
+      if (!mover) break;
+      plan[mover.a.id] = mover.s.code;
+    }
   });
   // Mandatory coverage on the whole day, whoever gives it (sellers or managers). If nobody covers the first or the
   // last hour, one person whose shift the manager did not set moves to a shift that covers it: preferences,
@@ -6751,7 +6843,7 @@ function placeShiftsOfDay(mp, d) {
       .some(function(a) {
         var keepOther = cv(a)[other] && nOther <= 1, cur = findShiftDef(plan[a.id]) || { startMin: 0 };
         var s2 = (RETAIL_SHIFTS[(RETAIL_STATUS[retailStatusOf(a)] || RETAIL_STATUS.SA).grid] || []).filter(function(s) {
-          var c2 = cv(a, s.code); return c2[key] && (!keepOther || c2[other]) && restAllows(mp, a, d.ds, s.code);
+          var c2 = cv(a, s.code); return c2[key] && (!keepOther || c2[other]) && restAllows(mp, a, d.ds, s.code) && leadAllows(a, d.ds, s.code);
         }).sort(function(x, y) { return Math.abs(x.startMin - cur.startMin) - Math.abs(y.startMin - cur.startMin); })[0];
         if (s2) { plan[a.id] = s2.code; return true; }
         return false;
@@ -6831,13 +6923,14 @@ function restPass(mp, d) {
       var b = agents.find(function(x) { return x.id === bid; });
       return bid !== aid && b && poolOf(b) === poolOf(a) && !(planningOverrides[bid] || {})[d.ds] &&
         (mp.cornerAssign[bid] || {})[d.ds] === corner && restAllows(mp, a, d.ds, plan[bid]) && restAllows(mp, b, d.ds, code) &&
+        leadAllows(a, d.ds, plan[bid]) && leadAllows(b, d.ds, code) &&
         weekFits(mp, a, d, plan[bid]) && weekFits(mp, b, d, code);
     });
     if (mateId) { plan[aid] = plan[mateId]; plan[mateId] = code; return; }
     if (!isSpecialDay(d)) {
       var cur = findShiftDef(code) || { startMin: -1 };
       var alt = (RETAIL_SHIFTS[poolOf(a) === 'stock' ? 'stock' : 'sales'] || [])
-        .filter(function(s) { return s.startMin > cur.startMin && restAllows(mp, a, d.ds, s.code) && weekFits(mp, a, d, s.code); })
+        .filter(function(s) { return s.startMin > cur.startMin && restAllows(mp, a, d.ds, s.code) && weekFits(mp, a, d, s.code) && leadAllows(a, d.ds, s.code); })
         .sort(function(x, y) { return x.startMin - y.startMin; })[0];
       if (alt) { plan[aid] = alt.code; return; }
     }
@@ -6888,8 +6981,8 @@ function repairDisplayedCoverage(mp) {
   mp.monthDays.forEach(function(d) {
     if (d.closure || d.past || mp._freeze || isSpecialDay(d)) return;
     var hm = dayMinutes(d.ds), groups = {};
-    // Late target of the day, on the sellers and managers working this day (never stock, they are not on the floor)
-    var sellers = agents.filter(function(a) { return poolOf(a) !== 'stock' && workHoursOf(a, d.ds, effective(a, d.ds)); });
+    // Late target of the day, on the sellers working this day (Roman 19-10: never the managers, never stock)
+    var sellers = agents.filter(function(a) { return poolOf(a) === 'sales' && workHoursOf(a, d.ds, effective(a, d.ds)); });
     var lateTarget = Math.round(sellers.length * lateRatio);
     var dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
     agents.forEach(function(a) {
@@ -6899,9 +6992,8 @@ function repairDisplayedCoverage(mp) {
       if (!cid) return;
       (groups[cid] = groups[cid] || []).push(a);
     });
-    Object.keys(groups).forEach(function(cid) {
-      var list = groups[cid];
-      function state(changes) {
+    // Opening, closing, late and floor hours of a group of people, with some changes tried
+    function stateOf(list, changes) {
         var o = 0, c = 0, nLate = 0, hours = [];
         list.forEach(function(a) {
           var move = changes.find(function(x) { return x.a.id === a.id; });
@@ -6915,8 +7007,8 @@ function repairDisplayedCoverage(mp) {
         });
         return { o: o, c: c, late: nLate, hours: hours,
           missing: Math.max(0, minO - o) + Math.max(0, minC - c) };
-      }
-      function pressure(st) {
+    }
+    function pressure(st) {
         var value = 0;
         for (var t = hm.open; t + 15 <= hm.close; t += 15) {
           var ci = hourlyCurveIndex(t);
@@ -6925,7 +7017,10 @@ function repairDisplayedCoverage(mp) {
           value += Math.max(0, w) / Math.max(0.5, present);
         }
         return value;
-      }
+    }
+    Object.keys(groups).forEach(function(cid) {
+      var list = groups[cid];
+      function state(changes) { return stateOf(list, changes); }
       for (var pass = 0; pass < list.length * 2 + 2; pass++) {
         var before = state([]);
         if (!before.missing) break;
@@ -6963,6 +7058,29 @@ function repairDisplayedCoverage(mp) {
         dayLate = sellers.filter(function(a) { return late[effective(a, d.ds).code]; }).length;
       }
     });
+    // Late target, last (Roman 19-10): after the repairs, a seller moves between a late and a non-late shift while the
+    // day is off its target, if no opening or closing minimum is lost (store, corner) and rest and weekly hours fit.
+    // A target that cannot be met stays short; the diagnostics say it.
+    var floor = agents.filter(function(a) { return poolOf(a) !== 'stock' && workHoursOf(a, d.ds, effective(a, d.ds)); });
+    for (var turn = 0; turn < sellers.length && dayLate !== lateTarget; turn++) {
+      var up = dayLate < lateTarget, pick = null;
+      sellers.forEach(function(a) {
+        if (!mutable(a, d) || !!late[effective(a, d.ds).code] === up) return;
+        var gl = groups[storeCorners.length > 1 ? cornerOf(a, d.ds) : '_store'] || [a];
+        var gb = stateOf(gl, []), sb = stateOf(floor, []);
+        grid.forEach(function(sh) {
+          if (!!late[sh.code] !== up || !restFits(a, d, sh.code) || !weekFits(mp, a, d, sh.code)) return;
+          var ch = [{ a: a, code: sh.code }], ga = stateOf(gl, ch), sa = stateOf(floor, ch);
+          if (ga.missing > gb.missing || (gb.o >= minO && ga.o < minO) || (gb.c >= minC && ga.c < minC)) return;
+          if ((sb.o >= minO && sa.o < minO) || (sb.c >= minC && sa.c < minC)) return;
+          var sc = [pressure(sa), Math.abs(sh.startMin - workHoursOf(a, d.ds, effective(a, d.ds)).start)];
+          if (!pick || less(sc, pick.sc)) pick = { a: a, code: sh.code, sc: sc };
+        });
+      });
+      if (!pick) break;
+      mp.shiftPlanByDay[d.ds][pick.a.id] = pick.code;
+      dayLate += up ? 1 : -1;
+    }
   });
 }
 // The cells of the plan as built so far, and their final check
@@ -7026,7 +7144,7 @@ function testedMoves(mp) {
         var row = rowOf(a, p[1]);
         if (poolOf(a) === 'stock' || !movable(a, row)) return;
         gridOf(a).forEach(function(g) {
-          if (row.res.code === g.code || !coverOf(a, p[1], { code: g.code })[edge]) return;
+          if (row.res.code === g.code || !coverOf(a, p[1], { code: g.code })[edge] || !leadAllows(a, p[1], g.code)) return;
           list.push({ kind: works(row) ? 0 : 2, steps: [set(a, p[1], workRes(a, g.code, works(row) ? row.res.corner : cornerFor(a, a, {})))] });
         });
       });
@@ -7040,7 +7158,7 @@ function testedMoves(mp) {
       var row = rowOf(a, ds);
       if (!movable(a, row) || !works(row)) return;
       // 1 another shift the same day (only hours and rest depend on the shift; day counts do not)
-      if (p[0] === 'hours' || p[0] === 'day' || p[0] === 'rest') gridOf(a).forEach(function(g) { if (g.code !== row.res.code) list.push({ kind: 0, steps: [set(a, ds, workRes(a, g.code, row.res.corner))] }); });
+      if (p[0] === 'hours' || p[0] === 'day' || p[0] === 'rest') gridOf(a).forEach(function(g) { if (g.code !== row.res.code && leadAllows(a, ds, g.code)) list.push({ kind: 0, steps: [set(a, ds, workRes(a, g.code, row.res.corner))] }); });
       // 2 a colleague of the same team who is off that day takes the day
       agents.forEach(function(b) {
         var rb = rowOf(b, ds);
@@ -7901,7 +8019,7 @@ function computeMonthlyPlanOn(opt, ctx) {
   freezeMonthlyValue(hours);
   var issues = check.issues, mandatoryIssues = check.mandatory;
   var diagnostics = freezeMonthlyValue({ status: check.status, mandatoryIssues: mandatoryIssues, unknown: check.unknown,
-    moves: { tried: moves.tried, applied: moves.applied, failed: moves.failed } });
+    moves: { tried: moves.tried, applied: moves.applied, failed: moves.failed }, late: lateReport(cells, monthDays, todayDs) });
   return Object.freeze({ issues: issues, habitsDays: habits.days, hours: hours,
     fixedIssues: freezeMonthlyValue(JSON.parse(JSON.stringify(fixedIssues))),
     cells: cells, diagnostics: diagnostics,
@@ -8383,7 +8501,7 @@ function caCountHtml(people, agentRows, rh, hours, open) {
   function cw(cid) { return cornerTrafficValue(cid, refY, refM); }
   var corners = multi ? storeCorners.slice().sort(function(a, b) { return cw(b.id) - cw(a.id); }) : [];
   var codeOf = {}; storeCorners.forEach(function(c) { codeOf[c.id] = c.code; });
-  var RH_FULL = { O: 'Opening', C: 'Closing', OFF: 'Off', SUN: 'Sun', ABS: 'Absence', H: 'Hours this month' };
+  var RH_FULL = { O: 'Opening', C: 'Closing', OFF: 'Off', SUN: 'Sundays', ABS: 'Absence', H: 'Worked hours' };
   cornerAllocDetail = {};
   var body = '';
   people.forEach(function(a) {
@@ -8400,18 +8518,19 @@ function caCountHtml(people, agentRows, rh, hours, open) {
     cornerAllocDetail[a.id] = { name: name, per: per };
     var c = rh[a.id] || { O: 0, C: 0, off: 0, dim: 0, cp: 0 }, hr = hours[a.id] || { used: 0, reference: 0 };
     var mUsed = Math.round(hr.used / 6) / 10, mCap = Math.round(hr.reference / 6) / 10;
+    var col = 0, td = function(cls, html, extra) { return '<td class="ca-n' + cls + '" data-col="' + (col++) + '"' + (extra || '') + '>' + html + '</td>'; };
     body += '<tr><td class="ca-name">' + esc(name) + '</td>' + corners.map(function(cn) {
-      if (!sales) return '<td class="ca-n"><span class="sh-none">-</span></td>';
+      if (!sales) return td('', '<span class="sh-none">-</span>');
       var n = (per[cn.code] || []).length;
-      return '<td class="ca-n">' + (n ? '<button type="button" class="ca-btn" onclick="showCornerAlloc(\'' + a.id + '\',\'' + esc(cn.code) + '\')">' + n + '</button>' : '<span class="sh-none">0</span>') + '</td>';
-    }).join('') + (multi ? '<td class="ca-n ca-tot">' + (sales ? tot : '<span class="sh-none">-</span>') + '</td>' : '') +
-      [c.O, c.C, c.off, c.dim, c.cp].map(function(v, k) { return '<td class="ca-n ca-rh' + (k ? '' : ' ca-rh1') + '">' + v + '</td>'; }).join('') +
-      '<td class="ca-n ca-rh" data-no-i18n title="' + esc(tf('{h} h this month, reference {max} h', { h: mUsed, max: mCap })) + '">' + (mCap > 0 ? mUsed : '') + '</td></tr>';
+      return td('', n ? '<button type="button" class="ca-btn" onclick="showCornerAlloc(\'' + a.id + '\',\'' + esc(cn.code) + '\')">' + n + '</button>' : '<span class="sh-none">0</span>');
+    }).join('') + (multi ? td(' ca-tot', sales ? tot : '<span class="sh-none">-</span>') : '') +
+      [c.O, c.C, c.off, c.dim, c.cp].map(function(v) { return td(' ca-rh', v); }).join('') +
+      td(' ca-rh', mCap > 0 ? mUsed : '', ' data-no-i18n title="' + esc(tf('{h} h this month, reference {max} h', { h: mUsed, max: mCap })) + '"') + '</tr>';
   });
   return '<details class="card coverage-card ca-card"' + (open ? ' open' : '') + '><summary><span class="coverage-expander" aria-hidden="true"></span><span>' + t('Client Advisor count') + '</span></summary>' +
-    '<div class="ca-wrap"><table class="ca-table"><thead><tr><th class="ca-name">' + t('Client advisor') + '</th>' +
-    corners.map(function(cn) { return '<th class="ca-n" data-no-i18n>' + esc(cn.code) + '</th>'; }).join('') + (multi ? '<th class="ca-n">' + t('Total') + '</th>' : '') +
-    RH_COLUMNS.map(function(k, i) { var full = RH_FULL[k]; return '<th class="ca-n ca-rh' + (i ? '' : ' ca-rh1') + '" data-no-i18n title="' + esc(t(full)) + '">' + (CURRENT_LANG !== 'en' && /SUN|ABS|H/.test(k) ? esc(t(full)) : k) + '</th>'; }).join('') +
+    '<div class="ca-wrap"><table class="ca-table xh"><thead><tr><th class="ca-name">' + t('Client advisor') + '</th>' +
+    corners.map(function(cn, i) { return '<th class="ca-n" data-col="' + i + '" data-no-i18n>' + esc(cn.code) + '</th>'; }).join('') + (multi ? '<th class="ca-n" data-col="' + corners.length + '">' + t('Total') + '</th>' : '') +
+    RH_COLUMNS.map(function(k, i) { return '<th class="ca-n ca-rh" data-col="' + (corners.length + (multi ? 1 : 0) + i) + '">' + esc(t(RH_FULL[k])) + '</th>'; }).join('') +
     '</tr></thead><tbody>' + body + '</tbody></table></div><div class="ca-detail" id="ca-detail"></div></details>';
 }
 function showCornerAlloc(agentId, code) {
@@ -10083,6 +10202,7 @@ init();
 
 <!-- CELL EDITOR -->
 <div id="color-pop" class="color-pop" onclick="event.stopPropagation()"></div>
+<div id="rv-tip" class="rv-tip" role="tooltip" hidden></div>
 <div id="evt-tip" class="evt-tip"></div>
 <div id="date-pop" class="dp-pop" onclick="event.stopPropagation()"></div>
 
