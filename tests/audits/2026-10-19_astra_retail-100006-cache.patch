@@ -1,0 +1,35 @@
+--- a/tests/builds/CAST_RETAIL_TEST.html
++++ b/tests/builds/CAST_RETAIL_TEST.html
+@@ -8130,16 +8130,20 @@
+   var issues = check.issues, mandatoryIssues = check.mandatory;
+   var diagnostics = freezeMonthlyValue({ status: check.status, mandatoryIssues: mandatoryIssues, unknown: check.unknown,
+     moves: { tried: moves.tried, applied: moves.applied, failed: moves.failed }, late: lateReport(cells, monthDays, todayDs) });
++  var paintFingerprint = ctx.fingerprint;
+   return Object.freeze({ issues: issues, habitsDays: habits.days, hours: hours,
+     fixedIssues: freezeMonthlyValue(JSON.parse(JSON.stringify(fixedIssues))),
+     cells: cells, diagnostics: diagnostics,
+     // Show the plan, then keep it: the painter only paints, the plan shown is saved next (once; a repaint writes nothing)
+     paint: function() {
+-      var shown = paintMonthlyPlan({ ctx: ctx, cells: cells, hours: hours, agentRows: agentRows, rh: rh, fixedIssues: fixedIssues, monthDays: monthDays, year: year, monthIdx: monthIdx, snapKey: snapKey });
++      var shown = paintMonthlyPlan({ ctx: ctx, expectedFingerprint: paintFingerprint, cells: cells, hours: hours, agentRows: agentRows, rh: rh, fixedIssues: fixedIssues, monthDays: monthDays, year: year, monthIdx: monthIdx, snapKey: snapKey });
+       // Saving the plan shown changes the saved planning, not the plan: in the frozen mode of the app the same result
+       // stays valid for the new fingerprint (checked on the bench: a new calculation gives the same cells and checks)
+-      if (shown && keepShownPlan(snapKey, newSnap, snapLoaded) && manualMode && lastMonthlyRun && lastMonthlyRun.run === this)
+-        lastMonthlyRun = { key: monthlyFingerprint(monthlyInputs(), toDateStr(new Date())), run: this };
++      if (shown && keepShownPlan(snapKey, newSnap, snapLoaded) && manualMode) {
++        paintFingerprint = monthlyFingerprint(monthlyInputs(), toDateStr(new Date()));
++        if (lastMonthlyRun && lastMonthlyRun.run === this)
++          lastMonthlyRun = { key: paintFingerprint, run: this };
++      }
+       return shown; } });
+ }
+ // Show and save a computed Monthly plan (the only place that changes the screen or writes the saved planning).
+@@ -8161,7 +8165,7 @@
+     return '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span>';
+   }
+   // A computed plan belongs to its context: never apply it to a new store, month or edit.
+-  if (ctx.fingerprint !== monthlyFingerprint(monthlyInputs(), toDateStr(new Date()))) return false;
++  if ((v.expectedFingerprint || ctx.fingerprint) !== monthlyFingerprint(monthlyInputs(), toDateStr(new Date()))) return false;
+   var container = document.getElementById('planning-monthly-body');
+   if (!container) return false;
+   monthlyResult = cells;
