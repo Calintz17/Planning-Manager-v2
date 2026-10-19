@@ -1,5 +1,6 @@
-// Late target and managers (Roman 19-10), old build against new build, on the cases of functional.cjs.
-// The late target counts the sellers only: round(sellers working x late target). Managers work an opening or a
+// Evening share and managers (Roman 19-10), old build against new build, on the cases of functional.cjs. Each build is
+// measured with its own rule: late shifts and share of the build (10.0.0.3: evening group by the medians, store share).
+// The target counts the sellers only: round(sellers working x share). Managers work an opening or a
 // closing shift (never a middle one, unless set by hand) and do not stand in for the sellers who close.
 // Each case, in the new build: no error, a cell for everyone, no more mandatory breaks than the old build, no manager
 // on a middle shift, no day closed only by managers while sellers work; and the late gap is reported (target, actual).
@@ -33,7 +34,7 @@ const MODS = {
 };
 const RUN = `JSON.stringify((()=>{
   const r = pickMonthlyPlan(), ym = toDateStr(monthlyRef).slice(0, 7), days = monthDsList(ym), today = toDateStr(new Date());
-  const grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), ratio = storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
+  const grid = RETAIL_SHIFTS.sales || [], late = lateCodes(grid), ratio = typeof storeEveningShare === 'function' ? storeEveningShare() : storeSettings && storeSettings.closing_ratio != null ? storeSettings.closing_ratio : 0.5;
   let missing = 0, target = 0, actual = 0, shortDays = 0, leadMid = 0, leadOnlyClose = 0, sellersClose = 0, leadM = [];
   days.forEach(ds => {
     agents.forEach(a => { if (!(r.cells[ds] || {})[a.id]) missing++; });

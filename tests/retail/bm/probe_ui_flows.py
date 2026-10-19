@@ -14,6 +14,8 @@ STATE = """(() => { const h = s => { let x = 0; for (let i = 0; i < s.length; i+
   const meta = ['monthly-meta', 'intraday-meta'].map(id => (document.getElementById(id) || {}).textContent || '').join('|');
   main.querySelectorAll('#btn-submit-review, #btn-decide-review, #btn-withdraw-review, #review-banner, .rv-chip-wrap, .bell-wrap, #tab-reviews, .c-rh, .ca-card, #monthly-meta, #intraday-meta, colgroup').forEach(e => e.remove());
   main.querySelectorAll('.plan-tabs').forEach(e => e.replaceWith(...e.childNodes));
+  // 10.0.0.3: the Late shifts target setting is gone (the evening share is calculated)
+  main.querySelectorAll('#thr-ratio').forEach(e => e.closest('.set-rule').remove());
   const open = [...document.querySelectorAll('.modal-overlay.open, #cell-editor, #leave-popup, #week-picker-popup, .more-menu.open, .mission-menu, #lang-menu.open')]
     .filter(e => e.offsetParent !== null || getComputedStyle(e).display !== 'none').map(e => e.id || e.className).sort();
   // Each write: table, method, the rows sent (hashed; Labor rules without the two call-centre rules no longer saved), filters
