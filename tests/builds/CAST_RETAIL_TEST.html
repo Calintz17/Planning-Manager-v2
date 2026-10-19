@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v10.0.0.5 TEST</title>
+  <title>CAST v10.0.0.6 TEST</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -1956,7 +1956,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
-var CAST_VERSION = '10.0.0.5';
+var CAST_VERSION = '10.0.0.6';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -5005,43 +5005,21 @@ function renderIntraday(ds) {
   if (currentStoreId && agents.length && !getDayClosureType(day) && !monthlyResult[day]) renderMonthlyPlanning();
   paintIntraday(ds);
 }
-function paintIntraday(ds) {
-  intradayExport = null;
-  var body = document.getElementById('planning-intraday-body');
-  if (!body) return;
-  renderCornerTabs();
-  setPlanMeta('intraday-meta', ds ? formatDateDisplay(ds) : '');
-  if (!currentStoreId) { body.innerHTML = '<p class="plan-empty">Select a store to view the intraday planning.</p>'; return; }
-  if (!ds) ds = toDateStr(new Date());
-  currentIntradayDate = ds;
-  renderReviewStatus();
-  var inp = document.getElementById('intraday-date');
-  if (inp && inp.value !== ds) inp.value = ds;
-  var closure = getDayClosureType(ds);
-  if (closure) {
-    var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
-    body.innerHTML = '<p class="plan-empty">' + tf('{date} - store closed ({reason}).', { date: formatDateDisplay(ds), reason: t(why) }) + '</p>';
-    return;
-  }
+// The Intraday of a day, calculated once (Astra lot 2): shifts, breaks, briefs, Welcome, reinforcements, groups and
+// rows. It shows nothing and saves nothing; the screen and the Excel export are made from it.
+function buildIntradayModel(ds) {
   var dow = ['sun','mon','tue','wed','thu','fri','sat'][new Date(ds + 'T12:00:00').getDay()];
   var dh = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
   if (calHours[ds]) dh = calHours[ds];
   var openH = dh.open, closeH = dh.close;
   var dayPlan = monthlyResult[ds];
-  if (!dayPlan) {
-    body.innerHTML = '<p class="plan-empty">' +
-      tf('Open {date} in the Monthly view first to compute its planning.', { date: formatDateDisplay(ds) }) + '</p>';
-    return;
-  }
+  if (!dayPlan) return { empty: 'noplan' };
   var working = agents.filter(function(a) {
     if (a.is_active === false) return false;
     var mr = dayPlan[a.id];
     return mr && !mr.special;
   });
-  if (!working.length) {
-    body.innerHTML = '<p class="plan-empty">' + tf('No client advisors scheduled on {date}.', { date: formatDateDisplay(ds) }) + '</p>';
-    return;
-  }
+  if (!working.length) return { empty: 'nobody' };
   // Same hours as the monthly planning
   var shiftInfo = {};
   working.forEach(function(a) {
@@ -5064,9 +5042,6 @@ function paintIntraday(ds) {
   T0 = Math.floor(Math.min(T0, openH));
   T1 = Math.ceil(Math.max(T1, closeH));
   var span = T1 - T0;
-  intradayAxis = { T0: T0, T1: T1 };
-  function pct(h) { return ((h - T0) / span) * 100; }
-  function wpct(h) { return (h / span) * 100; }
   var curve = (storeSettings && storeSettings.hourly_curve) || null;
   // Intraday help between corners
   var reinforceMissions = {};
@@ -5487,13 +5462,6 @@ function paintIntraday(ds) {
       welcomePlan[chosen.id].push(ph);
     }
   }
-  function fmtH(m) {
-    var h = Math.floor(m / 60), mn = m % 60;
-    return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
-  }
-  var axis = '<div class="it-axis"><div class="pad">' + t('Agent') + '</div><div class="ticks">';
-  for (var h = Math.floor(T0); h < Math.ceil(T1); h++) axis += '<span>' + h + 'h</span>';
-  axis += '</div></div>';
   var groups = [];
   if (storeCorners.length > 1) {
     var refYi = monthlyRef.getFullYear(), refMi = monthlyRef.getMonth() + 1;
@@ -5527,15 +5495,10 @@ function paintIntraday(ds) {
       if (list.length) groups.push({ title: blockDef.title.toUpperCase(), list: list });
     });
   }
-  var rowsHtml = '';
-  var intradayExportRows = [];
+  // Each person's shift and blocks: the automatic ones (at the manager's position when moved), the missions added by
+  // hand and the reinforcements. The screen and the Excel export both read these rows.
   groups.forEach(function(grp) {
-    var list = grp.list;
-    rowsHtml += '<div class="it-group"><div class="it-role"' + (grp.cornerCode ? ' data-no-i18n' : '') + '>' + esc(grp.title) + '</div>';
-    list.forEach(function(a) {
-      var sh = shiftInfo[a.id];
-      var sH = sh.startMin / 60, eH = sh.endMin / 60;
-      var toneCls = 'sh-' + (sh.tone || 'close');
+    grp.rows = grp.list.map(function(a) {
       var blocks = [];
       function withOverride(agentId, type, calcStart, durH) {
         // The manager's position wins, inside or outside the shift
@@ -5560,26 +5523,88 @@ function paintIntraday(ds) {
           blocks.push([withOverride(a.id, 'wel' + wi, wh, 1), 1, 'wel' + wi, 'Welcome']);
         });
       }
-      var exportBlocks = blocks.map(function(b){
+      return { a: a, sh: shiftInfo[a.id], blocks: blocks, added: addedMissions[a.id] || [], reinf: reinforceMissions[a.id] || [] };
+    });
+  });
+  return { ds: ds, openH: openH, closeH: closeH, T0: T0, T1: T1, span: span, groups: groups, count: working.length };
+}
+// Excel rows of the day, read from the model (the same rows as the screen)
+function toIntradayExport(model) {
+  var out = [];
+  model.groups.forEach(function(grp) {
+    grp.rows.forEach(function(row) {
+      var a = row.a, sh = row.sh;
+      var exportBlocks = row.blocks.map(function(b){
         return { start:b[0], dur:b[1], type:b[2], label:b[3],
                  color: (b[4] && b[4].indexOf('bc-') === 0) ? b[4].slice(3) : null };
       });
-      (addedMissions[a.id] || []).forEach(function(m) {
+      row.added.forEach(function(m) {
         var md = missionDef(m.type);
         exportBlocks.push({ start: m.start, dur: missionDurH(m), type: m.type.indexOf('brk:') === 0 ? 'brk' : m.type,
                             label: md.label, color: md.color || null });
       });
-      (reinforceMissions[a.id] || []).forEach(function(m) {
+      row.reinf.forEach(function(m) {
         exportBlocks.push({ start: m.start, dur: m.dur, type: 'reinf', label: '\u2192' + m.toCode, color: null });
       });
-      intradayExportRows.push({
+      out.push({
         agentId: a.id,
         name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
         role: (RETAIL_STATUS[retailStatusOf(a)] || {}).label || '',
         group: grp.title, groupIsCorner: !!grp.cornerCode,
-        code: sh.code, tone: sh.tone || 'close', startH: sH, endH: eH,
+        code: sh.code, tone: sh.tone || 'close', startH: sh.startMin / 60, endH: sh.endMin / 60,
         blocks: exportBlocks
       });
+    });
+  });
+  return { ds: model.ds, storeId: currentStoreId, openH: model.T0, closeH: model.T1, rows: out };
+}
+// The Intraday screen: draws the model of the day, then binds the drag and the editors
+function paintIntraday(ds) {
+  intradayExport = null;
+  var body = document.getElementById('planning-intraday-body');
+  if (!body) return;
+  renderCornerTabs();
+  setPlanMeta('intraday-meta', ds ? formatDateDisplay(ds) : '');
+  if (!currentStoreId) { body.innerHTML = '<p class="plan-empty">Select a store to view the intraday planning.</p>'; return; }
+  if (!ds) ds = toDateStr(new Date());
+  currentIntradayDate = ds;
+  renderReviewStatus();
+  var inp = document.getElementById('intraday-date');
+  if (inp && inp.value !== ds) inp.value = ds;
+  var closure = getDayClosureType(ds);
+  if (closure) {
+    var why = (closure === 'holiday') ? (calHolidays[ds] || 'Holiday') : 'Closed';
+    body.innerHTML = '<p class="plan-empty">' + tf('{date} - store closed ({reason}).', { date: formatDateDisplay(ds), reason: t(why) }) + '</p>';
+    return;
+  }
+  var model = buildIntradayModel(ds);
+  if (model.empty === 'noplan') {
+    body.innerHTML = '<p class="plan-empty">' +
+      tf('Open {date} in the Monthly view first to compute its planning.', { date: formatDateDisplay(ds) }) + '</p>';
+    return;
+  }
+  if (model.empty === 'nobody') {
+    body.innerHTML = '<p class="plan-empty">' + tf('No client advisors scheduled on {date}.', { date: formatDateDisplay(ds) }) + '</p>';
+    return;
+  }
+  var T0 = model.T0, T1 = model.T1, span = model.span, openH = model.openH, closeH = model.closeH, groups = model.groups;
+  intradayAxis = { T0: T0, T1: T1 };
+  function pct(h) { return ((h - T0) / span) * 100; }
+  function wpct(h) { return (h / span) * 100; }
+  function fmtH(m) {
+    var h = Math.floor(m / 60), mn = m % 60;
+    return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
+  }
+  var axis = '<div class="it-axis"><div class="pad">' + t('Agent') + '</div><div class="ticks">';
+  for (var h = Math.floor(T0); h < Math.ceil(T1); h++) axis += '<span>' + h + 'h</span>';
+  axis += '</div></div>';
+  var rowsHtml = '';
+  groups.forEach(function(grp) {
+    rowsHtml += '<div class="it-group"><div class="it-role"' + (grp.cornerCode ? ' data-no-i18n' : '') + '>' + esc(grp.title) + '</div>';
+    grp.rows.forEach(function(row) {
+      var a = row.a, sh = row.sh, blocks = row.blocks;
+      var sH = sh.startMin / 60, eH = sh.endMin / 60;
+      var toneCls = 'sh-' + (sh.tone || 'close');
       var grid = '<div class="it-grid">';
       for (var k = Math.floor(T0); k < Math.ceil(T1); k++) grid += '<i></i>';
       grid += '</div>';
@@ -5605,7 +5630,7 @@ function paintIntraday(ds) {
           ' title="' + esc(bl[3]) + '" data-full="' + esc(bl[3]) + '" style="left:' + pct(bl[0]) + '%;width:' + wpct(bl[1]) + '%">' +
           (bl[1] < 0.5 ? '' : esc(bl[3])) + '</div>';
       });
-      (addedMissions[a.id] || []).forEach(function(m) {
+      row.added.forEach(function(m) {
         var md = missionDef(m.type);
         var visualCls = md.cls;
         var label = esc(t(md.short));
@@ -5617,7 +5642,7 @@ function paintIntraday(ds) {
           (durH < 0.5 ? '' : label) +
           '</div>';
       });
-      (reinforceMissions[a.id] || []).forEach(function(m, mi) {
+      row.reinf.forEach(function(m, mi) {
         track += '<div class="it-blk it-blk-reinf" draggable="false"' +
           ' data-agent="' + a.id + '" data-type="reinf" data-ridx="' + mi + '"' +
           ' data-dur="' + m.dur + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
@@ -5641,8 +5666,8 @@ function paintIntraday(ds) {
       axis +
       '<div class="it-rows">' + rowsHtml + '</div>' +
     '</div>';
-  setPlanMeta('intraday-meta', tf('{date} - {count} present', { date: formatDateDisplay(ds), count: working.length }));
-  intradayExport = { ds: ds, storeId: currentStoreId, openH: T0, closeH: T1, rows: intradayExportRows };
+  setPlanMeta('intraday-meta', tf('{date} - {count} present', { date: formatDateDisplay(ds), count: model.count }));
+  intradayExport = toIntradayExport(model);
   intradayShownKey = currentStoreId + '|' + ds;
   initIntradayDrag(body, T0, span, ds);
   bindMissionEditors(body);
