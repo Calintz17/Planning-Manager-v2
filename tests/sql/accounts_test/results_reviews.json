@@ -37,7 +37,7 @@
  {
   "test": "manager sends his store",
   "pass": true,
-  "detail": "('ok', [({'id': '1f098c2e-4914-4a08-93bd-3c5915df1afd', 'status': 'pending', 'revision': 1},)])"
+  "detail": "('ok', [({'id': 'e691b8c8-fe5f-43c1-8500-f92444ac8cdd', 'status': 'pending', 'revision': 1},)])"
  },
  {
   "test": "author and name come from the server",
@@ -122,7 +122,7 @@
  {
   "test": "director returns with a comment",
   "pass": true,
-  "detail": "('ok', [({'id': '1f098c2e-4914-4a08-93bd-3c5915df1afd', 'status': 'returned', 'revision': 1},)])"
+  "detail": "('ok', [({'id': 'e691b8c8-fe5f-43c1-8500-f92444ac8cdd', 'status': 'returned', 'revision': 1},)])"
  },
  {
   "test": "a second decision on the same sending: conflict",
@@ -137,7 +137,7 @@
  {
   "test": "second sending: revision 2, revision 1 and its comment kept",
   "pass": true,
-  "detail": "('ok', [({'id': '701f8801-501b-4dd8-beaa-72e22664de31', 'status': 'pending', 'revision': 2},)])"
+  "detail": "('ok', [({'id': '4f265a17-1b7d-43cd-aeb5-5359ebe07071', 'status': 'pending', 'revision': 2},)])"
  },
  {
   "test": "another manager of the same store may withdraw too",
@@ -157,7 +157,7 @@
  {
   "test": "manager withdraws, the month is free again",
   "pass": true,
-  "detail": "('ok', [({'id': '701f8801-501b-4dd8-beaa-72e22664de31', 'status': 'withdrawn', 'revision': 2},)])"
+  "detail": "('ok', [({'id': '4f265a17-1b7d-43cd-aeb5-5359ebe07071', 'status': 'withdrawn', 'revision': 2},)])"
  },
  {
   "test": "a withdrawn sending cannot be validated",
@@ -167,7 +167,7 @@
  {
   "test": "admin sends for any store",
   "pass": true,
-  "detail": "('ok', [({'id': '016cf608-766a-406d-a5c2-ea646e467c7c', 'status': 'pending', 'revision': 1},)])"
+  "detail": "('ok', [({'id': '88fcfd9d-6e4b-4f90-ae08-571233d56db5', 'status': 'pending', 'revision': 1},)])"
  },
  {
   "test": "admin sees his own sending in the pending list",
@@ -177,7 +177,7 @@
  {
   "test": "admin validates his own sending, with his own name",
   "pass": true,
-  "detail": "('ok', [({'id': '016cf608-766a-406d-a5c2-ea646e467c7c', 'status': 'validated', 'revision': 1},)])"
+  "detail": "('ok', [({'id': '88fcfd9d-6e4b-4f90-ae08-571233d56db5', 'status': 'validated', 'revision': 1},)])"
  },
  {
   "test": "director of EMEA does not see the Japan sending",
@@ -212,7 +212,7 @@
  {
   "test": "validate is accepted, the sent copy becomes the reviewed one when none is given",
   "pass": true,
-  "detail": "('ok', [({'id': '13db2ebd-190c-4e82-9162-63931ca2a186', 'status': 'validated', 'revision': 3},)])"
+  "detail": "('ok', [({'id': 'c82c2089-a0e2-42eb-b21e-d2b0b991ad48', 'status': 'validated', 'revision': 3},)])"
  },
  {
   "test": "after validation the manager keeps the hand",
@@ -223,6 +223,11 @@
   "test": "two decisions at once: the second waits, then gets a conflict, the first stays",
   "pass": true,
   "detail": "{'b': 'err changed meanwhile'}"
+ },
+ {
+  "test": "one decision function only, with the check argument",
+  "pass": true,
+  "detail": ""
  },
  {
   "test": "history: each step is kept with its author",
@@ -252,7 +257,7 @@
  {
   "test": "director cancels a validation: cancelled, reason and author kept, validation kept in the history",
   "pass": true,
-  "detail": "('ok', [({'id': '9e6d5378-dbe5-42b8-ae50-8d827b43ccf4', 'status': 'cancelled', 'revision': 4},)])"
+  "detail": "('ok', [({'id': '1e8c246b-bd35-4358-89ca-37a69a6e255c', 'status': 'cancelled', 'revision': 4},)])"
  },
  {
   "test": "cancel: the store sees it as new again",
@@ -275,8 +280,13 @@
   "detail": ""
  },
  {
+  "test": "the decision keeps the check of the reviewed copy (a record, not a veto)",
+  "pass": true,
+  "detail": "('ok', [({'id': 'e3722a48-2e20-4157-92cf-d9c97acfb95d', 'status': 'returned', 'revision': 5},)])"
+ },
+ {
   "test": "admin cancels a sending sent too fast, the month is free again",
   "pass": true,
-  "detail": "('ok', [({'id': '1a3af9a4-aa00-40d2-b0bf-596ff8e21b70', 'status': 'cancelled', 'revision': 5},)])"
+  "detail": "('ok', [({'id': 'e3722a48-2e20-4157-92cf-d9c97acfb95d', 'status': 'cancelled', 'revision': 5},)])"
  }
 ]

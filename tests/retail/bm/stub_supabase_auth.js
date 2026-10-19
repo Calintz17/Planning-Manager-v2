@@ -63,7 +63,7 @@
     if (name === 'retail_decide_review') {
       if (!r || !canReview(r.store_id)) return fail('not allowed');
       if (r.status !== 'pending' || r.revision !== a.p_revision) return fail('changed meanwhile');
-      Object.assign(r, { status: a.p_decision, reviewed_plan: a.p_plan || r.submitted_plan, comment: a.p_comment || '', decided_by: u.id,
+      Object.assign(r, { status: a.p_decision, reviewed_plan: a.p_plan || r.submitted_plan, comment: a.p_comment || '', decided_by: u.id, decision_diagnostics: a.p_diagnostics || null,
         decided_by_name: name_, decided_at: now, history: (r.history || []).concat([step(a.p_decision, a.p_comment)]) });
       return { data: { id: r.id, status: a.p_decision }, error: null };
     }
@@ -79,13 +79,13 @@
     return { data: null, error: null };
   }
   function Q(t) {
-    var rows = scope(t, (DB[t] || []).slice()), single = false, write = false, ins = null;
+    var rows = scope(t, (DB[t] || []).slice()), single = false, write = false, ins = null, head = false;
     var q = {
       gte: function (k, v) { rows = rows.filter(function (r) { return r[k] != null && r[k] >= v; }); return p; },
       order: function (k, o) { var asc = !o || o.ascending !== false; rows.sort(function (x, y) { return (x[k] > y[k] ? 1 : x[k] < y[k] ? -1 : 0) * (asc ? 1 : -1); }); return p; },
       limit: function (n) { rows = rows.slice(0, n); return p; },
       range: function (a, b) { rows = rows.slice(a, b + 1); return p; },
-      select: function () { return p; },
+      select: function (c, o) { head = !!(o && o.head); return p; },
       eq: function (k, v) { rows = rows.filter(function (r) { return r[k] === v; }); return p; },
       in: function (k, vs) { rows = rows.filter(function (r) { return vs.indexOf(r[k]) !== -1; }); return p; },
       maybeSingle: function () { single = true; return p; },
@@ -99,6 +99,7 @@
         if (!write && A.rejectOnce && A.rejectOnce[t] > 0) { A.rejectOnce[t]--; return Promise.reject(new Error('network down')).then(ok, err); }
         // Seen marks are kept (one per person), the other writes are only answered
         if (write && ins && t === 'retail_review_seen') { var u = getSess(); (DB[t] = DB[t] || []).push({ review_id: ins.review_id, user_id: u && u.id }); }
+        if (head) return Promise.resolve({ data: null, count: rows.length, error: null }).then(ok, err);   // count: 'exact', head: true
         var data = write ? [] : (single ? (rows[0] || null) : rows);
         return Promise.resolve({ data: data, error: null }).then(ok, err);
       }

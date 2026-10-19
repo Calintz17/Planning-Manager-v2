@@ -12,6 +12,8 @@ c.execute(open(SQL + '/2026-10-19_retail_reviews.sql').read())
 c.execute(open(SQL + '/2026-10-19_retail_reviews.sql').read())   # can be run again
 c.execute(open(SQL + '/2026-10-19_retail_reviews_cancel.sql').read())   # 10.0.0.1: cancel and history
 c.execute(open(SQL + '/2026-10-19_retail_reviews_cancel.sql').read())
+c.execute(open(SQL + '/2026-10-19_retail_reviews_decision_check.sql').read())   # 10.0.0.2: decision check, twice
+c.execute(open(SQL + '/2026-10-19_retail_reviews_decision_check.sql').read())
 def one(sql):
     c.execute(sql); return c.fetchone()[0]
 U = {}; c.execute('select email, user_id from retail_profiles'); [U.__setitem__(e.split('@')[0], str(u)) for e, u in c.fetchall()]
@@ -121,6 +123,7 @@ waited = th.is_alive(); ka.commit(); th.join(5)
 check('two decisions at once: the second waits, then gets a conflict, the first stays', waited and out.get('b', '').startswith('err') and 'changed meanwhile' in out['b']
       and one(f"select status || comment from retail_plan_reviews where id = '{r4}'") == 'validatedfirst', out)
 ka.close(); kb.close()
+check('one decision function only, with the check argument', one("select count(*) from pg_proc where proname = 'retail_decide_review'") == 1)
 # cancel (10.0.0.1): the director takes back a validation or a sending sent too fast
 canc = lambda u, r, rev, keep=True: as_user(U[u], f"select retail_cancel_review('{r}', {rev}, 'Clicked too fast')", keep)
 check('history: each step is kept with its author', one(f"select string_agg(e->>'status' || ':' || (e->>'by'), ',' order by ord) from retail_plan_reviews, jsonb_array_elements(history) with ordinality t(e, ord) where id = '{r4}'") == f"pending:{U['m1']},validated:{U['dir']}")
@@ -137,6 +140,8 @@ check('a cancelled sending cannot be validated or cancelled again', as_user(U['d
 check('cancelled: the manager changes the month and sends again (revision 5)', ov('m1', '2026-11-08')[0] == 'ok' and submit('m1', 'Store One')[0] == 'ok' and rid('Store One', 5))
 r5 = rid('Store One', 5)
 check('pending: the manager is locked again', ov('m1', '2026-11-09')[0] == 'err')
+d5 = as_user(U['dir'], f"select retail_decide_review('{r5}', 5, 'returned', null, 'redo', '{{\"status\":\"ok\",\"mandatory\":0}}'::jsonb)", False)
+check('the decision keeps the check of the reviewed copy (a record, not a veto)', d5[0] == 'ok', d5)
 c5 = canc('admin', r5, 5)
 check('admin cancels a sending sent too fast, the month is free again', c5[0] == 'ok' and ov('m1', '2026-11-09')[0] == 'ok', c5)
 json.dump(results, open(H + '/results_reviews.json', 'w'), indent=1)
