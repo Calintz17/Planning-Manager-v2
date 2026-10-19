@@ -1,0 +1,1006 @@
+{
+  "source": {
+    "main": "db6b862dd5a2bf32be1fb29575654b983fee7cd4",
+    "test": "27f72072879342cab207e1ba355d4dfc96c44a35"
+  },
+  "scope": "Synthetic local Firefox and VM tests, no authenticated production data or writes",
+  "clock_live": "2026-10-19",
+  "engine_comparison": {
+    "cases": 45,
+    "failures": 0
+  },
+  "mutations": {
+    "cases": 17,
+    "undetected": 0
+  },
+  "ui_comparison": {
+    "steps": 82,
+    "failures": 0
+  },
+  "review_nominal": {
+    "checks": 53,
+    "failures": 0
+  },
+  "adversarial": [
+    {
+      "test": "last quarter rounded up",
+      "counts": [
+        1,
+        1,
+        2,
+        5
+      ],
+      "pass": true
+    },
+    {
+      "test": "feasible late target precedes automatic manager role heuristic",
+      "date": "2026-11-21",
+      "target": 3,
+      "actual": 2,
+      "alternativeNewMandatory": [],
+      "pass": false
+    },
+    {
+      "test": "approval does not silently add an employee absent from submission",
+      "submittedPeople": 29,
+      "approvedPeople": 30,
+      "pass": false
+    }
+  ],
+  "design": [
+    {
+      "page": "monthly",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Monthly planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Intraday planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "titles": [],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Client Advisors",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Settings",
+          "size": "22px",
+          "left": 62
+        },
+        {
+          "text": "Break structure",
+          "size": "16px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Validation",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Monthly planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Intraday planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "titles": [],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Client Advisors",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Settings",
+          "size": "22px",
+          "left": 62
+        },
+        {
+          "text": "Break structure",
+          "size": "16px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Validation",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Monthly planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Intraday planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "titles": [],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Client Advisors",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Settings",
+          "size": "22px",
+          "left": 62
+        },
+        {
+          "text": "Break structure",
+          "size": "16px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Validation",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Monthly planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Intraday planning",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "titles": [],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Client Advisors",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Settings",
+          "size": "22px",
+          "left": 62
+        },
+        {
+          "text": "Break structure",
+          "size": "16px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Validation",
+          "size": "22px",
+          "left": 75
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Monthly planning",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Intraday planning",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "titles": [],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Client Advisors",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Settings",
+          "size": "26px",
+          "left": 248
+        },
+        {
+          "text": "Break structure",
+          "size": "16px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Validation",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "tooltip-long",
+      "dark": false,
+      "bounds": {
+        "top": 212,
+        "bottom": 1215,
+        "height": 1003,
+        "viewport": 900,
+        "scroll": 1001
+      }
+    },
+    {
+      "page": "monthly",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Monthly planning",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Intraday planning",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "titles": [],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Client Advisors",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Settings",
+          "size": "26px",
+          "left": 248
+        },
+        {
+          "text": "Break structure",
+          "size": "16px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "titles": [
+        {
+          "text": "Validation",
+          "size": "26px",
+          "left": 271
+        }
+      ],
+      "popups": [],
+      "errors": []
+    },
+    {
+      "page": "tooltip-long",
+      "dark": true,
+      "bounds": {
+        "top": 212,
+        "bottom": 1215,
+        "height": 1003,
+        "viewport": 900,
+        "scroll": 1001
+      }
+    }
+  ],
+  "layout": [
+    {
+      "width": 320,
+      "geometry": {
+        "firstColumn": [
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          }
+        ],
+        "headers": [
+          {
+            "width": 1016,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 1016,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 1016,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 1016,
+            "height": 30,
+            "left": 76
+          }
+        ],
+        "theme": {
+          "width": 52,
+          "height": 44,
+          "left": 170
+        },
+        "actions": [
+          {
+            "text": "‹",
+            "width": 44,
+            "height": 44,
+            "left": 75
+          },
+          {
+            "text": "›",
+            "width": 44,
+            "height": 44,
+            "left": 253
+          },
+          {
+            "text": "Send for validation",
+            "width": 143.96665954589844,
+            "height": 44,
+            "left": 75
+          },
+          {
+            "text": "Send",
+            "width": 71.88334655761719,
+            "height": 44,
+            "left": 224.96665954589844
+          },
+          {
+            "text": "Download",
+            "width": 97.53334045410156,
+            "height": 44,
+            "left": 75
+          },
+          {
+            "text": "",
+            "width": 44,
+            "height": 44,
+            "left": 178.53334045410156
+          }
+        ]
+      }
+    },
+    {
+      "width": 390,
+      "geometry": {
+        "firstColumn": [
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 56,
+            "height": 48,
+            "left": 76
+          }
+        ],
+        "headers": [
+          {
+            "width": 1016,
+            "height": 48,
+            "left": 76
+          },
+          {
+            "width": 1016,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 1016,
+            "height": 30,
+            "left": 76
+          },
+          {
+            "width": 1016,
+            "height": 30,
+            "left": 76
+          }
+        ],
+        "theme": {
+          "width": 52,
+          "height": 44,
+          "left": 228
+        },
+        "actions": [
+          {
+            "text": "‹",
+            "width": 44,
+            "height": 44,
+            "left": 75
+          },
+          {
+            "text": "›",
+            "width": 44,
+            "height": 44,
+            "left": 323
+          },
+          {
+            "text": "Send for validation",
+            "width": 143.96665954589844,
+            "height": 44,
+            "left": 75
+          },
+          {
+            "text": "Send",
+            "width": 71.88334655761719,
+            "height": 44,
+            "left": 224.96665954589844
+          },
+          {
+            "text": "Download",
+            "width": 97.53334045410156,
+            "height": 44,
+            "left": 75
+          },
+          {
+            "text": "",
+            "width": 44,
+            "height": 44,
+            "left": 178.53334045410156
+          }
+        ]
+      }
+    },
+    {
+      "width": 1440,
+      "geometry": {
+        "firstColumn": [
+          {
+            "width": 184,
+            "height": 44,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 30,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 30,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 30,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 30,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 44,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 44,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 44,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 44,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 44,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 30,
+            "left": 272
+          },
+          {
+            "width": 184,
+            "height": 44,
+            "left": 272
+          }
+        ],
+        "headers": [
+          {
+            "width": 1144,
+            "height": 44,
+            "left": 272
+          },
+          {
+            "width": 1144,
+            "height": 30,
+            "left": 272
+          },
+          {
+            "width": 1144,
+            "height": 30,
+            "left": 272
+          },
+          {
+            "width": 1144,
+            "height": 30,
+            "left": 272
+          }
+        ],
+        "theme": {
+          "width": 52,
+          "height": 36,
+          "left": 1264
+        },
+        "actions": [
+          {
+            "text": "‹",
+            "width": 32,
+            "height": 36,
+            "left": 801.3333129882812
+          },
+          {
+            "text": "›",
+            "width": 32,
+            "height": 36,
+            "left": 941.3333129882812
+          },
+          {
+            "text": "Send for validation",
+            "width": 159,
+            "height": 36,
+            "left": 979.3333129882812
+          },
+          {
+            "text": "Send",
+            "width": 80.33334350585938,
+            "height": 36,
+            "left": 1144.3333740234375
+          },
+          {
+            "text": "Download",
+            "width": 108.33332824707031,
+            "height": 36,
+            "left": 1230.6666259765625
+          },
+          {
+            "text": "",
+            "width": 40,
+            "height": 36,
+            "left": 1345
+          }
+        ]
+      }
+    }
+  ]
+}
