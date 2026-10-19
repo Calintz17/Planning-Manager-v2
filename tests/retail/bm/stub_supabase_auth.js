@@ -34,7 +34,7 @@
         : (DB.retail_profile_stores || []).some(function (x) { return x.user_id === u.id && x.store_id === s.id; }));
     });
   }
-  // The three steps of a validation, with the same rules as tests/sql/2026-10-19_retail_reviews.sql
+  // The steps of a validation, with the same rules as tests/sql/2026-10-19_retail_reviews.sql and _cancel.sql
   function rpc(name, a) {
     var u = getSess(), p = profileOf(u), R = DB.retail_plan_reviews = DB.retail_plan_reviews || [];
     var fail = function (m) { return { data: null, error: { message: m } }; };
@@ -42,6 +42,7 @@
     var canSubmit = function (sid) { return !!p && (p.role === 'admin' || (p.role === 'manager' && sees(sid))); };
     var canReview = function (sid) { return !!p && (p.role === 'admin' || (p.role === 'director' && sees(sid))); };
     var name_ = p ? (p.full_name || p.email) : '', now = new Date().toISOString();
+    var step = function (st, c) { return { status: st, by: u.id, name: name_, at: now, comment: c || '' }; };
     log.push(['rpc', name, a && (a.p_decision || a.p_month || a.p_id)]);
     if (name === 'retail_submit_review') {
       if (!canSubmit(a.p_store)) return fail('not allowed');
@@ -49,22 +50,31 @@
       var rev = R.filter(function (r) { return r.store_id === a.p_store && r.month === a.p_month; }).length + 1;
       var row = { id: 'rv' + (R.length + 1), store_id: a.p_store, month: a.p_month, revision: rev, status: 'pending', submitted_plan: a.p_plan,
         reviewed_plan: null, context: a.p_context, diagnostics: a.p_diagnostics, comment: '', submitted_by: u.id, submitted_by_name: name_,
-        submitted_at: now, decided_by: null, decided_by_name: '', decided_at: null };
+        submitted_at: now, decided_by: null, decided_by_name: '', decided_at: null, history: [step('pending')] };
       R.push(row); return { data: { id: row.id, revision: rev, status: 'pending' }, error: null };
     }
     var r = R.find(function (x) { return x.id === a.p_id; });
     if (name === 'retail_withdraw_review') {
       if (!r || !canSubmit(r.store_id)) return fail('not allowed');
       if (r.status !== 'pending' || r.revision !== a.p_revision) return fail('changed meanwhile');
-      Object.assign(r, { status: 'withdrawn', decided_by: u.id, decided_by_name: name_, decided_at: now });
+      Object.assign(r, { status: 'withdrawn', decided_by: u.id, decided_by_name: name_, decided_at: now, history: (r.history || []).concat([step('withdrawn')]) });
       return { data: { id: r.id, status: 'withdrawn' }, error: null };
     }
     if (name === 'retail_decide_review') {
       if (!r || !canReview(r.store_id)) return fail('not allowed');
       if (r.status !== 'pending' || r.revision !== a.p_revision) return fail('changed meanwhile');
       Object.assign(r, { status: a.p_decision, reviewed_plan: a.p_plan || r.submitted_plan, comment: a.p_comment || '', decided_by: u.id,
-        decided_by_name: name_, decided_at: now });
+        decided_by_name: name_, decided_at: now, history: (r.history || []).concat([step(a.p_decision, a.p_comment)]) });
       return { data: { id: r.id, status: a.p_decision }, error: null };
+    }
+    if (name === 'retail_cancel_review') {
+      if (!r || !canReview(r.store_id)) return fail('not allowed');
+      if (r.revision !== a.p_revision || (r.status !== 'pending' && r.status !== 'validated') ||
+          R.some(function (x) { return x.store_id === r.store_id && x.month === r.month && x.revision > r.revision; })) return fail('changed meanwhile');
+      Object.assign(r, { status: 'cancelled', comment: a.p_comment || '', decided_by: u.id, decided_by_name: name_, decided_at: now,
+        history: (r.history || []).concat([step('cancelled', a.p_comment)]) });
+      DB.retail_review_seen = (DB.retail_review_seen || []).filter(function (x) { return x.review_id !== r.id; });
+      return { data: { id: r.id, status: 'cancelled' }, error: null };
     }
     return { data: null, error: null };
   }

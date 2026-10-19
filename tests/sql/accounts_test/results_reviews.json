@@ -37,7 +37,7 @@
  {
   "test": "manager sends his store",
   "pass": true,
-  "detail": "('ok', [({'id': '2aa777ba-500d-45a9-b8d6-87b48a4e2aa5', 'status': 'pending', 'revision': 1},)])"
+  "detail": "('ok', [({'id': '1f098c2e-4914-4a08-93bd-3c5915df1afd', 'status': 'pending', 'revision': 1},)])"
  },
  {
   "test": "author and name come from the server",
@@ -122,7 +122,7 @@
  {
   "test": "director returns with a comment",
   "pass": true,
-  "detail": "('ok', [({'id': '2aa777ba-500d-45a9-b8d6-87b48a4e2aa5', 'status': 'returned', 'revision': 1},)])"
+  "detail": "('ok', [({'id': '1f098c2e-4914-4a08-93bd-3c5915df1afd', 'status': 'returned', 'revision': 1},)])"
  },
  {
   "test": "a second decision on the same sending: conflict",
@@ -137,7 +137,7 @@
  {
   "test": "second sending: revision 2, revision 1 and its comment kept",
   "pass": true,
-  "detail": "('ok', [({'id': 'c564ace0-a377-4b9d-976b-33f4752810a4', 'status': 'pending', 'revision': 2},)])"
+  "detail": "('ok', [({'id': '701f8801-501b-4dd8-beaa-72e22664de31', 'status': 'pending', 'revision': 2},)])"
  },
  {
   "test": "another manager of the same store may withdraw too",
@@ -157,7 +157,7 @@
  {
   "test": "manager withdraws, the month is free again",
   "pass": true,
-  "detail": "('ok', [({'id': 'c564ace0-a377-4b9d-976b-33f4752810a4', 'status': 'withdrawn', 'revision': 2},)])"
+  "detail": "('ok', [({'id': '701f8801-501b-4dd8-beaa-72e22664de31', 'status': 'withdrawn', 'revision': 2},)])"
  },
  {
   "test": "a withdrawn sending cannot be validated",
@@ -167,7 +167,7 @@
  {
   "test": "admin sends for any store",
   "pass": true,
-  "detail": "('ok', [({'id': 'cedf89b4-58c2-401a-97c1-539efffe3e5d', 'status': 'pending', 'revision': 1},)])"
+  "detail": "('ok', [({'id': '016cf608-766a-406d-a5c2-ea646e467c7c', 'status': 'pending', 'revision': 1},)])"
  },
  {
   "test": "admin sees his own sending in the pending list",
@@ -177,7 +177,7 @@
  {
   "test": "admin validates his own sending, with his own name",
   "pass": true,
-  "detail": "('ok', [({'id': 'cedf89b4-58c2-401a-97c1-539efffe3e5d', 'status': 'validated', 'revision': 1},)])"
+  "detail": "('ok', [({'id': '016cf608-766a-406d-a5c2-ea646e467c7c', 'status': 'validated', 'revision': 1},)])"
  },
  {
   "test": "director of EMEA does not see the Japan sending",
@@ -212,7 +212,7 @@
  {
   "test": "validate is accepted, the sent copy becomes the reviewed one when none is given",
   "pass": true,
-  "detail": "('ok', [({'id': 'ded3bbca-e2c6-4283-a7b4-62c29c5cd16d', 'status': 'validated', 'revision': 3},)])"
+  "detail": "('ok', [({'id': '13db2ebd-190c-4e82-9162-63931ca2a186', 'status': 'validated', 'revision': 3},)])"
  },
  {
   "test": "after validation the manager keeps the hand",
@@ -223,5 +223,60 @@
   "test": "two decisions at once: the second waits, then gets a conflict, the first stays",
   "pass": true,
   "detail": "{'b': 'err changed meanwhile'}"
+ },
+ {
+  "test": "history: each step is kept with its author",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "manager cannot cancel",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director of another region cannot cancel",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "cancel with the wrong revision: refused",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "an older sending cannot be cancelled",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "director cancels a validation: cancelled, reason and author kept, validation kept in the history",
+  "pass": true,
+  "detail": "('ok', [({'id': '9e6d5378-dbe5-42b8-ae50-8d827b43ccf4', 'status': 'cancelled', 'revision': 4},)])"
+ },
+ {
+  "test": "cancel: the store sees it as new again",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "a cancelled sending cannot be validated or cancelled again",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "cancelled: the manager changes the month and sends again (revision 5)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "pending: the manager is locked again",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "test": "admin cancels a sending sent too fast, the month is free again",
+  "pass": true,
+  "detail": "('ok', [({'id': '1a3af9a4-aa00-40d2-b0bf-596ff8e21b70', 'status': 'cancelled', 'revision': 5},)])"
  }
 ]

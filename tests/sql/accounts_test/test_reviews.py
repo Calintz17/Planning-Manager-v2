@@ -10,6 +10,8 @@ db = psycopg2.connect(dsn); db.autocommit = True
 c = db.cursor()
 c.execute(open(SQL + '/2026-10-19_retail_reviews.sql').read())
 c.execute(open(SQL + '/2026-10-19_retail_reviews.sql').read())   # can be run again
+c.execute(open(SQL + '/2026-10-19_retail_reviews_cancel.sql').read())   # 10.0.0.1: cancel and history
+c.execute(open(SQL + '/2026-10-19_retail_reviews_cancel.sql').read())
 def one(sql):
     c.execute(sql); return c.fetchone()[0]
 U = {}; c.execute('select email, user_id from retail_profiles'); [U.__setitem__(e.split('@')[0], str(u)) for e, u in c.fetchall()]
@@ -119,6 +121,24 @@ waited = th.is_alive(); ka.commit(); th.join(5)
 check('two decisions at once: the second waits, then gets a conflict, the first stays', waited and out.get('b', '').startswith('err') and 'changed meanwhile' in out['b']
       and one(f"select status || comment from retail_plan_reviews where id = '{r4}'") == 'validatedfirst', out)
 ka.close(); kb.close()
+# cancel (10.0.0.1): the director takes back a validation or a sending sent too fast
+canc = lambda u, r, rev, keep=True: as_user(U[u], f"select retail_cancel_review('{r}', {rev}, 'Clicked too fast')", keep)
+check('history: each step is kept with its author', one(f"select string_agg(e->>'status' || ':' || (e->>'by'), ',' order by ord) from retail_plan_reviews, jsonb_array_elements(history) with ordinality t(e, ord) where id = '{r4}'") == f"pending:{U['m1']},validated:{U['dir']}")
+check('manager cannot cancel', canc('m1', r4, 4, False)[0] == 'err')
+check('director of another region cannot cancel', canc('dirjp', r4, 4, False)[0] == 'err')
+check('cancel with the wrong revision: refused', canc('dir', r4, 3, False)[0] == 'err')
+check('an older sending cannot be cancelled', canc('dir', r3, 3, False)[0] == 'err')
+as_user(U['m1'], f"insert into retail_review_seen(review_id) values ('{r4}')", True)
+c4 = canc('dir', r4, 4)
+check('director cancels a validation: cancelled, reason and author kept, validation kept in the history',
+      c4[0] == 'ok' and one(f"select status || '|' || comment || '|' || decided_by::text || '|' || jsonb_array_length(history) || '|' || (history->1->>'comment') from retail_plan_reviews where id = '{r4}'") == f"cancelled|Clicked too fast|{U['dir']}|3|first", c4)
+check('cancel: the store sees it as new again', one(f"select count(*) from retail_review_seen where review_id = '{r4}'") == 0)
+check('a cancelled sending cannot be validated or cancelled again', as_user(U['dir'], f"select retail_decide_review('{r4}', 4, 'validated', null, '')")[0] == 'err' and canc('dir', r4, 4, False)[0] == 'err')
+check('cancelled: the manager changes the month and sends again (revision 5)', ov('m1', '2026-11-08')[0] == 'ok' and submit('m1', 'Store One')[0] == 'ok' and rid('Store One', 5))
+r5 = rid('Store One', 5)
+check('pending: the manager is locked again', ov('m1', '2026-11-09')[0] == 'err')
+c5 = canc('admin', r5, 5)
+check('admin cancels a sending sent too fast, the month is free again', c5[0] == 'ok' and ov('m1', '2026-11-09')[0] == 'ok', c5)
 json.dump(results, open(H + '/results_reviews.json', 'w'), indent=1)
 print(len(results), 'checks,', len(fails), 'failures'); [print('FAIL', f, [r['detail'] for r in results if r['test'] == f]) for f in fails]
 sys.exit(1 if fails else 0)
