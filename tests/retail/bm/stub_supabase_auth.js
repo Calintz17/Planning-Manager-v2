@@ -82,6 +82,7 @@
     var rows = scope(t, (DB[t] || []).slice()), single = false, write = false, ins = null, head = false;
     var q = {
       gte: function (k, v) { rows = rows.filter(function (r) { return r[k] != null && r[k] >= v; }); return p; },
+      lt: function (k, v) { rows = rows.filter(function (r) { return r[k] != null && r[k] < v; }); return p; },
       order: function (k, o) { var asc = !o || o.ascending !== false; rows.sort(function (x, y) { return (x[k] > y[k] ? 1 : x[k] < y[k] ? -1 : 0) * (asc ? 1 : -1); }); return p; },
       limit: function (n) { rows = rows.slice(0, n); return p; },
       range: function (a, b) { rows = rows.slice(a, b + 1); return p; },
