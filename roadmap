@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CAST - Roadmap</title>
+<meta name="description" content="What CAST does today, release by release, and what comes next.">
+<style>
+:root {
+  --font:Arial, Helvetica, sans-serif;
+  --night:#0C1A33; --brand:#183C74; --mist:#C9D5E6; --mist-2:#8FA3C0; --white:#FFFFFF; --line-dark:#24395E;
+  --tx-1:#17283E; --tx-2:#52647B; --tint:#EAF0FA;
+  --veil:rgba(12,26,51,.66);
+  --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s16:64px;
+  --r-sm:6px; --r-lg:12px; --top-h:72px; --max:1200px;
+  --card:212px;                                   /* side of a square */
+  --step:150px;                                   /* distance between two milestones; they alternate above and below */
+  --stem:26px;                                    /* from the line to a square */
+  --gutter:max(var(--s8), calc((100vw - var(--max)) / 2 + var(--s8)));
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--font); font-size:17px; line-height:1.6; color:var(--white); background:var(--night); -webkit-font-smoothing:antialiased; }
+a { color:inherit; text-decoration:none; }
+.wrap { max-width:var(--max); margin:0 auto; padding:0 var(--s8); }
+:focus-visible { outline:2px solid var(--mist); outline-offset:3px; border-radius:var(--r-sm); }
+
+/* Buttons and top bar: the same as the home page */
+.btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 var(--s6); border-radius:var(--r-sm); border:1px solid transparent; font-size:14px; font-weight:700; white-space:nowrap; transition:background .15s, border-color .15s, color .15s; }
+.btn-light { background:var(--white); color:var(--brand); border-color:var(--white); }
+.btn-light:hover { background:var(--mist); border-color:var(--mist); }
+.btn-sm { min-height:38px; padding:0 var(--s4); font-size:13px; }
+.top { position:sticky; top:0; z-index:20; height:var(--top-h); background:var(--night); border-bottom:1px solid var(--line-dark); }
+.top .wrap { display:flex; align-items:center; justify-content:space-between; height:100%; gap:var(--s4); }
+.brand { display:flex; align-items:center; gap:var(--s4); color:var(--white); }
+.brand img { height:26px; width:auto; filter:brightness(0) invert(1); }
+.brand-txt { display:none; font-size:26px; font-weight:700; font-style:italic; letter-spacing:-.03em; }
+.brand-txt.is-on { display:block; }
+.brand-sub { font-size:12px; line-height:1.35; color:var(--mist); border-left:1px solid var(--line-dark); padding-left:var(--s4); }
+.top-nav { display:flex; align-items:center; gap:var(--s6); font-size:14px; color:var(--mist); }
+.top-nav a.lnk:hover, .top-nav a.lnk[aria-current] { color:var(--white); }
+
+/* One screen, the hero image behind */
+.rm { position:relative; min-height:calc(100vh - var(--top-h)); min-height:calc(100svh - var(--top-h)); display:flex; flex-direction:column; overflow:hidden; }
+.rm-media, .rm-veil { position:absolute; inset:0; }
+.rm-media img { width:100%; height:100%; object-fit:cover; }
+.rm-veil { background:var(--veil); }
+.rm-veil::after { content:""; position:absolute; inset:0; background:var(--brand); mix-blend-mode:color; opacity:.4; }
+.rm-head { position:relative; z-index:2; width:100%; margin-top:clamp(28px, 6vh, 72px); display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s6); flex-wrap:wrap; }
+.rm h1 { font-size:clamp(32px, 3.6vw, 52px); line-height:1.05; letter-spacing:-.025em; }
+.rm-intro { color:var(--mist); font-size:16px; }
+
+/* The line */
+.line { position:relative; z-index:2; flex:1 0 auto; display:flex; align-items:center; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x; overscroll-behavior-x:contain; outline:none; }
+.line::-webkit-scrollbar { display:none; }
+.line.is-drag { cursor:grabbing; }
+.line:focus-visible { box-shadow:inset 0 0 0 2px var(--mist); }
+.rail { position:relative; display:flex; min-width:max-content; height:calc(2 * (var(--card) + var(--stem)) + 24px); padding:0 calc(var(--gutter) + var(--card) / 2); }
+.track { position:absolute; left:0; right:0; top:50%; height:24px; margin-top:-12px; overflow:hidden; pointer-events:none; }
+.track::before { content:""; position:absolute; left:0; right:0; top:12px; height:1px; background:linear-gradient(90deg, rgba(255,255,255,.4) var(--done, 70%), transparent var(--done, 70%)); }
+.track .plan { position:absolute; top:12px; left:var(--done, 70%); width:calc(var(--end, 100%) - var(--done, 70%)); border-top:1px dashed rgba(255,255,255,.4); }
+/* Light running along the line, right to left: the colours of Forecast with AI */
+.streak { position:absolute; top:11px; left:0; width:280px; height:3px; border-radius:3px; pointer-events:none;
+  background:linear-gradient(90deg, transparent 0%, #FFFFFF 14%, #A78BFA 34%, #6366F1 58%, #60A5FA 80%, transparent 100%);
+  animation:run 7s linear infinite; will-change:transform; }
+.streak::after { content:""; position:absolute; inset:-5px 0; border-radius:8px; filter:blur(8px); opacity:.85;
+  background:linear-gradient(90deg, transparent 0%, rgba(167,139,250,.55) 25%, rgba(99,102,241,.5) 55%, rgba(96,165,250,.45) 80%, transparent 100%); }
+@keyframes run { from { transform:translateX(var(--run-from, 2400px)); } to { transform:translateX(-300px); } }
+
+/* Milestones: a dot on the line, a stem, a square above or below */
+.ms { position:relative; width:var(--step); flex:none; height:100%; }
+.dot { position:absolute; left:0; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--white); box-shadow:0 0 0 5px rgba(255,255,255,.12); }
+.ms::after { content:""; position:absolute; left:0; width:1px; height:var(--stem); background:rgba(255,255,255,.45); }
+.ms.up::after { bottom:50%; margin-bottom:6px; }
+.ms.dn::after { top:50%; margin-top:6px; }
+.sq { position:absolute; left:0; transform:translateX(-50%); width:var(--card); height:var(--card); padding:var(--s5); border-radius:var(--r-lg); background:var(--white); color:var(--tx-1); display:flex; flex-direction:column; box-shadow:0 18px 40px rgba(0,0,0,.28); }
+.ms.up .sq { bottom:calc(50% + var(--stem) + 6px); }
+.ms.dn .sq { top:calc(50% + var(--stem) + 6px); }
+.ic { width:40px; height:40px; border-radius:var(--r-sm); background:var(--tint); color:var(--brand); display:flex; align-items:center; justify-content:center; flex:none; }
+.ic svg { width:22px; height:22px; }
+.sq-txt { margin-top:auto; }
+.date { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--tx-2); }
+.sq h2 { margin-top:6px; font-size:18px; line-height:1.2; letter-spacing:-.01em; }
+.sq p { margin-top:6px; font-size:14px; line-height:1.4; color:var(--tx-2); }
+/* Planned: grey squares on the dashed part */
+.ms.next .dot { background:var(--night); border:1px dashed var(--mist); box-shadow:none; }
+.ms.next::after { background:none; border-left:1px dashed rgba(255,255,255,.4); }
+.ms.next .sq { background:rgba(233,237,242,.14); color:var(--white); border:1px dashed rgba(255,255,255,.45); box-shadow:none; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+.ms.next .ic { background:rgba(255,255,255,.12); color:var(--mist); }
+.ms.next .date, .ms.next p { color:var(--mist); }
+
+/* Bottom */
+.rm-foot { position:relative; z-index:2; width:100%; margin-bottom:clamp(20px, 4vh, 48px); display:flex; justify-content:space-between; align-items:center; gap:var(--s6); }
+.hint { display:flex; align-items:center; gap:var(--s3); font-size:13px; color:var(--mist); }
+.hint svg { width:34px; height:12px; }
+.arrows { display:flex; gap:var(--s2); }
+.arw { width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-sm); border:1px solid rgba(255,255,255,.5); background:transparent; color:var(--white); cursor:pointer; transition:background .15s, border-color .15s, opacity .15s; }
+.arw:hover { border-color:var(--white); background:rgba(255,255,255,.08); }
+.arw:disabled { opacity:.35; cursor:default; background:transparent; border-color:rgba(255,255,255,.5); }
+.arw svg { width:18px; height:18px; }
+
+footer { background:var(--night); color:var(--mist-2); font-size:13px; padding:var(--s8) 0; border-top:1px solid var(--line-dark); }
+footer .wrap { display:flex; justify-content:space-between; align-items:center; gap:var(--s4); flex-wrap:wrap; }
+.sign { color:var(--mist); }
+
+@media (max-width: 640px) {
+  :root { --top-h:64px; --card:176px; --step:120px; --stem:20px; --gutter:var(--s5); }
+  body { font-size:16px; }
+  .wrap { padding:0 var(--s5); }
+  .brand-sub, .top-nav a.lnk { display:none; }
+  .sq { padding:var(--s4); }
+  .sq h2 { font-size:16px; }
+  .sq p { font-size:13px; }
+  .ic { width:34px; height:34px; }
+  .ic svg { width:19px; height:19px; }
+  .hint span { display:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .streak { animation:none; display:none; }
+}
+</style>
+<script>
+// Crop the empty margins of the logo image (as on the home page)
+function trimLogo(img) {
+  if (img.dataset.trimmed) return;
+  try {
+    var c = document.createElement('canvas'), w = img.naturalWidth, h = img.naturalHeight;
+    c.width = w; c.height = h;
+    var x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    var d = x.getImageData(0, 0, w, h).data, x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (var y = 0; y < h; y++) for (var i = 0; i < w; i++) {
+      var k = (y * w + i) * 4;
+      if (d[k + 3] > 20 && (d[k] < 235 || d[k + 1] < 235 || d[k + 2] < 235)) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    if (x1 <= x0 || y1 <= y0) return;
+    var o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+    o.getContext('2d').drawImage(img, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+    img.dataset.trimmed = '1'; img.src = o.toDataURL('image/png');
+  } catch (e) {}
+}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img src="logo/CAST_LOGO_TEXTE.png" alt="CAST" onload="trimLogo(this)" onerror="this.style.display='none';this.nextElementSibling.classList.add('is-on')">
+      <span class="brand-txt">CAST.</span>
+      <span class="brand-sub">CELINE Automated<br>Scheduling Tool</span>
+    </a>
+    <nav class="top-nav">
+      <a class="lnk" href="roadmap.html" aria-current="page">Roadmap</a>
+      <a class="lnk" href="index.html#modules">Modules</a>
+      <a class="lnk" href="index.html#how">How it works</a>
+      <a class="lnk" href="index.html#better">Better each month</a>
+      <a class="btn btn-light btn-sm" href="index.html#modules">Open CAST</a>
+    </nav>
+  </div>
+</header>
+
+<main class="rm">
+  <div class="rm-media"><img src="image%20homepage/hero.jpg" alt=""></div>
+  <div class="rm-veil"></div>
+
+  <div class="wrap rm-head">
+    <h1>Roadmap</h1>
+    <p class="rm-intro">7 releases since March 2026. 2 more planned by November.</p>
+  </div>
+
+  <div class="line" id="line" tabindex="0" role="region" aria-label="Roadmap. Use the arrow keys or drag to move along it.">
+    <div class="rail" id="rail" role="list">
+      <div class="track" aria-hidden="true"><span class="plan"></span><span class="streak"></span></div>
+
+      <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/><path d="M19 20a3 3 0 0 1-3 2h-3"/></svg></span>
+        <div class="sq-txt"><div class="date">March 2026</div><h2>Client Service</h2><p>Weekly planning for calls, chats and emails.</p></div></div></div>
+
+      <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/><path d="M10 21v-5h4v5"/></svg></span>
+        <div class="sq-txt"><div class="date">June 2026</div><h2>Retail</h2><p>Store planning built from store traffic.</p></div></div></div>
+
+      <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2"/></svg></span>
+        <div class="sq-txt"><div class="date">August 2026</div><h2>Monthly planning</h2><p>Shifts, days off and corners for the whole month.</p></div></div></div>
+
+      <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div class="sq-txt"><div class="date">September 2026</div><h2>Intraday</h2><p>Breaks and lunches placed hour by hour.</p></div></div></div>
+
+      <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>Learning engine</h2><p>Repeats the manager's usual changes in the next draft.</p></div></div></div>
+
+      <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><rect x="15" y="11" width="7" height="6" rx="1.5"/><path d="M16.5 11V9.5a2 2 0 0 1 4 0V11"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>Accounts</h2><p>Each user sees only their own stores.</p></div></div></div>
+
+      <div class="ms up" role="listitem" id="last-done"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="m9 13 2 2 4-4"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>Director validation</h2><p>Directors approve or return each planning.</p></div></div></div>
+
+      <div class="ms dn next" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/><path d="M15 6h5v5"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>AI traffic forecast</h2><p>Forecasts store traffic for the coming weeks.</p></div></div></div>
+
+      <div class="ms up next" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+        <div class="sq-txt"><div class="date">November 2026</div><h2>Insights</h2><p>Planning figures for all stores on one page.</p></div></div></div>
+    </div>
+  </div>
+
+  <div class="wrap rm-foot">
+    <div class="hint" aria-hidden="true">
+      <svg viewBox="0 0 34 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h32M5 2 1 6l4 4M29 2l4 4-4 4"/></svg>
+      <span>Drag the line</span>
+    </div>
+    <div class="arrows">
+      <button class="arw" type="button" id="prev" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="arw" type="button" id="next" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>CAST - CELINE Automated Scheduling Tool. Internal tool for CELINE teams.</span>
+    <span class="sign">© Roman Inc.</span>
+  </div>
+</footer>
+
+<script>
+(function() {
+  var line = document.getElementById('line'), rail = document.getElementById('rail'), lastDone = document.getElementById('last-done');
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Solid line up to the last release, dashed after; the light starts from the right end of the line
+  function size() {
+    rail.style.setProperty('--done', (lastDone.offsetLeft + lastDone.offsetWidth / 2) + 'px');
+    var last = rail.querySelector('.ms:last-of-type');
+    rail.style.setProperty('--end', (last.offsetLeft + 64) + 'px');
+    rail.style.setProperty('--run-from', rail.offsetWidth + 'px');
+    arrows();
+  }
+  function step() { return lastDone.offsetWidth * 2 || 300; }
+  function go(dx) { line.scrollBy({ left: dx, behavior: reduce ? 'auto' : 'smooth' }); }
+  function arrows() {
+    prev.disabled = line.scrollLeft <= 2;
+    next.disabled = line.scrollLeft + line.clientWidth >= line.scrollWidth - 2;
+  }
+  // Drag with the mouse (touch scrolls natively)
+  var down = false, x0 = 0, s0 = 0, moved = false;
+  line.addEventListener('pointerdown', function(e) {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false; x0 = e.clientX; s0 = line.scrollLeft; line.classList.add('is-drag');
+  });
+  window.addEventListener('pointermove', function(e) {
+    if (!down) return;
+    var dx = e.clientX - x0; if (Math.abs(dx) > 3) moved = true;
+    line.scrollLeft = s0 - dx;
+  });
+  window.addEventListener('pointerup', function() { down = false; line.classList.remove('is-drag'); });
+  line.addEventListener('click', function(e) { if (moved) { e.preventDefault(); e.stopPropagation(); } }, true);
+  // A vertical wheel moves along the line too
+  line.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    var max = line.scrollWidth - line.clientWidth;
+    if ((e.deltaY < 0 && line.scrollLeft <= 0) || (e.deltaY > 0 && line.scrollLeft >= max)) return;
+    e.preventDefault(); line.scrollLeft += e.deltaY;
+  }, { passive: false });
+  line.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(step()); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-step()); }
+    else if (e.key === 'Home') { e.preventDefault(); go(-line.scrollWidth); }
+    else if (e.key === 'End') { e.preventDefault(); go(line.scrollWidth); }
+  });
+  prev.addEventListener('click', function() { go(-step()); });
+  next.addEventListener('click', function() { go(step()); });
+  line.addEventListener('scroll', arrows, { passive: true });
+  window.addEventListener('resize', size);
+  size();
+})();
+</script>
+</body>
+</html>
