@@ -1,0 +1,68 @@
+/* Design proposal only. Companion integration notes are in the Roadmap design audit.
+   Keep the original header, links, content, drag and keyboard controls. */
+:root {
+  --card:248px;
+  --card-h:176px;
+  --step:180px;
+  --stem:30px;
+  --rm-paper:#F1F4F7;
+  --rm-planned:#1B2B40;
+  --rm-ice:#B5CDDF;
+}
+.rm-intro { position:relative; z-index:2; width:100%; padding-top:36px; padding-bottom:20px; }
+.rm-eyebrow { color:#AABCD0; font-size:10px; font-weight:700; letter-spacing:.10em; }
+.rm-intro h1 { margin-top:8px; color:#F4F6FA; font-size:32px; line-height:1.2; letter-spacing:-.02em; }
+.rm-intro p { margin-top:8px; color:#C2CFDC; font-size:15px; line-height:1.5; }
+.rm-veil { background:rgba(12,26,51,.74); }
+.rm-veil::after { opacity:.18; }
+.line { scroll-snap-type:x proximity; touch-action:pan-x pan-y pinch-zoom; }
+.line.is-drag { scroll-snap-type:none; }
+.ms { scroll-snap-align:center; }
+.sq {
+  padding:20px 24px;
+  background:var(--rm-paper);
+  border:1px solid #DBE2E9;
+  box-shadow:0 6px 20px rgba(0,0,0,.14);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+.ic svg { width:22px; height:22px; stroke-width:1.6; }
+.date { font-size:10px; letter-spacing:.06em; }
+.sq h2 { font-size:18px; line-height:1.25; margin-top:7px; }
+.sq p { font-size:14px; line-height:1.4; margin-top:7px; }
+.rm-state { position:absolute; top:20px; right:18px; color:#426457; font-size:9px; line-height:18px; font-weight:700; letter-spacing:.03em; }
+.rm-state::before { content:""; display:inline-block; width:4px; height:4px; margin-right:6px; border-radius:50%; background:currentColor; vertical-align:middle; }
+.ms.current .sq { border-color:var(--rm-ice); box-shadow:0 6px 20px rgba(0,0,0,.14),0 0 24px rgba(143,185,214,.15); }
+.ms.current .dot { background:#F1F5F8; box-shadow:0 0 0 4px rgba(143,185,214,.3),0 0 0 7px rgba(143,185,214,.09); }
+.ms.current .rm-state { color:#28516D; background:#E1EBF4; padding:0 7px; border-radius:4px; font-size:8px; }
+.ms.next .sq { color:#EDF2F7; background:rgba(27,43,64,.96); border-color:#56697E; box-shadow:0 6px 20px rgba(0,0,0,.12); }
+.ms.next .ic { color:#B7CBDF; }
+.ms.next .date,.ms.next p { color:#BECCD9; }
+.ms.next .rm-state { color:#D3DFE9; border:1px solid #53677D; border-radius:4px; padding:0 7px; line-height:17px; }
+.ms.next .rm-state::before { display:none; }
+.track::before { background:rgba(181,205,223,.55); }
+.streak { width:280px; height:1.5px; background:linear-gradient(90deg,transparent,#8FAFC8 40%,#E9F3FA 75%,transparent); animation:run 14s linear infinite; }
+.streak::after { inset:-2px 0; filter:blur(4px); opacity:.35; background:linear-gradient(90deg,transparent,rgba(181,205,223,.5),transparent); }
+@keyframes run { from { transform:translateX(-300px); } to { transform:translateX(var(--run-to,2400px)); } }
+.arw { width:44px; height:44px; border-color:#6A7D91; background:rgba(24,42,62,.5); }
+.arw:hover:not(:disabled) { background:rgba(181,205,223,.1); border-color:#B5CDDF; }
+.top-nav a[aria-current="page"] { position:relative; color:#FFFFFF; }
+.top-nav a[aria-current="page"]::after { content:""; position:absolute; left:0; right:0; height:2px; bottom:-25px; background:var(--rm-ice); }
+@media(max-width:640px) {
+  :root { --card:min(326px,calc(100vw - 64px)); --card-h:220px; --step:calc(var(--card) + 20px); --stem:38px; }
+  .rm-intro { padding-top:30px; padding-bottom:20px; }
+  .rm-intro h1 { font-size:30px; }
+  .rm-intro p { font-size:15px; }
+  .line { flex:1 0 338px; }
+  .rail { height:calc(var(--card-h) + var(--stem) + 48px); padding-inline:50vw; }
+  .track { top:calc(100% - 24px); }
+  .dot { top:calc(100% - 24px); }
+  .ms.up::after,.ms.dn::after { top:auto; bottom:24px; margin:0; height:var(--stem); }
+  .ms.up .sq,.ms.dn .sq { top:auto; bottom:calc(24px + var(--stem) + 6px); }
+  .sq { padding:22px 24px; }
+  .sq h2 { font-size:20px; }
+  .sq p { font-size:14px; }
+  .hint span { display:inline; font-size:12px; }
+  .rm-foot { gap:12px; }
+}
+@media(prefers-reduced-motion:reduce) { .streak { display:none; animation:none; } .line { scroll-behavior:auto; } }
