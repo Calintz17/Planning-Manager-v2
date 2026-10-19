@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CAST - Roadmap</title>
+<meta name="description" content="The milestones of CAST, the CELINE Automated Scheduling Tool, and what comes next.">
+<style>
+:root {
+  --font:Arial, Helvetica, sans-serif;
+  --night:#0C1A33; --brand:#183C74; --mist:#C9D5E6; --mist-2:#8FA3C0; --white:#FFFFFF; --line-dark:#24395E;
+  --veil:rgba(12,26,51,.62);
+  --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px; --s16:64px;
+  --r-sm:6px; --top-h:72px; --max:1200px;
+  --step:340px;                                   /* room of one milestone on the line */
+  --gutter:max(var(--s8), calc((100vw - var(--max)) / 2 + var(--s8)));
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--font); font-size:17px; line-height:1.6; color:var(--white); background:var(--night); -webkit-font-smoothing:antialiased; }
+a { color:inherit; text-decoration:none; }
+.wrap { max-width:var(--max); margin:0 auto; padding:0 var(--s8); }
+:focus-visible { outline:2px solid var(--mist); outline-offset:3px; border-radius:var(--r-sm); }
+
+/* Buttons and top bar: the same as the home page */
+.btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 var(--s6); border-radius:var(--r-sm); border:1px solid transparent; font-size:14px; font-weight:700; white-space:nowrap; transition:background .15s, border-color .15s, color .15s; }
+.btn-light { background:var(--white); color:var(--brand); border-color:var(--white); }
+.btn-light:hover { background:var(--mist); border-color:var(--mist); }
+.btn-sm { min-height:38px; padding:0 var(--s4); font-size:13px; }
+.top { position:sticky; top:0; z-index:20; height:var(--top-h); background:var(--night); border-bottom:1px solid var(--line-dark); }
+.top .wrap { display:flex; align-items:center; justify-content:space-between; height:100%; gap:var(--s4); }
+.brand { display:flex; align-items:center; gap:var(--s4); color:var(--white); }
+.brand img { height:26px; width:auto; filter:brightness(0) invert(1); }
+.brand-txt { display:none; font-size:26px; font-weight:700; font-style:italic; letter-spacing:-.03em; }
+.brand-txt.is-on { display:block; }
+.brand-sub { font-size:12px; line-height:1.35; color:var(--mist); border-left:1px solid var(--line-dark); padding-left:var(--s4); }
+.top-nav { display:flex; align-items:center; gap:var(--s6); font-size:14px; color:var(--mist); }
+.top-nav a.lnk:hover, .top-nav a.lnk[aria-current] { color:var(--white); }
+
+/* The page: one screen, the hero image behind the line */
+.rm { position:relative; min-height:calc(100vh - var(--top-h)); min-height:calc(100svh - var(--top-h)); display:flex; flex-direction:column; overflow:hidden; }
+.rm-media, .rm-veil { position:absolute; inset:0; }
+.rm-media img { width:100%; height:100%; object-fit:cover; }
+.rm-veil { background:var(--veil); }
+.rm-veil::after { content:""; position:absolute; inset:0; background:var(--brand); mix-blend-mode:color; opacity:.4; }
+.rm-head { position:relative; z-index:2; width:100%; margin-top:clamp(32px, 7vh, 88px); display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s10); flex-wrap:wrap; }
+.eyebrow { font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--mist); }
+.rm h1 { margin-top:var(--s3); font-size:clamp(38px, 4.8vw, 72px); line-height:1; letter-spacing:-.035em; font-weight:700; max-width:16ch; }
+.rm-intro { max-width:27em; color:var(--mist); font-size:17px; }
+
+/* The line: a long rule to drag, milestones above and below it */
+.line { position:relative; z-index:2; flex:1; display:flex; align-items:center; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x; overscroll-behavior-x:contain; outline:none; }
+.line::-webkit-scrollbar { display:none; }
+.line.is-drag { cursor:grabbing; }
+.line:focus-visible { box-shadow:inset 0 0 0 2px var(--mist); }
+.rail { position:relative; display:flex; min-width:max-content; padding:0 var(--gutter); height:460px; }
+.rail::before { content:""; position:absolute; left:0; width:var(--done, 0px); top:50%; height:1px; background:rgba(255,255,255,.28); }
+.done-line { position:absolute; left:0; top:50%; height:2px; margin-top:-1px; background:var(--white); width:var(--done, 0px); transform-origin:left; animation:draw 1.4s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes draw { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+.ms { position:relative; width:var(--step); flex:none; height:100%; }
+.ms::before { content:""; position:absolute; left:0; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border-radius:50%; background:var(--white); box-shadow:0 0 0 6px rgba(255,255,255,.12); }
+.ms::after { content:""; position:absolute; left:0; width:1px; background:rgba(255,255,255,.35); }
+.ms.up::after { bottom:50%; height:44px; margin-bottom:12px; }
+.ms.dn::after { top:50%; height:44px; margin-top:12px; }
+.ms-body { position:absolute; left:0; width:calc(var(--step) - var(--s10)); padding-left:var(--s5); border-left:1px solid transparent; }
+.ms.up .ms-body { bottom:calc(50% + 60px); }
+.ms.dn .ms-body { top:calc(50% + 60px); }
+.ms-date { font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--mist); }
+.ms h2 { margin-top:var(--s2); font-size:clamp(22px, 2vw, 26px); line-height:1.15; letter-spacing:-.015em; }
+.ms p { margin-top:var(--s2); font-size:15px; line-height:1.55; color:var(--mist); }
+.ms-num { position:absolute; left:var(--s5); top:50%; transform:translateY(-50%); font-size:12px; font-weight:700; color:var(--mist-2); padding-left:var(--s3); }
+.ms.up .ms-num { margin-top:18px; }
+.ms.dn .ms-num { margin-top:-18px; }
+
+/* Today, between what is done and what comes */
+.ms.today::before { background:var(--night); border:2px solid var(--white); box-shadow:0 0 0 6px rgba(255,255,255,.12); }
+.ms.today .pulse { position:absolute; left:0; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border-radius:50%; border:1px solid var(--white); animation:pulse 2.4s ease-out infinite; }
+@keyframes pulse { from { transform:scale(1); opacity:.8; } to { transform:scale(3.2); opacity:0; } }
+
+/* Coming soon: grey, on a dashed line */
+.next { position:relative; display:flex; }
+.next::before { content:""; position:absolute; left:0; right:var(--s16); top:50%; border-top:1px dashed rgba(255,255,255,.4); }
+.ms.soon::before { background:transparent; border:1px dashed var(--mist-2); box-shadow:none; }
+.ms.soon::after { background:none; border-left:1px dashed rgba(255,255,255,.3); }
+.ms.soon h2, .ms.soon p { color:var(--mist-2); }
+.now { margin-left:var(--s3); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--white); }
+.end { width:var(--s16); flex:none; }
+
+/* Bottom: how to travel the line */
+.rm-foot { position:relative; z-index:2; width:100%; margin-bottom:clamp(24px, 5vh, 56px); display:flex; justify-content:space-between; align-items:center; gap:var(--s6); }
+.hint { display:flex; align-items:center; gap:var(--s3); font-size:13px; color:var(--mist); }
+.hint svg { width:34px; height:12px; }
+.arrows { display:flex; gap:var(--s2); }
+.arw { width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border-radius:var(--r-sm); border:1px solid rgba(255,255,255,.5); background:transparent; color:var(--white); cursor:pointer; transition:background .15s, border-color .15s, opacity .15s; }
+.arw:hover { border-color:var(--white); background:rgba(255,255,255,.08); }
+.arw:disabled { opacity:.35; cursor:default; background:transparent; border-color:rgba(255,255,255,.5); }
+.arw svg { width:18px; height:18px; }
+
+footer { background:var(--night); color:var(--mist-2); font-size:13px; padding:var(--s8) 0; border-top:1px solid var(--line-dark); }
+footer .wrap { display:flex; justify-content:space-between; align-items:center; gap:var(--s4); flex-wrap:wrap; }
+.sign { color:var(--mist); }
+
+/* Phones: every milestone under the line, a narrower step */
+@media (max-width: 640px) {
+  :root { --top-h:64px; --step:270px; --gutter:var(--s5); }
+  body { font-size:16px; }
+  .wrap { padding:0 var(--s5); }
+  .brand-sub, .top-nav a.lnk { display:none; }
+  .rm-intro { font-size:16px; }
+  .rail { height:330px; }
+  .rail::before, .done-line, .next::before, .ms::before, .ms.today .pulse { top:22%; }
+  .ms.up::after, .ms.dn::after { top:22%; bottom:auto; height:28px; margin:12px 0 0; }
+  .ms.up .ms-body, .ms.dn .ms-body { top:calc(22% + 52px); bottom:auto; }
+  .ms.up .ms-num, .ms.dn .ms-num { top:22%; margin-top:-22px; }
+  .hint span { display:none; }
+  .end { width:max(var(--s5), calc(100vw - var(--step) - 2 * var(--gutter))); }   /* the last milestone can come fully into view */
+}
+@media (prefers-reduced-motion: reduce) {
+  .done-line, .ms.today .pulse { animation:none; }
+  .line { scroll-behavior:auto; }
+}
+</style>
+<script>
+// Crop the empty margins of the logo image (as on the home page)
+function trimLogo(img) {
+  if (img.dataset.trimmed) return;
+  try {
+    var c = document.createElement('canvas'), w = img.naturalWidth, h = img.naturalHeight;
+    c.width = w; c.height = h;
+    var x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    var d = x.getImageData(0, 0, w, h).data, x0 = w, y0 = h, x1 = 0, y1 = 0;
+    for (var y = 0; y < h; y++) for (var i = 0; i < w; i++) {
+      var k = (y * w + i) * 4;
+      if (d[k + 3] > 20 && (d[k] < 235 || d[k + 1] < 235 || d[k + 2] < 235)) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    }
+    if (x1 <= x0 || y1 <= y0) return;
+    var o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+    o.getContext('2d').drawImage(img, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+    img.dataset.trimmed = '1'; img.src = o.toDataURL('image/png');
+  } catch (e) {}
+}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img src="logo/CAST_LOGO_TEXTE.png" alt="CAST" onload="trimLogo(this)" onerror="this.style.display='none';this.nextElementSibling.classList.add('is-on')">
+      <span class="brand-txt">CAST.</span>
+      <span class="brand-sub">CELINE Automated<br>Scheduling Tool</span>
+    </a>
+    <nav class="top-nav">
+      <a class="lnk" href="roadmap.html" aria-current="page">Roadmap</a>
+      <a class="lnk" href="index.html#modules">Modules</a>
+      <a class="lnk" href="index.html#how">How it works</a>
+      <a class="lnk" href="index.html#better">Better each month</a>
+      <a class="btn btn-light btn-sm" href="index.html#modules">Open CAST</a>
+    </nav>
+  </div>
+</header>
+
+<main class="rm">
+  <div class="rm-media"><img src="image%20homepage/hero.jpg" alt=""></div>
+  <div class="rm-veil"></div>
+
+  <div class="wrap rm-head">
+    <div>
+      <div class="eyebrow">Roadmap</div>
+      <h1>Seven milestones. Eight months.</h1>
+    </div>
+    <p class="rm-intro">From a first Client Service MVP to a planning tool that learns from its managers, with accounts and validation. And more on the way.</p>
+  </div>
+
+  <div class="line" id="line" tabindex="0" role="region" aria-label="Roadmap timeline. Use the arrow keys or drag to move along it.">
+    <div class="rail" id="rail" role="list">
+      <span class="done-line" id="done-line" aria-hidden="true"></span>
+      <div role="listitem" class="ms dn"><span class="ms-num">01</span><div class="ms-body"><div class="ms-date">March 2026</div><h2>Client Service MVP</h2><p>Calls, chats and emails staffed from forecast volume, for the six Client Service centers.</p></div></div>
+      <div role="listitem" class="ms up"><span class="ms-num">02</span><div class="ms-body"><div class="ms-date">June 2026</div><h2>First Retail draft</h2><p>The planning logic brought to the boutiques: stores, teams and traffic.</p></div></div>
+      <div role="listitem" class="ms dn"><span class="ms-num">03</span><div class="ms-body"><div class="ms-date">August 2026</div><h2>A working monthly planning</h2><p>Shifts, corners, days off, holidays and exports, planned from store traffic.</p></div></div>
+      <div role="listitem" class="ms up"><span class="ms-num">04</span><div class="ms-body"><div class="ms-date">September 2026</div><h2>Intraday</h2><p>Every day hour by hour: briefs, Welcome, lunches, breaks and reinforcements, timed to traffic.</p></div></div>
+      <div role="listitem" class="ms dn"><span class="ms-num">05</span><div class="ms-body"><div class="ms-date">October 2026</div><h2>An engine that learns from managers</h2><p>Each validated planning brings the next first draft closer to the one the manager would have made.</p></div></div>
+      <div role="listitem" class="ms up"><span class="ms-num">06</span><div class="ms-body"><div class="ms-date">October 2026</div><h2>Accounts and roles</h2><p>Managers, directors and administrators, each with their own stores and rights.</p></div></div>
+      <div role="listitem" class="ms dn today" id="today"><span class="pulse" aria-hidden="true"></span><span class="ms-num">07<b class="now">Today</b></span><div class="ms-body"><div class="ms-date">October 2026</div><h2>Director validation</h2><p>Plannings sent, reviewed, validated or returned by the director, with their full history.</p></div></div>
+      <div class="next">
+          <div role="listitem" class="ms up soon"><span class="ms-num">08</span><div class="ms-body"><div class="ms-date">Coming soon</div><h2>AI traffic forecast</h2><p>Store traffic forecast by AI, so each planning starts from the days ahead.</p></div></div>
+          <div role="listitem" class="ms dn soon"><span class="ms-num">09</span><div class="ms-body"><div class="ms-date">Coming soon</div><h2>Insights</h2><p>One page to read the planning of every boutique in a network, at a glance.</p></div></div>
+        <div class="end" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap rm-foot">
+    <div class="hint" aria-hidden="true">
+      <svg viewBox="0 0 34 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h32M5 2 1 6l4 4M29 2l4 4-4 4"/></svg>
+      <span>Drag the line to travel through time</span>
+    </div>
+    <div class="arrows">
+      <button class="arw" type="button" id="prev" aria-label="Previous milestones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="arw" type="button" id="next" aria-label="Next milestones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>CAST - CELINE Automated Scheduling Tool. Internal tool for CELINE teams.</span>
+    <span class="sign">© Roman Inc.</span>
+  </div>
+</footer>
+
+<script>
+(function() {
+  var line = document.getElementById('line'), rail = document.getElementById('rail'), today = document.getElementById('today');
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The solid line runs from the start to today; the dashed line goes on to what comes
+  function sizeDone() { rail.style.setProperty('--done', today.offsetLeft + 'px'); }
+  function step() { return today.offsetWidth || 340; }
+  function go(dx) { line.scrollBy({ left: dx, behavior: reduce ? 'auto' : 'smooth' }); }
+  function arrows() {
+    prev.disabled = line.scrollLeft <= 2;
+    next.disabled = line.scrollLeft + line.clientWidth >= line.scrollWidth - 2;
+  }
+  // Drag with the mouse (touch scrolls natively)
+  var down = false, x0 = 0, s0 = 0, moved = false;
+  line.addEventListener('pointerdown', function(e) {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false; x0 = e.clientX; s0 = line.scrollLeft; line.classList.add('is-drag');
+  });
+  window.addEventListener('pointermove', function(e) {
+    if (!down) return;
+    var dx = e.clientX - x0; if (Math.abs(dx) > 3) moved = true;
+    line.scrollLeft = s0 - dx;
+  });
+  window.addEventListener('pointerup', function() { down = false; line.classList.remove('is-drag'); });
+  line.addEventListener('click', function(e) { if (moved) { e.preventDefault(); e.stopPropagation(); } }, true);
+  // A vertical wheel moves along the line too
+  line.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    var max = line.scrollWidth - line.clientWidth;
+    if ((e.deltaY < 0 && line.scrollLeft <= 0) || (e.deltaY > 0 && line.scrollLeft >= max)) return;
+    e.preventDefault(); line.scrollLeft += e.deltaY;
+  }, { passive: false });
+  line.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(step()); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-step()); }
+    else if (e.key === 'Home') { e.preventDefault(); go(-line.scrollWidth); }
+    else if (e.key === 'End') { e.preventDefault(); go(line.scrollWidth); }
+  });
+  prev.addEventListener('click', function() { go(-step() * 2); });
+  next.addEventListener('click', function() { go(step() * 2); });
+  line.addEventListener('scroll', arrows, { passive: true });
+  window.addEventListener('resize', function() { sizeDone(); arrows(); });
+  sizeDone(); arrows();
+})();
+</script>
+</body>
+</html>

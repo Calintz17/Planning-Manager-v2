@@ -23,5 +23,18 @@ step('Recalculate from today: always calculated', "forceRecalc=true;try{renderMo
 step('midnight: yesterday becomes past, a new calculation', "window.NOW='2026-10-20T00:05:00';renderMonthlyPlanning();", {calc: true});
 step('a new engine version: a new calculation', "CAST_VERSION='test-next';renderMonthlyPlanning();", {calc: true});
 out.push(['another store: the old result is never applied', run(c, `(()=>{var r=pickMonthlyPlan();currentStoreId='other-store';var applied=r.paint();currentStoreId='bm';return applied===false})()`), '']);
+// What is seen (Astra 10.0.0.6): a kept result is really drawn again, with the language and the corner shown
+const d = context(file);
+run(d, `Date=class extends Date{constructor(...a){super(...(a.length?a:['2026-10-19T12:00:00']));}static now(){return new Date().getTime();}};
+monthlyRef=new Date(2026,10,1);manualMode=true;planSnapshot={storeId:currentStoreId,month:snapshotMonthKey(),ok:true,plan:{}};
+var saveOk=true;savePlanSnapshot=function(s,m,p){if(saveOk)planSnapshot.confirmed=p;return Promise.resolve(saveOk);};
+var box=document.getElementById('planning-monthly-body');var rows=function(){return (box.innerHTML.match(/<tr/g)||[]).length;};
+var show=function(){box.innerHTML='';var r=renderMonthlyPlanning();return {r:r,html:box.innerHTML,rows:rows()};};`);
+out.push(['after the save, shown again from the kept result: drawn', run(d, `(()=>{var a=show(),b=show();return a.rows>0&&b.r===a.r&&b.html===a.html})()`), '']);
+out.push(['corner shown: the table is drawn again with that corner only', run(d, `(()=>{var all=show();currentCornerView=storeCorners[0].id;var one=show();currentCornerView=null;var back=show();return one.r===all.r&&one.rows>0&&one.rows<all.rows&&back.html===all.html})()`), '']);
+out.push(['language: the kept result is drawn in the new language', run(d, `(()=>{var en=show();CURRENT_LANG='fr';var fr=show();CURRENT_LANG='en';var back=show();return fr.r===en.r&&fr.rows===en.rows&&fr.html!==en.html&&back.html===en.html})()`), '']);
+out.push(['a refused save: the result is not kept for the new data, nothing stale is drawn', run(d, `(()=>{saveOk=false;var a=pickMonthlyPlan(),ds=Object.keys(a.cells)[5],ag=agents.find(x=>poolOf(x)==='sales');planningOverrides[ag.id]=Object.assign({},planningOverrides[ag.id],{[ds]:'OFF'});
+  var stale=a.paint(),b=show();saveOk=true;return stale===false&&b.r!==a&&b.rows>0})()`), '']);
+out.push(['another store: a kept result is never drawn', run(d, `(()=>{var r=pickMonthlyPlan();box.innerHTML='kept';currentStoreId='other-store';var applied=r.paint();currentStoreId='bm';return applied===false&&box.innerHTML==='kept'})()`), '']);
 console.log(out.map(x => (x[1] ? 'OK   ' : 'FAIL ') + x[0] + (x[1] ? '' : ' ' + x[2])).join('\n'));
 process.exitCode = out.every(x => x[1]) ? 0 : 1;
