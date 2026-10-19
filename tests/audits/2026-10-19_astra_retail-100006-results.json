@@ -1,0 +1,6515 @@
+{
+  "version": "10.0.0.6 TEST",
+  "score": 84,
+  "main_sha": "bf58fb8ad2a40ecaedec103f8f0c2b5d35b24070",
+  "test_sha": "f8126bd3edf8768c6f08f99ccca1a7f1cc38a4ce",
+  "candidate_sha256": "97ba5aa94f4ecebe86dd463fd3a42c0ff30e147e477b2567ef243c3c6b1677a0",
+  "functional": [
+    {
+      "kind": "bm",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        28,
+        28
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        28,
+        28
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        80,
+        80
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        80,
+        80
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers3",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        4,
+        4
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers1",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        3,
+        3
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noManagers",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "oneAdvisor",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "violation",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        0,
+        0
+      ],
+      "mandatory": 38,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noAdvisor",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "violation",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        0,
+        0
+      ],
+      "mandatory": 60,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "allAbsentWeek",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        39,
+        39
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "fairnessOff",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noCornerTraffic",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "oneCorner",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "closedDays",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        27,
+        27
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "holidaysOpen",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "manualMix",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        0,
+        0
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sixDaysManual",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "violation",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        50,
+        50
+      ],
+      "mandatory": 3,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "shortHours",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        0,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "strictRest",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        50,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedKept",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedRecalc",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers3",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        12,
+        12
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "manualMix",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "violation",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        0,
+        0
+      ],
+      "mandatory": 56,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedKept",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        28,
+        28
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedRecalc",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        28,
+        28
+      ],
+      "mandatory": 0,
+      "pass": true
+    }
+  ],
+  "functional_19": [
+    {
+      "kind": "bm",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        54,
+        54
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        51,
+        51
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        21,
+        21
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        28,
+        28
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        60,
+        60
+      ],
+      "mandatory": 0,
+      "pass": true
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "sameCells": true,
+      "sameIssues": true,
+      "sameStatus": true,
+      "status": "incomplete",
+      "error": null,
+      "oldError": null,
+      "missing": 0,
+      "twoOff": [
+        80,
+        80
+      ],
+      "mandatory": 0,
+      "pass": true
+    }
+  ],
+  "late": [
+    {
+      "kind": "bm",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "213/213",
+        "213/213"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "221/221",
+        "221/221"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "97/97",
+        "97/97"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "223/223",
+        "223/223"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "223/223",
+        "223/223"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "87/87",
+        "87/87"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "84/84",
+        "84/84"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "37/37",
+        "37/37"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "85/85",
+        "85/85"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "85/85",
+        "85/85"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "216/216",
+        "216/216"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "227/227",
+        "227/227"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "101/101",
+        "101/101"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "227/227",
+        "227/227"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "227/227",
+        "227/227"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "230/230",
+        "230/230"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "230/230",
+        "230/230"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers3",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "28/23",
+        "28/23"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers1",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "21/21",
+        "21/21"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noManagers",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "186/186",
+        "186/186"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "oneAdvisor",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        38,
+        38
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "openNone|2026-11-01",
+        "openNone|2026-11-02",
+        "openNone|2026-11-03",
+        "closeNone|2026-11-03",
+        "openNone|2026-11-04"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noAdvisor",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        60,
+        60
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "openNone|2026-11-01",
+        "closeNone|2026-11-01",
+        "openNone|2026-11-02",
+        "closeNone|2026-11-02",
+        "openNone|2026-11-03"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "allAbsentWeek",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "142/142",
+        "142/142"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "fairnessOff",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "179/183",
+        "179/183"
+      ],
+      "shortDays": [
+        6,
+        6
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noCornerTraffic",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "oneCorner",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "closedDays",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "182/182",
+        "182/182"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "holidaysOpen",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "manualMix",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "157/157",
+        "157/157"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sixDaysManual",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        3,
+        3
+      ],
+      "late": [
+        "184/184",
+        "184/184"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "row|a09|2026-11-07",
+        "week|a09|2026-11-02",
+        "hours|a09|2026-11-02"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "shortHours",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "150/150",
+        "150/150"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "strictRest",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "182/184",
+        "182/184"
+      ],
+      "shortDays": [
+        2,
+        2
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedKept",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "fourPeople",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "22/22",
+        "22/22"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "tenPlusOne",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "109/96",
+        "109/96"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedRecalc",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers3",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "36/36",
+        "36/36"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "manualMix",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        56,
+        56
+      ],
+      "late": [
+        "58/58",
+        "58/58"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "data|j00|2026-11-07",
+        "data|j00|2026-11-10",
+        "data|j00|2026-11-22",
+        "data|j00|2026-11-25",
+        "data|j01|2026-11-01"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedKept",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedRecalc",
+      "pass": true,
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    }
+  ],
+  "intraday_comparison": [
+    {
+      "kind": "bm",
+      "month": 9,
+      "days": 60,
+      "rows": 1091,
+      "mismatches": []
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "days": 62,
+      "rows": 1067,
+      "mismatches": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "days": 60,
+      "rows": 819,
+      "mismatches": []
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "days": 60,
+      "rows": 378,
+      "mismatches": []
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "days": 62,
+      "rows": 396,
+      "mismatches": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "days": 60,
+      "rows": 390,
+      "mismatches": []
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "days": 60,
+      "rows": 924,
+      "mismatches": []
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "days": 62,
+      "rows": 968,
+      "mismatches": []
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "days": 60,
+      "rows": 962,
+      "mismatches": []
+    }
+  ],
+  "cache": {
+    "firstPaint": true,
+    "cacheHit": true,
+    "keyMatches": true,
+    "secondPaint": false,
+    "filteredPaint": false,
+    "foreignPaint": false
+  },
+  "cache_browser": {
+    "calls": 2,
+    "paintResults": [
+      true,
+      false
+    ],
+    "rowsAll": 35,
+    "rowsAfterFilter": 35,
+    "cacheKeyMatches": true,
+    "errors": []
+  },
+  "cache_fix_vm": {
+    "firstPaint": true,
+    "cacheHit": true,
+    "keyMatches": true,
+    "secondPaint": true,
+    "filteredPaint": true,
+    "foreignPaint": false
+  },
+  "cache_fix_browser": {
+    "calls": 2,
+    "paintResults": [
+      true,
+      true
+    ],
+    "rowsAll": 35,
+    "rowsAfterFilter": 29,
+    "cacheKeyMatches": true,
+    "errors": []
+  },
+  "review_edge_cases": [
+    {
+      "test": "absence changed to OUT during review",
+      "changed": false,
+      "copy": {
+        "cells": {
+          "2026-11-19": {
+            "a09": {
+              "code": "A",
+              "special": "leave"
+            }
+          }
+        },
+        "edits": {}
+      },
+      "pass": false
+    },
+    {
+      "test": "corner-only explicit edit also copies recalculated shift",
+      "cells": {
+        "2026-11-19": {
+          "a09": {
+            "code": "C",
+            "corner": "RTW"
+          }
+        }
+      },
+      "edits": {
+        "2026-11-19|a09": true
+      },
+      "pass": false
+    },
+    {
+      "test": "single shift share disabled in allocation but not reporting/learning",
+      "target": 52,
+      "actual": 0,
+      "closing": 88,
+      "firstShort": {
+        "ds": "2026-11-01",
+        "target": 2,
+        "actual": 0,
+        "cause": "limits"
+      },
+      "learnedStats": {
+        "evening": 0,
+        "sellers": 88,
+        "grouping": "median-1"
+      },
+      "pass": false
+    },
+    {
+      "test": "missing sent context still produces learnable stats",
+      "context": "today",
+      "evening": {
+        "evening": 183,
+        "sellers": 352,
+        "grouping": "median-1"
+      },
+      "pass": false
+    },
+    {
+      "test": "501 pending, first 500 read, last unread",
+      "nav": "99+",
+      "bellItems": 0,
+      "bellHidden": true,
+      "pass": false
+    },
+    {
+      "test": "200 revisions of October must not hide September",
+      "months": [
+        "2026-10"
+      ],
+      "ratio": 0.5,
+      "pass": false
+    }
+  ],
+  "off_cases": [
+    {
+      "0": {
+        "two": 0,
+        "eligible": 0
+      },
+      "kind": "bm",
+      "month": 9
+    },
+    {
+      "0": {
+        "two": 18,
+        "eligible": 18
+      },
+      "kind": "bm",
+      "month": 10
+    },
+    {
+      "0": {
+        "two": 51,
+        "eligible": 51
+      },
+      "kind": "bm",
+      "month": 11
+    },
+    {
+      "0": {
+        "two": 0,
+        "eligible": 0
+      },
+      "kind": "jpA",
+      "month": 9
+    },
+    {
+      "0": {
+        "two": 7,
+        "eligible": 7
+      },
+      "kind": "jpA",
+      "month": 10
+    },
+    {
+      "0": {
+        "two": 28,
+        "eligible": 28
+      },
+      "kind": "jpA",
+      "month": 11
+    },
+    {
+      "0": {
+        "two": 20,
+        "eligible": 20
+      },
+      "kind": "jpB",
+      "month": 10
+    },
+    {
+      "0": {
+        "two": 80,
+        "eligible": 80
+      },
+      "kind": "jpB",
+      "month": 11
+    }
+  ],
+  "off_totals": {
+    "exactly_two": 204,
+    "eligible": 204
+  },
+  "design": [
+    {
+      "page": "dashboard",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "geometry": {
+        "monthlyName": {
+          "left": 76,
+          "width": 56
+        },
+        "monthlyFirst": {
+          "left": 132,
+          "width": 32
+        },
+        "countName": {
+          "left": 76,
+          "width": 56
+        },
+        "countFirst": {
+          "left": 132,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 320,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "bounds": {
+        "left": 10,
+        "right": 310,
+        "top": 10,
+        "bottom": 834
+      },
+      "errors": []
+    },
+    {
+      "page": "dashboard",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "geometry": {
+        "monthlyName": {
+          "left": 76,
+          "width": 56
+        },
+        "monthlyFirst": {
+          "left": 132,
+          "width": 32
+        },
+        "countName": {
+          "left": 76,
+          "width": 56
+        },
+        "countFirst": {
+          "left": 132,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 320,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "bounds": {
+        "left": 10,
+        "right": 310,
+        "top": 10,
+        "bottom": 834
+      },
+      "errors": []
+    },
+    {
+      "page": "dashboard",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "geometry": {
+        "monthlyName": {
+          "left": 76,
+          "width": 56
+        },
+        "monthlyFirst": {
+          "left": 132,
+          "width": 32
+        },
+        "countName": {
+          "left": 76,
+          "width": 56
+        },
+        "countFirst": {
+          "left": 132,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 390,
+      "height": 844,
+      "dark": false,
+      "overflow": false,
+      "bounds": {
+        "left": 10,
+        "right": 380,
+        "top": 10,
+        "bottom": 834
+      },
+      "errors": []
+    },
+    {
+      "page": "dashboard",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "geometry": {
+        "monthlyName": {
+          "left": 76,
+          "width": 56
+        },
+        "monthlyFirst": {
+          "left": 132,
+          "width": 32
+        },
+        "countName": {
+          "left": 76,
+          "width": 56
+        },
+        "countFirst": {
+          "left": 132,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 390,
+      "height": 844,
+      "dark": true,
+      "overflow": false,
+      "bounds": {
+        "left": 10,
+        "right": 380,
+        "top": 10,
+        "bottom": 834
+      },
+      "errors": []
+    },
+    {
+      "page": "dashboard",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "geometry": {
+        "monthlyName": {
+          "left": 110,
+          "width": 184
+        },
+        "monthlyFirst": {
+          "left": 294,
+          "width": 32
+        },
+        "countName": {
+          "left": 110,
+          "width": 184
+        },
+        "countFirst": {
+          "left": 294,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 844,
+      "height": 390,
+      "dark": false,
+      "overflow": false,
+      "bounds": {
+        "left": 132,
+        "right": 712,
+        "top": 20,
+        "bottom": 370
+      },
+      "errors": []
+    },
+    {
+      "page": "dashboard",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "geometry": {
+        "monthlyName": {
+          "left": 110,
+          "width": 184
+        },
+        "monthlyFirst": {
+          "left": 294,
+          "width": 32
+        },
+        "countName": {
+          "left": 110,
+          "width": 184
+        },
+        "countFirst": {
+          "left": 294,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 844,
+      "height": 390,
+      "dark": true,
+      "overflow": false,
+      "bounds": {
+        "left": 132,
+        "right": 712,
+        "top": 20,
+        "bottom": 370
+      },
+      "errors": []
+    },
+    {
+      "page": "dashboard",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "geometry": {
+        "monthlyName": {
+          "left": 272,
+          "width": 184
+        },
+        "monthlyFirst": {
+          "left": 456,
+          "width": 32
+        },
+        "countName": {
+          "left": 272,
+          "width": 184
+        },
+        "countFirst": {
+          "left": 456,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 1440,
+      "height": 900,
+      "dark": false,
+      "overflow": false,
+      "bounds": {
+        "left": 430,
+        "right": 1010,
+        "top": 104,
+        "bottom": 796
+      },
+      "errors": []
+    },
+    {
+      "page": "dashboard",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "traffic",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "alignment",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "geometry": {
+        "monthlyName": {
+          "left": 272,
+          "width": 184
+        },
+        "monthlyFirst": {
+          "left": 456,
+          "width": 32
+        },
+        "countName": {
+          "left": 272,
+          "width": 184
+        },
+        "countFirst": {
+          "left": 456,
+          "width": 56
+        }
+      }
+    },
+    {
+      "page": "agent-dialog",
+      "width": 1440,
+      "height": 900,
+      "dark": true,
+      "overflow": false,
+      "bounds": {
+        "left": 430,
+        "right": 1010,
+        "top": 104,
+        "bottom": 796
+      },
+      "errors": []
+    }
+  ],
+  "css_identical": true,
+  "accounts": [
+    {
+      "test": "no session shows sign in",
+      "pass": true,
+      "got": {
+        "login": true,
+        "gate": false,
+        "err": "",
+        "store": "",
+        "region": true,
+        "country": true,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [],
+        "countries": [],
+        "stores": [],
+        "initials": "",
+        "dot": false,
+        "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+        "log": []
+      }
+    },
+    {
+      "test": "wrong password: message, stays on sign in",
+      "pass": true,
+      "got": "Wrong email or password."
+    },
+    {
+      "test": "manager 1 store: straight to Store One, no menus",
+      "pass": true,
+      "got": {
+        "login": false,
+        "gate": false,
+        "err": "",
+        "store": "Store One",
+        "region": false,
+        "country": false,
+        "storeField": false,
+        "fixedStore": "Store One",
+        "regions": [],
+        "countries": [],
+        "stores": [
+          "Store One"
+        ],
+        "initials": "MO",
+        "dot": true,
+        "gateSub": "Choose your store.",
+        "log": [
+          [
+            "signIn",
+            "manager.one@test.fr"
+          ],
+          [
+            "signIn",
+            "manager.one@test.fr"
+          ]
+        ]
+      }
+    },
+    {
+      "test": "manager 1 store: initials and default password dot",
+      "pass": true,
+      "got": "MO"
+    },
+    {
+      "test": "account menu shows email, role, warning",
+      "pass": true,
+      "got": ""
+    },
+    {
+      "test": "password: too short refused",
+      "pass": true,
+      "got": "At least 6 characters."
+    },
+    {
+      "test": "password: mismatch refused",
+      "pass": true,
+      "got": ""
+    },
+    {
+      "test": "password: wrong current refused",
+      "pass": true,
+      "got": ""
+    },
+    {
+      "test": "password: saved with pw_changed, dot gone, editor closed",
+      "pass": true,
+      "got": [
+        [
+          "updateUser",
+          {
+            "password": "newpass1",
+            "data": {
+              "pw_changed": true
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "test": "sign out: back to sign in",
+      "pass": true,
+      "got": true
+    },
+    {
+      "test": "no JavaScript error (flow 1)",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "manager 2 stores: gate with Store only",
+      "pass": true,
+      "got": {
+        "login": false,
+        "gate": true,
+        "err": "",
+        "store": "",
+        "region": false,
+        "country": false,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [],
+        "countries": [],
+        "stores": [
+          "Store One",
+          "Store Two"
+        ],
+        "initials": "MT",
+        "dot": false,
+        "gateSub": "Choose your store.",
+        "log": []
+      }
+    },
+    {
+      "test": "manager 2 stores: gate text",
+      "pass": true,
+      "got": "Choose your store."
+    },
+    {
+      "test": "manager 2 stores: picks Store Two",
+      "pass": true,
+      "got": ""
+    },
+    {
+      "test": "manager 2 stores: remembers Store Two after reload",
+      "pass": true,
+      "got": "Store Two"
+    },
+    {
+      "test": "manager 2 countries: flat store list, no region or country menu",
+      "pass": true,
+      "got": {
+        "login": false,
+        "gate": true,
+        "err": "",
+        "store": "",
+        "region": false,
+        "country": false,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [],
+        "countries": [],
+        "stores": [
+          "Store One",
+          "Store Three"
+        ],
+        "initials": "MW",
+        "dot": true,
+        "gateSub": "Choose your store.",
+        "log": []
+      }
+    },
+    {
+      "test": "manager 2 countries: Store Three sets its country and region",
+      "pass": true,
+      "got": [
+        "Store Three",
+        "GB",
+        "EMEA",
+        "Paris"
+      ]
+    },
+    {
+      "test": "manager 2 countries: Store One sets France",
+      "pass": true,
+      "got": [
+        "Store One",
+        "FR",
+        "EMEA"
+      ]
+    },
+    {
+      "test": "manager 2 countries: remembers Store One after reload",
+      "pass": true,
+      "got": "Store One"
+    },
+    {
+      "test": "no JavaScript error (flow 3)",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "load error: back to sign in with a message",
+      "pass": true,
+      "got": "Could not load your account. Try again."
+    },
+    {
+      "test": "load error: signing in again opens the store",
+      "pass": true,
+      "got": "Store One"
+    },
+    {
+      "test": "no JavaScript error (flow 3b)",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "network down on retail_regions: sign in with a message, loader hidden",
+      "pass": true,
+      "got": "Could not load your account. Try again."
+    },
+    {
+      "test": "network down on retail_regions: signing in again opens the store",
+      "pass": true,
+      "got": "Store One"
+    },
+    {
+      "test": "no JavaScript error (network down on retail_regions)",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "network down on retail_stores: sign in with a message, loader hidden",
+      "pass": true,
+      "got": "Could not load your account. Try again."
+    },
+    {
+      "test": "network down on retail_stores: signing in again opens the store",
+      "pass": true,
+      "got": "Store One"
+    },
+    {
+      "test": "no JavaScript error (network down on retail_stores)",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "network down on retail_profiles: sign in with a message, loader hidden",
+      "pass": true,
+      "got": "Could not load your account. Try again."
+    },
+    {
+      "test": "network down on retail_profiles: signing in again opens the store",
+      "pass": true,
+      "got": "Store One"
+    },
+    {
+      "test": "no JavaScript error (network down on retail_profiles)",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "director: no region menu (single region), countries of EMEA only",
+      "pass": true,
+      "got": {
+        "login": false,
+        "gate": true,
+        "err": "",
+        "store": "",
+        "region": false,
+        "country": true,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [
+          "EMEA"
+        ],
+        "countries": [
+          "France",
+          "United Kingdom"
+        ],
+        "stores": [],
+        "initials": "DE",
+        "dot": true,
+        "gateSub": "Choose your store.",
+        "log": []
+      }
+    },
+    {
+      "test": "director: gate text",
+      "pass": true,
+      "got": "Choose your store."
+    },
+    {
+      "test": "director: UK has one store, opens it",
+      "pass": true,
+      "got": "Store Three"
+    },
+    {
+      "test": "admin: three menus, all regions",
+      "pass": true,
+      "got": {
+        "login": false,
+        "gate": true,
+        "err": "",
+        "store": "",
+        "region": true,
+        "country": true,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [
+          "EMEA",
+          "JAPAN"
+        ],
+        "countries": [],
+        "stores": [],
+        "initials": "AC",
+        "dot": false,
+        "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+        "log": []
+      }
+    },
+    {
+      "test": "refused: inactive@test.fr",
+      "pass": true,
+      "got": {
+        "login": true,
+        "gate": false,
+        "err": "Your account is not active. Contact your administrator.",
+        "store": "",
+        "region": true,
+        "country": true,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [],
+        "countries": [],
+        "stores": [],
+        "initials": "",
+        "dot": false,
+        "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+        "log": [
+          [
+            "signOut"
+          ]
+        ]
+      }
+    },
+    {
+      "test": "refused: noprofile@test.fr",
+      "pass": true,
+      "got": {
+        "login": true,
+        "gate": false,
+        "err": "Your account is not active. Contact your administrator.",
+        "store": "",
+        "region": true,
+        "country": true,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [],
+        "countries": [],
+        "stores": [],
+        "initials": "",
+        "dot": false,
+        "gateSub": "To navigate your workspace, please choose a region, a country and a store.",
+        "log": [
+          [
+            "signOut"
+          ]
+        ]
+      }
+    },
+    {
+      "test": "refused: nostore@test.fr",
+      "pass": true,
+      "got": {
+        "login": true,
+        "gate": false,
+        "err": "No store is linked to your account. Contact your administrator.",
+        "store": "",
+        "region": true,
+        "country": true,
+        "storeField": true,
+        "fixedStore": null,
+        "regions": [],
+        "countries": [],
+        "stores": [],
+        "initials": "N",
+        "dot": true,
+        "gateSub": "Choose your store.",
+        "log": [
+          [
+            "signOut"
+          ]
+        ]
+      }
+    },
+    {
+      "test": "sign in screen fits light-390",
+      "pass": true,
+      "got": ""
+    },
+    {
+      "test": "account menu inside the screen light-390",
+      "pass": true,
+      "got": [
+        160,
+        380
+      ]
+    },
+    {
+      "test": "no JavaScript error light-390",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "sign in screen fits dark-390",
+      "pass": true,
+      "got": ""
+    },
+    {
+      "test": "account menu inside the screen dark-390",
+      "pass": true,
+      "got": [
+        160,
+        380
+      ]
+    },
+    {
+      "test": "no JavaScript error dark-390",
+      "pass": true,
+      "got": []
+    },
+    {
+      "test": "sign in screen fits dark-1440",
+      "pass": true,
+      "got": ""
+    },
+    {
+      "test": "account menu inside the screen dark-1440",
+      "pass": true,
+      "got": [
+        1188,
+        1408
+      ]
+    },
+    {
+      "test": "no JavaScript error dark-1440",
+      "pass": true,
+      "got": []
+    }
+  ],
+  "ui_actions": {
+    "1440": [
+      {
+        "step": "monthly",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1156075908/3618/124",
+          "open": [],
+          "writes": [],
+          "toast": "null",
+          "theme": "",
+          "lang": "en",
+          "step": "monthly",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "corner LG",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "856854544/2722/124",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "corner LG",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "corner all",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1156075908/3618/124",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "corner all",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell editor",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1156075908/3618/124",
+          "open": [
+            "cell-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "cell editor",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell to OFF",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1107088543/3728/-1825865663",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_overrides",
+              "upsert",
+              1266300465,
+              []
+            ],
+            [
+              "retail_planning_edits",
+              "insert",
+              1308184011,
+              []
+            ]
+          ],
+          "toast": "Updated ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "cell to OFF",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell editor 2",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1107088543/3728/-1825865663",
+          "open": [
+            "cell-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "cell editor 2",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell to C",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1524866294/3728/586048837",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_overrides",
+              "upsert",
+              1952550680,
+              []
+            ],
+            [
+              "retail_planning_edits",
+              "insert",
+              76387571,
+              []
+            ]
+          ],
+          "toast": "Updated ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "cell to C",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "event editor",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1524866294/3728/586048837",
+          "open": [
+            "event-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "event editor",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "event saved",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1524866294/3728/586048837",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_events",
+              "insert",
+              63076852,
+              []
+            ]
+          ],
+          "toast": "Event saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "event saved",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "month next",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1624628692/3412/124",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              -965841956,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "month next",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "month back",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1496727329/3738/586048837",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              924063748,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "month back",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "download menu",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1496727329/3738/586048837",
+          "open": [
+            "export-menu"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "download menu",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "intraday",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1965518845/3772/-1041233916",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              599580588,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "intraday",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "intraday next day",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1790160521/4283/1829796622",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              924063748,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "intraday next day",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "mission menu",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1790160521/4283/1829796622",
+          "open": [
+            "mission-menu"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "mission menu",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "mission added",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1790160521/4283/1829796622",
+          "open": [],
+          "writes": [
+            [
+              "retail_intraday_missions",
+              "insert",
+              339599837,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "mission added",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "traffic",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1300333410/4573/1829796622",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "traffic",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "traffic typed",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1300333410/4573/1829796622",
+          "open": [],
+          "writes": [
+            [
+              "retail_traffic_monthly",
+              "upsert",
+              510037960,
+              []
+            ],
+            [
+              "retail_traffic_daily",
+              "upsert",
+              -901058694,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "traffic typed",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "advisors",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "644612272/4920/1829796622",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "advisors",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent editor",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "644612272/4920/1829796622",
+          "open": [
+            "agent-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "agent editor",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent hours 35",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "644612272/4920/1829796622",
+          "open": [
+            "agent-editor"
+          ],
+          "writes": [
+            [
+              "retail_agents",
+              "update",
+              -51798104,
+              [
+                [
+                  "eq",
+                  "id",
+                  "a10"
+                ]
+              ]
+            ],
+            [
+              "retail_agent_prefs",
+              "upsert",
+              578740365,
+              []
+            ]
+          ],
+          "toast": "Saved ✓ New weekly hours from 19 Oct 2026",
+          "theme": "",
+          "lang": "en",
+          "step": "agent hours 35",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent closed",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-19469005/1192/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "agent closed",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent added",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-19469005/1192/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_agents",
+              "insert",
+              -1800402564,
+              []
+            ]
+          ],
+          "toast": "New Person added ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "agent added",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "absence page",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1950004126/1608/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "absence page",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "leave popup",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "92727958/1608/203530565",
+          "open": [
+            "leave-popup"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "leave popup",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "leave saved",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1144337890/4984/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_agent_leave",
+              "insert",
+              1308499840,
+              []
+            ]
+          ],
+          "toast": "Absence saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "leave saved",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "settings",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-2139118445/7996/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "settings",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "opening 11:00",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "513720383/7996/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_regulations",
+              "upsert",
+              -1308783559,
+              []
+            ],
+            [
+              "retail_store_settings",
+              "upsert",
+              2043302369,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "opening 11:00",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "corner row",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "60445360/8003/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "corner row",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "staffing",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "60445360/8003/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "staffing",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "fairness toggle",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-225124737/7485/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_regulations",
+              "upsert",
+              -1308783559,
+              []
+            ],
+            [
+              "retail_store_settings",
+              "upsert",
+              -160799038,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "fairness toggle",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "breaks",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "165324449/7690/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_regulations",
+              "upsert",
+              -1942995074,
+              []
+            ],
+            [
+              "retail_store_settings",
+              "upsert",
+              -160799038,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "breaks",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "week picker",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "165324449/7690/203530565",
+          "open": [
+            "week-picker-popup"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "week picker",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "week picker next",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "165324449/7690/203530565",
+          "open": [
+            "week-picker-popup"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "week picker next",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "week picked",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1521707542/4837/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "week picked",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "language jp",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "350548795/4292/-2104161199",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "jp",
+          "step": "language jp",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "language en",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "language en",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "theme",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "dark",
+          "lang": "en",
+          "step": "theme",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "account menu",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [
+            "acct-menu"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "dark",
+          "lang": "en",
+          "step": "account menu",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "password",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [
+            "pw-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "dark",
+          "lang": "en",
+          "step": "password",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "password saved",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [],
+          "writes": [],
+          "toast": "Password changed ✓",
+          "theme": "dark",
+          "lang": "en",
+          "step": "password saved",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      }
+    ],
+    "390": [
+      {
+        "step": "monthly",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1156075908/3618/124",
+          "open": [],
+          "writes": [],
+          "toast": "null",
+          "theme": "",
+          "lang": "en",
+          "step": "monthly",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "corner LG",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "856854544/2722/124",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "corner LG",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "corner all",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1156075908/3618/124",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "corner all",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell editor",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1156075908/3618/124",
+          "open": [
+            "cell-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "cell editor",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell to OFF",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1107088543/3728/-1825865663",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_overrides",
+              "upsert",
+              1266300465,
+              []
+            ],
+            [
+              "retail_planning_edits",
+              "insert",
+              1308184011,
+              []
+            ]
+          ],
+          "toast": "Updated ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "cell to OFF",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell editor 2",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1107088543/3728/-1825865663",
+          "open": [
+            "cell-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "cell editor 2",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "cell to C",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1524866294/3728/586048837",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_overrides",
+              "upsert",
+              1952550680,
+              []
+            ],
+            [
+              "retail_planning_edits",
+              "insert",
+              76387571,
+              []
+            ]
+          ],
+          "toast": "Updated ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "cell to C",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "event editor",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1524866294/3728/586048837",
+          "open": [
+            "event-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "event editor",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "event saved",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1524866294/3728/586048837",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_events",
+              "insert",
+              63076852,
+              []
+            ]
+          ],
+          "toast": "Event saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "event saved",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "month next",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1624628692/3412/124",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              -965841956,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "month next",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "month back",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1496727329/3738/586048837",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              924063748,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "month back",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "download menu",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1496727329/3738/586048837",
+          "open": [
+            "export-menu"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "download menu",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "intraday",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1965518845/3772/-1041233916",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              599580588,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "intraday",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "intraday next day",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1790160521/4283/1829796622",
+          "open": [],
+          "writes": [
+            [
+              "retail_planning_snapshot",
+              "upsert",
+              924063748,
+              []
+            ]
+          ],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "intraday next day",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "mission menu",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1790160521/4283/1829796622",
+          "open": [
+            "mission-menu"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "mission menu",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "mission added",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1790160521/4283/1829796622",
+          "open": [],
+          "writes": [
+            [
+              "retail_intraday_missions",
+              "insert",
+              339599837,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "mission added",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "traffic",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1300333410/4573/1829796622",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "traffic",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "traffic typed",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1300333410/4573/1829796622",
+          "open": [],
+          "writes": [
+            [
+              "retail_traffic_monthly",
+              "upsert",
+              510037960,
+              []
+            ],
+            [
+              "retail_traffic_daily",
+              "upsert",
+              -901058694,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "traffic typed",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "advisors",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "644612272/4920/1829796622",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "advisors",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent editor",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "644612272/4920/1829796622",
+          "open": [
+            "agent-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "agent editor",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent hours 35",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "644612272/4920/1829796622",
+          "open": [
+            "agent-editor"
+          ],
+          "writes": [
+            [
+              "retail_agents",
+              "update",
+              -51798104,
+              [
+                [
+                  "eq",
+                  "id",
+                  "a10"
+                ]
+              ]
+            ],
+            [
+              "retail_agent_prefs",
+              "upsert",
+              578740365,
+              []
+            ]
+          ],
+          "toast": "Saved ✓ New weekly hours from 19 Oct 2026",
+          "theme": "",
+          "lang": "en",
+          "step": "agent hours 35",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent closed",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-19469005/1192/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "agent closed",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "agent added",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-19469005/1192/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_agents",
+              "insert",
+              -1800402564,
+              []
+            ]
+          ],
+          "toast": "New Person added ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "agent added",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "absence page",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1950004126/1608/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "absence page",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "leave popup",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "92727958/1608/203530565",
+          "open": [
+            "leave-popup"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "leave popup",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "leave saved",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1144337890/4984/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_agent_leave",
+              "insert",
+              1308499840,
+              []
+            ]
+          ],
+          "toast": "Absence saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "leave saved",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "settings",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-2139118445/7996/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "settings",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "opening 11:00",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "513720383/7996/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_regulations",
+              "upsert",
+              -1308783559,
+              []
+            ],
+            [
+              "retail_store_settings",
+              "upsert",
+              2043302369,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "opening 11:00",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "corner row",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "60445360/8003/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "corner row",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "staffing",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "60445360/8003/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "staffing",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "fairness toggle",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-225124737/7485/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_regulations",
+              "upsert",
+              -1308783559,
+              []
+            ],
+            [
+              "retail_store_settings",
+              "upsert",
+              -160799038,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "fairness toggle",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "breaks",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "165324449/7690/203530565",
+          "open": [],
+          "writes": [
+            [
+              "retail_regulations",
+              "upsert",
+              -1942995074,
+              []
+            ],
+            [
+              "retail_store_settings",
+              "upsert",
+              -160799038,
+              []
+            ]
+          ],
+          "toast": "Saved ✓",
+          "theme": "",
+          "lang": "en",
+          "step": "breaks",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "week picker",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "165324449/7690/203530565",
+          "open": [
+            "week-picker-popup"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "week picker",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "week picker next",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "165324449/7690/203530565",
+          "open": [
+            "week-picker-popup"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "week picker next",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "week picked",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "1521707542/4837/203530565",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "week picked",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "language jp",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "350548795/4292/-2104161199",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "jp",
+          "step": "language jp",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "language en",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "",
+          "lang": "en",
+          "step": "language en",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "theme",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [],
+          "writes": [],
+          "toast": "",
+          "theme": "dark",
+          "lang": "en",
+          "step": "theme",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "account menu",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [
+            "acct-menu"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "dark",
+          "lang": "en",
+          "step": "account menu",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "password",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [
+            "pw-editor"
+          ],
+          "writes": [],
+          "toast": "",
+          "theme": "dark",
+          "lang": "en",
+          "step": "password",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      },
+      {
+        "step": "password saved",
+        "pass": true,
+        "diff": [],
+        "new": {
+          "page": "-1844425695/4292/-827894321",
+          "open": [],
+          "writes": [],
+          "toast": "Password changed ✓",
+          "theme": "dark",
+          "lang": "en",
+          "step": "password saved",
+          "note": "",
+          "errors": []
+        },
+        "old": null
+      }
+    ]
+  },
+  "static": {
+    "file": "audit-100006/repo/tests/builds/CAST_RETAIL_TEST.html",
+    "lines": 10483,
+    "bytes": 603565,
+    "scripts": [
+      {
+        "lines": 36,
+        "offset": 1017
+      },
+      {
+        "lines": 8853,
+        "offset": 1414
+      }
+    ],
+    "functions": 617,
+    "topFunctions": 447,
+    "singleOccurrenceTopFunctions": [
+      {
+        "name": "spreadPick",
+        "line": 4256,
+        "end": 4260,
+        "lines": 5,
+        "top": true,
+        "occurrences": 1,
+        "params": [
+          "group",
+          "j",
+          "k",
+          "rot"
+        ]
+      }
+    ],
+    "singleOccurrenceBindings": [],
+    "longestFunctions": [
+      {
+        "name": "computeMonthlyPlanOn",
+        "line": 7468,
+        "end": 8144,
+        "lines": 677,
+        "top": true,
+        "occurrences": 3,
+        "params": [
+          "opt",
+          "ctx"
+        ]
+      },
+      {
+        "name": "buildIntradayModel",
+        "line": 5010,
+        "end": 5530,
+        "lines": 521,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "ds"
+        ]
+      },
+      {
+        "name": "placeShiftsOfDay",
+        "line": 6626,
+        "end": 6959,
+        "lines": 334,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp",
+          "d"
+        ]
+      },
+      {
+        "name": "paintMonthlyPlan",
+        "line": 8147,
+        "end": 8375,
+        "lines": 229,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "v"
+        ]
+      },
+      {
+        "name": "exportMonthly",
+        "line": 9212,
+        "end": 9427,
+        "lines": 216,
+        "top": true,
+        "occurrences": 2,
+        "params": []
+      },
+      {
+        "name": "repairDisplayedCoverage",
+        "line": 7045,
+        "end": 7195,
+        "lines": 151,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp"
+        ]
+      },
+      {
+        "name": "balanceCorners",
+        "line": 7324,
+        "end": 7467,
+        "lines": 144,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp",
+          "wF",
+          "totWf"
+        ]
+      },
+      {
+        "name": "exportIntraday",
+        "line": 9428,
+        "end": 9566,
+        "lines": 139,
+        "top": true,
+        "occurrences": 2,
+        "params": []
+      },
+      {
+        "name": "renderTraffic",
+        "line": 4675,
+        "end": 4801,
+        "lines": 127,
+        "top": true,
+        "occurrences": 11,
+        "params": [
+          "localeOnly"
+        ]
+      },
+      {
+        "name": "renderDashboard",
+        "line": 6257,
+        "end": 6383,
+        "lines": 127,
+        "top": true,
+        "occurrences": 13,
+        "params": []
+      },
+      {
+        "name": "finalCheck",
+        "line": 8464,
+        "end": 8579,
+        "lines": 116,
+        "top": true,
+        "occurrences": 4,
+        "params": [
+          "cells",
+          "ctx"
+        ]
+      },
+      {
+        "name": "paintIntraday",
+        "line": 5562,
+        "end": 5674,
+        "lines": 113,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "ds"
+        ]
+      },
+      {
+        "name": "testedMoves",
+        "line": 7213,
+        "end": 7321,
+        "lines": 109,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp"
+        ]
+      },
+      {
+        "name": "initHourlyCurve",
+        "line": 4823,
+        "end": 4930,
+        "lines": 108,
+        "top": true,
+        "occurrences": 3,
+        "params": [
+          "keepValues"
+        ]
+      },
+      {
+        "name": "renderRegulations",
+        "line": 3560,
+        "end": 3664,
+        "lines": 105,
+        "top": true,
+        "occurrences": 8,
+        "params": []
+      },
+      {
+        "name": "groupDaysOff",
+        "line": 7867,
+        "end": 7934,
+        "lines": 68,
+        "top": false,
+        "occurrences": 2,
+        "params": []
+      },
+      {
+        "name": "renderMonthlyCalendar",
+        "line": 9717,
+        "end": 9781,
+        "lines": 65,
+        "top": true,
+        "occurrences": 4,
+        "params": []
+      },
+      {
+        "name": "openCellEditor",
+        "line": 5969,
+        "end": 6032,
+        "lines": 64,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "agentId",
+          "ds",
+          "evt"
+        ]
+      },
+      {
+        "name": "openSendMenu",
+        "line": 9058,
+        "end": 9119,
+        "lines": 62,
+        "top": true,
+        "occurrences": 3,
+        "params": [
+          "ev",
+          "view"
+        ]
+      },
+      {
+        "name": "onStoreChange",
+        "line": 2623,
+        "end": 2683,
+        "lines": 61,
+        "top": true,
+        "occurrences": 8,
+        "params": []
+      }
+    ]
+  },
+  "logs": {
+    "mutations": "{\"name\":\"nobody closes\",\"key\":\"closeNone|2026-11-11\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":1,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"nobody opens\",\"key\":\"openNone|2026-11-11\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":1,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"sixth day in a week\",\"key\":\"week|a12|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":5,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"unknown code\",\"key\":\"data|a12|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":1,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"unknown corner\",\"key\":\"data|a12|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":1,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"missing cell\",\"key\":\"cell|a12|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"incomplete\",\"newMandatory\":0,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"days in a row\",\"key\":\"row|a12|2026-11-14\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":23,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"two weeks\",\"key\":\"twoWeeks|a12|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":23,\"kind\":\"bm\",\"pass\":true}\n{\"name\":\"weekly hours\",\"key\":\"hours|a12|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":23,\"kind\":\"bm\",\"pass\":true}\nbm plan before mutation: {\"status\":\"incomplete\",\"mandatory\":0}\n{\"name\":\"nobody closes\",\"key\":\"closeNone|2026-11-11\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":1,\"kind\":\"jpA\",\"pass\":true}\n{\"name\":\"nobody opens\",\"key\":\"openNone|2026-11-11\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":1,\"kind\":\"jpA\",\"pass\":true}\n{\"name\":\"sixth day in a week\",\"key\":\"week|j02|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":3,\"kind\":\"jpA\",\"pass\":true}\n{\"name\":\"unknown code\",\"key\":\"data|j02|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":1,\"kind\":\"jpA\",\"pass\":true}\n{\"name\":\"missing cell\",\"key\":\"cell|j02|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"incomplete\",\"newMandatory\":0,\"kind\":\"jpA\",\"pass\":true}\n{\"name\":\"days in a row\",\"key\":\"row|j02|2026-11-14\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":19,\"kind\":\"jpA\",\"pass\":true}\n{\"name\":\"two weeks\",\"key\":\"twoWeeks|j02|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":19,\"kind\":\"jpA\",\"pass\":true}\n{\"name\":\"weekly hours\",\"key\":\"hours|j02|2026-11-09\",\"detected\":true,\"wasBefore\":false,\"status\":\"violation\",\"newMandatory\":19,\"kind\":\"jpA\",\"pass\":true}\njpA plan before mutation: {\"status\":\"incomplete\",\"mandatory\":0}\n17 mutations, 0 not detected\n",
+    "learning": "OK   December validated, November planned: 50%\nOK   the month itself validated: not learned\nOK   no history: 50%\nOK   October with 3 revisions + September: last revision of each month, both months\nOK   last October sending cancelled: October not learned\nOK   8 validated months: the 6 last only\nOK   same store, October planned: reloaded, October not learned for itself\nOK   a store whose sellers left: the count of the month stays (made when validated)\nOK   the count of a validation uses its own team and shifts\nOK   O/M/C stays O/M/C\nOK   all end together: the last to arrive is evening\nOK   all start together: the first to leave is morning\nOK   one shift: no groups\nOK   tied catalogue: the evening share is met, no false gap\nOK   a corner set before the sending does not make a recalculated cell a reviewer change\nOK   a shift set by hand during the review is the reviewer change\nOK   decision check uses the sent inputs (today kept apart), with the evening count\nOK   60 waiting, the first 50 read: the 10 others light the bell\n",
+    "cache": "OK   first showing: one calculation, one save\nOK   show again, nothing changed: no calculation, no save\nOK   change language: no calculation\nOK   change corner shown: no calculation\nOK   the kept result is the full calculation (cells and checks)\nOK   the kept result cannot be changed by the screen\nOK   a change of data: a new calculation\nOK   Recalculate from today: always calculated\nOK   midnight: yesterday becomes past, a new calculation\nOK   a new engine version: a new calculation\nOK   another store: the old result is never applied\n",
+    "model-firefox": "OK  setup.js {\"days\": 60, \"rows\": 819, \"bad\": [], \"nbad\": 0} []\nOK  setup_jp.js {\"days\": 30, \"rows\": 195, \"bad\": [], \"nbad\": 0} []\n"
+  },
+  "limitations": [
+    "Synthetic data and Supabase stubs",
+    "Firefox desktop/mobile viewport, not real Safari/iPhone",
+    "Intraday export JSON compared; no complete XLSX binary certification",
+    "Production and database unchanged"
+  ],
+  "review_nominal": {
+    "checks": 63,
+    "failures": 0,
+    "results": [
+      {
+        "test": "manager: Send for validation shown, no status yet, Validation in the menu",
+        "pass": true,
+        "got": "{'chip': '', 'text': '', 'menu': '', 'dot': False, 'send': True, 'marked': 0, 'bell': '0', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts': [], 'editor': False}"
+      },
+      {
+        "test": "the counters left the planning; Client Advisor count in full words",
+        "pass": true,
+        "got": "Client advisorCA LG PRF RTW SHO Total Opening Closing Off Sundays Absence Worked hours"
+      },
+      {
+        "test": "Client Advisor count: one row per advisor shown",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "pointer guide: the column lights in the Client Advisor count and in Coverage",
+        "pass": true,
+        "got": "([30, 30], 8)"
+      },
+      {
+        "test": "the counts start under the first day of the Monthly",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "send opens a window, then sends",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "manager sends: the button becomes \"Pending\" with its arrow, Withdraw in its menu",
+        "pass": true,
+        "got": "{'chip': 'pending', 'text': 'Pending', 'menu': 'Pending validation, sent by Julie M., 19 Oct Revision 1, sent by Julie M. on 19 Oct 2026 10:00 Editing is paused while your director reviews. Withdraw to make a change. Withdraw...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '0', 'n"
+      },
+      {
+        "test": "the sending holds the plan shown, its inputs and the check",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "pending: a square cannot be changed, the reason is said",
+        "pass": true,
+        "got": "{'chip': 'pending', 'text': 'Pending', 'menu': 'Pending validation, sent by Julie M., 19 Oct Revision 1, sent by Julie M. on 19 Oct 2026 10:00 Editing is paused while your director reviews. Withdraw to make a change. Withdraw...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '0', 'n"
+      },
+      {
+        "test": "pending: Recalculate is stopped too",
+        "pass": true,
+        "got": "['This month waits for validation. Withdraw it to make a change.']"
+      },
+      {
+        "test": "manager withdraws from the menu, through its window",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "withdrawn: \"Withdrawn\", Send again in the menu",
+        "pass": true,
+        "got": "{'chip': 'withdrawn', 'text': 'Withdrawn', 'menu': 'Withdrawn by Julie M., 19 Oct Revision 1, sent by Julie M. on 19 Oct 2026 10:00 Send again...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts': ['Withdrawn ✓'], 'editor'"
+      },
+      {
+        "test": "after withdrawing the manager can change a square",
+        "pass": true,
+        "got": "{'chip': 'withdrawn', 'text': 'Withdrawn', 'menu': 'Withdrawn by Julie M., 19 Oct Revision 1, sent by Julie M. on 19 Oct 2026 10:00 Send again...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts': [], 'editor': True}"
+      },
+      {
+        "test": "manager sends again: revision 2 pending (in the menu)",
+        "pass": true,
+        "got": "Pending validation, sent by Julie M., 19 Oct Revision 2, sent by Julie M. on 19 Oct 2026 10:00 Editing is paused while your director reviews. Withdraw to make a change. Withdraw..."
+      },
+      {
+        "test": "no JavaScript error (manager)",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "director: bell 1 and menu count 1",
+        "pass": true,
+        "got": "{'chip': '', 'text': '', 'menu': '', 'dot': False, 'send': False, 'marked': 0, 'bell': '1', 'nav': '1', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts': [], 'editor': False}"
+      },
+      {
+        "test": "director: To review lists Store A November, revision 2, with Open and Cancel",
+        "pass": true,
+        "got": "['Store A November 2026 2 Julie M. 19 Oct 2026 10:00 Pending - OpenCancel']"
+      },
+      {
+        "test": "director: Open goes to the store and the month",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "opened: the bell dot goes, the queue count stays until decided",
+        "pass": true,
+        "got": "{'chip': 'pending', 'text': 'Pending', 'menu': 'Pending validation, sent by Julie M., 19 Oct Revision 2, sent by Julie M. on 19 Oct 2026 10:00 No square changed by you Validate or return... Cancel sending...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '1', 'navShown': True, 'bann"
+      },
+      {
+        "test": "director: \"Pending\", Validate or return and Cancel sending in the menu",
+        "pass": true,
+        "got": "{'chip': 'pending', 'text': 'Pending', 'menu': 'Pending validation, sent by Julie M., 19 Oct Revision 2, sent by Julie M. on 19 Oct 2026 10:00 No square changed by you Validate or return... Cancel sending...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '1', 'navShown': True, 'bann"
+      },
+      {
+        "test": "director corrects one square: it is marked, \"1 square changed by you\"",
+        "pass": true,
+        "got": "{'chip': 'pending', 'text': 'Pending', 'menu': 'Pending validation, sent by Julie M., 19 Oct Revision 2, sent by Julie M. on 19 Oct 2026 10:00 1 square changed by you Validate or return... Cancel sending...', 'dot': False, 'send': False, 'marked': 1, 'bell': '0', 'nav': '1', 'navShown': True, 'banne"
+      },
+      {
+        "test": "the review window shows the change count, a comment box, Validate and Return",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "Escape closes the window, nothing is sent",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "director returns with a comment",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "returned: \"Returned\", the comment in the menu",
+        "pass": true,
+        "got": "{'chip': 'returned', 'text': 'Returned', 'menu': 'Returned by Claire D., 19 Oct Revision 2, sent by Julie M. on 19 Oct 2026 10:00 Agent 12 works 6 days in a row, please move one shift. 1 square changed by your director', 'dot': False, 'send': False, 'marked': 1, 'bell': '0', 'nav': '0', 'navShown': "
+      },
+      {
+        "test": "the decision holds the sent copy plus his one change, and its check",
+        "pass": true,
+        "got": "{'status': 'incomplete', 'mandatory': 0, 'mandatoryToday': 0, 'context': 'sent', 'edits': 1, 'evening': None, 'engine': '10.0.0.6'}"
+      },
+      {
+        "test": "no JavaScript error (director)",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "director of another region: bell 0, empty list",
+        "pass": true,
+        "got": "{'chip': '', 'text': '', 'menu': '', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts': [], 'editor': False}"
+      },
+      {
+        "test": "manager: bell 1 (returned), \"Returned\" with the comment and 1 changed square",
+        "pass": true,
+        "got": "{'chip': 'returned', 'text': 'Returned', 'menu': 'Returned by Claire D., 19 Oct Revision 2, sent by Julie M. on 19 Oct 2026 10:00 Agent 12 works 6 days in a row, please move one shift. 1 square changed by your director Send again...', 'dot': False, 'send': False, 'marked': 1, 'bell': '1', 'nav': '0'"
+      },
+      {
+        "test": "hover on the status shows the comment",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "opening the notification marks it seen for him (bell 0)",
+        "pass": true,
+        "got": "{'chip': 'returned', 'text': 'Returned', 'menu': 'Returned by Claire D., 19 Oct Revision 2, sent by Julie M. on 19 Oct 2026 10:00 Agent 12 works 6 days in a row, please move one shift. 1 square changed by your director Send again...', 'dot': False, 'send': False, 'marked': 1, 'bell': '0', 'nav': '0'"
+      },
+      {
+        "test": "manager sends revision 3",
+        "pass": true,
+        "got": "Pending validation, sent by Julie M., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 Editing is paused while your director reviews. Withdraw to make a change. Withdraw..."
+      },
+      {
+        "test": "no JavaScript error (manager, second visit)",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "admin: Validate or return, Withdraw and Cancel sending in the menu",
+        "pass": true,
+        "got": "{'chip': 'pending', 'text': 'Pending', 'menu': 'Pending validation, sent by Julie M., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 No square changed by you Validate or return... Withdraw... Cancel sending...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '1', 'navShown':"
+      },
+      {
+        "test": "admin validates through the window",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "a person added after the sending does not slip into the validated copy",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "the validation keeps its evening count; December learns from it, November not from itself",
+        "pass": true,
+        "got": "[183, 352, 0.5, 0.5107361963190185, 0.5107361963190185]"
+      },
+      {
+        "test": "validated: \"Validated\", no dot, no Send again (nothing new to send)",
+        "pass": true,
+        "got": "{'chip': 'validated', 'text': 'Validated', 'menu': 'Validated by Admin T., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 Good No change since validation Cancel validation...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan':"
+      },
+      {
+        "test": "a change after validation: a dot on \"Validated\", Send again in the menu",
+        "pass": true,
+        "got": "Validated by Admin T., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 Good 1 change since validation Send again... Cancel validation..."
+      },
+      {
+        "test": "admin cancels the validation (menu, window with a reason)",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "cancelled: \"Cancelled\", the history keeps the validation",
+        "pass": true,
+        "got": "({'chip': 'cancelled', 'text': 'Cancelled', 'menu': 'Validation cancelled by Admin T., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 Clicked too fast Send again...', 'dot': False, 'send': False, 'marked': 0, 'bell': '0', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toast"
+      },
+      {
+        "test": "admin sends for another store and finds it in his own queue",
+        "pass": true,
+        "got": "{'chip': 'cancelled', 'text': 'Cancelled', 'menu': 'Validation cancelled by Admin T., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 Clicked too fast Send again...', 'dot': False, 'send': False, 'marked': 0, 'bell': '1', 'nav': '1', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts"
+      },
+      {
+        "test": "All: Cancel only on the last sending still waiting or validated",
+        "pass": true,
+        "got": "['Store A November 2026 1 Julie M. 19 Oct 2026 10:00 Withdrawn Julie M., 19 Oct 2026 10:00 Open', 'Store A November 2026 2 Julie M. 19 Oct 2026 10:00 Returned Claire D., 19 Oct 2026 10:00 Open', 'Store A November 2026 3 Julie M. 19 Oct 2026 10:00 Cancelled Admin T., 19 Oct 2026 10:00 Open', 'Store F"
+      },
+      {
+        "test": "Cancel from the list (window with a reason)",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "the list is up to date, Store Four is cancelled",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "no JavaScript error (admin)",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "manager: bell 1 (cancelled), \"Cancelled\" with the reason, he can change the month",
+        "pass": true,
+        "got": "{'chip': 'cancelled', 'text': 'Cancelled', 'menu': 'Validation cancelled by Admin T., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 Clicked too fast Send again...', 'dot': False, 'send': False, 'marked': 0, 'bell': '1', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts"
+      },
+      {
+        "test": "cancelled: the cell editor opens",
+        "pass": true,
+        "got": "{'chip': 'cancelled', 'text': 'Cancelled', 'menu': 'Validation cancelled by Admin T., 19 Oct Revision 3, sent by Julie M. on 19 Oct 2026 10:00 Clicked too fast Send again...', 'dot': False, 'send': False, 'marked': 0, 'bell': '1', 'nav': '0', 'navShown': True, 'banner': False, 'rhInPlan': 0, 'toasts"
+      },
+      {
+        "test": "Intraday: no status",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "no JavaScript error (manager, third visit)",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "60 waiting: the queue says 60 (exact count, not the 50 loaded)",
+        "pass": true,
+        "got": "60"
+      },
+      {
+        "test": "a 2,000-character comment: a short preview inside the screen",
+        "pass": true,
+        "got": "[212, 284, 72, 900, False]"
+      },
+      {
+        "test": "the preview also shows on keyboard focus, Escape hides it",
+        "pass": true,
+        "got": ""
+      },
+      {
+        "test": "136 sendings: 100 shown, Show more gives the rest",
+        "pass": true,
+        "got": "(100, 134)"
+      },
+      {
+        "test": "no JavaScript error (many sendings)",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "screen director-review-390: fits, no error",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "screen director-review-390: the status menu stays on screen",
+        "pass": true,
+        "got": "[62, 382, 390]"
+      },
+      {
+        "test": "screen director-review-dark-1440: fits, no error",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "screen director-review-dark-1440: the status menu stays on screen",
+        "pass": true,
+        "got": "[1027, 1347, 1440]"
+      },
+      {
+        "test": "screen manager-pending-dark-390: fits, no error",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "screen manager-pending-dark-390: the status menu stays on screen",
+        "pass": true,
+        "got": "[62, 382, 390]"
+      },
+      {
+        "test": "screen manager-pending-320: fits, no error",
+        "pass": true,
+        "got": "[]"
+      },
+      {
+        "test": "screen manager-pending-320: the status menu stays on screen",
+        "pass": true,
+        "got": "[24, 312, 320]"
+      }
+    ]
+  }
+}
