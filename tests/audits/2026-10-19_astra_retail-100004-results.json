@@ -1,0 +1,612 @@
+{
+  "sources": {
+    "main": "bf58fb8ad2a40ecaedec103f8f0c2b5d35b24070",
+    "test": "d45270e848be6fb23524f1de466a8bbcaaa2dcb9"
+  },
+  "date": "2026-10-19",
+  "scope": "Synthetic local VM/Firefox; no real Supabase writes or production edits",
+  "functional": {
+    "cases": 45,
+    "failures": 0
+  },
+  "mandatoryComparison": {
+    "cases": 47,
+    "failures": 0,
+    "newOrWorse": []
+  },
+  "twoOff": {
+    "eligibleWeeks": 204,
+    "twoOffWeeks": 204,
+    "sameAsBaseline": true
+  },
+  "mutationTests": {
+    "total": 17,
+    "undetected": 0
+  },
+  "reviewNominal": {
+    "total": 63,
+    "failures": 0
+  },
+  "reviewLearningNominal": {
+    "total": 18,
+    "failures": 0
+  },
+  "actions": {
+    "total": 82,
+    "failures": 0
+  },
+  "accounts": {
+    "total": 48,
+    "failures": 0
+  },
+  "responsive": {
+    "pageStates": 64,
+    "agentDialogs": 8,
+    "overflow": 0,
+    "errors": 0,
+    "alignment": [
+      {
+        "page": "alignment",
+        "width": 320,
+        "height": 844,
+        "dark": false,
+        "geometry": {
+          "monthlyName": {
+            "left": 76,
+            "width": 56
+          },
+          "monthlyFirst": {
+            "left": 132,
+            "width": 32
+          },
+          "countName": {
+            "left": 76,
+            "width": 56
+          },
+          "countFirst": {
+            "left": 132,
+            "width": 56
+          }
+        }
+      },
+      {
+        "page": "alignment",
+        "width": 320,
+        "height": 844,
+        "dark": true,
+        "geometry": {
+          "monthlyName": {
+            "left": 76,
+            "width": 56
+          },
+          "monthlyFirst": {
+            "left": 132,
+            "width": 32
+          },
+          "countName": {
+            "left": 76,
+            "width": 56
+          },
+          "countFirst": {
+            "left": 132,
+            "width": 56
+          }
+        }
+      },
+      {
+        "page": "alignment",
+        "width": 390,
+        "height": 844,
+        "dark": false,
+        "geometry": {
+          "monthlyName": {
+            "left": 76,
+            "width": 56
+          },
+          "monthlyFirst": {
+            "left": 132,
+            "width": 32
+          },
+          "countName": {
+            "left": 76,
+            "width": 56
+          },
+          "countFirst": {
+            "left": 132,
+            "width": 56
+          }
+        }
+      },
+      {
+        "page": "alignment",
+        "width": 390,
+        "height": 844,
+        "dark": true,
+        "geometry": {
+          "monthlyName": {
+            "left": 76,
+            "width": 56
+          },
+          "monthlyFirst": {
+            "left": 132,
+            "width": 32
+          },
+          "countName": {
+            "left": 76,
+            "width": 56
+          },
+          "countFirst": {
+            "left": 132,
+            "width": 56
+          }
+        }
+      },
+      {
+        "page": "alignment",
+        "width": 844,
+        "height": 390,
+        "dark": false,
+        "geometry": {
+          "monthlyName": {
+            "left": 110,
+            "width": 184
+          },
+          "monthlyFirst": {
+            "left": 294,
+            "width": 32
+          },
+          "countName": {
+            "left": 110,
+            "width": 184
+          },
+          "countFirst": {
+            "left": 294,
+            "width": 56
+          }
+        }
+      },
+      {
+        "page": "alignment",
+        "width": 844,
+        "height": 390,
+        "dark": true,
+        "geometry": {
+          "monthlyName": {
+            "left": 110,
+            "width": 184
+          },
+          "monthlyFirst": {
+            "left": 294,
+            "width": 32
+          },
+          "countName": {
+            "left": 110,
+            "width": 184
+          },
+          "countFirst": {
+            "left": 294,
+            "width": 56
+          }
+        }
+      },
+      {
+        "page": "alignment",
+        "width": 1440,
+        "height": 900,
+        "dark": false,
+        "geometry": {
+          "monthlyName": {
+            "left": 272,
+            "width": 184
+          },
+          "monthlyFirst": {
+            "left": 456,
+            "width": 32
+          },
+          "countName": {
+            "left": 272,
+            "width": 184
+          },
+          "countFirst": {
+            "left": 456,
+            "width": 56
+          }
+        }
+      },
+      {
+        "page": "alignment",
+        "width": 1440,
+        "height": 900,
+        "dark": true,
+        "geometry": {
+          "monthlyName": {
+            "left": 272,
+            "width": 184
+          },
+          "monthlyFirst": {
+            "left": 456,
+            "width": 32
+          },
+          "countName": {
+            "left": 272,
+            "width": 184
+          },
+          "countFirst": {
+            "left": 456,
+            "width": 56
+          }
+        }
+      }
+    ]
+  },
+  "static": {
+    "lines": 10429,
+    "bytes": 600061,
+    "scripts": [
+      {
+        "lines": 36,
+        "offset": 1017
+      },
+      {
+        "lines": 8799,
+        "offset": 1414
+      }
+    ],
+    "functions": 611,
+    "topFunctions": 441,
+    "singleOccurrenceTopFunctions": [
+      {
+        "name": "spreadPick",
+        "line": 4256,
+        "end": 4260,
+        "lines": 5,
+        "top": true,
+        "occurrences": 1,
+        "params": [
+          "group",
+          "j",
+          "k",
+          "rot"
+        ]
+      }
+    ],
+    "longestFunctions": [
+      {
+        "name": "computeMonthlyPlanOn",
+        "line": 7438,
+        "end": 8107,
+        "lines": 670,
+        "top": true,
+        "occurrences": 3,
+        "params": [
+          "opt",
+          "ctx"
+        ]
+      },
+      {
+        "name": "renderIntraday",
+        "line": 4992,
+        "end": 5644,
+        "lines": 653,
+        "top": true,
+        "occurrences": 11,
+        "params": [
+          "ds"
+        ]
+      },
+      {
+        "name": "placeShiftsOfDay",
+        "line": 6596,
+        "end": 6929,
+        "lines": 334,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp",
+          "d"
+        ]
+      },
+      {
+        "name": "paintMonthlyPlan",
+        "line": 8110,
+        "end": 8343,
+        "lines": 234,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "v"
+        ]
+      },
+      {
+        "name": "exportMonthly",
+        "line": 9158,
+        "end": 9373,
+        "lines": 216,
+        "top": true,
+        "occurrences": 2,
+        "params": []
+      },
+      {
+        "name": "repairDisplayedCoverage",
+        "line": 7015,
+        "end": 7165,
+        "lines": 151,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp"
+        ]
+      },
+      {
+        "name": "balanceCorners",
+        "line": 7294,
+        "end": 7437,
+        "lines": 144,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp",
+          "wF",
+          "totWf"
+        ]
+      },
+      {
+        "name": "exportIntraday",
+        "line": 9374,
+        "end": 9512,
+        "lines": 139,
+        "top": true,
+        "occurrences": 2,
+        "params": []
+      },
+      {
+        "name": "renderTraffic",
+        "line": 4665,
+        "end": 4791,
+        "lines": 127,
+        "top": true,
+        "occurrences": 11,
+        "params": [
+          "localeOnly"
+        ]
+      },
+      {
+        "name": "renderDashboard",
+        "line": 6227,
+        "end": 6353,
+        "lines": 127,
+        "top": true,
+        "occurrences": 13,
+        "params": []
+      },
+      {
+        "name": "finalCheck",
+        "line": 8417,
+        "end": 8532,
+        "lines": 116,
+        "top": true,
+        "occurrences": 4,
+        "params": [
+          "cells",
+          "ctx"
+        ]
+      },
+      {
+        "name": "testedMoves",
+        "line": 7183,
+        "end": 7291,
+        "lines": 109,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "mp"
+        ]
+      },
+      {
+        "name": "initHourlyCurve",
+        "line": 4813,
+        "end": 4920,
+        "lines": 108,
+        "top": true,
+        "occurrences": 3,
+        "params": [
+          "keepValues"
+        ]
+      },
+      {
+        "name": "renderRegulations",
+        "line": 3560,
+        "end": 3664,
+        "lines": 105,
+        "top": true,
+        "occurrences": 8,
+        "params": []
+      },
+      {
+        "name": "groupDaysOff",
+        "line": 7837,
+        "end": 7904,
+        "lines": 68,
+        "top": false,
+        "occurrences": 2,
+        "params": []
+      },
+      {
+        "name": "renderMonthlyCalendar",
+        "line": 9663,
+        "end": 9727,
+        "lines": 65,
+        "top": true,
+        "occurrences": 4,
+        "params": []
+      },
+      {
+        "name": "openCellEditor",
+        "line": 5939,
+        "end": 6002,
+        "lines": 64,
+        "top": true,
+        "occurrences": 2,
+        "params": [
+          "agentId",
+          "ds",
+          "evt"
+        ]
+      },
+      {
+        "name": "openSendMenu",
+        "line": 9004,
+        "end": 9065,
+        "lines": 62,
+        "top": true,
+        "occurrences": 3,
+        "params": [
+          "ev",
+          "view"
+        ]
+      },
+      {
+        "name": "onStoreChange",
+        "line": 2623,
+        "end": 2683,
+        "lines": 61,
+        "top": true,
+        "occurrences": 8,
+        "params": []
+      },
+      {
+        "name": "saveAgentEditor",
+        "line": 8765,
+        "end": 8825,
+        "lines": 61,
+        "top": true,
+        "occurrences": 2,
+        "params": []
+      }
+    ]
+  },
+  "exactClonePairs": [
+    {
+      "a": [
+        5061,
+        5065
+      ],
+      "b": [
+        5490,
+        5496
+      ],
+      "tokens": 77,
+      "lines": 5
+    },
+    {
+      "a": [
+        9196,
+        9201
+      ],
+      "b": [
+        9413,
+        9417
+      ],
+      "tokens": 71,
+      "lines": 5
+    },
+    {
+      "a": [
+        1704,
+        1707
+      ],
+      "b": [
+        9548,
+        9551
+      ],
+      "tokens": 60,
+      "lines": 4
+    }
+  ],
+  "cssRepeatedProperties": [
+    {
+      "scope": "",
+      "selector": ".page-head.plan-head",
+      "property": "column-gap",
+      "before": "",
+      "after": "12px"
+    }
+  ],
+  "edgeCases": [
+    {
+      "test": "absence changed to OUT during review",
+      "changed": false,
+      "copy": {
+        "cells": {
+          "2026-11-19": {
+            "a09": {
+              "code": "A",
+              "special": "leave"
+            }
+          }
+        },
+        "edits": {}
+      },
+      "pass": false
+    },
+    {
+      "test": "corner-only explicit edit also copies recalculated shift",
+      "cells": {
+        "2026-11-19": {
+          "a09": {
+            "code": "C",
+            "corner": "RTW"
+          }
+        }
+      },
+      "edits": {
+        "2026-11-19|a09": true
+      },
+      "pass": false
+    },
+    {
+      "test": "single shift share disabled in allocation but not reporting/learning",
+      "target": 52,
+      "actual": 0,
+      "closing": 88,
+      "firstShort": {
+        "ds": "2026-11-01",
+        "target": 2,
+        "actual": 0,
+        "cause": "limits"
+      },
+      "learnedStats": {
+        "evening": 0,
+        "sellers": 88,
+        "grouping": "median-1"
+      },
+      "pass": false
+    },
+    {
+      "test": "missing sent context still produces learnable stats",
+      "context": "today",
+      "evening": {
+        "evening": 183,
+        "sellers": 352,
+        "grouping": "median-1"
+      },
+      "pass": false
+    },
+    {
+      "test": "501 pending, first 500 read, last unread",
+      "nav": "99+",
+      "bellItems": 0,
+      "bellHidden": true,
+      "pass": false
+    },
+    {
+      "test": "200 revisions of October must not hide September",
+      "months": [
+        "2026-10"
+      ],
+      "ratio": 0.5,
+      "pass": false
+    }
+  ],
+  "newNotificationRequirements": "Specified in audit; not implemented by Astra"
+}
