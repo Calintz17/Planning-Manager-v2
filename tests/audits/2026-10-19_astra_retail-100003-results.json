@@ -1,0 +1,2204 @@
+{
+  "source": {
+    "main": "63cee80d9e4843a554418540d287b08f03057fa8",
+    "test": "c061f53e3ca9e8cc17273fbc12dc3ca5d8a8635e"
+  },
+  "clock": "2026-10-19",
+  "scope": "Synthetic local code/Firefox audit; no real Supabase session, no production writes",
+  "lateQuota": [
+    {
+      "kind": "bm",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "213/213",
+        "213/213"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "221/221",
+        "221/221"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "90/90",
+        "90/90"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "223/223",
+        "223/223"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "223/223",
+        "223/223"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "87/87",
+        "87/87"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "84/84",
+        "84/84"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "34/34",
+        "34/34"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "85/85",
+        "85/85"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "85/85",
+        "85/85"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "216/216"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 9,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "227/227"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 10,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "92/92"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "227/227"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 11,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "227/227"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 12,
+      "clock": "gen",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "230/230"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpB",
+      "month": 12,
+      "clock": "live",
+      "mod": "base",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "0/0",
+        "230/230"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers3",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "28/23",
+        "28/23"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers1",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "21/21",
+        "21/21"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noManagers",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "186/186",
+        "186/186"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "oneAdvisor",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        38,
+        38
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "openNone|2026-11-01",
+        "openNone|2026-11-02",
+        "openNone|2026-11-03",
+        "closeNone|2026-11-03",
+        "openNone|2026-11-04"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noAdvisor",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        60,
+        60
+      ],
+      "late": [
+        "0/0",
+        "0/0"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "openNone|2026-11-01",
+        "closeNone|2026-11-01",
+        "openNone|2026-11-02",
+        "closeNone|2026-11-02",
+        "openNone|2026-11-03"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "allAbsentWeek",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "142/142",
+        "142/142"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "fairnessOff",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "179/183"
+      ],
+      "shortDays": [
+        0,
+        6
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "noCornerTraffic",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "oneCorner",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "closedDays",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "182/182",
+        "182/182"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "holidaysOpen",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "manualMix",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "157/157",
+        "157/157"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "sixDaysManual",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        3,
+        3
+      ],
+      "late": [
+        "184/184",
+        "184/184"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "row|a09|2026-11-07",
+        "week|a09|2026-11-02",
+        "hours|a09|2026-11-02"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "shortHours",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "150/150",
+        "150/150"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "strictRest",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/184",
+        "182/184"
+      ],
+      "shortDays": [
+        1,
+        2
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedKept",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "fourPeople",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "22/22",
+        "22/22"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "tenPlusOne",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "109/128",
+        "109/96"
+      ],
+      "shortDays": [
+        19,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "bm",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedRecalc",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "183/183",
+        "183/183"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "sellers3",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "36/36",
+        "36/36"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "manualMix",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        56,
+        56
+      ],
+      "late": [
+        "58/58",
+        "58/58"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "violation",
+        "violation"
+      ],
+      "newKeys": [
+        "data|j00|2026-11-07",
+        "data|j00|2026-11-10",
+        "data|j00|2026-11-22",
+        "data|j00|2026-11-25",
+        "data|j01|2026-11-01"
+      ],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedKept",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    },
+    {
+      "kind": "jpA",
+      "month": 11,
+      "clock": "live",
+      "mod": "savedRecalc",
+      "pass": true,
+      "added": [],
+      "error": null,
+      "mandatory": [
+        0,
+        0
+      ],
+      "late": [
+        "83/83",
+        "83/83"
+      ],
+      "shortDays": [
+        0,
+        0
+      ],
+      "leadMid": [
+        0,
+        0
+      ],
+      "leadOnlyClose": [
+        0,
+        0
+      ],
+      "status": [
+        "incomplete",
+        "incomplete"
+      ],
+      "newKeys": [],
+      "leadM": []
+    }
+  ],
+  "reviewChecks": {
+    "total": 63,
+    "failures": 0
+  },
+  "mutations": {
+    "total": 17,
+    "undetected": 0
+  },
+  "actions": {
+    "total": 82,
+    "failures": 0
+  },
+  "design": [
+    {
+      "page": "monthly",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 320,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 320,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 390,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 390,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 1440,
+      "dark": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "monthly",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "intraday",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "calendar",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "agents",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "settings",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "page": "reviews",
+      "width": 1440,
+      "dark": true,
+      "overflow": false,
+      "errors": []
+    }
+  ],
+  "alignment": [
+    {
+      "width": 390,
+      "geometry": {
+        "monthlyName": {
+          "left": 76,
+          "width": 56,
+          "height": 48
+        },
+        "monthlyFirstNumber": {
+          "left": 132,
+          "width": 32,
+          "height": 48
+        },
+        "countName": {
+          "left": 76,
+          "width": 120,
+          "height": 33
+        },
+        "countFirstNumber": {
+          "left": 196,
+          "width": 56,
+          "height": 33
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "geometry": {
+        "monthlyName": {
+          "left": 272,
+          "width": 184,
+          "height": 44
+        },
+        "monthlyFirstNumber": {
+          "left": 456,
+          "width": 32,
+          "height": 44
+        },
+        "countName": {
+          "left": 272,
+          "width": 184,
+          "height": 33
+        },
+        "countFirstNumber": {
+          "left": 456,
+          "width": 56,
+          "height": 33
+        }
+      }
+    }
+  ],
+  "adversarial": [
+    {
+      "test": "future validated month used for November",
+      "ratio": 0.5398773006134969,
+      "learned": {
+        "storeId": "bm",
+        "evening": 26,
+        "sellers": 26
+      },
+      "calls": [
+        [
+          "select",
+          "month,reviewed_plan"
+        ],
+        [
+          "eq",
+          "store_id",
+          "bm"
+        ],
+        [
+          "eq",
+          "status",
+          "validated"
+        ],
+        [
+          "order",
+          "month",
+          {
+            "ascending": false
+          }
+        ],
+        [
+          "limit",
+          6
+        ]
+      ]
+    },
+    {
+      "test": "same store different target month cached",
+      "ratio": 0.5398773006134969,
+      "queries": 1
+    },
+    {
+      "test": "catalogues with tied end times",
+      "groups": {
+        "O": "am",
+        "M": "mid",
+        "C": "mid"
+      },
+      "single": {
+        "X": "mid"
+      }
+    },
+    {
+      "test": "no evening category despite all shifts covering closing",
+      "groups": {
+        "O": "am",
+        "M": "mid",
+        "C": "mid"
+      },
+      "late": {
+        "ratio": 0.5,
+        "target": 52,
+        "actual": 0,
+        "closing": 88,
+        "firstShort": {
+          "ds": "2026-11-01",
+          "target": 2,
+          "actual": 0,
+          "cause": "limits"
+        }
+      },
+      "mandatory": 0
+    },
+    {
+      "test": "pre-existing explicit override makes recalculated cell a reviewer edit",
+      "cells": {
+        "2026-11-19": {
+          "a09": {
+            "code": "C"
+          }
+        }
+      },
+      "edits": {
+        "2026-11-19|a09": true
+      }
+    },
+    {
+      "test": "decision diagnostics uses live contracts, not sent context",
+      "original": 0,
+      "decision": 161
+    }
+  ],
+  "unreadBeyondPage": {
+    "totalPending": 60,
+    "bellItems": 0,
+    "bellHidden": true,
+    "unreadOutsideFirstPage": 10
+  },
+  "twoDaysOffEligibleWeeks": [
+    {
+      "0": {
+        "two": 0,
+        "eligible": 0
+      },
+      "1": {
+        "two": 0,
+        "eligible": 0
+      },
+      "kind": "bm",
+      "month": 9
+    },
+    {
+      "0": {
+        "two": 18,
+        "eligible": 18
+      },
+      "1": {
+        "two": 18,
+        "eligible": 18
+      },
+      "kind": "bm",
+      "month": 10
+    },
+    {
+      "0": {
+        "two": 51,
+        "eligible": 51
+      },
+      "1": {
+        "two": 51,
+        "eligible": 51
+      },
+      "kind": "bm",
+      "month": 11
+    },
+    {
+      "0": {
+        "two": 0,
+        "eligible": 0
+      },
+      "1": {
+        "two": 0,
+        "eligible": 0
+      },
+      "kind": "jpA",
+      "month": 9
+    },
+    {
+      "0": {
+        "two": 7,
+        "eligible": 7
+      },
+      "1": {
+        "two": 7,
+        "eligible": 7
+      },
+      "kind": "jpA",
+      "month": 10
+    },
+    {
+      "0": {
+        "two": 28,
+        "eligible": 28
+      },
+      "1": {
+        "two": 28,
+        "eligible": 28
+      },
+      "kind": "jpA",
+      "month": 11
+    },
+    {
+      "0": {
+        "two": 0,
+        "eligible": 0
+      },
+      "1": {
+        "two": 0,
+        "eligible": 0
+      },
+      "kind": "jpB",
+      "month": 9
+    },
+    {
+      "0": {
+        "two": 20,
+        "eligible": 20
+      },
+      "1": {
+        "two": 20,
+        "eligible": 20
+      },
+      "kind": "jpB",
+      "month": 10
+    },
+    {
+      "0": {
+        "two": 80,
+        "eligible": 80
+      },
+      "1": {
+        "two": 80,
+        "eligible": 80
+      },
+      "kind": "jpB",
+      "month": 11
+    }
+  ]
+}
