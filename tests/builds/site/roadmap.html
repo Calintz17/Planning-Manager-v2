@@ -4,15 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CAST - Roadmap</title>
-<meta name="description" content="The milestones of CAST, the CELINE Automated Scheduling Tool, and what comes next.">
+<meta name="description" content="What CAST does today, release by release, and what comes next.">
 <style>
 :root {
   --font:Arial, Helvetica, sans-serif;
   --night:#0C1A33; --brand:#183C74; --mist:#C9D5E6; --mist-2:#8FA3C0; --white:#FFFFFF; --line-dark:#24395E;
-  --veil:rgba(12,26,51,.62);
-  --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px; --s16:64px;
-  --r-sm:6px; --top-h:72px; --max:1200px;
-  --step:340px;                                   /* room of one milestone on the line */
+  --tx-1:#17283E; --tx-2:#52647B; --tint:#EAF0FA;
+  --veil:rgba(12,26,51,.66);
+  --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s16:64px;
+  --r-sm:6px; --r-lg:12px; --top-h:72px; --max:1200px;
+  --card:212px;                                   /* side of a square */
+  --step:150px;                                   /* distance between two milestones; they alternate above and below */
+  --stem:26px;                                    /* from the line to a square */
   --gutter:max(var(--s8), calc((100vw - var(--max)) / 2 + var(--s8)));
 }
 * { box-sizing:border-box; margin:0; padding:0; }
@@ -36,57 +39,57 @@ a { color:inherit; text-decoration:none; }
 .top-nav { display:flex; align-items:center; gap:var(--s6); font-size:14px; color:var(--mist); }
 .top-nav a.lnk:hover, .top-nav a.lnk[aria-current] { color:var(--white); }
 
-/* The page: one screen, the hero image behind the line */
+/* One screen, the hero image behind */
 .rm { position:relative; min-height:calc(100vh - var(--top-h)); min-height:calc(100svh - var(--top-h)); display:flex; flex-direction:column; overflow:hidden; }
 .rm-media, .rm-veil { position:absolute; inset:0; }
 .rm-media img { width:100%; height:100%; object-fit:cover; }
 .rm-veil { background:var(--veil); }
 .rm-veil::after { content:""; position:absolute; inset:0; background:var(--brand); mix-blend-mode:color; opacity:.4; }
-.rm-head { position:relative; z-index:2; width:100%; margin-top:clamp(32px, 7vh, 88px); display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s10); flex-wrap:wrap; }
-.eyebrow { font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--mist); }
-.rm h1 { margin-top:var(--s3); font-size:clamp(38px, 4.8vw, 72px); line-height:1; letter-spacing:-.035em; font-weight:700; max-width:16ch; }
-.rm-intro { max-width:27em; color:var(--mist); font-size:17px; }
+.rm-head { position:relative; z-index:2; width:100%; margin-top:clamp(28px, 6vh, 72px); display:flex; justify-content:space-between; align-items:flex-end; gap:var(--s6); flex-wrap:wrap; }
+.rm h1 { font-size:clamp(32px, 3.6vw, 52px); line-height:1.05; letter-spacing:-.025em; }
+.rm-intro { color:var(--mist); font-size:16px; }
 
-/* The line: a long rule to drag, milestones above and below it */
-.line { position:relative; z-index:2; flex:1; display:flex; align-items:center; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x; overscroll-behavior-x:contain; outline:none; }
+/* The line */
+.line { position:relative; z-index:2; flex:1 0 auto; display:flex; align-items:center; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-x; overscroll-behavior-x:contain; outline:none; }
 .line::-webkit-scrollbar { display:none; }
 .line.is-drag { cursor:grabbing; }
 .line:focus-visible { box-shadow:inset 0 0 0 2px var(--mist); }
-.rail { position:relative; display:flex; min-width:max-content; padding:0 var(--gutter); height:460px; }
-.rail::before { content:""; position:absolute; left:0; width:var(--done, 0px); top:50%; height:1px; background:rgba(255,255,255,.28); }
-.done-line { position:absolute; left:0; top:50%; height:2px; margin-top:-1px; background:var(--white); width:var(--done, 0px); transform-origin:left; animation:draw 1.4s cubic-bezier(.2,.7,.2,1) both; }
-@keyframes draw { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+.rail { position:relative; display:flex; min-width:max-content; height:calc(2 * (var(--card) + var(--stem)) + 24px); padding:0 calc(var(--gutter) + var(--card) / 2); }
+.track { position:absolute; left:0; right:0; top:50%; height:24px; margin-top:-12px; overflow:hidden; pointer-events:none; }
+.track::before { content:""; position:absolute; left:0; right:0; top:12px; height:1px; background:linear-gradient(90deg, rgba(255,255,255,.4) var(--done, 70%), transparent var(--done, 70%)); }
+.track .plan { position:absolute; top:12px; left:var(--done, 70%); width:calc(var(--end, 100%) - var(--done, 70%)); border-top:1px dashed rgba(255,255,255,.4); }
+/* Light running along the line, right to left: the colours of Forecast with AI */
+.streak { position:absolute; top:11px; left:0; width:280px; height:3px; border-radius:3px; pointer-events:none;
+  background:linear-gradient(90deg, transparent 0%, #FFFFFF 14%, #A78BFA 34%, #6366F1 58%, #60A5FA 80%, transparent 100%);
+  animation:run 7s linear infinite; will-change:transform; }
+.streak::after { content:""; position:absolute; inset:-5px 0; border-radius:8px; filter:blur(8px); opacity:.85;
+  background:linear-gradient(90deg, transparent 0%, rgba(167,139,250,.55) 25%, rgba(99,102,241,.5) 55%, rgba(96,165,250,.45) 80%, transparent 100%); }
+@keyframes run { from { transform:translateX(var(--run-from, 2400px)); } to { transform:translateX(-300px); } }
+
+/* Milestones: a dot on the line, a stem, a square above or below */
 .ms { position:relative; width:var(--step); flex:none; height:100%; }
-.ms::before { content:""; position:absolute; left:0; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border-radius:50%; background:var(--white); box-shadow:0 0 0 6px rgba(255,255,255,.12); }
-.ms::after { content:""; position:absolute; left:0; width:1px; background:rgba(255,255,255,.35); }
-.ms.up::after { bottom:50%; height:44px; margin-bottom:12px; }
-.ms.dn::after { top:50%; height:44px; margin-top:12px; }
-.ms-body { position:absolute; left:0; width:calc(var(--step) - var(--s10)); padding-left:var(--s5); border-left:1px solid transparent; }
-.ms.up .ms-body { bottom:calc(50% + 60px); }
-.ms.dn .ms-body { top:calc(50% + 60px); }
-.ms-date { font-size:13px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--mist); }
-.ms h2 { margin-top:var(--s2); font-size:clamp(22px, 2vw, 26px); line-height:1.15; letter-spacing:-.015em; }
-.ms p { margin-top:var(--s2); font-size:15px; line-height:1.55; color:var(--mist); }
-.ms-num { position:absolute; left:var(--s5); top:50%; transform:translateY(-50%); font-size:12px; font-weight:700; color:var(--mist-2); padding-left:var(--s3); }
-.ms.up .ms-num { margin-top:18px; }
-.ms.dn .ms-num { margin-top:-18px; }
+.dot { position:absolute; left:0; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--white); box-shadow:0 0 0 5px rgba(255,255,255,.12); }
+.ms::after { content:""; position:absolute; left:0; width:1px; height:var(--stem); background:rgba(255,255,255,.45); }
+.ms.up::after { bottom:50%; margin-bottom:6px; }
+.ms.dn::after { top:50%; margin-top:6px; }
+.sq { position:absolute; left:0; transform:translateX(-50%); width:var(--card); height:var(--card); padding:var(--s5); border-radius:var(--r-lg); background:var(--white); color:var(--tx-1); display:flex; flex-direction:column; box-shadow:0 18px 40px rgba(0,0,0,.28); }
+.ms.up .sq { bottom:calc(50% + var(--stem) + 6px); }
+.ms.dn .sq { top:calc(50% + var(--stem) + 6px); }
+.ic { width:40px; height:40px; border-radius:var(--r-sm); background:var(--tint); color:var(--brand); display:flex; align-items:center; justify-content:center; flex:none; }
+.ic svg { width:22px; height:22px; }
+.sq-txt { margin-top:auto; }
+.date { font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--tx-2); }
+.sq h2 { margin-top:6px; font-size:18px; line-height:1.2; letter-spacing:-.01em; }
+.sq p { margin-top:6px; font-size:14px; line-height:1.4; color:var(--tx-2); }
+/* Planned: grey squares on the dashed part */
+.ms.next .dot { background:var(--night); border:1px dashed var(--mist); box-shadow:none; }
+.ms.next::after { background:none; border-left:1px dashed rgba(255,255,255,.4); }
+.ms.next .sq { background:rgba(233,237,242,.14); color:var(--white); border:1px dashed rgba(255,255,255,.45); box-shadow:none; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+.ms.next .ic { background:rgba(255,255,255,.12); color:var(--mist); }
+.ms.next .date, .ms.next p { color:var(--mist); }
 
-/* Today, between what is done and what comes */
-.ms.today::before { background:var(--night); border:2px solid var(--white); box-shadow:0 0 0 6px rgba(255,255,255,.12); }
-.ms.today .pulse { position:absolute; left:0; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border-radius:50%; border:1px solid var(--white); animation:pulse 2.4s ease-out infinite; }
-@keyframes pulse { from { transform:scale(1); opacity:.8; } to { transform:scale(3.2); opacity:0; } }
-
-/* Coming soon: grey, on a dashed line */
-.next { position:relative; display:flex; }
-.next::before { content:""; position:absolute; left:0; right:var(--s16); top:50%; border-top:1px dashed rgba(255,255,255,.4); }
-.ms.soon::before { background:transparent; border:1px dashed var(--mist-2); box-shadow:none; }
-.ms.soon::after { background:none; border-left:1px dashed rgba(255,255,255,.3); }
-.ms.soon h2, .ms.soon p { color:var(--mist-2); }
-.now { margin-left:var(--s3); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--white); }
-.end { width:var(--s16); flex:none; }
-
-/* Bottom: how to travel the line */
-.rm-foot { position:relative; z-index:2; width:100%; margin-bottom:clamp(24px, 5vh, 56px); display:flex; justify-content:space-between; align-items:center; gap:var(--s6); }
+/* Bottom */
+.rm-foot { position:relative; z-index:2; width:100%; margin-bottom:clamp(20px, 4vh, 48px); display:flex; justify-content:space-between; align-items:center; gap:var(--s6); }
 .hint { display:flex; align-items:center; gap:var(--s3); font-size:13px; color:var(--mist); }
 .hint svg { width:34px; height:12px; }
 .arrows { display:flex; gap:var(--s2); }
@@ -99,24 +102,20 @@ footer { background:var(--night); color:var(--mist-2); font-size:13px; padding:v
 footer .wrap { display:flex; justify-content:space-between; align-items:center; gap:var(--s4); flex-wrap:wrap; }
 .sign { color:var(--mist); }
 
-/* Phones: every milestone under the line, a narrower step */
 @media (max-width: 640px) {
-  :root { --top-h:64px; --step:270px; --gutter:var(--s5); }
+  :root { --top-h:64px; --card:176px; --step:120px; --stem:20px; --gutter:var(--s5); }
   body { font-size:16px; }
   .wrap { padding:0 var(--s5); }
   .brand-sub, .top-nav a.lnk { display:none; }
-  .rm-intro { font-size:16px; }
-  .rail { height:330px; }
-  .rail::before, .done-line, .next::before, .ms::before, .ms.today .pulse { top:22%; }
-  .ms.up::after, .ms.dn::after { top:22%; bottom:auto; height:28px; margin:12px 0 0; }
-  .ms.up .ms-body, .ms.dn .ms-body { top:calc(22% + 52px); bottom:auto; }
-  .ms.up .ms-num, .ms.dn .ms-num { top:22%; margin-top:-22px; }
+  .sq { padding:var(--s4); }
+  .sq h2 { font-size:16px; }
+  .sq p { font-size:13px; }
+  .ic { width:34px; height:34px; }
+  .ic svg { width:19px; height:19px; }
   .hint span { display:none; }
-  .end { width:max(var(--s5), calc(100vw - var(--step) - 2 * var(--gutter))); }   /* the last milestone can come fully into view */
 }
 @media (prefers-reduced-motion: reduce) {
-  .done-line, .ms.today .pulse { animation:none; }
-  .line { scroll-behavior:auto; }
+  .streak { animation:none; display:none; }
 }
 </style>
 <script>
@@ -164,39 +163,60 @@ function trimLogo(img) {
   <div class="rm-veil"></div>
 
   <div class="wrap rm-head">
-    <div>
-      <div class="eyebrow">Roadmap</div>
-      <h1>Seven milestones. Eight months.</h1>
-    </div>
-    <p class="rm-intro">From a first Client Service MVP to a planning tool that learns from its managers, with accounts and validation. And more on the way.</p>
+    <h1>Roadmap</h1>
+    <p class="rm-intro">7 releases since March 2026. 2 more planned by November.</p>
   </div>
 
-  <div class="line" id="line" tabindex="0" role="region" aria-label="Roadmap timeline. Use the arrow keys or drag to move along it.">
+  <div class="line" id="line" tabindex="0" role="region" aria-label="Roadmap. Use the arrow keys or drag to move along it.">
     <div class="rail" id="rail" role="list">
-      <span class="done-line" id="done-line" aria-hidden="true"></span>
-      <div role="listitem" class="ms dn"><span class="ms-num">01</span><div class="ms-body"><div class="ms-date">March 2026</div><h2>Client Service MVP</h2><p>Calls, chats and emails staffed from forecast volume, for the six Client Service centers.</p></div></div>
-      <div role="listitem" class="ms up"><span class="ms-num">02</span><div class="ms-body"><div class="ms-date">June 2026</div><h2>First Retail draft</h2><p>The planning logic brought to the boutiques: stores, teams and traffic.</p></div></div>
-      <div role="listitem" class="ms dn"><span class="ms-num">03</span><div class="ms-body"><div class="ms-date">August 2026</div><h2>A working monthly planning</h2><p>Shifts, corners, days off, holidays and exports, planned from store traffic.</p></div></div>
-      <div role="listitem" class="ms up"><span class="ms-num">04</span><div class="ms-body"><div class="ms-date">September 2026</div><h2>Intraday</h2><p>Every day hour by hour: briefs, Welcome, lunches, breaks and reinforcements, timed to traffic.</p></div></div>
-      <div role="listitem" class="ms dn"><span class="ms-num">05</span><div class="ms-body"><div class="ms-date">October 2026</div><h2>An engine that learns from managers</h2><p>Each validated planning brings the next first draft closer to the one the manager would have made.</p></div></div>
-      <div role="listitem" class="ms up"><span class="ms-num">06</span><div class="ms-body"><div class="ms-date">October 2026</div><h2>Accounts and roles</h2><p>Managers, directors and administrators, each with their own stores and rights.</p></div></div>
-      <div role="listitem" class="ms dn today" id="today"><span class="pulse" aria-hidden="true"></span><span class="ms-num">07<b class="now">Today</b></span><div class="ms-body"><div class="ms-date">October 2026</div><h2>Director validation</h2><p>Plannings sent, reviewed, validated or returned by the director, with their full history.</p></div></div>
-      <div class="next">
-          <div role="listitem" class="ms up soon"><span class="ms-num">08</span><div class="ms-body"><div class="ms-date">Coming soon</div><h2>AI traffic forecast</h2><p>Store traffic forecast by AI, so each planning starts from the days ahead.</p></div></div>
-          <div role="listitem" class="ms dn soon"><span class="ms-num">09</span><div class="ms-body"><div class="ms-date">Coming soon</div><h2>Insights</h2><p>One page to read the planning of every boutique in a network, at a glance.</p></div></div>
-        <div class="end" aria-hidden="true"></div>
-      </div>
+      <div class="track" aria-hidden="true"><span class="plan"></span><span class="streak"></span></div>
+
+      <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/><path d="M19 20a3 3 0 0 1-3 2h-3"/></svg></span>
+        <div class="sq-txt"><div class="date">March 2026</div><h2>Client Service</h2><p>Weekly planning for calls, chats and emails.</p></div></div></div>
+
+      <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13v8h14v-8"/><path d="M10 21v-5h4v5"/></svg></span>
+        <div class="sq-txt"><div class="date">June 2026</div><h2>Retail</h2><p>Store planning built from store traffic.</p></div></div></div>
+
+      <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2"/></svg></span>
+        <div class="sq-txt"><div class="date">August 2026</div><h2>Monthly planning</h2><p>Shifts, days off and corners for the whole month.</p></div></div></div>
+
+      <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div class="sq-txt"><div class="date">September 2026</div><h2>Intraday</h2><p>Breaks and lunches placed hour by hour.</p></div></div></div>
+
+      <div class="ms up" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>Learning engine</h2><p>Repeats the manager's usual changes in the next draft.</p></div></div></div>
+
+      <div class="ms dn" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><rect x="15" y="11" width="7" height="6" rx="1.5"/><path d="M16.5 11V9.5a2 2 0 0 1 4 0V11"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>Accounts</h2><p>Each user sees only their own stores.</p></div></div></div>
+
+      <div class="ms up" role="listitem" id="last-done"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="m9 13 2 2 4-4"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>Director validation</h2><p>Directors approve or return each planning.</p></div></div></div>
+
+      <div class="ms dn next" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/><path d="M15 6h5v5"/></svg></span>
+        <div class="sq-txt"><div class="date">October 2026</div><h2>AI traffic forecast</h2><p>Forecasts store traffic for the coming weeks.</p></div></div></div>
+
+      <div class="ms up next" role="listitem"><span class="dot"></span><div class="sq">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+        <div class="sq-txt"><div class="date">November 2026</div><h2>Insights</h2><p>Planning figures for all stores on one page.</p></div></div></div>
     </div>
   </div>
 
   <div class="wrap rm-foot">
     <div class="hint" aria-hidden="true">
       <svg viewBox="0 0 34 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h32M5 2 1 6l4 4M29 2l4 4-4 4"/></svg>
-      <span>Drag the line to travel through time</span>
+      <span>Drag the line</span>
     </div>
     <div class="arrows">
-      <button class="arw" type="button" id="prev" aria-label="Previous milestones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <button class="arw" type="button" id="next" aria-label="Next milestones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="arw" type="button" id="prev" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="arw" type="button" id="next" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
   </div>
 </main>
@@ -210,12 +230,18 @@ function trimLogo(img) {
 
 <script>
 (function() {
-  var line = document.getElementById('line'), rail = document.getElementById('rail'), today = document.getElementById('today');
+  var line = document.getElementById('line'), rail = document.getElementById('rail'), lastDone = document.getElementById('last-done');
   var prev = document.getElementById('prev'), next = document.getElementById('next');
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // The solid line runs from the start to today; the dashed line goes on to what comes
-  function sizeDone() { rail.style.setProperty('--done', today.offsetLeft + 'px'); }
-  function step() { return today.offsetWidth || 340; }
+  // Solid line up to the last release, dashed after; the light starts from the right end of the line
+  function size() {
+    rail.style.setProperty('--done', (lastDone.offsetLeft + lastDone.offsetWidth / 2) + 'px');
+    var last = rail.querySelector('.ms:last-of-type');
+    rail.style.setProperty('--end', (last.offsetLeft + 64) + 'px');
+    rail.style.setProperty('--run-from', rail.offsetWidth + 'px');
+    arrows();
+  }
+  function step() { return lastDone.offsetWidth * 2 || 300; }
   function go(dx) { line.scrollBy({ left: dx, behavior: reduce ? 'auto' : 'smooth' }); }
   function arrows() {
     prev.disabled = line.scrollLeft <= 2;
@@ -247,11 +273,11 @@ function trimLogo(img) {
     else if (e.key === 'Home') { e.preventDefault(); go(-line.scrollWidth); }
     else if (e.key === 'End') { e.preventDefault(); go(line.scrollWidth); }
   });
-  prev.addEventListener('click', function() { go(-step() * 2); });
-  next.addEventListener('click', function() { go(step() * 2); });
+  prev.addEventListener('click', function() { go(-step()); });
+  next.addEventListener('click', function() { go(step()); });
   line.addEventListener('scroll', arrows, { passive: true });
-  window.addEventListener('resize', function() { sizeDone(); arrows(); });
-  sizeDone(); arrows();
+  window.addEventListener('resize', size);
+  size();
 })();
 </script>
 </body>
