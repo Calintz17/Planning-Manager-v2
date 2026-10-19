@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v10.0.0.4 TEST</title>
+  <title>CAST v10.0.0.5 TEST</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -1956,7 +1956,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
-var CAST_VERSION = '10.0.0.4';
+var CAST_VERSION = '10.0.0.5';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -4271,13 +4271,23 @@ function contractHistory(a) {
     .slice().sort(function(x, y) { return x.from < y.from ? -1 : x.from > y.from ? 1 : 0; });
 }
 function currentContractHours(a) { return contractHours(a, '9999-12-31'); }
-function contractHours(a, ds) {
-  if (!ds) { console.error('contractHours needs a date'); ds = '9999-12-31'; }   // never breaks the page; tests check it
+// Weekly hours of an advisor on a day: the contract of that date, else the advisor's hours, else the store default
+function contractHoursFor(a, ds, defaultWeekly) {
   var v = null;
   contractHistory(a).forEach(function(h) { if (h.from <= ds) v = +h.hours; });
   if (v != null) return v;
   if (a && a.weekly_hours > 0) return +a.weekly_hours;
-  return regulations.weekly_hours > 0 ? +regulations.weekly_hours : 0;
+  return defaultWeekly > 0 ? +defaultWeekly : 0;
+}
+function contractHours(a, ds) {
+  if (!ds) { console.error('contractHours needs a date'); ds = '9999-12-31'; }   // never breaks the page; tests check it
+  return contractHoursFor(a, ds, regulations.weekly_hours);
+}
+// Corner where an advisor works on a day: the corner of the day's plan, else the usual corner
+function effectiveCornerId(a, dayPlan, corners) {
+  var r = (dayPlan || {})[a.id];
+  if (r && r.corner) { var c = corners.find(function(x) { return x.code === r.corner; }); if (c) return c.id; }
+  return a.home_corner_id || null;
 }
 // Month hours counter (Roman 17-10): the weekly hours are respected each week; the month shows a counter against
 // weekly hours x days of the month / 7 (the average month of the contract), not a limit.
@@ -4989,7 +4999,13 @@ async function loadAndRenderIntraday(ds) {
   addedMissions = am;
   renderIntraday(ds);
 }
+// Intraday: the month's plan is made first when the day has none yet (here, not inside the screen), then the day is shown
 function renderIntraday(ds) {
+  var day = ds || toDateStr(new Date());
+  if (currentStoreId && agents.length && !getDayClosureType(day) && !monthlyResult[day]) renderMonthlyPlanning();
+  paintIntraday(ds);
+}
+function paintIntraday(ds) {
   intradayExport = null;
   var body = document.getElementById('planning-intraday-body');
   if (!body) return;
@@ -5011,7 +5027,6 @@ function renderIntraday(ds) {
   var dh = (regulations.day_hours && regulations.day_hours[dow]) || { open: 10, close: 18 };
   if (calHours[ds]) dh = calHours[ds];
   var openH = dh.open, closeH = dh.close;
-  if (!monthlyResult[ds]) renderMonthlyPlanning();
   var dayPlan = monthlyResult[ds];
   if (!dayPlan) {
     body.innerHTML = '<p class="plan-empty">' +
@@ -5058,11 +5073,7 @@ function renderIntraday(ds) {
   if (storeSettings && storeSettings.intraday_reinforcement && storeCorners.length > 1 && curve && curve.length) {
     var refYr = monthlyRef.getFullYear(), refMr = monthlyRef.getMonth() + 1;
     var cwR = function(cid){ return cornerTrafficValue(cid, refYr, refMr); };
-    var effCornerId = function(a){
-      var r = (monthlyResult[ds] || {})[a.id];
-      if (r && r.corner) { for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id; }
-      return a.home_corner_id || null;
-    };
+    var effCornerId = function(a) { return effectiveCornerId(a, dayPlan, storeCorners); };
     var byC = {}; storeCorners.forEach(function(c){ byC[c.id]=[]; });
     working.forEach(function(a){ if (poolOf(a)==='sales'){ var cid=effCornerId(a); if (cid&&byC[cid]) byC[cid].push(a); } });
     var minOpen = minCover('open');
@@ -5487,13 +5498,7 @@ function renderIntraday(ds) {
   if (storeCorners.length > 1) {
     var refYi = monthlyRef.getFullYear(), refMi = monthlyRef.getMonth() + 1;
     function cWi(cid){ return cornerTrafficValue(cid, refYi, refMi); }
-    function effCorner(a){
-      var r = (monthlyResult[ds] || {})[a.id];
-      if (r && r.corner) {
-        for (var i=0;i<storeCorners.length;i++) if (storeCorners[i].code===r.corner) return storeCorners[i].id;
-      }
-      return a.home_corner_id || null;
-    }
+    function effCorner(a) { return effectiveCornerId(a, dayPlan, storeCorners); }
     var mgmt = working.filter(function(a){ return poolOf(a)==='mgmt'; });
     if (mgmt.length) groups.push({ title:'MANAGEMENT', list:mgmt });
     storeCorners.slice().sort(function(x,y){ return cWi(y.id)-cWi(x.id); }).forEach(function(c){
@@ -8103,12 +8108,19 @@ function computeMonthlyPlanOn(opt, ctx) {
   return Object.freeze({ issues: issues, habitsDays: habits.days, hours: hours,
     fixedIssues: freezeMonthlyValue(JSON.parse(JSON.stringify(fixedIssues))),
     cells: cells, diagnostics: diagnostics,
-    paint: function() { return paintMonthlyPlan({ ctx: ctx, cells: cells, hours: hours, agentRows: agentRows, rh: rh, fixedIssues: fixedIssues, monthDays: monthDays, year: year, monthIdx: monthIdx, newSnap: newSnap, snapKey: snapKey, snapLoaded: snapLoaded }); } });
+    // Show the plan, then keep it: the painter only paints, the plan shown is saved next (once; a repaint writes nothing)
+    paint: function() {
+      var shown = paintMonthlyPlan({ ctx: ctx, cells: cells, hours: hours, agentRows: agentRows, rh: rh, fixedIssues: fixedIssues, monthDays: monthDays, year: year, monthIdx: monthIdx, snapKey: snapKey });
+      // Saving the plan shown changes the saved planning, not the plan: in the frozen mode of the app the same result
+      // stays valid for the new fingerprint (checked on the bench: a new calculation gives the same cells and checks)
+      if (shown && keepShownPlan(snapKey, newSnap, snapLoaded) && manualMode && lastMonthlyRun && lastMonthlyRun.run === this)
+        lastMonthlyRun = { key: monthlyFingerprint(monthlyInputs(), toDateStr(new Date())), run: this };
+      return shown; } });
 }
 // Show and save a computed Monthly plan (the only place that changes the screen or writes the saved planning).
 // v: what the calculation made (the plan, its hours and counters) and the month it is for.
 function paintMonthlyPlan(v) {
-  var ctx = v.ctx, cells = v.cells, hours = v.hours, agentRows = v.agentRows, rh = v.rh, fixedIssues = v.fixedIssues, monthDays = v.monthDays, year = v.year, monthIdx = v.monthIdx, newSnap = v.newSnap, snapKey = v.snapKey, snapLoaded = v.snapLoaded;
+  var ctx = v.ctx, cells = v.cells, hours = v.hours, agentRows = v.agentRows, rh = v.rh, fixedIssues = v.fixedIssues, monthDays = v.monthDays, year = v.year, monthIdx = v.monthIdx, snapKey = v.snapKey;
   function cell(res) {
     if (res.special === 'closed') return '<span class="sh-none">-</span>';
     if (res.half) {
@@ -8127,11 +8139,6 @@ function paintMonthlyPlan(v) {
   if (ctx.fingerprint !== monthlyFingerprint(monthlyInputs(), toDateStr(new Date()))) return false;
   var container = document.getElementById('planning-monthly-body');
   if (!container) return false;
-  // The plan shown is saved, so it never changes by itself later. Its check status stays in result.diagnostics.
-  if (snapLoaded && !planSnapshot.writeBlocked && !monthLocked() && JSON.stringify(newSnap) !== JSON.stringify(planSnapshot.plan || {})) {
-    planSnapshot.plan = newSnap;
-    lastSnapSave = savePlanSnapshot(currentStoreId, snapKey, newSnap);
-  }
   monthlyResult = cells;
   monthlyHours = { storeId: currentStoreId, month: snapKey, byAgent: hours };
   var fxNew = fixedIssues.filter(function(x) { var k = x.a.id + x.issue; return !fixedWarned[k] && (fixedWarned[k] = true); });
@@ -8341,6 +8348,13 @@ function paintMonthlyPlan(v) {
   attachCrossHighlight();
   return true;
 }
+// The plan shown is saved, so it never changes by itself later. Its check status stays in result.diagnostics.
+function keepShownPlan(key, plan, loaded) {
+  if (!loaded || !planSnapshot || planSnapshot.writeBlocked || monthLocked() || JSON.stringify(plan) === JSON.stringify(planSnapshot.plan || {})) return;
+  planSnapshot.plan = plan;
+  lastSnapSave = savePlanSnapshot(currentStoreId, key, plan);
+  return true;
+}
 // Monthly context: every input of the calculation, read at once, copied and frozen. The calculation runs on this copy
 // only, so a change made during or after it (a load, a manager edit, another store) never mixes with it. A change to
 // try (manual check) is made on the copy, never on the live data.
@@ -8377,8 +8391,16 @@ function copyMonthlyValue(v) {
   return o;
 }
 // Same text for the same inputs, whether the month is a Date (live) or its text (context)
+// Fingerprint of what the plan is made of: the inputs, the day (yesterday becomes past at midnight) and the engine
+// version. The language and the corner shown are display only: they never change a cell, so they are left out, as the
+// copy of the saved planning kept to undo a failed save.
+var DISPLAY_ONLY = { CURRENT_LANG: true, currentCornerView: true };
 function monthlyFingerprint(inputs, today) {
-  return JSON.stringify([today, inputs], function(k, v) { return k === 'monthlyRef' && this[k] instanceof Date ? toDateStr(this[k]) : v; });
+  return JSON.stringify([today, CAST_VERSION, inputs], function(k, v) {
+    if (this === inputs && DISPLAY_ONLY[k]) return undefined;
+    if (k === 'confirmed' && this === inputs.planSnapshot) return undefined;   // last saved copy, kept only to undo a failed save
+    return k === 'monthlyRef' && this[k] instanceof Date ? toDateStr(this[k]) : v;
+  });
 }
 function buildMonthlyContext(change) {
   var inputs = copyMonthlyValue(monthlyInputs()), today = toDateStr(new Date());
@@ -8547,14 +8569,21 @@ function mandatoryAdded(after, before) {
   return Object.keys(after).filter(function(k) { return MANDATORY.test(k) && after[k] > ((before || {})[k] || 0) + 1e-6; });
 }
 // The plan with the manager's learned choices, unless they break a mandatory rule that the plan without them keeps
+// One result is kept: while the month's inputs are the same, showing it again (language, corner, theme, a repaint)
+// computes nothing. Any change of data gives a new fingerprint, and "Recalculate from today" always computes.
+// The result is frozen, so the screen and the exports cannot change it.
+var lastMonthlyRun = null;
 function pickMonthlyPlan(ctx) {
+  var live = !ctx;
   ctx = ctx || buildMonthlyContext();
+  if (live && !forceRecalc && lastMonthlyRun && lastMonthlyRun.key === ctx.fingerprint) return lastMonthlyRun.run;
   var run = computeMonthlyPlan({ habits: true }, ctx);
   if (run.habitsDays) {
     var plain = computeMonthlyPlan({ habits: false }, ctx), worse = mandatoryAdded(run.issues, plain.issues);
     habitsGate.last = { habits: !worse.length, worse: worse, brokenWithout: Object.keys(plain.issues).length };
     if (worse.length) run = plain;
   }
+  if (live) lastMonthlyRun = { key: ctx.fingerprint, run: run };
   return run;
 }
 function renderMonthlyPlanning() {
