@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v10.0.0.8 TEST</title>
+  <title>CAST v10.0.0.9 TEST</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="logo/cast-icon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="logo/cast-icon-192.png">
+  <link rel="apple-touch-icon" href="logo/cast-icon-180.png">
+  <meta name="apple-mobile-web-app-title" content="CAST">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -1967,7 +1971,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
-var CAST_VERSION = '10.0.0.8';
+var CAST_VERSION = '10.0.0.9';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -5701,7 +5705,7 @@ function paintIntraday(ds) {
     var h = Math.floor(m / 60), mn = m % 60;
     return h + (mn ? 'h' + (mn < 10 ? '0' + mn : mn) : 'h');
   }
-  var axis = '<div class="it-axis"><div class="pad">' + t('Agent') + '</div><div class="ticks">';
+  var axis = '<div class="it-axis"><div class="pad">' + t('Client Advisor') + '</div><div class="ticks">';
   for (var h = Math.floor(T0); h < Math.ceil(T1); h++) axis += '<span>' + h + 'h</span>';
   axis += '</div></div>';
   var rowsHtml = '';
@@ -8385,8 +8389,8 @@ function paintMonthlyPlan(v) {
   }
   // Column headers
   function headRow(firstLabel, withEvents, short) {
-    var lab = firstLabel === 'Agent' ? (CURRENT_LANG === 'en' ? 'Agents' : t('Agent')) : firstLabel;
-    var h = '<thead><tr><th class="c-agent">' + (withEvents ? lblPair(lab, lab) : short != null ? lblPair(lab, short) : lab) + '</th>';
+    var lab = firstLabel === 'Agent' ? t('Client Advisors') : firstLabel;   // Retail says Client Advisor, never agent
+    var h = '<thead><tr><th class="c-agent">' + (withEvents ? lblPair(lab, 'CA') : short != null ? lblPair(lab, short) : lab) + '</th>';
     monthDays.forEach(function(d, i) {
       var cls = 'c-day';
       if (d.dow === 1) cls += ' wk-start';
@@ -8477,7 +8481,7 @@ function paintMonthlyPlan(v) {
               '</td>' + monthDays.map(function(d){return '<td class="' + dayCls(d) + '"></td>';}).join('') + '</tr>';
       return;
     }
-    var name   = ((a.first_name || '') + ' ' + (a.last_name || '')).trim() || 'Agent';
+    var name   = ((a.first_name || '') + ' ' + (a.last_name || '')).trim() || t('Client Advisor');
     var stInfo = RETAIL_STATUS[retailStatusOf(a)];
     var wkH    = contractHours(a, monthDays[0].ds), ownH = regulations.weekly_hours > 0 && Math.abs(wkH - regulations.weekly_hours) > 1e-6;
     html += '<tr>';
@@ -9472,7 +9476,7 @@ function exportMonthly() {
   // Same style for every row label
   var LBL = { tx:'52525B', bold:true, sz:9, align:'left' };
   function lbl(txt, bg, isCode) { return cell(String(isCode ? txt : t(txt)).toUpperCase(), Object.assign({ bg:bg }, LBL)); }
-  var hRow = [ lbl('Agent', HEAD.bg), lbl('Role', HEAD.bg) ];
+  var hRow = [ lbl('Client Advisor', HEAD.bg), lbl('Role', HEAD.bg) ];
   days.forEach(function(d){
     hRow.push(cell(new Date(d.ds + 'T12:00:00').toLocaleDateString(dLoc(), { weekday:CURRENT_LANG === 'en' ? 'narrow' : 'short' }) + ' ' + d.num, { bg:(d.dow===0||d.dow===6)?'F1F2F4':HEAD.bg, tx:HEAD.tx, bold:true, sz:9, grid:true }));
   });
@@ -9679,7 +9683,7 @@ function exportIntraday() {
   var totalCols = 3 + nQ;
   function blankRow() { var r=[]; for (var i=0;i<totalCols;i++) r.push(cell('')); return r; }
   var rows = xlBrandRows(cell, totalCols, cell(currentStoreName + '   ' + formatDateDisplay(intradayExport.ds), {align:'left',bold:true,sz:11,tx:'6B7280',rule:true}), {rule:true});
-  var hRow = [ cell(t('Agent'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
+  var hRow = [ cell(t('Client Advisor'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell(t('Role'),{bg:'FAFAFB',tx:'6B7280',bold:true,align:'left'}),
                cell(t('Shift'),{bg:'FAFAFB',tx:'6B7280',bold:true}) ];
   for (var q=0; q<nQ; q++) {

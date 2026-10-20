@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CAST - CELINE Automated Scheduling Tool</title>
-<meta name="description" content="CAST builds the planning of CELINE boutiques and Client Service centers from traffic, workload, people and local rules.">
+<meta name="description" content="CAST is the rostering tool of CELINE boutiques and CSC.">
+<link rel="icon" type="image/png" sizes="32x32" href="logo/cast-icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="logo/cast-icon-192.png">
+<link rel="apple-touch-icon" href="logo/cast-icon-180.png">
+<meta name="apple-mobile-web-app-title" content="CAST">
 <style>
 :root {
   --font:Arial, Helvetica, sans-serif;
@@ -125,7 +129,7 @@ i { font-style:normal; }
 .mock-head b { font-size:14px; }
 .mock-head span { color:var(--tx-2); }
 .mock-grid { padding:var(--s3) var(--s5) var(--s4); }
-.mrow { display:grid; grid-template-columns:110px repeat(10, 1fr); gap:5px; align-items:center; height:36px; }
+.mrow { display:grid; grid-template-columns:132px repeat(10, 1fr); gap:5px; align-items:center; height:36px; }
 .mrow.hd { height:26px; font-size:11px; color:var(--tx-2); font-weight:700; text-align:center; }
 .mrow.hd span:first-child { text-align:left; }
 .mock .sh { height:24px; font-size:11px; }
@@ -242,12 +246,12 @@ function trimLogo(img) {
     </div>
     <div class="hero-veil"></div>
     <div class="wrap">
-      <h1>The right people, at the right place, every day.</h1>
+      <h1>Every day, the right people at the right place.</h1>
       <div class="hero-row">
-        <p>CAST plans CELINE boutiques and Client Service centers from traffic, workload, your team and your local rules. You review, adjust and share.</p>
+        <p>CAST is the rostering tool of CELINE boutiques and CSC. It prepares the planning of the month and of each day. The manager checks it, changes what is needed and shares it.</p>
         <div class="cta">
           <a class="btn btn-light" href="retail.html">Open Retail</a>
-          <a class="btn btn-line" href="CSC.html">Open Client Service</a>
+          <a class="btn btn-line" href="CSC.html">Open CSC</a>
         </div>
       </div>
     </div>
@@ -257,9 +261,9 @@ function trimLogo(img) {
     <div class="wrap">
       <h2>Less time on spreadsheets. More time with clients.</h2>
       <div class="statement-grid">
-        <div><h3>A month planned in seconds</h3><p>Days, shifts and corners are set from traffic and workload, within your hours and rest rules.</p></div>
-        <div><h3>Your call, always</h3><p>Change any cell. Your choices are kept, even when the planning is recalculated.</p></div>
-        <div><h3>Covered from open to close</h3><p>Every corner has someone who opens and someone who closes, and lunches are taken in turn.</p></div>
+        <div><h3>The month in one click</h3><p>Shifts, days off and corners for every Client Advisor, within opening hours, contract hours and rest rules.</p></div>
+        <div><h3>The manager decides</h3><p>Any square can be changed by hand. The change stays, even when the planning is recalculated.</p></div>
+        <div><h3>Covered from open to close</h3><p>Someone opens and someone closes in every corner. Lunches and breaks are taken in turn.</p></div>
       </div>
     </div>
   </section>
@@ -267,8 +271,8 @@ function trimLogo(img) {
   <section class="modules" id="modules">
     <div class="wrap">
       <div class="modules-head">
-        <h2>Two teams, one way to plan</h2>
-        <p>Each module speaks the language of its teams. Choose yours and pick your store or center.</p>
+        <h2>Two rostering tools</h2>
+        <p>One for boutiques, one for CSC. Open yours, then pick your store or center.</p>
       </div>
 
       <article class="panel">
@@ -276,11 +280,12 @@ function trimLogo(img) {
         <div class="panel-body">
           <span class="panel-for">For boutiques and department stores</span>
           <h3>Retail</h3>
-          <p class="desc">Sales, management and stock teams planned around store traffic, corner by corner.</p>
+          <p class="desc">Client Advisors, managers and stock, planned from store traffic, corner by corner.</p>
           <ul>
             <li>Shifts matched to hourly traffic</li>
-            <li>Part-time, absences, days off and training days</li>
-            <li>Intraday view with briefs, welcome, lunch and breaks</li>
+            <li>Part-time, absences, days off and training</li>
+            <li>Each day hour by hour: brief, Welcome, lunches and breaks</li>
+            <li>Plannings validated by the director</li>
             <li>English, Japanese, Korean and Chinese</li>
           </ul>
           <a class="btn btn-navy" href="retail.html">Open Retail</a>
@@ -290,16 +295,16 @@ function trimLogo(img) {
       <article class="panel flip">
         <div class="duo"><img src="https://images.unsplash.com/photo-1766066014237-00645c74e9c6?auto=format&fit=crop&w=1400&q=70" alt="Client advisor with a headset" loading="lazy"></div>
         <div class="panel-body">
-          <span class="panel-for">For Client Service centers</span>
-          <h3>Client Service</h3>
-          <p class="desc">Calls, chats and emails staffed from forecast volume and handling time.</p>
+          <span class="panel-for">For Client Service Centers</span>
+          <h3>CSC</h3>
+          <p class="desc">Calls, chats and emails staffed from the forecast volume.</p>
           <ul>
-            <li>Call, chat, mail, back office, fraud and clienteling</li>
-            <li>Task permissions for each agent, Team Leaders included</li>
-            <li>Intraday plan in 30-minute slots, with focus time on emails</li>
-            <li>Unfinished emails and back office carried to the next day</li>
+            <li>Calls, chats, emails, back office, fraud and clienteling</li>
+            <li>Tasks allowed for each Client Advisor, Team Leaders included</li>
+            <li>Each day in 30-minute slots, with time kept for emails</li>
+            <li>Unfinished emails and back office moved to the next day</li>
           </ul>
-          <a class="btn btn-navy" href="CSC.html">Open Client Service</a>
+          <a class="btn btn-navy" href="CSC.html">Open CSC</a>
         </div>
       </article>
     </div>
@@ -308,23 +313,23 @@ function trimLogo(img) {
   <section class="glimpse" id="how">
     <div class="wrap">
       <div>
-        <h2>From your rules to your planning</h2>
-        <p>Set it up once. CAST does the rest every month.</p>
+        <h2>How it works</h2>
+        <p>Set it up once. CAST prepares the planning every month.</p>
         <ol class="steps">
           <li><span><b>Set your rules</b>Opening hours, shifts, breaks, corners and contracts.</span></li>
-          <li><span><b>Add your team and traffic</b>Advisors, leaves and days off, traffic or workload by hour.</span></li>
-          <li><span><b>Review and share</b>Adjust any cell, then download in Excel or PDF, or send it.</span></li>
+          <li><span><b>Add your team and traffic</b>Client Advisors, leaves and days off, traffic or workload by hour.</span></li>
+          <li><span><b>Check and share</b>Change any square, then download it in Excel or PDF, or send it.</span></li>
         </ol>
       </div>
       <div class="mock" aria-hidden="true">
         <div class="mock-head"><b>Monthly planning</b><span>November 2026</span></div>
         <div class="mock-grid">
-          <div class="mrow hd"><span>Agent</span><span>M 2</span><span>T 3</span><span>W 4</span><span>T 5</span><span>F 6</span><span>S 7</span><span>S 8</span><span>M 9</span><span>T 10</span><span>W 11</span></div>
+          <div class="mrow hd"><span>Client Advisor</span><span>M 2</span><span>T 3</span><span>W 4</span><span>T 5</span><span>F 6</span><span>S 7</span><span>S 8</span><span>M 9</span><span>T 10</span><span>W 11</span></div>
           <div class="mrow"><div class="who"><i class="av" style="background:#854F0B">SM</i><span>Store Mgr</span></div><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i></div>
-          <div class="mrow"><div class="who"><i class="av" style="background:#185FA5">AR</i><span>Advisor</span></div><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh m">M</i><i class="sh o">O</i></div>
-          <div class="mrow"><div class="who"><i class="av" style="background:#0F6E56">BL</i><span>Advisor</span></div><i class="sh m">M</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i></div>
-          <div class="mrow"><div class="who"><i class="av" style="background:#993556">CM</i><span>Advisor</span></div><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh a">A</i><i class="sh a">A</i><i class="sh c">C</i></div>
-          <div class="mrow"><div class="who"><i class="av" style="background:#3C3489">DN</i><span>Advisor</span></div><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh m">M</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh m">M</i></div>
+          <div class="mrow"><div class="who"><i class="av" style="background:#185FA5">AR</i><span>Client Advisor</span></div><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh m">M</i><i class="sh o">O</i></div>
+          <div class="mrow"><div class="who"><i class="av" style="background:#0F6E56">BL</i><span>Client Advisor</span></div><i class="sh m">M</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh c">C</i><i class="sh o">O</i></div>
+          <div class="mrow"><div class="who"><i class="av" style="background:#993556">CM</i><span>Client Advisor</span></div><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh a">A</i><i class="sh a">A</i><i class="sh c">C</i></div>
+          <div class="mrow"><div class="who"><i class="av" style="background:#3C3489">DN</i><span>Client Advisor</span></div><i class="sh c">C</i><i class="sh o">O</i><i class="sh c">C</i><i class="sh m">M</i><i class="sh f">OFF</i><i class="sh c">C</i><i class="sh o">O</i><i class="sh o">O</i><i class="sh f">OFF</i><i class="sh m">M</i></div>
           <div class="mrow"><div class="who"><i class="av" style="background:#5F5E5A">EP</i><span>Stock</span></div><i class="sh o">OS</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh f">OFF</i><i class="sh o">OS</i><i class="sh c">CS</i><i class="sh o">OS</i></div>
         </div>
         <div class="mock-foot">Example planning. Names are fictitious.</div>
@@ -335,12 +340,12 @@ function trimLogo(img) {
   <section class="learn" id="better">
     <div class="wrap">
       <div>
-        <h2>CAST gets better every time you use it.</h2>
-        <p>Every planning you validate makes the next first draft closer to the one you would have made yourself.</p>
+        <h2>CAST learns from managers.</h2>
+        <p>Each validated planning makes the next first draft closer to the manager's own.</p>
         <ul>
-          <li><b>Your way of working.</b> Who usually opens, who closes, who prefers which days.</li>
-          <li><b>Fewer changes each month.</b> The more you use it, the less you have to adjust.</li>
-          <li><b>Rules stay first.</b> Your habits never override hours, rest or coverage.</li>
+          <li><b>Habits.</b> Who usually opens, who closes, on which days.</li>
+          <li><b>Fewer changes.</b> The more it is used, the less there is to change.</li>
+          <li><b>Rules first.</b> Habits never break hours, rest or coverage.</li>
         </ul>
       </div>
       <div class="stack" aria-hidden="true">
@@ -356,10 +361,10 @@ function trimLogo(img) {
     <div class="wrap">
       <div class="reach-grid">
         <div class="reach-item"><strong>228</strong><span>CELINE boutiques in 30 countries</span></div>
-        <div class="reach-item"><strong>6</strong><span>Client Service centers</span></div>
+        <div class="reach-item"><strong>6</strong><span>CSC</span></div>
         <div class="reach-item"><strong>5</strong><span>languages in Retail</span></div>
       </div>
-      <p class="cities"><b>Paris</b>, <b>New York</b>, <b>Shanghai</b>, <b>Tokyo</b>, <b>Seoul</b> and <b>Singapore</b>, with one planning logic for every team.</p>
+      <p class="cities"><b>Paris</b>, <b>New York</b>, <b>Shanghai</b>, <b>Tokyo</b>, <b>Seoul</b> and <b>Singapore</b>: one rostering tool for every team.</p>
     </div>
   </section>
 
@@ -367,10 +372,10 @@ function trimLogo(img) {
     <div class="bg"><img src="image%20homepage/maisons.jpg" alt=""></div>
     <div class="wrap">
       <h2>Ready for next month?</h2>
-      <p>Open your module, pick your store or center, and your team is already there.</p>
+      <p>Open your tool, pick your store or center: your team is already there.</p>
       <div class="cta">
         <a class="btn btn-light" href="retail.html">Open Retail</a>
-        <a class="btn btn-line" href="CSC.html">Open Client Service</a>
+        <a class="btn btn-line" href="CSC.html">Open CSC</a>
       </div>
     </div>
   </section>
