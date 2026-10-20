@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CAST v10.0.0.7</title>
+  <title>CAST v10.0.0.8</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
@@ -76,7 +76,8 @@ h1,h2,h3,h4 { font-weight:700; line-height:1.3; color:var(--tx-1); }
 .it-blk-reinf { background:var(--bg-base); color:var(--info-tx); border:1px dashed var(--info-tx); }
 .b-train { background:var(--pl-green); color:var(--pl-green-tx); box-shadow:none; }
 .b-cli { background:var(--pl-violet); color:var(--pl-violet-tx); box-shadow:none; }
-.mm-list { max-height:260px; overflow-y:auto; }
+.mm-list { max-height:min(360px, 50vh); overflow-y:auto; }
+.mm-chip-reinf { background:var(--bg-base); color:var(--info-tx); border:1px dashed var(--info-tx); }
 .mission-menu-item.is-on { background:var(--bg-base-3); box-shadow:inset 3px 0 0 var(--brand); }
 .mm-dur { margin-left:auto; font-size:12px; color:var(--tx-3); }
 .mm-form { display:flex; align-items:flex-end; gap:8px; padding:10px 4px 4px; border-top:1px solid var(--line); flex-wrap:wrap; }
@@ -354,7 +355,8 @@ input:checked + .toggle-slider:before { transform:translateX(18px); }
 .sh-late { background:var(--pl-yellow); color:var(--pl-yellow-tx); }
 .sh-dsun { background:var(--pl-violet); color:var(--pl-violet-tx); }
 .sh-violet { background:var(--pl-violet); color:var(--pl-violet-tx); }
-.sh-pt { background:var(--pl-work); color:var(--pl-work-tx); }   /* worked shifts never look like OFF (grey) */
+.sh-pt { background:var(--pl-work); color:var(--pl-work-tx); }
+.sh-sp { background:var(--pl-violet); color:var(--pl-violet-tx); box-shadow:inset 0 0 0 1px var(--pl-violet-tx); }   /* worked shifts never look like OFF (grey) */
 .sh-teal { background:var(--pl-green); color:var(--pl-green-tx); }
 .sh-pink { background:var(--dang-soft); color:var(--dang-tx); }
 .sh-slate { background:var(--pl-work); color:var(--pl-work-tx); }
@@ -603,6 +605,10 @@ body.one-store .sb-store-btn { display:none !important; }
 .ce-lbl { font-size:11px; color:var(--tx-2); }
 .ce-reset .ce-lbl { font-size:11px; color:var(--tx-2); }
 .ce-sep { height:1px; background:var(--line); margin:var(--s2) 0; }
+.ce-sp-row { grid-column:1 / -1; display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding:4px 2px 2px; }
+.ce-sp-row[hidden] { display:none; }
+.ce-sp-row .btn { margin-left:auto; }
+.ce-sp-to { color:var(--tx-2); }
 .ce-cnr-lbl { font-size:11px; font-weight:700; color:var(--tx-3); text-transform:uppercase; letter-spacing:normal; padding:0 var(--s2) 4px; }
 .ce-cnr { display:flex; flex-wrap:wrap; gap:5px; padding:0 var(--s2) 2px; }
 .ce-cnr-opt { padding:4px 10px; border:1px solid var(--line); background:var(--bg-base); border-radius:var(--r-sm); font-family:var(--font); font-size:12px; font-weight:700; color:var(--tx-2); cursor:pointer; transition:background .12s; }
@@ -928,6 +934,8 @@ textarea { resize:vertical; line-height:1.5; }
 .rv-dot { width:8px; height:8px; border-radius:50%; background:var(--warn-tx); flex-shrink:0; }
 .rv-tip { position:fixed; z-index:10000; max-width:320px; padding:var(--s2) var(--s3); background:var(--bg-base); color:var(--tx-1); border:1px solid var(--bd-tip, var(--line)); border-radius:var(--r-sm); box-shadow:var(--sh-2); font-size:12px; line-height:18px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; overflow-wrap:anywhere; pointer-events:none; }
 .rv-tip[hidden] { display:none; }
+.ov-tip { position:fixed; z-index:10000; padding:3px 8px; background:var(--bg-base); color:var(--tx-1); border:1px solid var(--bd-tip); border-radius:var(--r-sm); box-shadow:var(--sh-2); font-size:11px; line-height:16px; white-space:nowrap; pointer-events:none; }
+.ov-tip[hidden] { display:none; }
 .rv-more { display:flex; justify-content:center; padding-top:var(--s3); }
 .rv-st-pending { background:var(--warn-soft); color:var(--warn-tx); }
 .rv-st-returned { background:var(--pl-work); color:var(--pl-work-tx); }
@@ -1959,7 +1967,7 @@ function fitScope(name, items) {
   document.body.classList.toggle('one-store', single);
 }
 var ROLE_LABEL = { manager: 'Manager', director: 'Director', admin: 'Administrator' };
-var CAST_VERSION = '10.0.0.7';
+var CAST_VERSION = '10.0.0.8';
 function renderAccount() {
   var base = me.name || me.email.split('@')[0];
   var ini = base.split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function(w) { return w[0].toUpperCase(); }).join('');
@@ -2982,6 +2990,7 @@ function buildHabits(cutoffDs) {
     Object.keys(days).forEach(function(ds) {
       if (ds < fromDs || ds >= cutoffDs || getDayClosureType(ds) || agentOnLeave(a.id, ds)) return;
       var v = days[ds], shift = null;
+      if (specialShift(v)) return;   // one day, set by hand: not a habit
       if (v && v !== 'OFF') { if (!workHoursOf(a, ds, { code: v })) return; shift = v; }
       var state = v === 'OFF' ? 'off' : 'work', dt = new Date(ds + 'T12:00:00'), dow = dt.getDay();
       var w = Math.pow(2, -((cut - dt) / 864e5) / HALF);
@@ -3978,8 +3987,15 @@ function missionDefs() {
              cls: 'bc-' + breakColorOf(b, i), color: breakColorOf(b, i), brk: b };
   }).concat(FIXED_MISSIONS);
 }
+// A move to another corner set by hand in the Intraday (Roman 20-10): 'reinf:<corner id>', drawn like a reinforcement
+function reinfDef(type) {
+  if (type.indexOf('reinf:') !== 0) return null;
+  var c = storeCorners.find(function(x) { return x.id === type.slice(6); });
+  var code = c ? c.code : '?';
+  return { type: type, label: '\u2192' + code, short: '\u2192' + code, dur: 60, cls: 'mm-chip-reinf', free: true, toId: c ? c.id : null, toCode: code };
+}
 function missionDef(type) {
-  var d = missionDefs().find(function(m) { return m.type === type; });
+  var d = missionDefs().find(function(m) { return m.type === type; }) || reinfDef(type);
   if (d) return d;
   var name = type.indexOf('brk:') === 0 ? type.slice(4) : (MISSION_LABELS[type] || type);
   return { type: type, label: name, short: name, dur: (MISSION_DUR[type] || 1) * 60, cls: 'b-' + type };
@@ -4142,6 +4158,7 @@ function hierarchyRank(agent) {
 // Monthly planning
 function shiftCls(code) {
   if (!code) return 'sh-none';
+  if (specialShift(code)) return 'sh-sp';
   if (code === 'OFF') return 'sh-off';
   if (code === 'A')   return 'sh-cp';
   if (code === 'PT')  return 'sh-pt';
@@ -4415,10 +4432,21 @@ function ruleHours(a, ds, res) {
   return wh ? { start: wh.start, end: wh.end, paid: paidMinOf(wh.start, wh.end) } : null;
 }
 // Real working hours of a planning result, or null
+// Special shift (Roman 20-10): one day, hours set by hand in the Monthly (inventory, event). Code 'SP <start>-<end>'
+// in minutes. It is a manual square like the others: kept as set, counted in the hours, never learned as a habit.
+function specialShift(code) {
+  var m = /^SP (\d+)-(\d+)$/.exec(code || '');
+  return m && +m[2] > +m[1] ? { start: +m[1], end: +m[2] } : null;
+}
+function specialCode(start, end) { return 'SP ' + start + '-' + end; }
+// What a square shows: SP for a special shift, else its code
+function codeLabel(code) { return specialShift(code) ? 'SP' : (code || ''); }
 function workHoursOf(a, ds, res) {
   if (!res || res.special) return null;
   var code = res.code;
   if (!code || code === 'OFF' || code === 'A') return null;
+  var sp = specialShift(code);
+  if (sp) return { start: sp.start, end: sp.end };
   var h = dayMinutes(ds);
   var st, en;
   if (code === 'PT') {
@@ -5091,10 +5119,10 @@ function buildIntradayModel(ds) {
     var grid = RETAIL_SHIFTS[RETAIL_STATUS[retailStatusOf(a)].grid] || RETAIL_SHIFTS.sales;
     var sh = grid.find(function(s) { return s.code === res.code; }) || grid[0];
     var w = workHoursOf(a, ds, res) || { start: sh.startMin, end: sh.endMin };
-    var own = res.code === 'PT' || res.code === 'D';
+    var own = res.code === 'PT' || res.code === 'D', sp = specialShift(res.code);
     shiftInfo[a.id] = {
-      code: own ? res.code : sh.code, startMin: w.start, endMin: w.end,
-      tone: res.code === 'PT' ? 'pt' : res.code === 'D' ? 'dsun' : sh.tone, half: res.half
+      code: sp ? 'SP' : own ? res.code : sh.code, startMin: w.start, endMin: w.end,
+      tone: sp ? 'sp' : res.code === 'PT' ? 'pt' : res.code === 'D' ? 'dsun' : sh.tone, half: res.half
     };
   });
   var T0 = 24, T1 = 0;
@@ -5153,6 +5181,13 @@ function buildIntradayModel(ds) {
       }
     }
   }
+  // Moves to another corner set by hand: shown and kept like a reinforcement (dashed, arrow), deleted or moved like a mission
+  Object.keys(addedMissions).forEach(function(aid) {
+    (addedMissions[aid] || []).forEach(function(m) {
+      var rd = reinfDef(m.type);
+      if (rd) (reinforceMissions[aid] = reinforceMissions[aid] || []).push({ start: m.start, dur: missionDurH(m), toCode: rd.toCode, toId: rd.toId, id: m.id });
+    });
+  });
   var breaks = (regulations.breaks || []);
   var lunch = breaks.find(function(b) { return /lunch|dej/i.test(b.name); }) || breaks[0] || null;
   var byArrival = working.slice().sort(function(a, b) {
@@ -5588,9 +5623,9 @@ function buildIntradayModel(ds) {
         });
       }
       // The model keeps its own copies: a later change of settings or store never changes what it shows or exports
-      var reinf = (reinforceMissions[a.id] || []).map(function(m) { return { start: m.start, dur: m.dur, toCode: m.toCode }; });
+      var reinf = (reinforceMissions[a.id] || []).map(function(m) { return { start: m.start, dur: m.dur, toCode: m.toCode, id: m.id || null }; });
       return { a: { id: a.id, first_name: a.first_name, last_name: a.last_name, status: a.status }, sh: Object.assign({}, shiftInfo[a.id]),
-        blocks: blocks, added: (addedMissions[a.id] || []).map(resolvedAddedMission), reinf: reinf };
+        blocks: blocks, added: (addedMissions[a.id] || []).filter(function(m) { return !reinfDef(m.type); }).map(resolvedAddedMission), reinf: reinf };
     });
   });
   return { ds: ds, storeId: currentStoreId, openH: openH, closeH: closeH, T0: T0, T1: T1, span: span, groups: groups, count: working.length };
@@ -5712,7 +5747,7 @@ function paintIntraday(ds) {
       });
       row.reinf.forEach(function(m, mi) {
         track += '<div class="it-blk it-blk-reinf" draggable="false"' +
-          ' data-agent="' + a.id + '" data-type="reinf" data-ridx="' + mi + '"' +
+          ' data-agent="' + a.id + '" data-type="reinf" ' + (m.id ? 'data-mid="' + m.id + '"' : 'data-ridx="' + mi + '"') +
           ' data-dur="' + m.dur + '" data-smin="' + sh.startMin + '" data-emin="' + sh.endMin + '"' +
           ' title="' + esc('\u2192' + m.toCode) + '" data-full="' + esc('\u2192' + m.toCode) + '" style="left:' + pct(m.start) + '%;width:' + wpct(m.dur) + '%">' +
           (m.dur < 0.5 ? '' : '\u2192' + esc(m.toCode)) +
@@ -5809,11 +5844,17 @@ function openMissionMenu(ev, agentId) {
   menu.className = 'mission-menu';
   menu.id = 'mission-menu';
   menu.onclick = function(e) { e.stopPropagation(); };
+  var who = agents.find(function(x) { return x.id === agentId; }), here = who && effectiveCornerId(who, monthlyResult[currentIntradayDate], storeCorners);
+  var moves = who && poolOf(who) === 'sales' && storeCorners.length > 1 ? storeCorners.filter(function(c) { return c.id !== here; }) : [];
   menu.innerHTML = '<div class="mm-list">' + missionDefs().map(function(m) {
       return '<div class="mission-menu-item" data-type="' + esc(m.type) + '" onclick="pickMissionType(this)">' +
         '<span class="mm-chip ' + m.cls + '">' + esc(m.short) + '</span>' + esc(t(m.label)) +
         (m.free ? '' : '<span class="mm-dur">' + durLabel(m.dur) + '</span>') + '</div>';
-    }).join('') + '</div>' +
+    }).join('') +
+    (moves.length ? '<div class="bell-head">' + esc(t('Move to another corner')) + '</div>' + moves.map(function(c) {
+      return '<div class="mission-menu-item" data-type="reinf:' + c.id + '" onclick="pickMissionType(this)" data-no-i18n>' +
+        '<span class="mm-chip mm-chip-reinf">\u2192' + esc(c.code) + '</span>' + esc(c.full_name || c.code) + '</div>';
+    }).join('') : '') + '</div>' +
     '<div class="mm-form">' +
       '<div class="fld"><label>' + t('Start') + '</label>' + hourMinSelectHtml('mm-start', clickMin) + '</div>' +
       '<div class="fld" id="mm-dur-fld" style="display:none"><label>' + t('Duration') + '</label><select id="mm-dur">' + durOpts + '</select></div>' +
@@ -6008,10 +6049,23 @@ async function runForecast() {
   renderTraffic();
 }
 // Manual changes on the planning
+// Who changed a square by hand, and when (written by the server, SQL of 20-10): { agentId: { ds: { name, at } } }
+var overrideMeta = {};
+function noteOverrideMeta(r) {
+  var at = r.changed_at || r.created_at, o = overrideMeta[r.agent_id] = overrideMeta[r.agent_id] || {}, was = o[r.date];
+  if (at && (!was || was.at < at)) o[r.date] = { name: r.changed_by_name || '', at: at };
+}
+// The change just made here: the server writes the same name and time
+function setOverrideMeta(agentId, ds) {
+  var o = overrideMeta[agentId] = overrideMeta[agentId] || {};
+  if ((planningOverrides[agentId] || {})[ds] || (cornerOverrides[agentId] || {})[ds]) o[ds] = { name: (me && me.name) || '', at: new Date().toISOString() };
+  else delete o[ds];
+}
 async function loadPlanningOverrides() {
   var sid = currentStoreId;
   planningOverrides = {};
   cornerOverrides = {};
+  overrideMeta = {};
   if (!agents.length) return;
   var ids = agents.map(function(a) { return a.id; });
   var res = await sb.from('retail_planning_overrides').select('*').in('agent_id', ids);
@@ -6020,6 +6074,7 @@ async function loadPlanningOverrides() {
     res.data.forEach(function(r) {
       if (!planningOverrides[r.agent_id]) planningOverrides[r.agent_id] = {};
       planningOverrides[r.agent_id][r.date] = r.value;
+      noteOverrideMeta(r);
     });
   }
   var cor = await sb.from('retail_corner_overrides').select('*').in('agent_id', ids);
@@ -6029,6 +6084,7 @@ async function loadPlanningOverrides() {
       if (r.corner_id) {
         if (!cornerOverrides[r.agent_id]) cornerOverrides[r.agent_id] = {};
         cornerOverrides[r.agent_id][r.date] = r.corner_id;
+        noteOverrideMeta(r);
       }
     });
   }
@@ -6061,6 +6117,15 @@ function openCellEditor(agentId, ds, evt) {
             '<span class="sh ' + shiftCls(o[0]) + '">' + o[0] + '</span>' +
             '<span class="ce-lbl">' + o[1] + '</span></button>';
   });
+  // Special shift (Roman 20-10): hours set by hand for this day only (inventory, event)
+  var sp = specialShift(current), shownW = workHoursOf(agent, ds, (monthlyResult[ds] || {})[agentId]), dm = dayMinutes(ds);
+  var sp0 = sp ? sp.start : shownW ? shownW.start : dm.open, sp1 = sp ? sp.end : shownW ? shownW.end : dm.close;
+  html += '<div class="ce-sep"></div>' +
+    '<button class="ce-opt' + (sp ? ' is-current' : '') + '" onclick="toggleSpecialRow(this)" aria-expanded="' + !!sp + '">' +
+      '<span class="sh sh-sp" data-no-i18n>SP</span><span class="ce-lbl">' + t('Special shift') + '</span></button>' +
+    '<div class="ce-sp-row" id="ce-sp-row"' + (sp ? '' : ' hidden') + '>' + hourMinSelectHtml('ce-sp-start', sp0) +
+      '<span class="ce-sp-to">-</span>' + hourMinSelectHtml('ce-sp-end', sp1) +
+      '<button type="button" class="btn btn-primary btn-sm" onclick="applySpecialShift()">' + t('Apply') + '</button></div>';
   if (current) {
     html += '<div class="ce-sep"></div>' +
             '<button class="ce-opt ce-reset" onclick="applyCellOverride(null)">' +
@@ -6098,6 +6163,41 @@ function openCellEditor(agentId, ds, evt) {
   pop.style.visibility = 'visible';
   setTimeout(function() { document.addEventListener('click', closeCellEditorOutside); }, 0);
 }
+function toggleSpecialRow(btn) {
+  var row = document.getElementById('ce-sp-row');
+  row.hidden = !row.hidden;
+  btn.setAttribute('aria-expanded', String(!row.hidden));
+  var pop = document.getElementById('cell-editor'), r = pop.getBoundingClientRect();
+  if (r.bottom > window.innerHeight - 8) pop.style.top = Math.max(8, window.innerHeight - r.height - 8) + 'px';
+}
+// A special shift is saved as set: it may go beyond the usual hours (recovered or paid as overtime, declared elsewhere)
+function applySpecialShift() {
+  var a = hourMinValue('ce-sp-start'), b = hourMinValue('ce-sp-end');
+  if (a == null || b == null || b <= a) { showToast(t('The end must be after the start'), 'error'); return; }
+  applyCellOverride(specialCode(a, b));
+}
+// Pointer on a square changed by hand: who changed it and when (computer only: a phone has no pointer)
+(function() {
+  var fine = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)');
+  var tip = null, cur = null;
+  function hide() { if (tip) tip.hidden = true; cur = null; }
+  function place(e) { var r = tip.getBoundingClientRect(); tip.style.left = Math.max(8, Math.min(e.clientX + 12, window.innerWidth - r.width - 8)) + 'px'; tip.style.top = Math.max(8, Math.min(e.clientY + 16, window.innerHeight - r.height - 8)) + 'px'; }
+  document.addEventListener('mouseover', function(e) {
+    if (!fine || !fine.matches || !e.target.closest) return;
+    var td = e.target.closest('#planning-monthly-body td[data-agent][data-ds]');
+    var ag = td && td.dataset.agent, ds = td && td.dataset.ds;
+    var m = td && ((planningOverrides[ag] || {})[ds] || (cornerOverrides[ag] || {})[ds]) && (overrideMeta[ag] || {})[ds];
+    if (!m) { hide(); return; }
+    if (cur === td) return;
+    cur = td;
+    if (!tip) { tip = document.createElement('div'); tip.className = 'ov-tip'; tip.setAttribute('role', 'tooltip'); tip.setAttribute('data-no-i18n', ''); document.body.appendChild(tip); }
+    tip.textContent = (m.name ? m.name + ', ' : '') + reviewDate(m.at);
+    tip.hidden = false; place(e);
+  });
+  document.addEventListener('mousemove', function(e) { if (cur && tip && !tip.hidden) place(e); }, { passive: true });
+  window.addEventListener('scroll', hide, { passive: true, capture: true });
+  document.addEventListener('pointerdown', hide, true);
+})();
 function closeCellEditorOutside(e) {
   var pop = document.getElementById('cell-editor');
   if (pop && !pop.contains(e.target)) closeCellEditor();
@@ -6182,8 +6282,8 @@ async function applyCellOverride(value) {
   if (multiSelect.length && !targets.some(function(s){ return s.agentId === st.agentId && s.ds === st.ds; })) {
     targets.push({ agentId: st.agentId, ds: st.ds });
   }
-  // An absence is a fact and is always saved; any other change must keep the rules (see manualChangeIssue)
-  if (value !== 'A') {
+  // An absence is a fact and is always saved, a special shift too (Roman 20-10); any other change must keep the rules
+  if (value !== 'A' && !specialShift(value)) {
     showLoader();
     var issue = manualChangeIssue(function(i) {
       targets.forEach(function(x) { var o = i.planningOverrides[x.agentId] = i.planningOverrides[x.agentId] || {}; if (value === null) delete o[x.ds]; else o[x.ds] = value; });
@@ -6203,7 +6303,7 @@ async function applyCellOverride(value) {
     showToast(tf('Not saved: {error}', { error: w.error.message }), 'error');
     clearMultiSelect(); renderMonthlyPlanning(); return;
   }
-  targets.forEach(function(x) { var o = planningOverrides[x.agentId] = planningOverrides[x.agentId] || {}; if (value === null) delete o[x.ds]; else o[x.ds] = value; });
+  targets.forEach(function(x) { var o = planningOverrides[x.agentId] = planningOverrides[x.agentId] || {}; if (value === null) delete o[x.ds]; else o[x.ds] = value; setOverrideMeta(x.agentId, x.ds); });
   logManagerEdits(edits);
   showToast(targets.length > 1 ? tf('{count} cells updated \u2713', { count: targets.length }) : 'Updated \u2713');
   clearMultiSelect();
@@ -6235,6 +6335,7 @@ async function applyCornerOverride(cornerId) {
     if (del.error) { showToast('Failed to reset corner', 'error'); return; }
     if (cornerOverrides[st.agentId]) delete cornerOverrides[st.agentId][st.ds];
   }
+  setOverrideMeta(st.agentId, st.ds);
   logManagerEdits([{ store_id: currentStoreId, agent_id: st.agentId, date: st.ds, field: 'corner', old_value: oldC, new_value: cornerId || null, actor_source: 'manager_edit' }]);
   showToast('Corner updated \u2713');
   renderWithAdjustMode();
@@ -6728,6 +6829,7 @@ function placeShiftsOfDay(mp, d) {
     var fixedCodes = [];
     list = list.filter(function(a) {
       var mc = (planningOverrides[a.id] || {})[d.ds], ms = mc && grid.find(function(s) { return s.code === mc; });
+      if (specialShift(mc)) { plan[a.id] = mc; return false; }   // special shift: kept as set, outside the evening share
       if (ms) { plan[a.id] = ms.code; if (poolOf(a) !== 'mgmt') fixedCodes.push({ code: ms.code, a: a }); return false; }
       return true;
     });
@@ -8226,11 +8328,11 @@ function paintMonthlyPlan(v) {
       var pos = isClose ? 'sh-half-pm' : 'sh-half-am';
       return '<span class="sh-half ' + cls + ' ' + pos + '"><span class="sh-half-lbl">' + esc(res.code) + '</span></span>';
     }
+    var sp = specialShift(res.code), badge = '<span class="sh ' + shiftCls(res.code) + '"' + (sp ? ' data-no-i18n' : '') + '>' + esc(codeLabel(res.code)) + '</span>';
     if (res.corner) {
-      return '<span class="sh-cnr"><span class="sh-cnr-tag" data-no-i18n title="' + esc(res.corner) + '">' + esc(res.corner) + '</span>' +
-             '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span></span>';
+      return '<span class="sh-cnr"><span class="sh-cnr-tag" data-no-i18n title="' + esc(res.corner) + '">' + esc(res.corner) + '</span>' + badge + '</span>';
     }
-    return '<span class="sh ' + shiftCls(res.code) + '">' + esc(res.code) + '</span>';
+    return badge;
   }
   // A computed plan belongs to its context: never apply it to a new store, month or edit.
   if ((v.expectedFingerprint || ctx.fingerprint) !== monthlyFingerprint(monthlyInputs(), toDateStr(new Date()))) return false;
@@ -8417,15 +8519,29 @@ function paintMonthlyPlan(v) {
   html2 += '<div class="mth-wrap"><table class="mth" id="mth-summary" style="min-width:calc(var(--name-col) + ' + (monthDays.length * 32) + 'px)">' + monthlyColumns(monthDays.length);
   html2 += headRow('Indicator', false, '');
   html2 += '<tbody>';
-  function sumRow(label, map, cls, short) {
-    var r = '<tr class="' + (cls || '') + '"><td class="c-agent">' + lblPair(label, short) + '</td>';
+  function sumRow(label, map, cls, short, raw) {
+    var r = '<tr class="' + (cls || '') + '"><td class="c-agent"' + (raw ? ' data-no-i18n' : '') + '>' + lblPair(label, short) + '</td>';
     monthDays.forEach(function(d, i) {
       r += '<td class="' + dayCls(d) + '" data-col="' + i + '">' +
            (d.closure ? '<span class="sh-none">-</span>' : (map[d.ds] || 0)) + '</td>';
     });
     return r + '</tr>';
   }
-  lastCoverage = { totPres: totPres, totOff: totOff, totO: totO, totC: totC, pools: poolDayCount, rh: rh };
+  // Headcount of each corner on the floor (Roman 20-10): sellers working that day, in the corner of the day (a corner
+  // changed for the day counts in the new one). Off, absence and training do not count; managers are in no corner;
+  // stock is its own line (Stock above). No corner in the store: no line.
+  var cornerRows = storeCorners.map(function(c) {
+    var map = {};
+    monthDays.forEach(function(d) {
+      map[d.ds] = agents.filter(function(a) {
+        var res = cells[d.ds][a.id];
+        if (poolOf(a) !== 'sales' || !res || res.special || !workHoursOf(a, d.ds, res)) return false;
+        return (res.corner || (storeCorners.find(function(q) { return q.id === a.home_corner_id; }) || {}).code) === c.code;
+      }).length;
+    });
+    return { code: c.code, label: c.full_name || c.code, map: map };
+  });
+  lastCoverage = { totPres: totPres, totOff: totOff, totO: totO, totC: totC, pools: poolDayCount, rh: rh, corners: cornerRows };
   html2 += sumRow('Total present', totPres, 'tot', 'TOT');
   html2 += sumRow('Off',           totOff,  'tot', 'OFF');
   html2 += sumRow('Opening',       totO,    'tot', 'OPEN');
@@ -8434,6 +8550,7 @@ function paintMonthlyPlan(v) {
     if (!agents.some(function(a){ return poolOf(a) === p[0]; })) return;
     html2 += sumRow(p[1], poolDayCount[p[0]], 'st-row', p[2]);
   });
+  cornerRows.forEach(function(c) { html2 += sumRow(c.label, c.map, 'st-row', c.code, true); });
   html2 += '</tbody></table></div>';
   container.innerHTML = html;
   var prevCoverage = document.querySelector('.coverage-card:not(.ca-card)');
@@ -8654,7 +8771,7 @@ var CELL_MARKERS = { off: 'OFF', leave: 'A', out: 'OUT' };
 function validCell(r, ds) {
   if (r.special === 'closed') return !!getDayClosureType(ds) && !r.code;
   if (r.special) return CELL_MARKERS[r.special] === r.code && !r.half;
-  if (!(r.code === 'PT' || r.code === 'D' || findShiftDef(r.code))) return false;
+  if (!(r.code === 'PT' || r.code === 'D' || specialShift(r.code) || findShiftDef(r.code))) return false;
   if (r.half && r.half !== 'am' && r.half !== 'pm') return false;
   return !(r.corner && storeCorners.length > 1 && !storeCorners.some(function(q) { return q.code === r.corner; }));
 }
@@ -9145,7 +9262,7 @@ async function openSendMenu(ev, view) {
   document.body.appendChild(m);
   placeMenuUnder(m, ev.currentTarget);
   document.addEventListener('keydown', onExportMenuKey);
-  setTimeout(function() { document.addEventListener('click', closeExportMenu); }, 0);
+  setTimeout(function() { document.addEventListener('click', closeExportMenu); document.addEventListener('pointerdown', exportMenuOutside, true); }, 0);
   var built;
   try { built = await buildPlanningPdf(view); }
   catch (e) {
@@ -9222,7 +9339,7 @@ function openExportMenu(ev, view) {
   var first = m.querySelector('button');
   if (first) first.focus({ preventScroll:true });
   document.addEventListener('keydown', onExportMenuKey);
-  setTimeout(function() { document.addEventListener('click', closeExportMenu); }, 0);
+  setTimeout(function() { document.addEventListener('click', closeExportMenu); document.addEventListener('pointerdown', exportMenuOutside, true); }, 0);
 }
 // A menu opened under its button, kept inside the screen
 function placeMenuUnder(m, btn) {
@@ -9230,10 +9347,18 @@ function placeMenuUnder(m, btn) {
   m.style.top = (r.bottom + 6) + 'px';
   m.style.left = Math.max(8, Math.min(r.left, vw - m.offsetWidth - 8)) + 'px';
 }
+// A touch anywhere else closes the Share or Download menu (phones send no click for a touch on the page itself)
+function exportMenuOutside(e) {
+  var m = document.getElementById('export-menu');
+  if (!m) { document.removeEventListener('pointerdown', exportMenuOutside, true); return; }
+  if (m.contains(e.target) || (m.exportTrigger && m.exportTrigger.contains(e.target))) return;
+  closeExportMenu();
+}
 function closeExportMenu() {
   var m = document.getElementById('export-menu');
   if (m) m.remove();
   document.removeEventListener('click', closeExportMenu);
+  document.removeEventListener('pointerdown', exportMenuOutside, true);
   document.removeEventListener('keydown', onExportMenuKey);
 }
 // Escape closes the menu and goes back to Download
@@ -9301,6 +9426,7 @@ function exportMonthly() {
     'sh-teal':{bg:'DCEBDF',tx:'2D5841'}, 'sh-pink':{bg:'F6DDE7',tx:'82334E'},
     'sh-slate':{bg:'EAD8CC',tx:'624638'},
     'sh-off':{bg:'E8E9EB',tx:'4C586A'}, 'sh-cp':{bg:'F6DDE7',tx:'82334E'},
+    'sh-sp':{bg:'E4DDF0',tx:'5C467A'},
     'sh-none':{bg:'FAFAFB',tx:'A1A1AA'}
   };
   function toneClass(code) {
@@ -9430,7 +9556,7 @@ function exportMonthly() {
       days.forEach(function(d){
         var res = (monthlyResult[d.ds] || {})[a.id];
         var code = res ? res.code : '';
-        var disp = (res && res.corner) ? (res.corner + '\n' + code) : code;
+        var disp = (res && res.corner) ? (res.corner + '\n' + codeLabel(code)) : codeLabel(code);
         if (d.closure && !code) { r.push(cell('-',{bg:'F1F2F4',tx:'A1A1AA',grid:true})); return; }
         var t = SHIFT_XL[toneClass(code)] || SHIFT_XL['sh-none'];
         var hideCell = currentCornerView && storeCorners.length > 1 && poolOf(a) === 'sales' &&
@@ -9490,6 +9616,7 @@ function exportMonthly() {
   rows.push(sumRow('Management', (cv.pools && cv.pools.mgmt) || perDay.mgmt));
   rows.push(sumRow('Sales', (cv.pools && cv.pools.sales) || perDay.sales));
   rows.push(sumRow('Stock', (cv.pools && cv.pools.stock) || perDay.stock));
+  (cv.corners || []).forEach(function(c) { rows.push(sumRow(c.label, c.map)); });
   var cols = [{wch:20},{wch:11}];
   for (var c=0;c<nDays;c++) cols.push({wch:4.2});
   cols.push({wch:5}); cols.push({wch:5}); cols.push({wch:6}); cols.push({wch:6}); cols.push({wch:6}); cols.push({wch:7});
@@ -9529,7 +9656,7 @@ function exportIntraday() {
   var SHIFT_HEAD = {
     open:{bg:'DBEAFE',tx:'1E407A'}, close:{bg:'DCEBDF',tx:'2D5841'},
     mid:{bg:'F5EBCB',tx:'6B5622'}, late:{bg:'F5EBCB',tx:'6B5622'}, dsun:{bg:'E4DDF0',tx:'5C467A'}, violet:{bg:'E4DDF0',tx:'5C467A'}, pt:{bg:'EAD8CC',tx:'624638'},
-    teal:{bg:'DCEBDF',tx:'2D5841'}, pink:{bg:'F6DDE7',tx:'82334E'}, slate:{bg:'EAD8CC',tx:'624638'}
+    teal:{bg:'DCEBDF',tx:'2D5841'}, pink:{bg:'F6DDE7',tx:'82334E'}, slate:{bg:'EAD8CC',tx:'624638'}, sp:{bg:'E4DDF0',tx:'5C467A'}
   };
   var EMPTY = 'F4F5F8';
   function cell(v, o) {
@@ -10123,7 +10250,7 @@ function openPageHelp() {
     page && page.id === 'tab-regulations' ? {store:'hours',staffing:'labor',breaks:'breaks',shifts:'shifts'}[currentSettingsView] : 'monthly';
   openHelp(key);
 }
-// Counters of each advisor: in the Client Advisor count under the Monthly (screen and PDF) and in Excel
+// Counters of each advisor: in the Client Advisor count under the Monthly (screen) and in Excel
 var RH_COLUMNS = ['O', 'C', 'OFF', 'SUN', 'ABS', 'H'];
 function monthlyColumns(count) {
   return '<colgroup><col style="width:var(--name-col)"><col span="'+count+'"></colgroup>';
@@ -10159,25 +10286,7 @@ function planningExportHtml(view) {
     var days=table ? table.querySelectorAll('thead > tr:first-child > th.c-day').length : 0;
     var w=(184+days*32)+'px';
     if(table) { table.style.width=w; table.style.minWidth=w; }
-    // Coverage & headcount under the planning, always open
-    var cov=document.querySelector('#planning-coverage-body .mth-wrap');
-    if(cov) {
-      var c2=cov.cloneNode(true);
-      c2.querySelectorAll('thead > tr:first-child > th').forEach(function(el){ el.style.removeProperty('transform'); el.style.removeProperty('z-index'); });
-      var t2=c2.querySelector('.mth'); if(t2) { t2.style.width=w; t2.style.minWidth=w; }
-      var wrap=document.createElement('div');
-      wrap.innerHTML='<div class="pdf-cov-title">'+esc(t('Coverage & headcount'))+'</div>';
-      wrap.appendChild(c2);
-      copy.appendChild(wrap);
-    }
-    // Client Advisor count under it, the corner days and the counters of each advisor
-    var ca=document.querySelector('#planning-coverage-body .ca-wrap');
-    if(ca) {
-      var w2=document.createElement('div');
-      w2.innerHTML='<div class="pdf-cov-title">'+esc(t('Client Advisor count'))+'</div>';
-      w2.appendChild(ca.cloneNode(true));
-      copy.appendChild(w2);
-    }
+    // Coverage & headcount and Client Advisor count stay out of the PDF: they are in the Excel (Roman 20-10)
   }
   return copy.innerHTML;
 }
